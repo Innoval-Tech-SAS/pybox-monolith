@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class CampaignStatus(Enum):
+class CampaignStatus(str, Enum):
     DRAFT = "borrador"
     SCHEDULED = "programada"
     RUNNING = "en ejecución"

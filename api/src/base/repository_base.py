@@ -6,12 +6,12 @@ from database.database import Database, T
 class RepositoryBase(Generic[T]):
 
     def __init__(self, database: Database, model_class: Type[T]):
-        self._db = database
+        self.db = database
         self.model_class: Type[T] = model_class
 
     def add_many(self, model_instances: List[T]) -> List[T]:
         try:
-            with self._db.get_session() as session:
+            with self.db.get_session() as session:
                 session.add_all(model_instances)
                 session.commit()
                 for instance in model_instances:
@@ -23,7 +23,7 @@ class RepositoryBase(Generic[T]):
 
     def add(self, model_instance: T) -> T:
         try:
-            with self._db.get_session() as session:
+            with self.db.get_session() as session:
                 session.add(model_instance)
                 session.commit()
                 session.refresh(model_instance)
@@ -34,7 +34,7 @@ class RepositoryBase(Generic[T]):
 
     def get_by_id(self, id: int) -> Optional[T]:
         try:
-            with self._db.get_session() as session:
+            with self.db.get_session() as session:
                 return session.get(self.model_class, id)
         except Exception as e:
             print(f"Error al obtener la instancia por ID: {e}")
@@ -42,7 +42,7 @@ class RepositoryBase(Generic[T]):
 
     def get_all(self) -> List[T]:
         try:
-            with self._db.get_session() as session:
+            with self.db.get_session() as session:
                 return session.query(self.model_class).all()
         except Exception as e:
             print(f"Error al obtener todas las instancias: {e}")
@@ -50,7 +50,7 @@ class RepositoryBase(Generic[T]):
 
     def update(self, model_instance: T) -> T:
         try:
-            with self._db.get_session() as session:
+            with self.db.get_session() as session:
                 merged = session.merge(model_instance)
                 session.commit()
                 session.refresh(merged)
@@ -61,7 +61,7 @@ class RepositoryBase(Generic[T]):
 
     def delete(self, model_instance: T) -> None:
         try:
-            with self._db.get_session() as session:
+            with self.db.get_session() as session:
                 attached = (
                     session.merge(model_instance)
                     if model_instance not in session

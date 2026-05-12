@@ -1,8 +1,6 @@
 from flask import Blueprint, request, jsonify
-from sqlalchemy.exc import IntegrityError
 
 from ..services.contact_services import ContactServices
-from ..utils.contact_error_messages import duplicate_contact_message
 
 contact_bp = Blueprint("contact", __name__)
 
@@ -30,21 +28,7 @@ def upload_file():
         )
 
     file_type = filename.split(".")[-1]
-
-    try:
-        resumen = service.process_file(file, file_type)
-    except IntegrityError as e:
-        return (
-            jsonify(
-                {
-                    "error": duplicate_contact_message(e),
-                    "suggestion": "Revisa el archivo y elimina los contactos duplicados antes de volver a cargarlo.",
-                }
-            ),
-            409,
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+    resumen = service.process_file(file, file_type)
 
     return (
         jsonify(
