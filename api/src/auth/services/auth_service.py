@@ -32,6 +32,10 @@ class AuthService:
         self.token_service = token_service
         self.oauth_provider_service = oauth_provider_service
 
+    def register_and_authenticate(self, user_data: UserCreate) -> AuthResult:
+        user = self.register_user(user_data)
+        return self._open_session(user, AuthProvider.SELF)
+
     def register_user(self, user_data: UserCreate) -> UserModel:
         email = normalize_email(user_data["email"])
         phone_number = require_value(

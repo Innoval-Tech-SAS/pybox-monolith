@@ -17,11 +17,18 @@ export const App: React.FC = () => {
           />
         </Route>
 
-        {noAuthRouter.map((route, index) => {
-          return (
-            <Route key={index} path={route.path} element={route.element} />
-          );
-        })}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <div className="flex items-center justify-center h-screen">
+              <p className="text-lg font-semibold">Dashboard — en construcción</p>
+            </div>
+          }
+        />
+
+        {noAuthRouter.map((route, index) => (
+          <Route key={index} path={route.path} element={route.element} />
+        ))}
       </Routes>
     </BrowserRouter>
   );

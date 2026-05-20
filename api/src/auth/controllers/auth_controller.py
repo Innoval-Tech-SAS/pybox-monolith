@@ -11,8 +11,12 @@ service = AuthService()
 @auth_bp.route("/register", methods=["POST"])
 def register():
     body: UserCreate = request.get_json(force=True)
-    user = service.register_user(body)
-    return jsonify({"id": str(user.id), "email": str(user.email)}), 201
+    result = service.register_and_authenticate(body)
+    return jsonify({
+        "access_token": result["access_token"],
+        "token_type": result["token_type"],
+        "auth_provider": result["auth_provider"].value,
+    }), 201
 
 
 @auth_bp.route("/login", methods=["POST"])

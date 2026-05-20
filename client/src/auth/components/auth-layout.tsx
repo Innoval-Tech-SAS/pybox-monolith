@@ -11,7 +11,7 @@ export const AuthLayout: React.FC<{ children: React.ReactNode }> = ({
           <div className="relative flex items-center justify-center z-1">
             <div className="flex flex-col items-center max-w-xs">
               <p className="text-center text-gray-400 dark:text-white/60">
-                sofIA
+                Template
               </p>
             </div>
           </div>

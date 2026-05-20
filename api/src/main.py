@@ -1,6 +1,8 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 
 from config.error_handlers import register_error_handlers
+from tools.config_tools import get_or_throw
 from auth.controllers.auth_controller import auth_bp
 from contacts.controllers.contact_controller import contact_bp
 from users.models.user_model import UserModel
@@ -16,6 +18,9 @@ from database.database import db
 API_PREFIX = "/api/v1"
 
 app = Flask(__name__)
+app.secret_key = get_or_throw("AUTH_TOKEN_SECRET")
+
+CORS(app, origins=["http://localhost:4200"])
 
 register_error_handlers(app)
 
