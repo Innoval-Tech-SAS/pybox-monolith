@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 
+from auth.decorators import login_required
 from ..services.contact_services import ContactServices
 
 contact_bp = Blueprint("contact", __name__)
@@ -8,6 +9,7 @@ service = ContactServices()
 
 
 @contact_bp.route("/upload-file", methods=["POST"])
+@login_required
 def upload_file():
 
     if "file" not in request.files:
