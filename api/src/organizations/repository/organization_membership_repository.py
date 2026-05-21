@@ -1,24 +1,20 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from base.repository_base import RepositoryBase
-from database.database import db
 from organizations.models.organization_membership_model import OrganizationMembershipModel
 
 
 class OrganizationMembershipRepository(RepositoryBase[OrganizationMembershipModel]):
-    def __init__(self):
-        super().__init__(db, OrganizationMembershipModel)
+    model_class = OrganizationMembershipModel
 
-    def get_by_user_and_organization(
-        self,
-        user_id: int,
-        organization_id: int,
-    ) -> OrganizationMembershipModel | None:
-        with self.db.get_session() as session:
-            return (
-                session.query(self.model_class)
-                .filter_by(user_id=user_id, organization_id=organization_id)
-                .first()
+    def __init__(self, session: AsyncSession):
+        super().__init__(session)
+
+    async def get_by_user_id(self, user_id: int) -> list[OrganizationMembershipModel]:
+        result = await self.session.execute(
+            select(OrganizationMembershipModel).where(
+                OrganizationMembershipModel.user_id == user_id
             )
-
-    def list_by_user(self, user_id: int) -> list[OrganizationMembershipModel]:
-        with self.db.get_session() as session:
-            return session.query(self.model_class).filter_by(user_id=user_id).all()
+        )
+        return list(result.scalars().all())

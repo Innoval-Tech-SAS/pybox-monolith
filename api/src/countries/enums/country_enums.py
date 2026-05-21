@@ -80,3 +80,52 @@ NATIONALITY_PHONE_PREFIX: dict["Nationality", str] = {
     Nationality.PE: "+51",
     Nationality.VE: "+58",
 }
+
+
+class OrgFiscalDocumentType(str, Enum):
+    NIT = "NIT"    # Colombia
+    RFC = "RFC"    # México
+    CUIT = "CUIT"  # Argentina
+    RUC = "RUC"    # Perú
+    RIF = "RIF"    # Venezuela
+
+
+class OrgMercantileDocumentType(str, Enum):
+    CAMARA_COMERCIO = "CAMARA_COMERCIO"                        # Colombia
+    REGISTRO_PUBLICO_COMERCIO = "REGISTRO_PUBLICO_COMERCIO"    # México
+    INSCRIPCION_IGJ = "INSCRIPCION_IGJ"                        # Argentina
+    PARTIDA_SUNARP = "PARTIDA_SUNARP"                          # Perú
+    REGISTRO_MERCANTIL = "REGISTRO_MERCANTIL"                  # Venezuela
+
+
+ORG_FISCAL_DOCUMENT_BY_NATIONALITY: dict["Nationality", "OrgFiscalDocumentType"] = {
+    Nationality.CO: OrgFiscalDocumentType.NIT,
+    Nationality.MX: OrgFiscalDocumentType.RFC,
+    Nationality.AR: OrgFiscalDocumentType.CUIT,
+    Nationality.PE: OrgFiscalDocumentType.RUC,
+    Nationality.VE: OrgFiscalDocumentType.RIF,
+}
+
+ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY: dict["Nationality", "OrgMercantileDocumentType"] = {
+    Nationality.CO: OrgMercantileDocumentType.CAMARA_COMERCIO,
+    Nationality.MX: OrgMercantileDocumentType.REGISTRO_PUBLICO_COMERCIO,
+    Nationality.AR: OrgMercantileDocumentType.INSCRIPCION_IGJ,
+    Nationality.PE: OrgMercantileDocumentType.PARTIDA_SUNARP,
+    Nationality.VE: OrgMercantileDocumentType.REGISTRO_MERCANTIL,
+}
+
+ORG_FISCAL_DOCUMENT_NAMES: dict["OrgFiscalDocumentType", str] = {
+    OrgFiscalDocumentType.NIT: "NIT – Número de Identificación Tributaria",
+    OrgFiscalDocumentType.RFC: "RFC – Registro Federal de Contribuyentes",
+    OrgFiscalDocumentType.CUIT: "CUIT – Código Único de Identificación Tributaria",
+    OrgFiscalDocumentType.RUC: "RUC – Registro Único de Contribuyentes",
+    OrgFiscalDocumentType.RIF: "RIF – Registro de Información Fiscal",
+}
+
+ORG_MERCANTILE_DOCUMENT_NAMES: dict["OrgMercantileDocumentType", str] = {
+    OrgMercantileDocumentType.CAMARA_COMERCIO: "Cámara de Comercio",
+    OrgMercantileDocumentType.REGISTRO_PUBLICO_COMERCIO: "Registro Público de Comercio",
+    OrgMercantileDocumentType.INSCRIPCION_IGJ: "Inscripción en el IGJ",
+    OrgMercantileDocumentType.PARTIDA_SUNARP: "Partida Registral SUNARP",
+    OrgMercantileDocumentType.REGISTRO_MERCANTIL: "Registro Mercantil",
+}

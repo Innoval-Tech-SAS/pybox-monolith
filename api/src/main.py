@@ -1,7 +1,9 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from config.error_handlers import register_error_handlers
 from database.database import db
@@ -10,6 +12,7 @@ from tools.config_tools import get_or_throw
 # Importar modelos para que SQLAlchemy los registre en Base.metadata antes de create_all
 import campaigns.models.campaign_model  # noqa: F401
 import contacts.models.contact_model  # noqa: F401
+import notifications.models.verification_code_model  # noqa: F401
 import organizations.models.organization_model  # noqa: F401
 import organizations.models.organization_membership_model  # noqa: F401
 import users.models.user_model  # noqa: F401
@@ -20,13 +23,17 @@ import users.models.permission_assignment_model  # noqa: F401
 from auth.controllers.auth_controller import router as auth_router
 from contacts.controllers.contact_controller import router as contacts_router
 from countries.controllers.countries_controller import router as countries_router
+from onboarding.controllers.onboarding_controller import router as onboarding_router
 from users.controllers.user_controller import router as users_router
 
 API_PREFIX = "/api/v1"
 
+_UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    os.makedirs(_UPLOADS_DIR, exist_ok=True)
     await db.create_tables()
     yield
     await db.engine.dispose()
@@ -48,9 +55,12 @@ app.add_middleware(
 
 register_error_handlers(app)
 
+app.mount("/files", StaticFiles(directory=_UPLOADS_DIR), name="uploads")
+
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(contacts_router, prefix=API_PREFIX)
 app.include_router(countries_router, prefix=API_PREFIX)
+app.include_router(onboarding_router, prefix=API_PREFIX)
 app.include_router(users_router, prefix=API_PREFIX)
 
 
