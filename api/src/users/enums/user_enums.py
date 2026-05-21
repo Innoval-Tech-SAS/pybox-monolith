@@ -5,6 +5,7 @@ class UserRole(str, Enum):
     ADMIN = "ADMINISTRADOR"
     CUSTOMER_SERVICE = "ATENCION AL CLIENTE"
     USER_ORGANIZATION = "USUARIO ORGANIZACIÓN"
+    USER = "USUARIO"
 
 
 class UserScope(str, Enum):
@@ -13,9 +14,6 @@ class UserScope(str, Enum):
     SELF = "SELF"
 
 
-class UserDocumentType(str, Enum):
-    CC = "CÉDULA DE CIUDADANÍA"
-    CE = "CÉDULA DE EXTRANJERÍA"
-    PASSPORT = "PASAPORTE"
-    NIT = "NIT"
-    PEP = "PERMISO ESPECIAL DE PERMANENCIA"
+class PermissionEffect(str, Enum):
+    GRANT = "GRANT"
+    REVOKE = "REVOKE"

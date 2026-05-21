@@ -3,9 +3,9 @@ import { useApiClient } from "./use-api-client";
 import { RegisterRequest } from "@/types/auth/user";
 
 interface AuthTokenResponse {
-  access_token: string;
-  token_type: string;
-  auth_provider: string;
+  accessToken: string;
+  tokenType: string;
+  authProvider: string;
 }
 
 export const useRegister = () => {
@@ -13,16 +13,16 @@ export const useRegister = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const register = async (data: RegisterRequest): Promise<AuthTokenResponse> => {
+  const register = async (data: RegisterRequest, endpoint = "/auth/register"): Promise<AuthTokenResponse> => {
     setLoading(true);
     setError(null);
     try {
-      const result: AuthTokenResponse = await apiClient("/auth/register", {
+      const result: AuthTokenResponse = await apiClient(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      sessionStorage.setItem("accessToken", result.access_token);
+      sessionStorage.setItem("accessToken", result.accessToken);
       return result;
     } catch (err) {
       const message =

@@ -1,10 +1,6 @@
-from uuid import UUID
-
 from base.repository_base import RepositoryBase
 from database.database import db
-from organizations.models.organization_membership_model import (
-    OrganizationMembershipModel,
-)
+from organizations.models.organization_membership_model import OrganizationMembershipModel
 
 
 class OrganizationMembershipRepository(RepositoryBase[OrganizationMembershipModel]):
@@ -13,8 +9,8 @@ class OrganizationMembershipRepository(RepositoryBase[OrganizationMembershipMode
 
     def get_by_user_and_organization(
         self,
-        user_id: UUID,
-        organization_id: UUID,
+        user_id: int,
+        organization_id: int,
     ) -> OrganizationMembershipModel | None:
         with self.db.get_session() as session:
             return (
@@ -23,6 +19,6 @@ class OrganizationMembershipRepository(RepositoryBase[OrganizationMembershipMode
                 .first()
             )
 
-    def list_by_user(self, user_id: UUID) -> list[OrganizationMembershipModel]:
+    def list_by_user(self, user_id: int) -> list[OrganizationMembershipModel]:
         with self.db.get_session() as session:
             return session.query(self.model_class).filter_by(user_id=user_id).all()

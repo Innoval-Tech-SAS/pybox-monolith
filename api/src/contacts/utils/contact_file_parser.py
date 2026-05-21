@@ -3,7 +3,6 @@ from io import BytesIO
 from typing import Any
 
 import polars as pl
-from werkzeug.datastructures import FileStorage
 
 
 @dataclass(frozen=True)
@@ -16,9 +15,7 @@ class ContactFileData:
 class ContactFileParser:
     REQUIRED_COLUMNS = {"email", "phone_number"}
 
-    def parse(self, file: FileStorage, type_file: str) -> ContactFileData:
-        file_bytes = file.read()
-
+    def parse(self, file_bytes: bytes, type_file: str) -> ContactFileData:
         if not file_bytes:
             raise ValueError("El archivo está vacío")
 
@@ -28,19 +25,14 @@ class ContactFileParser:
 
         extra_info_columns = sorted(columns - self.REQUIRED_COLUMNS)
 
-        if extra_info_columns:
-            print(f"Columnas adicionales encontradas: {', '.join(extra_info_columns)}")
-
         contacts = []
         total_skipped = 0
 
         for row in df.to_dicts():
             contact_data = self._build_contact_data(row, extra_info_columns)
-
             if contact_data is None:
                 total_skipped += 1
                 continue
-
             contacts.append(contact_data)
 
         return ContactFileData(
@@ -52,19 +44,16 @@ class ContactFileParser:
     def _read_dataframe(self, file_bytes: bytes, type_file: str) -> pl.DataFrame:
         if type_file == "csv":
             return pl.read_csv(BytesIO(file_bytes))
-
         if type_file == "xlsx":
             return pl.read_excel(file_bytes)
-
         raise RuntimeError("Archivo no permitido. Solo se aceptan archivos .csv o .xlsx")
 
     def _validate_columns(self, columns: set[str]) -> None:
         if self.REQUIRED_COLUMNS.issubset(columns):
             return
-
-        missing_columns = self.REQUIRED_COLUMNS - columns
+        missing = self.REQUIRED_COLUMNS - columns
         raise ValueError(
-            f"El archivo debe contener las siguientes columnas: {', '.join(missing_columns)}"
+            f"El archivo debe contener las siguientes columnas: {', '.join(missing)}"
         )
 
     def _build_contact_data(
@@ -89,5 +78,4 @@ class ContactFileParser:
     def _clean_value(self, value: Any) -> Any:
         if isinstance(value, str):
             return value.strip() or None
-
         return value

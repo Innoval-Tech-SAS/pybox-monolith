@@ -1,13 +1,22 @@
 from typing import cast
 
-from flask import g, has_request_context, session
+import jwt
 
 from auth.enums.auth_enums import AuthProvider
 from users.repository.user_repository import UserRepository
+from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.models.user_model import UserModel
+from users.models.role_assignment_model import RoleAssignmentModel
+from users.enums.user_enums import UserRole, UserScope
 from security.services.auth_token_service import AuthTokenService
 from security.services.password_hasher_service import PasswordHasherService
-from ..schemas.auth_schemas import AuthResult, ProviderLogin, UserCreate, UserLogin
+from ..schemas.auth_schemas import (
+    AuthResponse,
+    ProviderAuth,
+    ProviderLogin,
+    UserCreate,
+    UserLogin,
+)
 from .oauth_provider_service import OAuthProviderService, ProviderProfile
 from ..utils.auth_utils import (
     normalize_email,
@@ -15,6 +24,7 @@ from ..utils.auth_utils import (
     require_value,
     resolve_auth_provider,
     resolve_document_type,
+    resolve_nationality,
 )
 
 
@@ -22,70 +32,71 @@ class AuthService:
 
     def __init__(
         self,
-        user_repository: UserRepository = UserRepository(),
-        password_hasher: PasswordHasherService = PasswordHasherService(),
+        user_repository: UserRepository,
+        role_assignment_repository: RoleAssignmentRepository,
+        password_hasher: PasswordHasherService | None = None,
         token_service: AuthTokenService | None = None,
-        oauth_provider_service: OAuthProviderService = OAuthProviderService(),
+        oauth_provider_service: OAuthProviderService | None = None,
     ):
         self.user_repository = user_repository
-        self.password_hasher = password_hasher
-        self.token_service = token_service
-        self.oauth_provider_service = oauth_provider_service
+        self.role_assignment_repository = role_assignment_repository
+        self.password_hasher = password_hasher or PasswordHasherService()
+        self.token_service = token_service or AuthTokenService()
+        self.oauth_provider_service = oauth_provider_service or OAuthProviderService()
 
-    def register_and_authenticate(self, user_data: UserCreate) -> AuthResult:
-        user = self.register_user(user_data)
-        return self._open_session(user, AuthProvider.SELF)
+    async def register_and_authenticate(
+        self, user_data: UserCreate, role: UserRole, scope: UserScope
+    ) -> AuthResponse:
+        user = await self.register_user(user_data)
+        await self.role_assignment_repository.add(
+            RoleAssignmentModel(user_id=cast(int, user.id), role=role, scope=scope)
+        )
+        return await self._build_response(user, AuthProvider.SELF)
 
-    def register_user(self, user_data: UserCreate) -> UserModel:
-        email = normalize_email(user_data["email"])
+    async def register_user(self, user_data: UserCreate) -> UserModel:
+        email = normalize_email(user_data.email)
         phone_number = require_value(
-            user_data["phone_number"],
-            "El número de teléfono es obligatorio.",
+            user_data.phone_number, "El número de teléfono es obligatorio."
         )
-        document_type = resolve_document_type(user_data["document_type"])
-        document_number = require_value(
-            user_data["document_number"],
-            "El número de documento es obligatorio.",
+        nationality = resolve_nationality(user_data.nationality)
+        document_type = (
+            resolve_document_type(user_data.document_type)
+            if user_data.document_type
+            else None
         )
+        document_number = user_data.document_number or None
 
-        if self.user_repository.get_by_email(email):
+        if await self.user_repository.get_by_email(email):
             raise ValueError("El correo electrónico ya está registrado.")
 
-        if phone_number and self.user_repository.get_by_phone_number(phone_number):
+        if await self.user_repository.get_by_phone_number(phone_number):
             raise ValueError("El número de teléfono ya está registrado.")
 
-        if self.user_repository.get_by_document(document_type, document_number):
-            raise ValueError("El documento ya está registrado.")
+        if document_type and document_number:
+            if await self.user_repository.get_by_document(
+                document_type, document_number
+            ):
+                raise ValueError("El documento ya está registrado.")
 
         user = UserModel(
-            firstname=require_value(
-                user_data["firstname"],
-                "El nombre es obligatorio.",
-            ),
-            lastname=require_value(
-                user_data["lastname"],
-                "El apellido es obligatorio.",
-            ),
+            firstname=require_value(user_data.firstname, "El nombre es obligatorio."),
+            lastname=require_value(user_data.lastname, "El apellido es obligatorio."),
             email=email,
-            hashed_password=self.password_hasher.hash_password(user_data["password"]),
+            hashed_password=self.password_hasher.hash_password(user_data.password),
             phone_number=phone_number,
             auth_provider=AuthProvider.SELF,
+            nationality=nationality,
             document_type=document_type,
             document_number=document_number,
         )
 
-        return self.user_repository.add(user)
+        return await self.user_repository.add(user)
 
-    def authenticate_user(self, user_data: UserLogin) -> AuthResult:
+    async def authenticate_user(self, user_data: UserLogin) -> AuthResponse:
+        email = normalize_email(user_data.email)
+        password = require_value(user_data.password, "La contraseña es obligatoria.")
 
-        email = normalize_email(user_data["email"])
-        password = require_value(
-            user_data["password"],
-            "La contraseña es obligatoria.",
-        )
-
-        user = self.user_repository.get_by_email(email)
-
+        user = await self.user_repository.get_by_email(email)
         if not user:
             raise ValueError("Credenciales inválidas.")
 
@@ -94,125 +105,165 @@ class AuthService:
             raise ValueError("Este usuario debe autenticarse con proveedor externo.")
 
         is_valid, new_hash = self.password_hasher.verify_and_maybe_rehash(
-            stored_hash,
-            password,
+            stored_hash, password
         )
-
         if not is_valid:
             raise ValueError("Credenciales inválidas.")
 
         if new_hash:
             setattr(user, "hashed_password", new_hash)
-            user = self.user_repository.update(user)
+            user = await self.user_repository.update(user)
 
-        return self._open_session(user, AuthProvider.SELF)
+        return await self._build_response(user, AuthProvider.SELF)
 
-    def authenticate_provider_user(self, provider_data: ProviderLogin) -> AuthResult:
-        provider = resolve_auth_provider(provider_data["provider"])
-        token = require_value(provider_data["token"], "El token es obligatorio.")
+    async def authenticate_provider_user(
+        self, provider_data: ProviderLogin
+    ) -> AuthResponse:
+        provider = resolve_auth_provider(provider_data.provider)
+        token = require_value(str(provider_data.token), "El token es obligatorio.")
 
         if provider == AuthProvider.SELF:
             raise ValueError("SELF no es un proveedor externo.")
 
         provider_profile = self.oauth_provider_service.verify_provider_token(
-            provider,
-            token,
+            provider, token
         )
-        user = self._get_or_create_provider_user(provider_profile, provider_data)
+        user = await self._get_or_create_provider_user(provider_profile, provider_data)
+        return await self._build_response(user, provider)
 
-        return self._open_session(user, provider)
+    async def authenticate_existing_provider_user(
+        self, provider_data: ProviderAuth
+    ) -> AuthResponse:
+        provider = resolve_auth_provider(provider_data.provider)
+        token = require_value(str(provider_data.token), "El token es obligatorio.")
 
-    def verify_access_token(self, token: str) -> dict:
-        return self._get_token_service().verify_token(token)
+        if provider == AuthProvider.SELF:
+            raise ValueError("SELF no es un proveedor externo.")
 
-    def close_session(self):
-        if not has_request_context():
-            return
+        provider_profile = self.oauth_provider_service.verify_provider_token(
+            provider, token
+        )
+        user = await self._get_provider_user_or_link_email(provider_profile)
+        if not user:
+            raise ValueError(
+                "No encontramos una cuenta asociada a Google. Regístrate primero para completar tu perfil."
+            )
 
-        user = getattr(g, "current_user", None)
+        return await self._build_response(user, provider)
+
+    async def refresh_tokens(self, refresh_token: str) -> AuthResponse:
+        try:
+            payload = jwt.decode(
+                refresh_token,
+                self.token_service.secret_key,
+                algorithms=[self.token_service.ALGORITHM],
+            )
+        except jwt.ExpiredSignatureError as e:
+            raise ValueError("El refresh token expiró.") from e
+        except jwt.InvalidTokenError as e:
+            raise ValueError("El refresh token no es válido.") from e
+
+        user_id: int = payload["sub"]
+        jti: str = payload["jti"]
+
+        if not await self.token_service.verify_refresh_token(user_id, jti):
+            raise ValueError("Sesión inválida o ya cerrada.")
+
+        user = await self.user_repository.get_by_id(user_id)
+        if not user:
+            raise ValueError("Usuario no encontrado.")
+
+        await self.token_service.revoke_refresh_token(user_id)
+        return await self._build_response(user, cast(AuthProvider, user.auth_provider))
+
+    async def logout(self, user_id: int) -> None:
+        await self.token_service.revoke_refresh_token(user_id)
+        user = await self.user_repository.get_by_id(user_id)
         if user:
             setattr(user, "is_active_sessions", False)
-            self.user_repository.update(user)
+            await self.user_repository.update(user)
 
-        session.clear()
-        g.current_user = None
-        g.access_token = None
-
-    def _get_or_create_provider_user(
+    async def _get_or_create_provider_user(
         self,
         provider_profile: ProviderProfile,
         provider_data: ProviderLogin,
     ) -> UserModel:
-        user = self.user_repository.get_by_provider_identity(
-            provider_profile.provider,
-            provider_profile.provider_user_id,
-        )
-
+        user = await self._get_provider_user_or_link_email(provider_profile)
         if user:
             return user
 
-        user = self.user_repository.get_by_email(provider_profile.email)
-        if user:
-            setattr(user, "auth_provider", provider_profile.provider)
-            setattr(user, "provider_user_id", provider_profile.provider_user_id)
-            return self.user_repository.update(user)
+        phone_number = normalize_optional(provider_data.phone_number)
+        nationality = (
+            resolve_nationality(provider_data.nationality)
+            if provider_data.nationality
+            else None
+        )
+
+        if phone_number and await self.user_repository.get_by_phone_number(
+            phone_number
+        ):
+            raise ValueError("El número de teléfono ya está registrado.")
 
         user = UserModel(
-            firstname=self._provider_value(
-                provider_data,
-                "firstname",
-                provider_profile.firstname,
-                "El nombre es obligatorio.",
+            firstname=(
+                normalize_optional(provider_data.firstname)
+                or normalize_optional(provider_profile.firstname)
+                or provider_profile.email.split("@", 1)[0]
             ),
-            lastname=self._provider_value(
-                provider_data,
-                "lastname",
-                provider_profile.lastname,
-                "El apellido es obligatorio.",
+            lastname=(
+                normalize_optional(provider_data.lastname)
+                or normalize_optional(provider_profile.lastname)
+                or ""
             ),
             email=provider_profile.email,
             hashed_password=None,
-            phone_number=require_value(
-                provider_data["phone_number"],
-                "El número de teléfono es obligatorio.",
-            ),
+            phone_number=phone_number,
             auth_provider=provider_profile.provider,
             provider_user_id=provider_profile.provider_user_id,
-            document_type=resolve_document_type(provider_data["document_type"]),
-            document_number=require_value(
-                provider_data["document_number"],
-                "El número de documento es obligatorio.",
+            nationality=nationality,
+            document_type=(
+                resolve_document_type(provider_data.document_type)
+                if provider_data.document_type
+                else None
             ),
+            document_number=provider_data.document_number or None,
         )
+        return await self.user_repository.add(user)
 
-        return self.user_repository.add(user)
+    async def _get_provider_user_or_link_email(
+        self,
+        provider_profile: ProviderProfile,
+    ) -> UserModel | None:
+        user = await self.user_repository.get_by_provider_identity(
+            provider_profile.provider,
+            provider_profile.provider_user_id,
+        )
+        if user:
+            return user
 
-    def _open_session(self, user: UserModel, auth_provider: AuthProvider) -> AuthResult:
+        user = await self.user_repository.get_by_email(provider_profile.email)
+        if not user:
+            return None
+
+        setattr(user, "auth_provider", provider_profile.provider)
+        setattr(user, "provider_user_id", provider_profile.provider_user_id)
+        return await self.user_repository.update(user)
+
+    async def _build_response(
+        self, user: UserModel, auth_provider: AuthProvider
+    ) -> AuthResponse:
         setattr(user, "is_active_sessions", True)
-        user = self.user_repository.update(user)
-
-        access_token = self._get_token_service().generate_token(user, auth_provider)
-
-        if has_request_context():
-            session["user_id"] = str(user.id)
-            session["email"] = str(user.email)
-            session["auth_provider"] = auth_provider.value
-            session["access_token"] = access_token
-            g.current_user = user
-            g.access_token = access_token
-
-        return {
-            "user": user,
-            "access_token": access_token,
-            "token_type": "Bearer",
-            "auth_provider": auth_provider,
-        }
-
-    def _get_token_service(self) -> AuthTokenService:
-        if self.token_service is None:
-            self.token_service = AuthTokenService()
-
-        return self.token_service
+        await self.user_repository.update(user)
+        access_token = self.token_service.generate_access_token(user, auth_provider)
+        refresh_token = await self.token_service.generate_refresh_token(
+            cast(int, user.id)
+        )
+        return AuthResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="Bearer",
+            auth_provider=auth_provider,
+        )
 
     def _provider_value(
         self,
@@ -221,5 +272,5 @@ class AuthService:
         fallback: str | None,
         message: str,
     ) -> str:
-        value = normalize_optional(provider_data.get(key)) or fallback
+        value = normalize_optional(getattr(provider_data, key, None)) or fallback
         return require_value(value or "", message)

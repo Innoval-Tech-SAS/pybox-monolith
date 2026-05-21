@@ -1,74 +1,45 @@
-from typing import Type, List, Optional, Generic
+from typing import Generic, List, Optional, Sequence, Type, TypeVar
 
-from database.database import Database, T
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import DeclarativeBase
+
+T = TypeVar("T", bound=DeclarativeBase)
 
 
 class RepositoryBase(Generic[T]):
+    model_class: Type[T]
 
-    def __init__(self, database: Database, model_class: Type[T]):
-        self.db = database
-        self.model_class: Type[T] = model_class
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
-    def add_many(self, model_instances: List[T]) -> List[T]:
-        try:
-            with self.db.get_session() as session:
-                session.add_all(model_instances)
-                session.commit()
-                for instance in model_instances:
-                    session.refresh(instance)
-                return model_instances
-        except Exception as e:
-            print(f"Error al agregar las instancias: {e}")
-            raise
+    async def add(self, instance: T) -> T:
+        self.session.add(instance)
+        await self.session.flush()
+        await self.session.refresh(instance)
+        return instance
 
-    def add(self, model_instance: T) -> T:
-        try:
-            with self.db.get_session() as session:
-                session.add(model_instance)
-                session.commit()
-                session.refresh(model_instance)
-                return model_instance
-        except Exception as e:
-            print(f"Error al agregar la instancia: {e}")
-            raise
+    async def add_many(self, instances: List[T]) -> Sequence[T]:
+        self.session.add_all(instances)
+        await self.session.flush()
+        for instance in instances:
+            await self.session.refresh(instance)
+        return instances
 
-    def get_by_id(self, id: int) -> Optional[T]:
-        try:
-            with self.db.get_session() as session:
-                return session.get(self.model_class, id)
-        except Exception as e:
-            print(f"Error al obtener la instancia por ID: {e}")
-            raise
+    async def get_by_id(self, id: object) -> Optional[T]:
+        return await self.session.get(self.model_class, id)
 
-    def get_all(self) -> List[T]:
-        try:
-            with self.db.get_session() as session:
-                return session.query(self.model_class).all()
-        except Exception as e:
-            print(f"Error al obtener todas las instancias: {e}")
-            raise
+    async def get_all(self) -> Sequence[T]:
+        result = await self.session.execute(select(self.model_class))
+        return result.scalars().all()
 
-    def update(self, model_instance: T) -> T:
-        try:
-            with self.db.get_session() as session:
-                merged = session.merge(model_instance)
-                session.commit()
-                session.refresh(merged)
-                return merged
-        except Exception as e:
-            print(f"Error al actualizar la instancia: {e}")
-            raise
+    async def update(self, instance: T) -> T:
+        merged = await self.session.merge(instance)
+        await self.session.flush()
+        await self.session.refresh(merged)
+        return merged
 
-    def delete(self, model_instance: T) -> None:
-        try:
-            with self.db.get_session() as session:
-                attached = (
-                    session.merge(model_instance)
-                    if model_instance not in session
-                    else model_instance
-                )
-                session.delete(attached)
-                session.commit()
-        except Exception as e:
-            print(f"Error al eliminar la instancia: {e}")
-            raise
+    async def delete(self, instance: T) -> None:
+        attached = await self.session.merge(instance)
+        await self.session.delete(attached)
+        await self.session.flush()

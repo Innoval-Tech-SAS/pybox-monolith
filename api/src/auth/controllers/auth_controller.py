@@ -1,47 +1,51 @@
-from flask import Blueprint, request, jsonify
+from fastapi import status
+from config.api_router import APIRouter
 
-from ..services.auth_service import AuthService
-from ..schemas.auth_schemas import ProviderLogin, UserCreate, UserLogin
+from auth.dependencies import AuthServiceDep, TokenPayload
+from auth.schemas.auth_schemas import (
+    AuthResponse,
+    ProviderAuth,
+    ProviderLogin,
+    RefreshRequest,
+    UserCreate,
+    UserLogin,
+)
+from users.enums.user_enums import UserRole, UserScope
 
-auth_bp = Blueprint("auth", __name__)
-
-service = AuthService()
-
-
-@auth_bp.route("/register", methods=["POST"])
-def register():
-    body: UserCreate = request.get_json(force=True)
-    result = service.register_and_authenticate(body)
-    return jsonify({
-        "access_token": result["access_token"],
-        "token_type": result["token_type"],
-        "auth_provider": result["auth_provider"].value,
-    }), 201
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@auth_bp.route("/login", methods=["POST"])
-def login():
-    body: UserLogin = request.get_json(force=True)
-    result = service.authenticate_user(body)
-    return jsonify({
-        "access_token": result["access_token"],
-        "token_type": result["token_type"],
-        "auth_provider": result["auth_provider"].value,
-    }), 200
+@router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+async def register_admin(body: UserCreate, service: AuthServiceDep) -> AuthResponse:
+    return await service.register_and_authenticate(body, UserRole.ADMIN, UserScope.ORGANIZATION)
 
 
-@auth_bp.route("/oauth", methods=["POST"])
-def oauth_login():
-    body: ProviderLogin = request.get_json(force=True)
-    result = service.authenticate_provider_user(body)
-    return jsonify({
-        "access_token": result["access_token"],
-        "token_type": result["token_type"],
-        "auth_provider": result["auth_provider"].value,
-    }), 200
+@router.post("/register/user", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+async def register_user(body: UserCreate, service: AuthServiceDep) -> AuthResponse:
+    return await service.register_and_authenticate(body, UserRole.USER, UserScope.SELF)
 
 
-@auth_bp.route("/logout", methods=["POST"])
-def logout():
-    service.close_session()
-    return jsonify({"message": "Sesión cerrada."}), 200
+@router.post("/login", response_model=AuthResponse)
+async def login(body: UserLogin, service: AuthServiceDep) -> AuthResponse:
+    return await service.authenticate_user(body)
+
+
+@router.post("/oauth", response_model=AuthResponse)
+async def oauth_login(body: ProviderLogin, service: AuthServiceDep) -> AuthResponse:
+    return await service.authenticate_provider_user(body)
+
+
+@router.post("/oauth/login", response_model=AuthResponse)
+async def oauth_existing_login(body: ProviderAuth, service: AuthServiceDep) -> AuthResponse:
+    return await service.authenticate_existing_provider_user(body)
+
+
+@router.post("/refresh", response_model=AuthResponse)
+async def refresh(body: RefreshRequest, service: AuthServiceDep) -> AuthResponse:
+    return await service.refresh_tokens(body.refresh_token)
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout(payload: TokenPayload, service: AuthServiceDep) -> dict:
+    await service.logout(int(payload["sub"]))
+    return {"message": "Sesión cerrada."}

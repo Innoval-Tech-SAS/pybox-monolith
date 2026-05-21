@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface GoogleCredentialResponse {
   credential: string;
@@ -6,7 +6,7 @@ interface GoogleCredentialResponse {
 
 declare global {
   interface Window {
-    google: {
+    google?: {
       accounts: {
         id: {
           initialize: (config: {
@@ -22,35 +22,81 @@ declare global {
 }
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
+const GOOGLE_SCRIPT_SRC = "https://accounts.google.com/gsi/client";
 
-export const useGoogleAuth = () => {
-  const callbackRef = useRef<((token: string) => void) | null>(null);
-  const initialized = useRef(false);
+let activeCallback: ((token: string) => void) | null = null;
+let scriptPromise: Promise<void> | null = null;
+let initializedClientId: string | null = null;
 
-  useEffect(() => {
-    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-    if (existing) return;
+const initializeGoogle = () => {
+  if (!window.google?.accounts.id || initializedClientId === CLIENT_ID) return;
+
+  window.google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback: (res) => activeCallback?.(res.credential),
+  });
+  initializedClientId = CLIENT_ID;
+};
+
+const loadGoogleScript = () => {
+  if (window.google?.accounts.id) {
+    initializeGoogle();
+    return Promise.resolve();
+  }
+
+  if (scriptPromise) return scriptPromise;
+
+  scriptPromise = new Promise((resolve, reject) => {
+    const finish = () => {
+      initializeGoogle();
+      resolve();
+    };
+
+    const existing = document.querySelector<HTMLScriptElement>(
+      `script[src="${GOOGLE_SCRIPT_SRC}"]`,
+    );
+    if (existing) {
+      existing.addEventListener("load", finish, { once: true });
+      existing.addEventListener("error", () => reject(new Error("No se pudo cargar Google.")), {
+        once: true,
+      });
+      return;
+    }
 
     const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
+    script.src = GOOGLE_SCRIPT_SRC;
     script.async = true;
     script.defer = true;
-    script.onload = () => {
-      window.google.accounts.id.initialize({
-        client_id: CLIENT_ID,
-        callback: (res) => callbackRef.current?.(res.credential),
-      });
-      initialized.current = true;
-    };
+    script.onload = finish;
+    script.onerror = () => reject(new Error("No se pudo cargar Google."));
     document.head.appendChild(script);
+  });
+
+  return scriptPromise;
+};
+
+export const useGoogleAuth = () => {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    loadGoogleScript()
+      .then(() => {
+        if (mounted) setReady(true);
+      })
+      .catch(() => {
+        if (mounted) setReady(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const signIn = useCallback((onToken: (token: string) => void) => {
-    callbackRef.current = onToken;
-    if (initialized.current) {
-      window.google.accounts.id.prompt();
-    }
+    activeCallback = onToken;
+    loadGoogleScript().then(() => window.google?.accounts.id.prompt());
   }, []);
 
-  return { signIn };
+  return { signIn, ready };
 };

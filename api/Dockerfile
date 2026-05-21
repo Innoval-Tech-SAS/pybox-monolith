@@ -3,6 +3,7 @@ FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app/src \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
@@ -19,4 +20,4 @@ COPY src ./src
 
 EXPOSE 5000
 
-CMD ["flask", "--app", "src.main:app", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]

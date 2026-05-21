@@ -1,34 +1,36 @@
-from flask import Flask, jsonify
-from flask.typing import ResponseReturnValue
-from werkzeug.exceptions import HTTPException
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from contacts.utils.contact_exceptions import DuplicateContactError
 
 
-def register_error_handlers(app: Flask) -> None:
+def register_error_handlers(app: FastAPI) -> None:
 
-    @app.errorhandler(DuplicateContactError)
-    def handle_duplicate_contact(error: DuplicateContactError) -> ResponseReturnValue:
-        return (
-            jsonify(
-                {
-                    "error": str(error),
-                    "suggestion": error.suggestion,
-                }
-            ),
-            409,
+    @app.exception_handler(DuplicateContactError)
+    async def handle_duplicate_contact(
+        _request: Request, error: DuplicateContactError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=409,
+            content={"error": str(error), "suggestion": error.suggestion},
         )
 
-    @app.errorhandler(ValueError)
-    @app.errorhandler(RuntimeError)
-    def handle_bad_request(error: Exception) -> ResponseReturnValue:
-        return jsonify({"error": str(error)}), 400
+    @app.exception_handler(ValueError)
+    async def handle_value_error(
+        _request: Request, error: ValueError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=400, content={"error": str(error)})
 
-    @app.errorhandler(HTTPException)
-    def handle_http_exception(error: HTTPException) -> ResponseReturnValue:
-        status_code = error.code or 500
-        return jsonify({"error": error.description}), status_code
+    @app.exception_handler(RuntimeError)
+    async def handle_runtime_error(
+        _request: Request, error: RuntimeError
+    ) -> JSONResponse:
+        return JSONResponse(status_code=400, content={"error": str(error)})
 
-    @app.errorhandler(Exception)
-    def handle_unexpected_error(error: Exception) -> ResponseReturnValue:
-        return jsonify({"error": "Error interno del servidor"}), 500
+    @app.exception_handler(Exception)
+    async def handle_unexpected_error(
+        _request: Request, _error: Exception
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=500, content={"error": "Error interno del servidor"}
+        )

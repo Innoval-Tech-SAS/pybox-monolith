@@ -1,43 +1,46 @@
-from flask import Blueprint, request, jsonify
+from typing import Annotated
 
-from auth.decorators import login_required
-from ..services.contact_services import ContactServices
+from fastapi import Depends, HTTPException, UploadFile, status
+from config.api_router import APIRouter
+from sqlalchemy.ext.asyncio import AsyncSession
 
-contact_bp = Blueprint("contact", __name__)
+from auth.dependencies import TokenPayload
+from contacts.services.contact_services import ContactServices
+from database.database import get_main_session
 
-service = ContactServices()
+router = APIRouter(prefix="/contacts", tags=["contacts"])
+
+MainSession = Annotated[AsyncSession, Depends(get_main_session)]
+
+_ALLOWED_EXTENSIONS = {"csv", "xlsx"}
 
 
-@contact_bp.route("/upload-file", methods=["POST"])
-@login_required
-def upload_file():
-
-    if "file" not in request.files:
-        return jsonify({"error": "El archivo no fue seleccionado"}), 400
-
-    file = request.files["file"]
-    filename = file.filename
+@router.post("/upload-file", status_code=status.HTTP_200_OK)
+async def upload_file(
+    file: UploadFile,
+    _: TokenPayload,
+    session: MainSession,
+) -> dict:
+    filename = file.filename or ""
 
     if not filename:
-        return jsonify({"error": "El nombre del archivo es inválido"}), 400
-
-    if not filename.endswith(".csv") and not filename.endswith(".xlsx"):
-        return (
-            jsonify(
-                {"error": "Archivo no permitido. Solo se aceptan archivos .csv o .xlsx"}
-            ),
-            400,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El nombre del archivo es inválido",
         )
 
-    file_type = filename.split(".")[-1]
-    resumen = service.process_file(file, file_type)
+    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if extension not in _ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Archivo no permitido. Solo se aceptan archivos .csv o .xlsx",
+        )
 
-    return (
-        jsonify(
-            {
-                "message": f"Archivo '{file.filename}' recibido exitosamente!",
-                "resumen": resumen,
-            }
-        ),
-        200,
-    )
+    file_bytes = await file.read()
+    service = ContactServices(session)
+    resumen = await service.process_file(file_bytes, extension)
+
+    return {
+        "message": f"Archivo '{filename}' recibido exitosamente!",
+        "resumen": resumen,
+    }

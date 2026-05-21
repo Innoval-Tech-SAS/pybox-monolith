@@ -4,8 +4,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   phone_number: string;
-  document_type: string;
-  document_number: string;
+  nationality: string;
 }
 
 export interface RegisterResponse {

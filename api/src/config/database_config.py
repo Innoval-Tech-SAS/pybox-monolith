@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from tools.config_tools import get_or_throw
-
 from dotenv import load_dotenv
+
+from tools.config_tools import get_or_throw
 
 load_dotenv()
 
