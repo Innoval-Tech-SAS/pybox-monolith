@@ -1,3 +1,4 @@
+import { Navigate } from "react-router";
 import { AuthPage } from "./auth/pages/auth-page";
 import { SignUpPage } from "./auth/pages/sign-up-page";
 import { HomePage } from "./home/pages/home-page";
@@ -20,6 +21,10 @@ export const noAuthRouter = [
 ];
 
 export const authRouter = [
+  {
+    path: "/",
+    element: <Navigate to="/dashboard" replace />,
+  },
   {
     path: "/dashboard",
     element: <HomePage />,

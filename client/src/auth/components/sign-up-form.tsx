@@ -1,20 +1,18 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { jwtDecode } from "jwt-decode";
 import { Input } from "../../ui/components/inputs/input";
-import { Select } from "../../ui/components/inputs/select";
+import { CountrySelect } from "../../ui/components/inputs/country-select";
 import { Label } from "../../ui/components/inputs/label";
 import { EyeCloseIcon, EyeIcon } from "../../ui/icons";
 import { SuccessModal } from "../../ui/components/modal/success-modal";
 import { ErrorModal } from "../../ui/components/modal/error-modal";
 import { useModal } from "../../hooks/use-modal";
 import { useRegister } from "../../hooks/use-register";
-import { useGoogleAuth } from "../../hooks/use-google-auth";
 import { useOAuthRegister } from "../../hooks/use-oauth-register";
 import { useNationalities } from "../../hooks/use-nationalities";
 import { GooglePayload } from "../../types/auth/google";
 import { MANUAL_INITIAL } from "../../constants/auth/sign-up-form";
-import { getFlagEmoji } from "../../utils/flag-emoji";
 import { SignUpFormProps } from "../../types/props/sign-up-form-props";
 import { GoogleButton } from "./google-button";
 
@@ -36,7 +34,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     loading: loadingOAuth,
     error: errorOAuth,
   } = useOAuthRegister();
-  const { signIn } = useGoogleAuth();
   const { nationalities, loading: loadingNationalities } = useNationalities();
   const navigate = useNavigate();
   const successModal = useModal();
@@ -46,29 +43,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
   const loading = loadingManual || loadingOAuth;
   const error = errorManual || errorOAuth;
-
-  const nationalityOptions = useMemo(
-    () =>
-      nationalities.map((n) => ({
-        value: n.code,
-        label: `${getFlagEmoji(n.code)} ${n.name}`,
-      })),
-    [nationalities],
-  );
-
-  const prefixOptions = useMemo(() => {
-    const seen = new Set<string>();
-    return nationalities
-      .filter((n) => {
-        if (seen.has(n.phonePrefix)) return false;
-        seen.add(n.phonePrefix);
-        return true;
-      })
-      .map((n) => ({
-        value: n.phonePrefix,
-        label: `${getFlagEmoji(n.code)} ${n.phonePrefix}`,
-      }));
-  }, [nationalities]);
 
   useEffect(() => {
     if (!successModal.isOpen) return;
@@ -80,25 +54,20 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     return () => clearTimeout(timer);
   }, [successModal.isOpen, countdown, navigate]);
 
-  const handleGoogleClick = () => {
-    signIn(async (token) => {
-      try {
-        const payload = jwtDecode<GooglePayload>(token);
-        const endpoint = mode === "admin" ? "/auth/oauth" : "/auth/oauth/user";
-        await oauthRegister({ provider: "GOOGLE", token }, endpoint);
-        sessionStorage.setItem(
-          "user",
-          JSON.stringify({ email: payload.email }),
-        );
-        setCountdown(10);
-        successModal.openModal();
-      } catch (err) {
-        setErrorMessage(
-          err instanceof Error ? err.message : "Error al registrar con Google",
-        );
-        errorModal.openModal();
-      }
-    });
+  const handleGoogleToken = async (token: string) => {
+    try {
+      const payload = jwtDecode<GooglePayload>(token);
+      const endpoint = mode === "admin" ? "/auth/oauth" : "/auth/oauth/user";
+      await oauthRegister({ provider: "GOOGLE", token }, endpoint);
+      sessionStorage.setItem("user", JSON.stringify({ email: payload.email }));
+      setCountdown(10);
+      successModal.openModal();
+    } catch (err) {
+      setErrorMessage(
+        err instanceof Error ? err.message : "Error al registrar con Google",
+      );
+      errorModal.openModal();
+    }
   };
 
   const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +109,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {mode === "admin"
-              ? "Crea la cuenta de tu organización"
+              ? "Crea la cuenta de tu empresa"
               : "Crea tu cuenta personal"}
           </p>
         </div>
@@ -231,8 +200,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               <Label className="text-gray-500">
                 Nacionalidad <span className="text-error-500">*</span>
               </Label>
-              <Select
-                options={nationalityOptions}
+              <CountrySelect
+                mode="NAME"
+                nationalities={nationalities}
                 placeholder={
                   loadingNationalities
                     ? "Cargando..."
@@ -251,12 +221,15 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               </Label>
               <div className="flex gap-2">
                 <div className="w-28 shrink-0">
-                  <Select
-                    options={prefixOptions}
+                  <CountrySelect
+                    mode="PHONE"
+                    valueKey="phonePrefix"
+                    nationalities={nationalities}
                     placeholder="+"
                     value={phonePrefix}
                     onChange={setPhonePrefix}
                     className="pr-8"
+                    disabled={loadingNationalities}
                   />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -295,7 +268,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         </div>
 
         <GoogleButton
-          onClick={handleGoogleClick}
+          onToken={handleGoogleToken}
           text={
             loadingOAuth
               ? "Registrando con Google..."

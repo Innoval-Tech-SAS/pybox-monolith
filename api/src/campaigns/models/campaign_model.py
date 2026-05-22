@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
-    func,
     UUID,
     Text,
     Enum,
@@ -10,15 +9,14 @@ from sqlalchemy import (
     Integer,
     Boolean,
     DateTime,
-    TIMESTAMP,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from database.database import Base
+from base.audit_model import AuditModel
 from campaigns.enums.campaign_enums import CampaignStatus
 
 
-class CampaignModel(Base):
+class CampaignModel(AuditModel):
 
     __tablename__ = "campanias"
 
@@ -54,22 +52,8 @@ class CampaignModel(Base):
         Integer, nullable=False, default=0, name="total_destinatarios"
     )
 
-    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, name="programado_para")
+    scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, name="programado_para")
 
     timezone: Mapped[str | None] = mapped_column(String(50), default="UTC", name="zona_horaria")
 
     fallback: Mapped[bool | None] = mapped_column(Boolean, default=True, name="fallback")
-
-    created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-        name="fecha_creacion",
-    )
-
-    updated_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP(timezone=True),
-        nullable=True,
-        onupdate=func.now(),
-        name="fecha_actualizacion",
-    )

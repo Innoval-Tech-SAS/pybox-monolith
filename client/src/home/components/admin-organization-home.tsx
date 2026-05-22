@@ -3,14 +3,14 @@ import { HomeShell } from "./home-shell";
 
 export const AdminOrganizationHome: React.FC = () => (
   <HomeShell
-    eyebrow="Home de organización"
-    title="Operación de tu organización"
+    eyebrow="Home de entidad"
+    title="Operación de tu entidad"
     description="Vista principal para administrar el estado operativo, el equipo y las acciones pendientes de la entidad activa."
     metrics={[
       {
         label: "Estado",
         value: "Activo",
-        helper: "La organización está lista para operar.",
+        helper: "La entidad está lista para operar.",
         tone: "success",
       },
       {
@@ -29,13 +29,13 @@ export const AdminOrganizationHome: React.FC = () => (
     actions={[
       {
         title: "Usuarios y permisos",
-        description: "Administra accesos para miembros de la organización.",
+        description: "Administra accesos para miembros de la entidad.",
         icon: <GroupIcon className="size-5" />,
         tone: "primary",
       },
       {
         title: "Perfil de entidad",
-        description: "Revisa los datos fiscales y documentos de la organización.",
+        description: "Revisa los datos fiscales y documentos de la entidad.",
         icon: <BoxCubeIcon className="size-5" />,
         tone: "info",
       },

@@ -1,11 +1,10 @@
 import uuid
-from datetime import datetime
 
-from sqlalchemy import String, DateTime, func
+from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database.database import Base
+from base.audit_model import AuditModel
 from countries.enums.country_enums import (
     Nationality,
     OrgFiscalDocumentType,
@@ -13,7 +12,7 @@ from countries.enums.country_enums import (
 )
 
 
-class OrganizationModel(Base):
+class OrganizationModel(AuditModel):
     __tablename__ = "entidades"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -43,11 +42,6 @@ class OrganizationModel(Base):
     )
     mercantile_document_file: Mapped[str | None] = mapped_column(
         String(500), nullable=True, name="archivo_documento_mercantil"
-    )
-
-    created_at: Mapped[datetime | None] = mapped_column(DateTime, name="fecha_creacion", default=func.now())
-    updated_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True, name="fecha_actualizacion", onupdate=func.now()
     )
 
     memberships = relationship(

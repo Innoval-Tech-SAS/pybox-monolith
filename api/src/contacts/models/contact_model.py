@@ -1,14 +1,13 @@
 import uuid
-from datetime import datetime
 
-from sqlalchemy import String, Boolean, func
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMP
+from sqlalchemy import String, Boolean
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from database.database import Base
+from base.audit_model import AuditModel
 
 
-class ContactModel(Base):
+class ContactModel(AuditModel):
 
     __tablename__ = "contactos"
 
@@ -37,11 +36,3 @@ class ContactModel(Base):
     unsubscribed: Mapped[bool | None] = mapped_column(Boolean, name="desuscrito", default=False)
 
     extra_info: Mapped[dict | None] = mapped_column(JSONB, index=True, name="informacion_adicional", nullable=True)
-
-    created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, name="fecha_creacion", nullable=False, server_default=func.now()
-    )
-
-    updated_at: Mapped[datetime | None] = mapped_column(
-        TIMESTAMP, name="fecha_actualizacion", nullable=True, onupdate=func.now()
-    )

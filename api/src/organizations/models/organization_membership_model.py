@@ -1,14 +1,13 @@
 import uuid
-from datetime import datetime
 
-from sqlalchemy import Integer, DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database.database import Base
+from base.audit_model import AuditModel
 
 
-class OrganizationMembershipModel(Base):
+class OrganizationMembershipModel(AuditModel):
     __tablename__ = "membresias_organizacion"
     __table_args__ = (
         UniqueConstraint(
@@ -23,7 +22,6 @@ class OrganizationMembershipModel(Base):
     organization_id: Mapped[uuid.UUID] = mapped_column(
         PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, name="id_entidad"
     )
-    created_at: Mapped[datetime | None] = mapped_column(DateTime, name="fecha_creacion", default=func.now())
     created_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("usuarios.id"), name="creado_por", nullable=False
     )

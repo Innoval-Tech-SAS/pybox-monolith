@@ -4,7 +4,7 @@ export const REGISTER_PANEL = {
   admin: {
     badge: "Gestión empresarial",
     title: "Registra tu",
-    highlight: "organización",
+    highlight: "tu empresa",
     description:
       "Configura tu empresa y gestiona tu equipo desde un solo lugar. Control total, resultados profesionales.",
   },

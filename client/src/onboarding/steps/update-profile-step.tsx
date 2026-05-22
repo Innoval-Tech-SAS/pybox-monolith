@@ -43,11 +43,11 @@ export const UpdateProfileStep: React.FC<Props> = ({ onDone }) => {
           <CountrySelect
             mode="NAME"
             required
+            nationalities={nationalities}
+            placeholder={loadingNat ? "Cargando países..." : "Selecciona tu país"}
             value={nationality}
             onChange={(v) => { setNationality(v); setDocumentType(""); }}
-            nationalities={nationalities}
             disabled={loadingNat}
-            placeholder="Selecciona tu país"
           />
         </div>
 

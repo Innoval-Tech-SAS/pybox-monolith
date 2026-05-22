@@ -1,0 +1,33 @@
+import uuid
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from base.soft_delete_repository_base import SoftDeleteRepositoryBase
+from payment_methods.models.payment_method_model import PaymentMethodModel
+
+
+class PaymentMethodRepository(SoftDeleteRepositoryBase[PaymentMethodModel]):
+    model_class = PaymentMethodModel
+
+    def __init__(self, session: AsyncSession):
+        super().__init__(session)
+
+    async def get_by_organization_id(self, organization_id: uuid.UUID) -> list[PaymentMethodModel]:
+        result = await self.session.execute(
+            select(PaymentMethodModel).where(
+                PaymentMethodModel.organization_id == organization_id,
+                PaymentMethodModel.deleted_at.is_(None),
+            )
+        )
+        return list(result.scalars().all())
+
+    async def get_active_by_organization_id(self, organization_id: uuid.UUID) -> list[PaymentMethodModel]:
+        result = await self.session.execute(
+            select(PaymentMethodModel).where(
+                PaymentMethodModel.organization_id == organization_id,
+                PaymentMethodModel.is_active.is_(True),
+                PaymentMethodModel.deleted_at.is_(None),
+            )
+        )
+        return list(result.scalars().all())

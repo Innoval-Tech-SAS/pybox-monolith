@@ -5,7 +5,7 @@ export const CustomerServiceHome: React.FC = () => (
   <HomeShell
     eyebrow="Home de soporte"
     title="Atención y seguimiento"
-    description="Vista enfocada en solicitudes, verificación de casos y continuidad de servicio para usuarios y organizaciones."
+    description="Vista enfocada en solicitudes, verificación de casos y continuidad de servicio para usuarios y entidades."
     metrics={[
       {
         label: "Casos",
@@ -35,7 +35,7 @@ export const CustomerServiceHome: React.FC = () => (
       },
       {
         title: "Conversaciones",
-        description: "Continúa el seguimiento con usuarios y organizaciones.",
+        description: "Continúa el seguimiento con usuarios y entidades.",
         icon: <ChatIcon className="size-5" />,
         tone: "info",
       },

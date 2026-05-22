@@ -5,7 +5,7 @@ export const OrganizationUserHome: React.FC = () => (
   <HomeShell
     eyebrow="Home de usuario interno"
     title="Trabajo asignado"
-    description="Vista para ejecutar tareas dentro de una organización, con acceso limitado a las funciones habilitadas."
+    description="Vista para ejecutar tareas dentro de una entidad, con acceso limitado a las funciones habilitadas."
     metrics={[
       {
         label: "Asignaciones",
@@ -29,7 +29,7 @@ export const OrganizationUserHome: React.FC = () => (
     actions={[
       {
         title: "Mis tareas",
-        description: "Continúa con actividades pendientes de tu organización.",
+        description: "Continúa con actividades pendientes de tu entidad.",
         icon: <PageIcon className="size-5" />,
         tone: "primary",
       },

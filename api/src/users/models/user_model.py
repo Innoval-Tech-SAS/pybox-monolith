@@ -1,16 +1,14 @@
-from datetime import datetime
-
-from sqlalchemy import Boolean, Integer, String, DateTime, UniqueConstraint, func
+from sqlalchemy import Boolean, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database.database import Base
+from base.audit_model import AuditModel
 from auth.enums.auth_enums import AuthProvider
 from organizations.models.organization_membership_model import OrganizationMembershipModel
 from countries.enums.country_enums import Nationality, UserDocumentType
 
 
-class UserModel(Base):
+class UserModel(AuditModel):
     __tablename__ = "usuarios"
     __table_args__ = (
         UniqueConstraint(
@@ -41,8 +39,6 @@ class UserModel(Base):
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="mfa_habilitado")
     is_active_sessions: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="sesion_activa")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="activo")
-    created_at: Mapped[datetime | None] = mapped_column(DateTime, name="fecha_creacion", default=func.now())
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, name="fecha_actualizacion", onupdate=func.now())
 
     memberships: Mapped[list[OrganizationMembershipModel]] = relationship(
         OrganizationMembershipModel,

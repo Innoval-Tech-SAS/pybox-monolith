@@ -1,10 +1,10 @@
 from sqlalchemy import Boolean, Integer, SmallInteger, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from database.database import Base
+from base.audit_model import AuditModel
 
 
-class PermissionModel(Base):
+class PermissionModel(AuditModel):
     __tablename__ = "permisos"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")

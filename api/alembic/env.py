@@ -24,6 +24,20 @@ import users.models.user_model  # noqa: E402, F401
 import users.models.permission_model  # noqa: E402, F401
 import users.models.role_assignment_model  # noqa: E402, F401
 import users.models.permission_assignment_model  # noqa: E402, F401
+import countries.models.country_model  # noqa: E402, F401
+import portfolios.models.portfolio_model  # noqa: E402, F401
+import portfolios.models.portfolio_user_access_model  # noqa: E402, F401
+import portfolios.models.portfolio_daily_counter_config_model  # noqa: E402, F401
+import debtors.models.debtor_model  # noqa: E402, F401
+import debtors.models.address_model  # noqa: E402, F401
+import debtors.models.segment_model  # noqa: E402, F401
+import credits.models.credit_model  # noqa: E402, F401
+import credits.models.credit_adjustment_model  # noqa: E402, F401
+import credits.models.uvr_quote_model  # noqa: E402, F401
+import payments.models.payment_model  # noqa: E402, F401
+import payment_methods.models.payment_method_model  # noqa: E402, F401
+import contact_methods.models.contact_method_model  # noqa: E402, F401
+import reports.models.report_model  # noqa: E402, F401
 
 config = context.config
 

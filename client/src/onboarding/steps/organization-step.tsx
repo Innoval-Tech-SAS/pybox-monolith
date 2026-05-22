@@ -61,7 +61,7 @@ export const OrganizationStep: React.FC<Props> = ({ onDone }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">Datos de la organización</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">Datos de la empresa</h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Completa la información de tu empresa para activar la cuenta.
         </p>
@@ -70,7 +70,7 @@ export const OrganizationStep: React.FC<Props> = ({ onDone }) => {
       <div className="space-y-4">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Nombre de la organización
+            Nombre de la empresa
           </label>
           <Input
             placeholder="Ej. Mi Empresa S.A.S."

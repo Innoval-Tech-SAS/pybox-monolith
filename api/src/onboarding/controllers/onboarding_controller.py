@@ -72,7 +72,7 @@ async def update_profile(
 
 
 @router.post("/organization", status_code=status.HTTP_204_NO_CONTENT)
-async def update_organization(
+async def create_first_org(
     user: CurrentUser,
     scope: CurrentScope,
     service: OnboardingServiceDep,
@@ -94,4 +94,4 @@ async def update_organization(
             detail="El campo 'data' debe ser un JSON válido",
         )
 
-    await service.save_organization(user, parsed, fiscal_document_file, mercantile_document_file)
+    await service.create_first_org(user, parsed, fiscal_document_file, mercantile_document_file)

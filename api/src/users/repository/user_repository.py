@@ -2,12 +2,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.enums.auth_enums import AuthProvider
-from base.repository_base import RepositoryBase
+from base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from countries.enums.country_enums import UserDocumentType
 from ..models.user_model import UserModel
 
 
-class UserRepository(RepositoryBase[UserModel]):
+class UserRepository(SoftDeleteRepositoryBase[UserModel]):
     model_class = UserModel
 
     def __init__(self, session: AsyncSession):
@@ -15,7 +15,10 @@ class UserRepository(RepositoryBase[UserModel]):
 
     async def get_by_email(self, email: str) -> UserModel | None:
         result = await self.session.execute(
-            select(UserModel).where(UserModel.email == email)
+            select(UserModel).where(
+                UserModel.email == email,
+                UserModel.deleted_at.is_(None),
+            )
         )
         return result.scalars().first()
 
@@ -28,12 +31,16 @@ class UserRepository(RepositoryBase[UserModel]):
             select(UserModel)
             .where(UserModel.auth_provider == auth_provider)
             .where(UserModel.provider_user_id == provider_user_id)
+            .where(UserModel.deleted_at.is_(None))
         )
         return result.scalars().first()
 
     async def get_by_phone_number(self, phone_number: str) -> UserModel | None:
         result = await self.session.execute(
-            select(UserModel).where(UserModel.phone_number == phone_number)
+            select(UserModel).where(
+                UserModel.phone_number == phone_number,
+                UserModel.deleted_at.is_(None),
+            )
         )
         return result.scalars().first()
 
@@ -46,5 +53,6 @@ class UserRepository(RepositoryBase[UserModel]):
             select(UserModel)
             .where(UserModel.document_type == document_type)
             .where(UserModel.document_number == document_number)
+            .where(UserModel.deleted_at.is_(None))
         )
         return result.scalars().first()

@@ -43,6 +43,10 @@ export const useSendRequest = () => {
             navigate("/admin/sign-in", { replace: true });
             return null;
           }
+        } else if (message === "Usuario no encontrado") {
+          sessionStorage.clear();
+          navigate("/admin/sign-in", { replace: true });
+          return null;
         } else {
           toastError("Error", message);
           throw new ApiError(message, 401);

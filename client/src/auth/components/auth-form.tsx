@@ -4,7 +4,6 @@ import { jwtDecode } from "jwt-decode";
 import { Input } from "../../ui/components/inputs/input";
 import { Label } from "../../ui/components/inputs/label";
 import { EyeCloseIcon, EyeIcon } from "../../ui/icons";
-import { useGoogleAuth } from "../../hooks/use-google-auth";
 import { useOAuthRegister } from "../../hooks/use-oauth-register";
 import { GooglePayload } from "../../types/auth/google";
 import { GoogleButton } from "./google-button";
@@ -18,7 +17,6 @@ export const AuthForm: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { signIn } = useGoogleAuth();
   const { oauthRegister, loading: loadingGoogle } = useOAuthRegister();
 
   const isLoading = loading || loadingGoogle;
@@ -53,26 +51,24 @@ export const AuthForm: React.FC = () => {
     }
   };
 
-  const handleGoogleClick = () => {
+  const handleGoogleToken = async (token: string) => {
     setError(null);
-    signIn(async (token) => {
-      let payload: GooglePayload;
-      try {
-        payload = jwtDecode<GooglePayload>(token);
-      } catch {
-        setError("No se pudo leer la cuenta de Google seleccionada.");
-        return;
-      }
+    let payload: GooglePayload;
+    try {
+      payload = jwtDecode<GooglePayload>(token);
+    } catch {
+      setError("No se pudo leer la cuenta de Google seleccionada.");
+      return;
+    }
 
-      try {
-        await oauthRegister({ provider: "GOOGLE", token }, "/auth/oauth/login");
-        sessionStorage.setItem("user", JSON.stringify({ email: payload.email }));
-        navigate("/dashboard", { replace: true });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Error al iniciar sesión con Google.";
-        setError(message);
-      }
-    });
+    try {
+      await oauthRegister({ provider: "GOOGLE", token }, "/auth/oauth/login");
+      sessionStorage.setItem("user", JSON.stringify({ email: payload.email }));
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error al iniciar sesión con Google.";
+      setError(message);
+    }
   };
 
   return (
@@ -152,7 +148,7 @@ export const AuthForm: React.FC = () => {
             </div>
 
             <GoogleButton
-              onClick={handleGoogleClick}
+              onToken={handleGoogleToken}
               text={loadingGoogle ? "Iniciando con Google..." : "Iniciar Sesión con Google"}
               disabled={isLoading}
             />

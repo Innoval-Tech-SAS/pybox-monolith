@@ -1,14 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Input } from "../../ui/components/inputs/input";
-import { Select } from "../../ui/components/inputs/select";
+import { CountrySelect } from "../../ui/components/inputs/country-select";
 import { Label } from "../../ui/components/inputs/label";
 import { SuccessModal } from "../../ui/components/modal/success-modal";
 import { ErrorModal } from "../../ui/components/modal/error-modal";
 import { useModal } from "../../hooks/use-modal";
 import { useOAuthRegister } from "../../hooks/use-oauth-register";
 import { useNationalities } from "../../hooks/use-nationalities";
-import { getFlagEmoji } from "../../utils/flag-emoji";
 import { CompleteProfileFormProps } from "../../types/props/complete-profile-form-props";
 
 export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token, email }) => {
@@ -22,22 +21,6 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
   const navigate = useNavigate();
   const successModal = useModal();
   const errorModal = useModal();
-
-  const nationalityOptions = useMemo(
-    () => nationalities.map((n) => ({ value: n.code, label: `${getFlagEmoji(n.code)} ${n.name}` })),
-    [nationalities]
-  );
-
-  const prefixOptions = useMemo(() => {
-    const seen = new Set<string>();
-    return nationalities
-      .filter((n) => {
-        if (seen.has(n.phonePrefix)) return false;
-        seen.add(n.phonePrefix);
-        return true;
-      })
-      .map((n) => ({ value: n.phonePrefix, label: `${getFlagEmoji(n.code)} ${n.phonePrefix}` }));
-  }, [nationalities]);
 
   const handleNationalityChange = (code: string) => {
     setNationality(code);
@@ -69,8 +52,9 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
             <Label className="text-gray-500">
               Nacionalidad <span className="text-error-500">*</span>
             </Label>
-            <Select
-              options={nationalityOptions}
+            <CountrySelect
+              mode="NAME"
+              nationalities={nationalities}
               placeholder={loadingNationalities ? "Cargando..." : "Selecciona tu nacionalidad"}
               value={nationality}
               onChange={handleNationalityChange}
@@ -84,12 +68,15 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
             </Label>
             <div className="flex gap-2">
               <div className="w-28 shrink-0">
-                <Select
-                  options={prefixOptions}
+                <CountrySelect
+                  mode="PHONE"
+                  valueKey="phonePrefix"
+                  nationalities={nationalities}
                   placeholder="+"
                   value={phonePrefix}
                   onChange={setPhonePrefix}
                   className="pr-8"
+                  disabled={loadingNationalities}
                 />
               </div>
               <div className="flex-1 min-w-0">

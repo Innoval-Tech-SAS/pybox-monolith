@@ -4,11 +4,11 @@ from sqlalchemy import Boolean, Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from database.database import Base
+from base.audit_model import AuditModel
 from users.enums.user_enums import PermissionEffect, UserScope
 
 
-class PermissionAssignmentModel(Base):
+class PermissionAssignmentModel(AuditModel):
     __tablename__ = "permisos_asignados"
     __table_args__ = (
         UniqueConstraint(

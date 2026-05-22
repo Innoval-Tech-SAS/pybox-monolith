@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import "./index.css";
+import "flag-icons/css/flag-icons.min.css";
 import { App } from "./app.tsx";
 import { AppWrapper } from "./ui/pages/app-wrapper";
 import { ThemeProvider } from "./ui/contexts/providers/theme-provider";

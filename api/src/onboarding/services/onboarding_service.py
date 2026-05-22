@@ -21,6 +21,7 @@ from organizations.repository.organization_membership_repository import Organiza
 from tools.file_tools import save_upload_file
 from users.models.user_model import UserModel
 from users.enums.user_enums import UserScope
+from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_repository import UserRepository
 
 
@@ -30,6 +31,7 @@ class OnboardingService:
         self._user_repo = UserRepository(session)
         self._org_repo = OrganizationRepository(session)
         self._membership_repo = OrganizationMembershipRepository(session)
+        self._role_repo = RoleAssignmentRepository(session)
 
     def get_status(
         self,
@@ -94,7 +96,7 @@ class OnboardingService:
         user.nationality = data.nationality
         await self._user_repo.update(user)
 
-    async def save_organization(
+    async def create_first_org(
         self,
         user: UserModel,
         data: OrganizationOnboardingSchema,
@@ -118,4 +120,11 @@ class OnboardingService:
         org.fiscal_document_file = fiscal_path
         org.mercantile_document_type = ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY[data.country]
         org.mercantile_document_file = mercantile_path
-        return await self._org_repo.update(org)
+        updated_org = await self._org_repo.update(org)
+
+        pending_role = await self._role_repo.get_pending_org_admin(cast(int, user.id))
+        if pending_role is not None:
+            pending_role.organization_id = updated_org.id
+            await self._role_repo.update(pending_role)
+
+        return updated_org

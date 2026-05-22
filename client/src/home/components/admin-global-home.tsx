@@ -16,7 +16,7 @@ export const AdminGlobalHome: React.FC = () => (
       {
         label: "Entidades",
         value: "Monitoreo",
-        helper: "Revisa actividad y estado operativo por organización.",
+        helper: "Revisa actividad y estado operativo por entidad.",
         tone: "info",
       },
       {
@@ -29,7 +29,7 @@ export const AdminGlobalHome: React.FC = () => (
     actions={[
       {
         title: "Mapa de entidades",
-        description: "Consulta organizaciones y su estado de habilitación.",
+        description: "Consulta entidades y su estado de habilitación.",
         icon: <GridIcon className="size-5" />,
         tone: "primary",
       },

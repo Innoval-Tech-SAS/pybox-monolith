@@ -1,0 +1,39 @@
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, UniqueConstraint
+from sqlalchemy import DateTime
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
+from sqlalchemy.orm import Mapped, mapped_column
+
+from base.audit_model import AuditModel
+
+
+class PortfolioUserAccessModel(AuditModel):
+    __tablename__ = "accesos_usuario_portafolio"
+    __table_args__ = (
+        UniqueConstraint("id_usuario", "id_portafolio", name="uq_acceso_usuario_portafolio"),
+        Index("ix_acl_org_user_active", "id_organizacion", "id_usuario", "activo"),
+        Index("ix_acl_portfolio_user_active", "id_portafolio", "id_usuario", "activo"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("usuarios.id"), nullable=False, index=True, name="id_usuario"
+    )
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, index=True, name="id_organizacion"
+    )
+    portfolio_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("portafolios.id", ondelete="CASCADE"), nullable=False, index=True, name="id_portafolio"
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="activo")
+    granted_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("usuarios.id"), nullable=True, name="otorgado_por"
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, name="revocado_en"
+    )
+    granted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.utcnow, name="otorgado_en"
+    )

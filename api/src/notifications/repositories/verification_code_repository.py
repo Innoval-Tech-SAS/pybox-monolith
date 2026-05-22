@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -49,11 +49,11 @@ class VerificationCodeRepository(RepositoryBase[VerificationCodeModel]):
             raise CodeNotFoundException("Código de verificación no encontrado")
         if record.consumed_at is not None:
             raise CodeAlreadyUsedException("El código de verificación ya fue utilizado")
-        if record.expires_at <= datetime.now():
+        if record.expires_at <= datetime.now(timezone.utc):
             raise CodeExpiredException("El código de verificación ha expirado")
 
         return record
 
     async def mark_consumed(self, record: VerificationCodeModel) -> VerificationCodeModel:
-        record.consumed_at = datetime.now()
+        record.consumed_at = datetime.now(timezone.utc)
         return await self.update(record)

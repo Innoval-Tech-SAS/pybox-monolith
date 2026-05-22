@@ -15,6 +15,15 @@ declare global {
           }) => void;
           prompt: () => void;
           cancel: () => void;
+          renderButton: (
+            container: HTMLElement,
+            config: {
+              type?: "standard" | "icon";
+              theme?: "outline" | "filled_blue" | "filled_black";
+              size?: "large" | "medium" | "small";
+              width?: number;
+            },
+          ) => void;
         };
       };
     };
@@ -93,10 +102,20 @@ export const useGoogleAuth = () => {
     };
   }, []);
 
-  const signIn = useCallback((onToken: (token: string) => void) => {
-    activeCallback = onToken;
-    loadGoogleScript().then(() => window.google?.accounts.id.prompt());
-  }, []);
+  const renderButtonToContainer = useCallback(
+    (container: HTMLElement, width: number, onToken: (token: string) => void) => {
+      activeCallback = onToken;
+      loadGoogleScript().then(() => {
+        window.google?.accounts.id.renderButton(container, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          width: width || 300,
+        });
+      });
+    },
+    [],
+  );
 
-  return { signIn, ready };
+  return { renderButtonToContainer, ready };
 };

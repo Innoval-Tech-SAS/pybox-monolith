@@ -27,14 +27,14 @@ const STEP_LABELS: Record<Step, string> = {
   email: "Verificar email",
   phone: "Verificar teléfono",
   profile: "Datos del documento",
-  organization: "Datos de la organización",
+  organization: "Datos de la empresa",
 };
 
 const STEP_DESCRIPTIONS: Record<Step, string> = {
   email: "Confirma que tienes acceso a tu correo electrónico.",
   phone: "Confirma que tienes acceso a tu número de teléfono.",
   profile: "Completa tu información de identificación.",
-  organization: "Registra los datos legales de tu organización.",
+  organization: "Registra los datos legales de tu empresa.",
 };
 
 export const OnboardingModal: React.FC<Props> = ({
