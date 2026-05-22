@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from notifications.enums.notification_enums import VerificationChannel
 from notifications.providers.nrs360_provider import NRS360Provider
 from notifications.services.verification_service import VerificationService
+from ..constants.verification_contants import SMS_TEMPLATE as _SMS_TEMPLATE
 
 
 class SMSVerificationService(VerificationService):
@@ -16,12 +17,9 @@ class SMSVerificationService(VerificationService):
         if not user.phone_number:
             raise ValueError("El usuario no tiene número de teléfono configurado")
 
-        message = (
-            f"Tu código de verificación es: {code}. "
-            f"Expira en 5 minutos. No lo compartas con nadie."
-        )
         return await self._provider.send_sms(
-            message=message,
-            to=[user.phone_number],
+            message=_SMS_TEMPLATE,
+            to=[user.phone_number.lstrip("+")],
             sender="TEMPLATE",
+            sub=[{"code": code}],
         )

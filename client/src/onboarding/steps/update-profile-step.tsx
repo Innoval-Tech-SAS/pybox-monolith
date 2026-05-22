@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Input } from "@/ui/components/inputs/input";
+import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { useUpdateProfile } from "@/hooks/use-update-profile";
 import { useNationalities } from "@/hooks/use-nationalities";
 
@@ -39,18 +40,15 @@ export const UpdateProfileStep: React.FC<Props> = ({ onDone }) => {
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Nacionalidad
           </label>
-          <select
+          <CountrySelect
+            mode="NAME"
             required
             value={nationality}
-            onChange={(e) => { setNationality(e.target.value); setDocumentType(""); }}
+            onChange={(v) => { setNationality(v); setDocumentType(""); }}
+            nationalities={nationalities}
             disabled={loadingNat}
-            className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-          >
-            <option value="">Selecciona tu país</option>
-            {nationalities.map((n) => (
-              <option key={n.code} value={n.code}>{n.name}</option>
-            ))}
-          </select>
+            placeholder="Selecciona tu país"
+          />
         </div>
 
         <div>

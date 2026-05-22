@@ -3,4 +3,6 @@ export interface DropZoneProps {
   file: File | null;
   onChange: (file: File | null) => void;
   error?: string;
+  allowed?: string[];
+  hint?: string;
 }

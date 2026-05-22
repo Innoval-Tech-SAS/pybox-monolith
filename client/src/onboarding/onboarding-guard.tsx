@@ -9,20 +9,14 @@ interface Props {
 export const OnboardingGuard: React.FC<Props> = ({ children }) => {
   const { status, loading, refetch } = useOnboardingStatus();
 
-  if (loading || !status) return null;
+  const showModal = !loading && !!status && !status.isComplete;
 
-  if (!status.isComplete) {
-    return (
-      <>
-        {children}
-        <OnboardingModal
-          isOpen={true}
-          status={status}
-          onComplete={refetch}
-        />
-      </>
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {showModal && (
+        <OnboardingModal isOpen={true} status={status!} onComplete={refetch} />
+      )}
+    </>
+  );
 };

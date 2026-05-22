@@ -42,7 +42,6 @@ class OrganizationOnboardingSchema(BaseSchema):
     name: str
     country: Nationality
     fiscal_document_number: str
-    mercantile_document_number: str
 
 
 class OnboardingStatusSchema(BaseSchema):

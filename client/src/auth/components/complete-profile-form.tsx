@@ -121,7 +121,7 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
         title="¡Cuenta creada!"
         description="Tu cuenta fue registrada exitosamente."
         actionLabel="Ir al dashboard"
-        onAction={() => navigate("/admin/dashboard", { replace: true })}
+        onAction={() => navigate("/dashboard", { replace: true })}
       />
 
       <ErrorModal

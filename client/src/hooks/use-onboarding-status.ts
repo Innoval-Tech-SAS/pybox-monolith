@@ -9,7 +9,7 @@ export const useOnboardingStatus = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const fetchStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -24,7 +24,7 @@ export const useOnboardingStatus = () => {
     }
   }, [apiClient]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { fetchStatus(); }, [fetchStatus]);
 
-  return { status, loading, error, refetch: fetch };
+  return { status, loading, error, refetch: fetchStatus };
 };

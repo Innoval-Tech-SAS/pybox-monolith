@@ -11,14 +11,22 @@ class NRS360Provider:
         self._sms_token = get_or_throw("NRS360_SMS_TOKEN")
         self._email_token = get_or_throw("NRS360_EMAIL_TOKEN")
 
-    async def send_sms(self, message: str, to: list[str], sender: str) -> bool:
-        payload = {
+    async def send_sms(
+        self,
+        message: str,
+        to: list[str],
+        sender: str,
+        sub: list[dict] | None = None,
+    ) -> bool:
+        payload: dict = {
             "message": message,
             "to": to,
             "sender": sender,
             "campaignName": "otp-verification",
         }
-        headers = {"Authorization": f"Basic {self._sms_token}"}
+        if sub:
+            payload["sub"] = sub
+        headers = {"Authorization": self._sms_token}
         try:
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.post(self._SMS_URL, json=payload, headers=headers)
@@ -29,8 +37,14 @@ class NRS360Provider:
             logger.error(f"Error al enviar SMS por 360NRS: {exc}")
             return False
 
-    async def send_email(self, subject: str, body: str, to: list[str]) -> bool:
-        payload = {
+    async def send_email(
+        self,
+        subject: str,
+        body: str,
+        to: list[str],
+        sub: list[dict] | None = None,
+    ) -> bool:
+        payload: dict = {
             "subject": subject,
             "body": body,
             "to": to,
@@ -38,7 +52,9 @@ class NRS360Provider:
             "fromName": "Template App",
             "campaignName": "otp-verification",
         }
-        headers = {"Authorization": f"Basic {self._email_token}"}
+        if sub:
+            payload["sub"] = sub
+        headers = {"Authorization": self._email_token}
         try:
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.post(self._EMAIL_URL, json=payload, headers=headers)

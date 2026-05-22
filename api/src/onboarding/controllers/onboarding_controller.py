@@ -1,6 +1,8 @@
 import json
 
-from fastapi import APIRouter, Form, HTTPException, UploadFile, status
+from fastapi import Form, HTTPException, UploadFile, status
+
+from config.api_router import APIRouter
 
 from notifications.exceptions import (
     CodeAlreadyUsedException,

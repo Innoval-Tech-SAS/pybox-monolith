@@ -73,7 +73,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   useEffect(() => {
     if (!successModal.isOpen) return;
     if (countdown === 0) {
-      navigate("/admin/dashboard", { replace: true });
+      navigate("/dashboard", { replace: true });
       return;
     }
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
@@ -330,7 +330,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           </>
         }
         actionLabel="Ir al dashboard ahora"
-        onAction={() => navigate("/admin/dashboard", { replace: true })}
+        onAction={() => navigate("/dashboard", { replace: true })}
       />
 
       <ErrorModal

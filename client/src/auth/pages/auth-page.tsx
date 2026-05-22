@@ -11,10 +11,12 @@ export const AuthPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkLogin = sessionStorage.getItem("accessToken");
-    if (checkLogin) {
-      navigate("/admin/dashboard", { replace: true });
+    const token = sessionStorage.getItem("accessToken");
+    const isValidToken = !!token && token.startsWith("eyJ");
+    if (isValidToken) {
+      navigate("/dashboard", { replace: true });
     } else {
+      if (token) sessionStorage.clear();
       setLoading(false);
     }
   }, [navigate]);

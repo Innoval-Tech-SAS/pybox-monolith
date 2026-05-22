@@ -163,7 +163,7 @@ class AuthService:
         except jwt.InvalidTokenError as e:
             raise ValueError("El refresh token no es válido.") from e
 
-        user_id: int = payload["sub"]
+        user_id: int = int(payload["sub"])
         jti: str = payload["jti"]
 
         if not await self.token_service.verify_refresh_token(user_id, jti):

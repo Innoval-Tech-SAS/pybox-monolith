@@ -25,7 +25,7 @@ export const VerifyChannelStep: React.FC<Props> = ({
   error,
   clearError,
 }) => {
-  const [channel, setChannel] = useState<VerificationChannel>(defaultChannel);
+  const channel = defaultChannel;
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [codeSent, setCodeSent] = useState(false);
 
@@ -50,27 +50,6 @@ export const VerifyChannelStep: React.FC<Props> = ({
 
       {!codeSent ? (
         <>
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              ¿Por dónde quieres recibir el código?
-            </p>
-            <div className="flex gap-3">
-              {(["EMAIL", "SMS"] as VerificationChannel[]).map((ch) => (
-                <button
-                  key={ch}
-                  type="button"
-                  onClick={() => setChannel(ch)}
-                  className={`flex-1 rounded-lg border py-2.5 text-sm font-medium transition-colors ${
-                    channel === ch
-                      ? "border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400"
-                      : "border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:text-gray-400"
-                  }`}
-                >
-                  {ch === "EMAIL" ? "Correo electrónico" : "SMS"}
-                </button>
-              ))}
-            </div>
-          </div>
           <button
             type="button"
             disabled={loading}
@@ -105,7 +84,7 @@ export const VerifyChannelStep: React.FC<Props> = ({
               onClick={() => { setCodeSent(false); setDigits(Array(6).fill("")); clearError(); }}
               className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400"
             >
-              Cambiar canal o reenviar código
+              Reenviar código
             </button>
           </div>
         </>

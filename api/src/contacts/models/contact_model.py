@@ -1,6 +1,9 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, func
+from datetime import datetime
+
+from sqlalchemy import String, Boolean, func
 from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMP
+from sqlalchemy.orm import Mapped, mapped_column
 
 from database.database import Base
 
@@ -9,7 +12,7 @@ class ContactModel(Base):
 
     __tablename__ = "contactos"
 
-    id = Column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         index=True,
@@ -17,28 +20,28 @@ class ContactModel(Base):
         default=uuid.uuid4,
     )
 
-    email = Column(
+    email: Mapped[str | None] = mapped_column(
         String, unique=True, index=True, name="correo_electronico", nullable=True
     )
 
-    phone_number = Column(
+    phone_number: Mapped[str | None] = mapped_column(
         String, unique=True, index=True, name="numero_telefono", nullable=True
     )
 
-    whatsapp_available = Column(Boolean, name="whatsapp_disponible", default=False)
+    whatsapp_available: Mapped[bool | None] = mapped_column(Boolean, name="whatsapp_disponible", default=False)
 
-    rcs_available = Column(Boolean, name="rcs_disponible", default=False)
+    rcs_available: Mapped[bool | None] = mapped_column(Boolean, name="rcs_disponible", default=False)
 
-    sms_available = Column(Boolean, name="sms_disponible", default=True)
+    sms_available: Mapped[bool | None] = mapped_column(Boolean, name="sms_disponible", default=True)
 
-    unsubscribed = Column(Boolean, name="desuscrito", default=False)
+    unsubscribed: Mapped[bool | None] = mapped_column(Boolean, name="desuscrito", default=False)
 
-    extra_info = Column(JSONB, index=True, name="informacion_adicional", nullable=True)
+    extra_info: Mapped[dict | None] = mapped_column(JSONB, index=True, name="informacion_adicional", nullable=True)
 
-    created_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, name="fecha_creacion", nullable=False, server_default=func.now()
     )
 
-    updated_at = Column(
+    updated_at: Mapped[datetime | None] = mapped_column(
         TIMESTAMP, name="fecha_actualizacion", nullable=True, onupdate=func.now()
     )

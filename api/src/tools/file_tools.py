@@ -1,5 +1,4 @@
 import os
-import uuid
 
 from fastapi import HTTPException, UploadFile, status
 
@@ -20,7 +19,7 @@ async def save_upload_file(file: UploadFile, org_id: str, label: str) -> str:
         )
 
     ext = os.path.splitext(file.filename or "")[1].lower()
-    filename = f"{label}_{uuid.uuid4().hex}{ext}"
+    filename = f"documento_{label}{ext}"
     dest_dir = os.path.join(_UPLOADS_ROOT, "organizations", org_id)
     os.makedirs(dest_dir, exist_ok=True)
 

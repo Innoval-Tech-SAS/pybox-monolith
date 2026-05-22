@@ -1,23 +1,11 @@
-from dataclasses import dataclass, field
-
-from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from countries.enums.country_enums import (
-    Nationality,
-    OrgFiscalDocumentType,
-    OrgMercantileDocumentType,
     ORG_FISCAL_DOCUMENT_BY_NATIONALITY,
     ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY,
-    UserDocumentType,
 )
 from notifications.dependencies import get_verification_service
 from notifications.enums.notification_enums import VerificationChannel
-from notifications.exceptions import (
-    CodeAlreadyUsedException,
-    CodeExpiredException,
-    CodeNotFoundException,
-)
 from onboarding.schemas.onboarding_schemas import (
     OnboardingStatusSchema,
     OrganizationOnboardingSchema,
@@ -61,7 +49,6 @@ class OnboardingService:
                 and bool(org.country)
                 and bool(org.fiscal_document_number)
                 and bool(org.fiscal_document_file)
-                and bool(org.mercantile_document_number)
                 and bool(org.mercantile_document_file)
             )
             if not org_complete:
@@ -113,6 +100,5 @@ class OnboardingService:
         org.fiscal_document_number = data.fiscal_document_number
         org.fiscal_document_file = fiscal_file_path
         org.mercantile_document_type = ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY[data.country]
-        org.mercantile_document_number = data.mercantile_document_number
         org.mercantile_document_file = mercantile_file_path
         return await self._org_repo.update(org)

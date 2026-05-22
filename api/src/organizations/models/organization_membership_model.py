@@ -1,5 +1,9 @@
-from sqlalchemy import Column, Integer, DateTime, ForeignKey, UniqueConstraint, func
-from sqlalchemy.orm import relationship
+import uuid
+from datetime import datetime
+
+from sqlalchemy import Integer, DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.database import Base
 
@@ -12,15 +16,15 @@ class OrganizationMembershipModel(Base):
         ),
     )
 
-    id = Column(Integer, primary_key=True, autoincrement=True, name="id")
-    user_id = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("usuarios.id"), nullable=False, name="id_usuario"
     )
-    organization_id = Column(
-        Integer, ForeignKey("entidades.id"), nullable=False, name="id_entidad"
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, name="id_entidad"
     )
-    created_at = Column(DateTime, name="fecha_creacion", default=func.now())
-    created_by = Column(
+    created_at: Mapped[datetime | None] = mapped_column(DateTime, name="fecha_creacion", default=func.now())
+    created_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("usuarios.id"), name="creado_por", nullable=False
     )
 

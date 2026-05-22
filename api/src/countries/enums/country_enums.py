@@ -29,7 +29,7 @@ class UserDocumentType(str, Enum):
     CI = "CI"
     RIF = "RIF"
     # Universal
-    PASSPORT = "PASSPORT"
+    PASSPORT = "PASAPORTE"
 
 
 DOCUMENTS_BY_NATIONALITY: dict["Nationality", list["UserDocumentType"]] = {
@@ -83,19 +83,19 @@ NATIONALITY_PHONE_PREFIX: dict["Nationality", str] = {
 
 
 class OrgFiscalDocumentType(str, Enum):
-    NIT = "NIT"    # Colombia
-    RFC = "RFC"    # México
+    NIT = "NIT"  # Colombia
+    RFC = "RFC"  # México
     CUIT = "CUIT"  # Argentina
-    RUC = "RUC"    # Perú
-    RIF = "RIF"    # Venezuela
+    RUC = "RUC"  # Perú
+    RIF = "RIF"  # Venezuela
 
 
 class OrgMercantileDocumentType(str, Enum):
-    CAMARA_COMERCIO = "CAMARA_COMERCIO"                        # Colombia
-    REGISTRO_PUBLICO_COMERCIO = "REGISTRO_PUBLICO_COMERCIO"    # México
-    INSCRIPCION_IGJ = "INSCRIPCION_IGJ"                        # Argentina
-    PARTIDA_SUNARP = "PARTIDA_SUNARP"                          # Perú
-    REGISTRO_MERCANTIL = "REGISTRO_MERCANTIL"                  # Venezuela
+    CAMARA_COMERCIO = "CAMARA_COMERCIO"  # Colombia
+    REGISTRO_PUBLICO_COMERCIO = "REGISTRO_PUBLICO_COMERCIO"  # México
+    INSCRIPCION_IGJ = "INSCRIPCION_IGJ"  # Argentina
+    PARTIDA_SUNARP = "PARTIDA_SUNARP"  # Perú
+    REGISTRO_MERCANTIL = "REGISTRO_MERCANTIL"  # Venezuela
 
 
 ORG_FISCAL_DOCUMENT_BY_NATIONALITY: dict["Nationality", "OrgFiscalDocumentType"] = {
@@ -106,7 +106,9 @@ ORG_FISCAL_DOCUMENT_BY_NATIONALITY: dict["Nationality", "OrgFiscalDocumentType"]
     Nationality.VE: OrgFiscalDocumentType.RIF,
 }
 
-ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY: dict["Nationality", "OrgMercantileDocumentType"] = {
+ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY: dict[
+    "Nationality", "OrgMercantileDocumentType"
+] = {
     Nationality.CO: OrgMercantileDocumentType.CAMARA_COMERCIO,
     Nationality.MX: OrgMercantileDocumentType.REGISTRO_PUBLICO_COMERCIO,
     Nationality.AR: OrgMercantileDocumentType.INSCRIPCION_IGJ,

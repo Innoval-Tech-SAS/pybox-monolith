@@ -1,4 +1,4 @@
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,13 +21,17 @@ async def get_current_user(
     payload: TokenPayload,
     session: Annotated[AsyncSession, Depends(get_main_session)],
 ) -> UserModel:
-    user_id = payload["sub"]
+    from config.logger import logger
+    user_id = int(payload["sub"])
+    logger.debug(f"[get_current_user] START — user_id={user_id!r} (type={type(user_id).__name__})")
     repo = UserRepository(session)
     user = await repo.get_by_id(user_id)
     if not user:
+        logger.debug(f"[get_current_user] END   — NOT FOUND for id={user_id!r}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado"
         )
+    logger.debug(f"[get_current_user] END   — OK user.id={user.id} email={user.email}")
     return user
 
 
@@ -35,7 +39,7 @@ async def get_current_scope(
     payload: TokenPayload,
     session: Annotated[AsyncSession, Depends(get_main_session)],
 ) -> UserScope:
-    user_id = payload["sub"]
+    user_id = int(payload["sub"])
     repo = RoleAssignmentRepository(session)
     assignments = await repo.get_by_user_id(user_id)
     if not assignments:
@@ -51,9 +55,7 @@ async def get_current_org(
     user: Annotated[UserModel, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_main_session)],
 ) -> OrganizationModel | None:
-    memberships = await OrganizationMembershipRepository(session).get_by_user_id(
-        cast(int, user.id)
-    )
+    memberships = await OrganizationMembershipRepository(session).get_by_user_id(user.id)
     if not memberships:
         return None
     return await OrganizationRepository(session).get_by_id(

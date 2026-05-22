@@ -1,5 +1,7 @@
 import { AuthPage } from "./auth/pages/auth-page";
 import { SignUpPage } from "./auth/pages/sign-up-page";
+import { HomePage } from "./home/pages/home-page";
+import { ProfilePage } from "./profile/pages/profile-page";
 import { NotFound } from "./ui/pages/not-found";
 
 export const noAuthRouter = [
@@ -14,5 +16,16 @@ export const noAuthRouter = [
   {
     path: "*",
     element: <NotFound />,
+  },
+];
+
+export const authRouter = [
+  {
+    path: "/dashboard",
+    element: <HomePage />,
+  },
+  {
+    path: "/profile",
+    element: <ProfilePage />,
   },
 ];

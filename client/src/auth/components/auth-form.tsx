@@ -45,7 +45,7 @@ export const AuthForm: React.FC = () => {
       sessionStorage.setItem("accessToken", data.accessToken);
       sessionStorage.setItem("refreshToken", data.refreshToken);
       sessionStorage.setItem("user", JSON.stringify({ email }));
-      navigate("/admin/dashboard", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch {
       setError("No se pudo conectar con el servidor.");
     } finally {
@@ -67,7 +67,7 @@ export const AuthForm: React.FC = () => {
       try {
         await oauthRegister({ provider: "GOOGLE", token }, "/auth/oauth/login");
         sessionStorage.setItem("user", JSON.stringify({ email: payload.email }));
-        navigate("/admin/dashboard", { replace: true });
+        navigate("/dashboard", { replace: true });
       } catch (err) {
         const message = err instanceof Error ? err.message : "Error al iniciar sesión con Google.";
         setError(message);

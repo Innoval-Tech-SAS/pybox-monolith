@@ -29,11 +29,11 @@ from users.controllers.user_controller import router as users_router
 API_PREFIX = "/api/v1"
 
 _UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
+os.makedirs(_UPLOADS_DIR, exist_ok=True)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    os.makedirs(_UPLOADS_DIR, exist_ok=True)
     await db.create_tables()
     yield
     await db.engine.dispose()

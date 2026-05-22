@@ -1,3 +1,4 @@
+import os
 import secrets
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
@@ -12,13 +13,11 @@ from notifications.exceptions import (
     CodeNotFoundException,
 )
 from notifications.models.verification_code_model import VerificationCodeModel
-from notifications.repositories.verification_code_repository import VerificationCodeRepository
+from notifications.repositories.verification_code_repository import (
+    VerificationCodeRepository,
+)
 
 EXPIRATION_MINUTES = 5
-
-
-def _generate_code() -> str:
-    return str(secrets.randbelow(1_000_000)).zfill(6)
 
 
 class VerificationService(ABC):
@@ -28,8 +27,11 @@ class VerificationService(ABC):
         self._repo = VerificationCodeRepository(session)
         self._session = session
 
+    def _generate_code(self) -> str:
+        return str(secrets.randbelow(1_000_000)).zfill(6)
+
     async def send_code(self, user) -> None:
-        code = _generate_code()
+        code = self._generate_code()
         record = VerificationCodeModel(
             user_id=user.id,
             channel=self.channel,
@@ -37,6 +39,10 @@ class VerificationService(ABC):
             expires_at=datetime.now() + timedelta(minutes=EXPIRATION_MINUTES),
         )
         await self._repo.add(record)
+
+        if os.getenv("ENV") == "development":
+            logger.info(f"[DEV] Código de verificación — canal={self.channel.value} user_id={user.id} code={code}")
+            return
 
         sent = await self._dispatch(user, code)
         if not sent:
@@ -46,9 +52,15 @@ class VerificationService(ABC):
 
     async def verify_code(self, user_id: int, code: str) -> None:
         try:
-            record = await self._repo.verify_with_exceptions(user_id, code, self.channel)
+            record = await self._repo.verify_with_exceptions(
+                user_id, code, self.channel
+            )
             await self._repo.mark_consumed(record)
-        except (CodeNotFoundException, CodeExpiredException, CodeAlreadyUsedException) as exc:
+        except (
+            CodeNotFoundException,
+            CodeExpiredException,
+            CodeAlreadyUsedException,
+        ) as exc:
             logger.warning(
                 f"Verificación fallida — user_id={user_id} canal={self.channel.value}: {exc}"
             )

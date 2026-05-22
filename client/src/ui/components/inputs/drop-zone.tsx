@@ -1,14 +1,14 @@
 import React, { useRef, useState } from "react";
 import { DropZoneProps } from "@/types/props/drop-zone-props";
 
-const ALLOWED = ["application/pdf", "image/png"];
+const DEFAULT_ALLOWED = ["application/pdf", "image/png"];
 
-export const DropZone: React.FC<DropZoneProps> = ({ label, file, onChange, error }) => {
+export const DropZone: React.FC<DropZoneProps> = ({ label, file, onChange, error, allowed = DEFAULT_ALLOWED, hint = "PDF o PNG · máx. 5 MB" }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
   const accept = (f: File) => {
-    if (!ALLOWED.includes(f.type)) return;
+    if (!allowed.includes(f.type)) return;
     onChange(f);
   };
 
@@ -46,7 +46,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ label, file, onChange, error
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
             </svg>
-            <span className="truncate max-w-[200px]">{file.name}</span>
+            <span className="truncate max-w-50">{file.name}</span>
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onChange(null); }}
@@ -73,7 +73,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ label, file, onChange, error
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,.png"
+        accept={allowed.map((t) => `.${t.split("/")[1]}`).join(",")}
         className="hidden"
         onChange={handleChange}
       />

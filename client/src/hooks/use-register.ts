@@ -23,6 +23,7 @@ export const useRegister = () => {
         body: JSON.stringify(data),
       });
       sessionStorage.setItem("accessToken", result.accessToken);
+      sessionStorage.setItem("user", JSON.stringify({ email: data.email }));
       return result;
     } catch (err) {
       const message =
