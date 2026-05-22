@@ -6,7 +6,6 @@ export interface OrgOnboardingData {
   name: string;
   country: string;
   fiscalDocumentNumber: string;
-  mercantileDocumentNumber: string;
   fiscalDocumentFile: File;
   mercantileDocumentFile: File;
 }
@@ -26,7 +25,6 @@ export const useOrganizationOnboarding = () => {
           name: data.name,
           country: data.country,
           fiscalDocumentNumber: data.fiscalDocumentNumber,
-          mercantileDocumentNumber: data.mercantileDocumentNumber,
         }),
       );
       form.append("fiscal_document_file", data.fiscalDocumentFile);

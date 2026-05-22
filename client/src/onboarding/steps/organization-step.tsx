@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Input } from "@/ui/components/inputs/input";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
+import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { useOrganizationOnboarding } from "@/hooks/use-organization-onboarding";
-import { useNationalities } from "@/hooks/use-nationalities";
 
 const ORG_FISCAL_NAMES: Record<string, string> = {
   CO: "NIT – Número de Identificación Tributaria",
@@ -25,13 +25,11 @@ interface Props {
 }
 
 export const OrganizationStep: React.FC<Props> = ({ onDone }) => {
-  const { nationalities, loading: loadingNat } = useNationalities();
   const { saveOrganization, loading, error, clearError } = useOrganizationOnboarding();
 
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [fiscalNumber, setFiscalNumber] = useState("");
-  const [mercantileNumber, setMercantileNumber] = useState("");
   const [fiscalFile, setFiscalFile] = useState<File | null>(null);
   const [mercantileFile, setMercantileFile] = useState<File | null>(null);
   const [fileErrors, setFileErrors] = useState({ fiscal: "", mercantile: "" });
@@ -54,7 +52,6 @@ export const OrganizationStep: React.FC<Props> = ({ onDone }) => {
       name,
       country,
       fiscalDocumentNumber: fiscalNumber,
-      mercantileDocumentNumber: mercantileNumber,
       fiscalDocumentFile: fiscalFile!,
       mercantileDocumentFile: mercantileFile!,
     });
@@ -86,18 +83,13 @@ export const OrganizationStep: React.FC<Props> = ({ onDone }) => {
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
             País de registro
           </label>
-          <select
+          <CountrySelect
+            mode="NAME"
             required
             value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            disabled={loadingNat}
-            className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-          >
-            <option value="">Selecciona el país</option>
-            {nationalities.map((n) => (
-              <option key={n.code} value={n.code}>{n.name}</option>
-            ))}
-          </select>
+            onChange={setCountry}
+            placeholder="Selecciona el país"
+          />
         </div>
 
         <div>
@@ -118,17 +110,6 @@ export const OrganizationStep: React.FC<Props> = ({ onDone }) => {
           error={fileErrors.fiscal}
         />
 
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-            {mercantileLabel}
-          </label>
-          <Input
-            placeholder="Número del registro mercantil"
-            value={mercantileNumber}
-            onChange={(e) => setMercantileNumber(e.target.value)}
-          />
-        </div>
-
         <DropZone
           label={`Documento: ${mercantileLabel}`}
           file={mercantileFile}
@@ -141,7 +122,7 @@ export const OrganizationStep: React.FC<Props> = ({ onDone }) => {
 
       <button
         type="submit"
-        disabled={loading || !name || !country || !fiscalNumber || !mercantileNumber}
+        disabled={loading || !name || !country || !fiscalNumber}
         className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
       >
         {loading ? "Guardando..." : "Finalizar"}

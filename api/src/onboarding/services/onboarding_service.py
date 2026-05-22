@@ -1,3 +1,6 @@
+from typing import cast
+
+from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from countries.enums.country_enums import (
@@ -12,7 +15,10 @@ from onboarding.schemas.onboarding_schemas import (
     UpdateProfileSchema,
 )
 from organizations.models.organization_model import OrganizationModel
+from organizations.models.organization_membership_model import OrganizationMembershipModel
 from organizations.repository.organization_repository import OrganizationRepository
+from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
+from tools.file_tools import save_upload_file
 from users.models.user_model import UserModel
 from users.enums.user_enums import UserScope
 from users.repository.user_repository import UserRepository
@@ -23,6 +29,7 @@ class OnboardingService:
         self._session = session
         self._user_repo = UserRepository(session)
         self._org_repo = OrganizationRepository(session)
+        self._membership_repo = OrganizationMembershipRepository(session)
 
     def get_status(
         self,
@@ -89,16 +96,26 @@ class OnboardingService:
 
     async def save_organization(
         self,
-        org: OrganizationModel,
+        user: UserModel,
         data: OrganizationOnboardingSchema,
-        fiscal_file_path: str,
-        mercantile_file_path: str,
+        fiscal_file: UploadFile,
+        mercantile_file: UploadFile,
     ) -> OrganizationModel:
-        org.name = data.name
+        org = await self._org_repo.add(OrganizationModel(name=data.name))
+        await self._membership_repo.add(OrganizationMembershipModel(
+            user_id=cast(int, user.id),
+            organization_id=org.id,
+            created_by=cast(int, user.id),
+        ))
+
+        org_id = str(org.id)
+        fiscal_path = await save_upload_file(fiscal_file, org_id, "fiscal")
+        mercantile_path = await save_upload_file(mercantile_file, org_id, "mercantile")
+
         org.country = data.country
         org.fiscal_document_type = ORG_FISCAL_DOCUMENT_BY_NATIONALITY[data.country]
         org.fiscal_document_number = data.fiscal_document_number
-        org.fiscal_document_file = fiscal_file_path
+        org.fiscal_document_file = fiscal_path
         org.mercantile_document_type = ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY[data.country]
-        org.mercantile_document_file = mercantile_file_path
+        org.mercantile_document_file = mercantile_path
         return await self._org_repo.update(org)

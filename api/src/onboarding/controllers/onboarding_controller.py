@@ -22,7 +22,6 @@ from onboarding.schemas.onboarding_schemas import (
     UpdateProfileSchema,
     VerifyOtpSchema,
 )
-from tools.file_tools import save_upload_file
 from users.enums.user_enums import UserScope
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
@@ -76,7 +75,6 @@ async def update_profile(
 async def update_organization(
     user: CurrentUser,
     scope: CurrentScope,
-    org: CurrentOrg,
     service: OnboardingServiceDep,
     data: str = Form(...),
     fiscal_document_file: UploadFile = Form(...),
@@ -87,11 +85,6 @@ async def update_organization(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo administradores de organización pueden completar este paso",
         )
-    if org is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="El usuario no pertenece a ninguna organización",
-        )
 
     try:
         parsed = OrganizationOnboardingSchema.model_validate(json.loads(data))
@@ -101,7 +94,4 @@ async def update_organization(
             detail="El campo 'data' debe ser un JSON válido",
         )
 
-    fiscal_path = await save_upload_file(fiscal_document_file, str(org.id), "fiscal")
-    mercantile_path = await save_upload_file(mercantile_document_file, str(org.id), "mercantile")
-
-    await service.save_organization(org, parsed, fiscal_path, mercantile_path)
+    await service.save_organization(user, parsed, fiscal_document_file, mercantile_document_file)

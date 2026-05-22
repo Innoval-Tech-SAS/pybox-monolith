@@ -117,7 +117,10 @@ class AuthService:
         return await self._build_response(user, AuthProvider.SELF)
 
     async def authenticate_provider_user(
-        self, provider_data: ProviderLogin
+        self,
+        provider_data: ProviderLogin,
+        role: UserRole = UserRole.ADMIN,
+        scope: UserScope = UserScope.ORGANIZATION,
     ) -> AuthResponse:
         provider = resolve_auth_provider(provider_data.provider)
         token = require_value(str(provider_data.token), "El token es obligatorio.")
@@ -128,7 +131,11 @@ class AuthService:
         provider_profile = self.oauth_provider_service.verify_provider_token(
             provider, token
         )
-        user = await self._get_or_create_provider_user(provider_profile, provider_data)
+        user, is_new = await self._get_or_create_provider_user(provider_profile, provider_data)
+        if is_new:
+            await self.role_assignment_repository.add(
+                RoleAssignmentModel(user_id=cast(int, user.id), role=role, scope=scope)
+            )
         return await self._build_response(user, provider)
 
     async def authenticate_existing_provider_user(
@@ -187,10 +194,10 @@ class AuthService:
         self,
         provider_profile: ProviderProfile,
         provider_data: ProviderLogin,
-    ) -> UserModel:
+    ) -> tuple[UserModel, bool]:
         user = await self._get_provider_user_or_link_email(provider_profile)
         if user:
-            return user
+            return user, False
 
         phone_number = normalize_optional(provider_data.phone_number)
         nationality = (
@@ -228,7 +235,7 @@ class AuthService:
             ),
             document_number=provider_data.document_number or None,
         )
-        return await self.user_repository.add(user)
+        return await self.user_repository.add(user), True
 
     async def _get_provider_user_or_link_email(
         self,

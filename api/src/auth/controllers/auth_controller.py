@@ -31,8 +31,13 @@ async def login(body: UserLogin, service: AuthServiceDep) -> AuthResponse:
 
 
 @router.post("/oauth", response_model=AuthResponse)
-async def oauth_login(body: ProviderLogin, service: AuthServiceDep) -> AuthResponse:
-    return await service.authenticate_provider_user(body)
+async def oauth_register_admin(body: ProviderLogin, service: AuthServiceDep) -> AuthResponse:
+    return await service.authenticate_provider_user(body, UserRole.ADMIN, UserScope.ORGANIZATION)
+
+
+@router.post("/oauth/user", response_model=AuthResponse)
+async def oauth_register_user(body: ProviderLogin, service: AuthServiceDep) -> AuthResponse:
+    return await service.authenticate_provider_user(body, UserRole.USER, UserScope.SELF)
 
 
 @router.post("/oauth/login", response_model=AuthResponse)

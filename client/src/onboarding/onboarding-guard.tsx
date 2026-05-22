@@ -1,6 +1,7 @@
 import React from "react";
 import { OnboardingModal } from "./onboarding-modal";
 import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
+import { Loader } from "@/ui/components/loader/loader";
 
 interface Props {
   children: React.ReactNode;
@@ -9,14 +10,17 @@ interface Props {
 export const OnboardingGuard: React.FC<Props> = ({ children }) => {
   const { status, loading, refetch } = useOnboardingStatus();
 
-  const showModal = !loading && !!status && !status.isComplete;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center w-full h-screen">
+        <Loader />
+      </div>
+    );
+  }
 
-  return (
-    <>
-      {children}
-      {showModal && (
-        <OnboardingModal isOpen={true} status={status!} onComplete={refetch} />
-      )}
-    </>
-  );
+  if (status && !status.isComplete) {
+    return <OnboardingModal isOpen={true} status={status} onComplete={refetch} />;
+  }
+
+  return <>{children}</>;
 };

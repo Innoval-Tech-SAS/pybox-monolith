@@ -80,7 +80,7 @@ export const Modal: React.FC<ModalProps> = ({
             </svg>
           </button>
         )}
-        <div>{children}</div>
+        {children}
       </div>
     </div>
   );

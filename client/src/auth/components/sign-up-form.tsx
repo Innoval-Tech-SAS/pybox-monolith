@@ -84,7 +84,8 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     signIn(async (token) => {
       try {
         const payload = jwtDecode<GooglePayload>(token);
-        await oauthRegister({ provider: "GOOGLE", token });
+        const endpoint = mode === "admin" ? "/auth/oauth" : "/auth/oauth/user";
+        await oauthRegister({ provider: "GOOGLE", token }, endpoint);
         sessionStorage.setItem(
           "user",
           JSON.stringify({ email: payload.email }),
