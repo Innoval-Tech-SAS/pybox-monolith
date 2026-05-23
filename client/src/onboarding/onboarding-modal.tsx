@@ -4,45 +4,19 @@ import { VerifyChannelStep } from "./steps/verify-channel-step";
 import { UpdateProfileStep } from "./steps/update-profile-step";
 import { OrganizationStep } from "./steps/organization-step";
 import { useVerifyOtp } from "@/hooks/use-verify-otp";
-import { OnboardingStatus } from "@/types/onboarding/onboarding-types";
+import {
+  STEP_DESCRIPTIONS,
+  STEP_LABELS,
+} from "@/onboarding/constants/onboarding-step-content";
+import { buildOnboardingSteps } from "@/onboarding/utils/onboarding-step-utils";
+import type { OnboardingModalProps } from "@/types/props/onboarding-props";
 
-interface Props {
-  isOpen: boolean;
-  status: OnboardingStatus;
-  onComplete: () => void;
-}
-
-type Step = "email" | "phone" | "profile" | "organization";
-
-function buildSteps(status: OnboardingStatus): Step[] {
-  const steps: Step[] = [];
-  if (!status.emailVerified) steps.push("email");
-  if (!status.phoneVerified) steps.push("phone");
-  if (!status.documentComplete) steps.push("profile");
-  if (status.orgComplete === false) steps.push("organization");
-  return steps;
-}
-
-const STEP_LABELS: Record<Step, string> = {
-  email: "Verificar email",
-  phone: "Verificar teléfono",
-  profile: "Datos del documento",
-  organization: "Datos de la empresa",
-};
-
-const STEP_DESCRIPTIONS: Record<Step, string> = {
-  email: "Confirma que tienes acceso a tu correo electrónico.",
-  phone: "Confirma que tienes acceso a tu número de teléfono.",
-  profile: "Completa tu información de identificación.",
-  organization: "Registra los datos legales de tu empresa.",
-};
-
-export const OnboardingModal: React.FC<Props> = ({
+export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   isOpen,
   status,
   onComplete,
 }) => {
-  const steps = buildSteps(status);
+  const steps = buildOnboardingSteps(status);
   const [stepIndex, setStepIndex] = useState(0);
   const { requestOtp, verifyOtp, loading, error, clearError } = useVerifyOtp();
 

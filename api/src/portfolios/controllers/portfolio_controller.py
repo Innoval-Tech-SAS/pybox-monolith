@@ -1,24 +1,21 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, UploadFile, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, Query, UploadFile, status
 
 from config.api_router import APIRouter
 from countries.enums.country_enums import Nationality
-from database.database import get_main_session
 from onboarding.dependencies import CurrentOrg
-from portfolios.services.portfolio_csv_service import CsvProcessResult, PortfolioCsvService
+from portfolios.dependencies import PortfolioCsvServiceDep
+from portfolios.services.portfolio_csv_service import CsvProcessResult
 
 router = APIRouter(prefix="/portfolios", tags=["portfolios"])
-
-MainSession = Annotated[AsyncSession, Depends(get_main_session)]
 
 
 @router.post("/upload-csv", status_code=status.HTTP_200_OK, response_model=None)
 async def upload_csv(
     file: UploadFile,
     org: CurrentOrg,
-    session: MainSession,
+    service: PortfolioCsvServiceDep,
     portfolio_name: Annotated[str | None, Query()] = None,
     country: Annotated[Nationality | None, Query()] = None,
 ) -> CsvProcessResult:
@@ -43,7 +40,6 @@ async def upload_csv(
         )
 
     file_bytes = await file.read()
-    service = PortfolioCsvService(session)
     return await service.process_csv(
         file_bytes=file_bytes,
         organization_id=org.id,

@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Integer, ForeignKey, UniqueConstraint
+from sqlalchemy import Boolean, Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,6 +24,9 @@ class OrganizationMembershipModel(AuditModel):
     )
     created_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("usuarios.id"), name="creado_por", nullable=False
+    )
+    is_legal_representative: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, name="es_representante_legal"
     )
 
     user = relationship("UserModel", foreign_keys=[user_id], back_populates="memberships")

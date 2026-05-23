@@ -2,29 +2,12 @@ import { useNavigate } from "react-router";
 import { jwtDecode } from "jwt-decode";
 import { User } from "@/types/auth/user";
 import { GooglePayload } from "@/types/auth/google";
+import { AuthTokenResponse, LoginCredentials } from "@/types/auth/auth-types";
 import { DEFAULT_ROLE_SCOPE, Role, RoleScope, Scope } from "@/types/auth/role";
+import { getSession, setSessionUser } from "@/auth/utils/auth-session-utils";
 import { getFirstAssignment } from "@/home/utils/home-session-utils";
 import { useApiClient } from "./use-api-client";
 import { useOAuthRegister } from "./use-oauth-register";
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-interface AuthTokenResponse {
-  accessToken: string;
-  refreshToken: string;
-}
-
-const getSession = (): User | null => {
-  try {
-    const raw = sessionStorage.getItem("user");
-    return raw ? (JSON.parse(raw) as User) : null;
-  } catch {
-    return null;
-  }
-};
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -39,8 +22,8 @@ export const useAuth = () => {
       body: JSON.stringify({ email, password }),
     });
     sessionStorage.setItem("accessToken", data.accessToken);
-    sessionStorage.setItem("refreshToken", data.refreshToken);
-    sessionStorage.setItem("user", JSON.stringify({ email }));
+    if (data.refreshToken) sessionStorage.setItem("refreshToken", data.refreshToken);
+    setSessionUser({ email });
     navigate("/dashboard", { replace: true });
   };
 
@@ -52,7 +35,7 @@ export const useAuth = () => {
       throw new Error("No se pudo leer la cuenta de Google seleccionada.");
     }
     await oauthRegister({ provider: "GOOGLE", token }, "/auth/oauth/login");
-    sessionStorage.setItem("user", JSON.stringify({ email: payload.email }));
+    setSessionUser({ email: payload.email });
     navigate("/dashboard", { replace: true });
   };
 

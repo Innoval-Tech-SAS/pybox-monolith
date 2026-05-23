@@ -1,10 +1,5 @@
 import { ArrowRight, Building2 } from "lucide-react";
-import { OrgSummary } from "../hooks/use-my-companies";
-
-interface OrgCardProps {
-  org: OrgSummary;
-  onClick: (id: string) => void;
-}
+import type { OrgCardProps } from "@/types/props/org-card-props";
 
 export const OrgCard: React.FC<OrgCardProps> = ({ org, onClick }) => (
   <button

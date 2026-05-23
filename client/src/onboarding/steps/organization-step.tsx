@@ -3,28 +3,13 @@ import { Input } from "@/ui/components/inputs/input";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { useOrganizationOnboarding } from "@/hooks/use-organization-onboarding";
+import {
+  ORG_FISCAL_NAMES,
+  ORG_MERCANTILE_NAMES,
+} from "@/onboarding/constants/organization-documents";
+import type { StepDoneProps } from "@/types/props/onboarding-props";
 
-const ORG_FISCAL_NAMES: Record<string, string> = {
-  CO: "NIT – Número de Identificación Tributaria",
-  MX: "RFC – Registro Federal de Contribuyentes",
-  AR: "CUIT – Código Único de Identificación Tributaria",
-  PE: "RUC – Registro Único de Contribuyentes",
-  VE: "RIF – Registro de Información Fiscal",
-};
-
-const ORG_MERCANTILE_NAMES: Record<string, string> = {
-  CO: "Cámara de Comercio",
-  MX: "Registro Público de Comercio",
-  AR: "Inscripción en el IGJ",
-  PE: "Partida Registral SUNARP",
-  VE: "Registro Mercantil",
-};
-
-interface Props {
-  onDone: () => void;
-}
-
-export const OrganizationStep: React.FC<Props> = ({ onDone }) => {
+export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
   const { saveOrganization, loading, error, clearError } = useOrganizationOnboarding();
 
   const [name, setName] = useState("");

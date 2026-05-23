@@ -9,6 +9,7 @@ from users.models.user_model import UserModel
 from users.models.role_assignment_model import RoleAssignmentModel
 from users.enums.user_enums import UserRole, UserScope
 from security.services.auth_token_service import AuthTokenService
+from security.services.encrypt_service import encrypt_service
 from security.services.password_hasher_service import PasswordHasherService
 from ..schemas.auth_schemas import (
     AuthResponse,
@@ -72,10 +73,9 @@ class AuthService:
         if await self.user_repository.get_by_phone_number(phone_number):
             raise ValueError("El número de teléfono ya está registrado.")
 
-        if document_type and document_number:
-            if await self.user_repository.get_by_document(
-                document_type, document_number
-            ):
+        document_number_hash = encrypt_service.hash_document(document_number) if document_number else None
+        if document_type and document_number_hash:
+            if await self.user_repository.get_by_document(document_type, document_number_hash):
                 raise ValueError("El documento ya está registrado.")
 
         user = UserModel(
@@ -87,7 +87,8 @@ class AuthService:
             auth_provider=AuthProvider.SELF,
             nationality=nationality,
             document_type=document_type,
-            document_number=document_number,
+            document_number=encrypt_service.encrypt_to_str(document_number) if document_number else None,
+            document_number_hash=document_number_hash,
         )
 
         return await self.user_repository.add(user)
@@ -211,6 +212,10 @@ class AuthService:
         ):
             raise ValueError("El número de teléfono ya está registrado.")
 
+        doc_type = resolve_document_type(provider_data.document_type) if provider_data.document_type else None
+        doc_number = provider_data.document_number or None
+        doc_number_hash = encrypt_service.hash_document(doc_number) if doc_number else None
+
         user = UserModel(
             firstname=(
                 normalize_optional(provider_data.firstname)
@@ -228,12 +233,9 @@ class AuthService:
             auth_provider=provider_profile.provider,
             provider_user_id=provider_profile.provider_user_id,
             nationality=nationality,
-            document_type=(
-                resolve_document_type(provider_data.document_type)
-                if provider_data.document_type
-                else None
-            ),
-            document_number=provider_data.document_number or None,
+            document_type=doc_type,
+            document_number=encrypt_service.encrypt_to_str(doc_number) if doc_number else None,
+            document_number_hash=doc_number_hash,
         )
         return await self.user_repository.add(user), True
 

@@ -1,13 +1,6 @@
 import React from "react";
 import { Breadcrumb } from "./breadcrumb";
-import { BreadcrumbItem } from "@/types/props/breadcrumb-props";
-
-interface ModuleBaseProps {
-  pageTitle: string;
-  sectionTitle?: string;
-  breadcrumbItems?: BreadcrumbItem[];
-  children: React.ReactNode;
-}
+import type { ModuleBaseProps } from "@/types/props/module-base-props";
 
 export const ModuleBase: React.FC<ModuleBaseProps> = ({
   pageTitle,

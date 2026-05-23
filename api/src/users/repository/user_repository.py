@@ -47,12 +47,13 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
     async def get_by_document(
         self,
         document_type: UserDocumentType,
-        document_number: str,
+        document_number_hash: str,
     ) -> UserModel | None:
         result = await self.session.execute(
             select(UserModel)
             .where(UserModel.document_type == document_type)
-            .where(UserModel.document_number == document_number)
+            .where(UserModel.document_number_hash == document_number_hash)
             .where(UserModel.deleted_at.is_(None))
         )
         return result.scalars().first()
+

@@ -2,14 +2,12 @@ import { useSidebar } from "../../../hooks/use-sidebar";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { NavItem } from "../../../config/navbar/types/nav-item";
+import type { NavItem } from "@/types/navigation/nav-item";
+import type { AsideMenuProps } from "@/types/props/aside-menu-props";
 
 import { ChevronDownIcon, HorizontaLDots } from "../../icons";
 
-export const AsideMenu: React.FC<{
-  navItems?: NavItem[];
-  othersItems?: NavItem[];
-}> = ({ navItems = [], othersItems = [] }) => {
+export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems = [] }) => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 

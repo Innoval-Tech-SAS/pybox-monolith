@@ -1,14 +1,7 @@
 import { useState } from "react";
 import { API_URL } from "./use-api-client";
+import type { OrgOnboardingData } from "@/types/onboarding/onboarding-types";
 import { getAuthHeaders } from "@/utils/auth-headers";
-
-export interface OrgOnboardingData {
-  name: string;
-  country: string;
-  fiscalDocumentNumber: string;
-  fiscalDocumentFile: File;
-  mercantileDocumentFile: File;
-}
 
 export const useOrganizationOnboarding = () => {
   const [loading, setLoading] = useState(false);

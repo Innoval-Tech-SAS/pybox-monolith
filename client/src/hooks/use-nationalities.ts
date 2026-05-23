@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import { useApiClient } from "./use-api-client";
-
-export interface NationalityOption {
-  code: string;
-  name: string;
-  phonePrefix: string;
-  documentTypes: string[];
-}
+import type { NationalityOption } from "@/types/countries/country-types";
 
 export const useNationalities = () => {
   const { apiClient } = useApiClient();

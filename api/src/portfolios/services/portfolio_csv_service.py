@@ -21,6 +21,7 @@ from payments.models.payment_model import PaymentModel
 from payments.repository.payment_repository import PaymentRepository
 from portfolios.models.portfolio_model import PortfolioModel
 from portfolios.repository.portfolio_repository import PortfolioRepository
+from security.services.encrypt_service import encrypt_service
 from portfolios.utils.portfolio_file_parser import (
     AddressRowData,
     CreditAdjustmentRowData,
@@ -136,14 +137,16 @@ class PortfolioCsvService:
     # ------------------------------------------------------------------
 
     async def _upsert_debtor(self, data: DebtorRowData) -> DebtorModel:
-        existing = await self.debtor_repo.get_by_document_number(data.document_number)
+        doc_hash = encrypt_service.hash_document(data.document_number)
+        existing = await self.debtor_repo.get_by_document_number(doc_hash)
         if existing:
             existing.full_name = data.full_name
             existing.document_type = data.document_type
             return await self.debtor_repo.update(existing)
         return await self.debtor_repo.add(
             DebtorModel(
-                document_number=data.document_number,
+                document_number=encrypt_service.encrypt_to_str(data.document_number),
+                document_number_hash=doc_hash,
                 full_name=data.full_name,
                 document_type=data.document_type,
                 debtor_type=data.debtor_type,

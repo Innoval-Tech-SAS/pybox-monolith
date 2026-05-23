@@ -1,11 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
+import type { GoogleButtonProps } from "@/types/props/google-button-props";
 import { useGoogleAuth } from "../../hooks/use-google-auth";
-
-interface GoogleButtonProps {
-  text: string;
-  onToken: (token: string) => void;
-  disabled?: boolean;
-}
 
 export const GoogleButton = ({
   text,

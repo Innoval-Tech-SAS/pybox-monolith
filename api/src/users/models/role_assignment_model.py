@@ -8,7 +8,7 @@ from base.audit_model import AuditModel
 from users.enums.user_enums import UserRole, UserScope, VALID_ROLE_SCOPE
 
 _CHECK_SQL = " OR ".join(
-    f"(rol = '{r.value}' AND alcance = '{s.value}')"
+    f"(rol = '{r.name}' AND alcance = '{s.name}')"
     for r, s in VALID_ROLE_SCOPE
 )
 

@@ -1,22 +1,17 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import { useNationalities, NationalityOption } from "@/hooks/use-nationalities";
-import { CountrySelectProps } from "@/types/props/country-select-props";
+import { useNationalities } from "@/hooks/use-nationalities";
+import type { NationalityOption } from "@/types/countries/country-types";
+import type {
+  CountrySelectProps,
+  FlagEmojiProps,
+} from "@/types/props/country-select-props";
+import {
+  getCountrySelectLabel,
+  getCountrySelectOptionValue,
+} from "@/ui/utils/country-select-utils";
 import { ChevronDownIcon } from "@/ui/icons";
 
-const getLabel = (n: NationalityOption, mode: CountrySelectProps["mode"]): string => {
-  switch (mode) {
-    case "PREFIX": return n.code;
-    case "NAME": return n.name;
-    case "PHONE": return n.phonePrefix;
-  }
-};
-
-const getOptionValue = (
-  n: NationalityOption,
-  valueKey: NonNullable<CountrySelectProps["valueKey"]>,
-): string => (valueKey === "phonePrefix" ? n.phonePrefix : n.code);
-
-const FlagEmoji: React.FC<{ code: string }> = ({ code }) => (
+const FlagEmoji: React.FC<FlagEmojiProps> = ({ code }) => (
   <span
     aria-hidden="true"
     className={`fi fi-${code.toLowerCase()} shrink-0 rounded-sm`}
@@ -42,7 +37,7 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
   const nationalities = externalNationalities ?? fetched;
   const isDisabled = disabled || loading;
   const selected = useMemo(
-    () => nationalities.find((n) => getOptionValue(n, valueKey) === value),
+    () => nationalities.find((n) => getCountrySelectOptionValue(n, valueKey) === value),
     [nationalities, value, valueKey],
   );
 
@@ -60,14 +55,14 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
   }, [open]);
 
   const handleSelect = (country: NationalityOption) => {
-    onChange(getOptionValue(country, valueKey));
+    onChange(getCountrySelectOptionValue(country, valueKey));
     setOpen(false);
   };
 
   const buttonText = loading
     ? "Cargando países..."
     : selected
-      ? getLabel(selected, mode)
+      ? getCountrySelectLabel(selected, mode)
       : placeholder;
 
   return (
@@ -105,7 +100,7 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
           className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900"
         >
           {nationalities.map((n) => {
-            const optionValue = getOptionValue(n, valueKey);
+            const optionValue = getCountrySelectOptionValue(n, valueKey);
             const isSelected = optionValue === value;
             return (
               <button
@@ -121,7 +116,7 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
                 }`}
               >
                 <FlagEmoji code={n.code} />
-                <span className="truncate">{getLabel(n, mode)}</span>
+                <span className="truncate">{getCountrySelectLabel(n, mode)}</span>
               </button>
             );
           })}

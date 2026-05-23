@@ -1,12 +1,8 @@
 import { useState } from "react";
 import { useApiClient } from "./use-api-client";
+import { setSessionUser } from "@/auth/utils/auth-session-utils";
+import { AuthTokenResponse } from "@/types/auth/auth-types";
 import { RegisterRequest } from "@/types/auth/user";
-
-interface AuthTokenResponse {
-  accessToken: string;
-  tokenType: string;
-  authProvider: string;
-}
 
 export const useRegister = () => {
   const { apiClient } = useApiClient();
@@ -23,7 +19,7 @@ export const useRegister = () => {
         body: JSON.stringify(data),
       });
       sessionStorage.setItem("accessToken", result.accessToken);
-      sessionStorage.setItem("user", JSON.stringify({ email: data.email }));
+      setSessionUser({ email: data.email });
       return result;
     } catch (err) {
       const message =

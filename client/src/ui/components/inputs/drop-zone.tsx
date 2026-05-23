@@ -1,14 +1,16 @@
 import React, { useRef, useState } from "react";
 import { DropZoneProps } from "@/types/props/drop-zone-props";
+import {
+  DEFAULT_ALLOWED_FILE_TYPES,
+  fileMatchesAllowedTypes,
+} from "@/ui/utils/drop-zone-utils";
 
-const DEFAULT_ALLOWED = ["application/pdf", "image/png"];
-
-export const DropZone: React.FC<DropZoneProps> = ({ label, file, onChange, error, allowed = DEFAULT_ALLOWED, hint = "PDF o PNG · máx. 5 MB" }) => {
+export const DropZone: React.FC<DropZoneProps> = ({ label, file, onChange, error, allowed = DEFAULT_ALLOWED_FILE_TYPES, hint = "PDF o PNG · máx. 5 MB" }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
   const accept = (f: File) => {
-    if (!allowed.includes(f.type)) return;
+    if (!fileMatchesAllowedTypes(f, allowed)) return;
     onChange(f);
   };
 
@@ -65,7 +67,7 @@ export const DropZone: React.FC<DropZoneProps> = ({ label, file, onChange, error
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Arrastra aquí o <span className="text-brand-500 font-medium">selecciona un archivo</span>
             </p>
-            <p className="text-xs text-gray-400">PDF o PNG · máx. 5 MB</p>
+            <p className="text-xs text-gray-400">{hint}</p>
           </>
         )}
       </div>

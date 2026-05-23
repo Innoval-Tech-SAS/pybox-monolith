@@ -1,16 +1,10 @@
-from typing import Annotated
-
-from fastapi import Depends, HTTPException, UploadFile, status
+from fastapi import HTTPException, UploadFile, status
 from config.api_router import APIRouter
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dependencies import TokenPayload
-from contacts.services.contact_services import ContactServices
-from database.database import get_main_session
+from contacts.dependencies import ContactServiceDep
 
 router = APIRouter(prefix="/contacts", tags=["contacts"])
-
-MainSession = Annotated[AsyncSession, Depends(get_main_session)]
 
 _ALLOWED_EXTENSIONS = {"csv", "xlsx"}
 
@@ -19,7 +13,7 @@ _ALLOWED_EXTENSIONS = {"csv", "xlsx"}
 async def upload_file(
     file: UploadFile,
     _: TokenPayload,
-    session: MainSession,
+    service: ContactServiceDep,
 ) -> dict:
     filename = file.filename or ""
 
@@ -37,7 +31,6 @@ async def upload_file(
         )
 
     file_bytes = await file.read()
-    service = ContactServices(session)
     resumen = await service.process_file(file_bytes, extension)
 
     return {

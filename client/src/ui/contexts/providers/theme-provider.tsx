@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
+import type { ChildrenProps } from "@/types/props/provider-props";
 import { ThemeContext } from "../theme-context";
-import { Theme } from "../../types/interfaces/contexts/theme-context-type";
+import type { Theme } from "@/types/contexts/theme-context-type";
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+export const ThemeProvider: React.FC<ChildrenProps> = ({
   children,
 }) => {
   const [theme, setTheme] = useState<Theme>("light");

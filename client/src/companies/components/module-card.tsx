@@ -1,15 +1,19 @@
 import { ArrowRight } from "lucide-react";
-import { OrgModule } from "../constants/org-modules";
+import { useNavigate } from "react-router";
+import type { ModuleCardProps } from "@/types/props/module-card-props";
 
-interface ModuleCardProps {
-  module: OrgModule;
-  orgId: string;
-  id?: string;
-}
+export const ModuleCard: React.FC<ModuleCardProps> = ({ module, orgId, id }) => {
+  const navigate = useNavigate();
 
-export const ModuleCard: React.FC<ModuleCardProps> = ({ module, id }) => (
+  const handleClick = () => {
+    if (!module.path) return;
+    navigate(`${module.path}?org=${orgId}`);
+  };
+
+  return (
   <button
     id={id}
+    onClick={handleClick}
     disabled={!module.path}
     className="group w-full cursor-pointer overflow-hidden rounded-3xl border border-gray-200 bg-white/80 backdrop-blur-md shadow-lg text-left transition-all duration-200 min-h-56 flex flex-col gap-5 p-5 sm:p-6
       hover:scale-[1.02] hover:shadow-xl
@@ -38,4 +42,5 @@ export const ModuleCard: React.FC<ModuleCardProps> = ({ module, id }) => (
       </div>
     </div>
   </button>
-);
+  );
+};

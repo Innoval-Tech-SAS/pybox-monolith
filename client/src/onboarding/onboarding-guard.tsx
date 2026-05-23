@@ -2,12 +2,9 @@ import React from "react";
 import { OnboardingModal } from "./onboarding-modal";
 import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
 import { Loader } from "@/ui/components/loader/loader";
+import type { OnboardingGuardProps } from "@/types/props/onboarding-props";
 
-interface Props {
-  children: React.ReactNode;
-}
-
-export const OnboardingGuard: React.FC<Props> = ({ children }) => {
+export const OnboardingGuard: React.FC<OnboardingGuardProps> = ({ children }) => {
   const { status, loading, refetch } = useOnboardingStatus();
 
   if (loading) {

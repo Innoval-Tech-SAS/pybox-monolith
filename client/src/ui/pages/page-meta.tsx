@@ -1,13 +1,11 @@
 import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import type { PageMetaProps } from "@/types/props/page-meta-props";
 
 export const PageMeta = ({
   title,
   description,
-}: {
-  title: string;
-  description: string;
-}) => {
+}: PageMetaProps) => {
   useEffect(() => {
     document.title = title;
   }, [title]);

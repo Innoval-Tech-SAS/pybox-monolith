@@ -1,7 +1,8 @@
 import json
-from typing import Any, Type, TypeVar
+from typing import Any, AsyncGenerator, Type, TypeVar
 
 import redis.asyncio as aioredis
+from redis.asyncio.client import PubSub
 from pydantic import BaseModel
 
 from config.redis_config import RedisConfig
@@ -10,9 +11,12 @@ T = TypeVar("T")
 
 
 class RedisClient:
+    """get/set client — uses a single shared connection."""
+
     def __init__(self, config: RedisConfig = RedisConfig()):
-        cfg = config
-        self._client: aioredis.Redis = aioredis.from_url(cfg.url, decode_responses=True)
+        self._client: aioredis.Redis = aioredis.from_url(
+            config.url, decode_responses=True
+        )
 
     @classmethod
     def get_instance(cls) -> "RedisClient":
@@ -28,7 +32,11 @@ class RedisClient:
     async def set_json(
         self, key: str, value: Any, ttl_seconds: int = RedisConfig.DEFAULT_TTL
     ) -> None:
-        serialized = value.model_dump_json() if isinstance(value, BaseModel) else json.dumps(value)
+        serialized = (
+            value.model_dump_json()
+            if isinstance(value, BaseModel)
+            else json.dumps(value)
+        )
         await self._client.set(key, serialized, ex=ttl_seconds)
 
     async def get(self, key: str) -> str | None:
@@ -49,4 +57,51 @@ class RedisClient:
         await self._client.aclose()
 
 
-redis_client = RedisClient()
+class RedisEventClient:
+    """pub/sub client — each instance owns its own connection and pubsub object."""
+
+    def __init__(self, config: RedisConfig = RedisConfig()):
+        self._client: aioredis.Redis = aioredis.from_url(
+            config.url, decode_responses=True
+        )
+        self._pubsub: PubSub = self._client.pubsub()
+
+    async def subscribe(self, *channels: str) -> None:
+        await self._pubsub.subscribe(*channels)
+
+    async def psubscribe(self, *patterns: str) -> None:
+        await self._pubsub.psubscribe(*patterns)
+
+    async def unsubscribe(self, *channels: str) -> None:
+        await self._pubsub.unsubscribe(*channels)
+
+    async def listen(self) -> AsyncGenerator[dict, None]:
+        async for message in self._pubsub.listen():
+            if message["type"] in ("message", "pmessage"):
+                yield message
+
+    async def publish(self, channel: str, message: str) -> None:
+        await self._client.publish(channel, message)
+
+    async def close(self) -> None:
+        await self._pubsub.close()
+        await self._client.aclose()
+
+
+class RedisFactory:
+    """Creates typed Redis clients from a shared config."""
+
+    def __init__(self, config: RedisConfig | None = None):
+        self._config = config or RedisConfig()
+
+    def get_set_client(self) -> RedisClient:
+        if not hasattr(self, "_set_client"):
+            self._set_client = RedisClient(self._config)
+        return self._set_client
+
+    def pubsub_client(self) -> RedisEventClient:
+        return RedisEventClient(self._config)
+
+
+redis_factory = RedisFactory()
+redis_client = redis_factory.get_set_client()

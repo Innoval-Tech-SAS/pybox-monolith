@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, TypeVar
+from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -9,14 +9,10 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase
 
 from config.database_config import DatabaseConfig
-from config.logger import logger
 
 
 class Base(DeclarativeBase):
     pass
-
-
-T = TypeVar("T", bound=DeclarativeBase)
 
 
 class Database:
@@ -25,13 +21,6 @@ class Database:
         self._Session: async_sessionmaker[AsyncSession] = async_sessionmaker(
             bind=self.engine, expire_on_commit=False
         )
-
-    async def create_tables(self) -> None:
-        async with self.engine.begin() as conn:
-            try:
-                await conn.run_sync(Base.metadata.create_all)
-            except Exception as e:
-                logger.error(e)
 
     @asynccontextmanager
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:

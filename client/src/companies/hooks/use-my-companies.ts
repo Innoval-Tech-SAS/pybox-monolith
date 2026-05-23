@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
-
-export interface OrgSummary {
-  id: string;
-  name: string;
-  description?: string;
-  country?: string;
-  fiscalDocumentType?: string;
-  fiscalDocumentNumber?: string;
-}
+import type { OrgSummary } from "@/types/companies/company-types";
 
 export const useMyCompanies = () => {
   const { apiClient } = useApiClient();

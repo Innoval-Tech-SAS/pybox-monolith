@@ -12,11 +12,6 @@ class UserModel(AuditModel):
     __tablename__ = "usuarios"
     __table_args__ = (
         UniqueConstraint(
-            "tipo_documento",
-            "numero_documento",
-            name="uq_usuarios_tipo_numero_documento",
-        ),
-        UniqueConstraint(
             "proveedor_autenticacion",
             "id_usuario_proveedor",
             name="uq_usuarios_proveedor_usuario",
@@ -33,7 +28,8 @@ class UserModel(AuditModel):
     provider_user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, name="id_usuario_proveedor")
     nationality: Mapped[Nationality | None] = mapped_column(ENUM(Nationality), nullable=True, name="nacionalidad")
     document_type: Mapped[UserDocumentType | None] = mapped_column(ENUM(UserDocumentType), nullable=True, name="tipo_documento")
-    document_number: Mapped[str | None] = mapped_column(String(50), nullable=True, name="numero_documento")
+    document_number: Mapped[str | None] = mapped_column(String(255), nullable=True, name="numero_documento")
+    document_number_hash: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True, index=True, name="numero_documento_hash")
     is_email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="correo_verificado")
     is_phone_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="telefono_verificado")
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="mfa_habilitado")

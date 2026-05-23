@@ -13,21 +13,21 @@ class DebtorRepository(SoftDeleteRepositoryBase[DebtorModel]):
         super().__init__(session)
 
     async def get_by_document(
-        self, document_type: DocumentTypes, document_number: str
+        self, document_type: DocumentTypes, document_number_hash: str
     ) -> DebtorModel | None:
         result = await self.session.execute(
             select(DebtorModel).where(
                 DebtorModel.document_type == document_type,
-                DebtorModel.document_number == document_number,
+                DebtorModel.document_number_hash == document_number_hash,
                 DebtorModel.deleted_at.is_(None),
             )
         )
         return result.scalars().first()
 
-    async def get_by_document_number(self, document_number: str) -> DebtorModel | None:
+    async def get_by_document_number(self, document_number_hash: str) -> DebtorModel | None:
         result = await self.session.execute(
             select(DebtorModel).where(
-                DebtorModel.document_number == document_number,
+                DebtorModel.document_number_hash == document_number_hash,
                 DebtorModel.deleted_at.is_(None),
             )
         )

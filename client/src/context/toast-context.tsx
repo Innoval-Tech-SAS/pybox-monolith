@@ -5,17 +5,18 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { NotificationVariant } from "@/types/props/notification-props";
-import { ToastContextValue, Toast } from "@/types/contexts/toast-context-types";
+import type { NotificationVariant } from "@/types/props/notification-props";
+import type { ToastContextValue, Toast } from "@/types/contexts/toast-context-types";
+import type { ToastProviderProps } from "@/types/props/provider-props";
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const DEFAULT_DURATION = 5000;
 
-export const ToastProvider: React.FC<{
-  children: React.ReactNode;
-  duration?: number;
-}> = ({ children, duration = DEFAULT_DURATION }) => {
+export const ToastProvider: React.FC<ToastProviderProps> = ({
+  children,
+  duration = DEFAULT_DURATION,
+}) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 

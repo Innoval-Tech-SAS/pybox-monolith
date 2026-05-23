@@ -31,7 +31,7 @@ class OrganizationModel(AuditModel):
         ENUM(OrgFiscalDocumentType), nullable=True, name="tipo_documento_fiscal"
     )
     fiscal_document_number: Mapped[str | None] = mapped_column(
-        String(50), nullable=True, name="numero_documento_fiscal"
+        String(255), nullable=True, name="numero_documento_fiscal"
     )
     fiscal_document_file: Mapped[str | None] = mapped_column(
         String(500), nullable=True, name="archivo_documento_fiscal"
@@ -42,6 +42,9 @@ class OrganizationModel(AuditModel):
     )
     mercantile_document_file: Mapped[str | None] = mapped_column(
         String(500), nullable=True, name="archivo_documento_mercantil"
+    )
+    representative_document_file: Mapped[str | None] = mapped_column(
+        String(500), nullable=True, name="archivo_documento_representante"
     )
 
     memberships = relationship(

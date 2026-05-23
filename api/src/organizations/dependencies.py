@@ -11,6 +11,7 @@ from organizations.services.organization_service import OrganizationService
 from users.enums.user_enums import UserRole, UserScope
 from users.models.role_assignment_model import RoleAssignmentModel
 from users.repository.role_assignment_repository import RoleAssignmentRepository
+from users.repository.user_repository import UserRepository
 
 
 async def get_admin_assignment(
@@ -46,6 +47,7 @@ def get_organization_service(
         org_repo=OrganizationRepository(session),
         membership_repo=OrganizationMembershipRepository(session),
         role_assignment_repo=RoleAssignmentRepository(session),
+        user_repo=UserRepository(session),
     )
 
 

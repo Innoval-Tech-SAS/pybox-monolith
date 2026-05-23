@@ -8,15 +8,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-
-export interface OrgModule {
-  key: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  gradient: string;
-  path: string | null;
-}
+import type { OrgModule } from "@/types/companies/company-types";
 
 export const ORG_MODULES: OrgModule[] = [
   {
@@ -33,7 +25,7 @@ export const ORG_MODULES: OrgModule[] = [
     description: "Carga un nuevo portafolio de clientes.",
     icon: <Plus size={24} className="text-white" />,
     gradient: "from-green-500 to-green-600",
-    path: null,
+    path: "/my-companies/add-portfolio",
   },
   {
     key: "payment-methods",

@@ -1,19 +1,9 @@
 import { useState } from "react";
 import { useApiClient } from "./use-api-client";
-
-export interface OAuthRegisterRequest {
-  provider: string;
-  token: string;
-  phone_number?: string;
-  nationality?: string;
-}
-
-interface AuthTokenResponse {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: string;
-  authProvider: string;
-}
+import {
+  AuthTokenResponse,
+  OAuthRegisterRequest,
+} from "@/types/auth/auth-types";
 
 export const useOAuthRegister = () => {
   const { apiClient } = useApiClient();
@@ -33,7 +23,7 @@ export const useOAuthRegister = () => {
         body: JSON.stringify(data),
       });
       sessionStorage.setItem("accessToken", result.accessToken);
-      sessionStorage.setItem("refreshToken", result.refreshToken);
+      if (result.refreshToken) sessionStorage.setItem("refreshToken", result.refreshToken);
       return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error al registrar con Google";

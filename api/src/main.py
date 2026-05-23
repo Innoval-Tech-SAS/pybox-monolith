@@ -9,30 +9,6 @@ from config.error_handlers import register_error_handlers
 from database.database import db
 from tools.config_tools import get_or_throw
 
-# Importar modelos para que SQLAlchemy los registre en Base.metadata antes de create_all
-import campaigns.models.campaign_model  # noqa: F401
-import contacts.models.contact_model  # noqa: F401
-import notifications.models.verification_code_model  # noqa: F401
-import organizations.models.organization_model  # noqa: F401
-import organizations.models.organization_membership_model  # noqa: F401
-import users.models.user_model  # noqa: F401
-import users.models.permission_model  # noqa: F401
-import users.models.role_assignment_model  # noqa: F401
-import users.models.permission_assignment_model  # noqa: F401
-import portfolios.models.portfolio_model  # noqa: F401
-import portfolios.models.portfolio_user_access_model  # noqa: F401
-import portfolios.models.portfolio_daily_counter_config_model  # noqa: F401
-import debtors.models.debtor_model  # noqa: F401
-import debtors.models.address_model  # noqa: F401
-import debtors.models.segment_model  # noqa: F401
-import credits.models.credit_model  # noqa: F401
-import credits.models.credit_adjustment_model  # noqa: F401
-import credits.models.uvr_quote_model  # noqa: F401
-import payments.models.payment_model  # noqa: F401
-import payment_methods.models.payment_method_model  # noqa: F401
-import contact_methods.models.contact_method_model  # noqa: F401
-import reports.models.report_model  # noqa: F401
-
 from auth.controllers.auth_controller import router as auth_router
 from contacts.controllers.contact_controller import router as contacts_router
 from countries.controllers.countries_controller import router as countries_router
@@ -48,8 +24,7 @@ os.makedirs(_UPLOADS_DIR, exist_ok=True)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    await db.create_tables()
+async def lifespan(_app: FastAPI):
     yield
     await db.engine.dispose()
 

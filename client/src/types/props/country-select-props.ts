@@ -1,4 +1,4 @@
-import { NationalityOption } from "@/hooks/use-nationalities";
+import type { NationalityOption } from "@/types/countries/country-types";
 
 export type CountrySelectMode = "PREFIX" | "NAME" | "PHONE";
 export type CountrySelectValueKey = "code" | "phonePrefix";
@@ -14,4 +14,8 @@ export interface CountrySelectProps {
   className?: string;
   disabled?: boolean;
   required?: boolean;
+}
+
+export interface FlagEmojiProps {
+  code: string;
 }

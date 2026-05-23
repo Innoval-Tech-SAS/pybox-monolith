@@ -1,20 +1,8 @@
 import React, { useState } from "react";
 import { OtpInput } from "@/ui/components/inputs/otp-input";
-import { VerificationChannel } from "@/types/onboarding/onboarding-types";
+import type { VerifyChannelStepProps } from "@/types/props/onboarding-props";
 
-interface Props {
-  title: string;
-  description: string;
-  defaultChannel: VerificationChannel;
-  onDone: () => void;
-  requestOtp: (channel: VerificationChannel) => Promise<void>;
-  verifyOtp: (channel: VerificationChannel, code: string) => Promise<void>;
-  loading: boolean;
-  error: string | null;
-  clearError: () => void;
-}
-
-export const VerifyChannelStep: React.FC<Props> = ({
+export const VerifyChannelStep: React.FC<VerifyChannelStepProps> = ({
   title,
   description,
   defaultChannel,

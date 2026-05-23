@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import base64
+import hashlib
+import hmac
 import secrets
 from typing import Optional
 
@@ -20,7 +22,7 @@ class EncryptService:
     VERSION = "v1"
     ENCRYPT_KEY = "ENCRYPT_KEY"
 
-    def __init__(self, key: Optional[bytes] = None):
+    def __init__(self, key: Optional[bytes] = None, hash_key: Optional[bytes] = None):
         if key is None:
             raw = get_or_throw(self.ENCRYPT_KEY)
             key = _b64d(raw)
@@ -29,6 +31,7 @@ class EncryptService:
             raise ValueError("La clave debe tener 32 bytes (AES-256).")
 
         self._aes = AESGCM(key)
+        self._hash_key = hash_key or _b64d(get_or_throw("DOCUMENT_HASH_KEY"))
 
     def _encrypt(self, data: bytes | str, *, aad: Optional[bytes | str] = None) -> str:
         try:
@@ -73,3 +76,9 @@ class EncryptService:
 
     def decrypt_to_str(self, token: str, **kwargs) -> str:
         return self._decrypt(token, **kwargs).decode("utf-8")
+
+    def hash_document(self, value: str) -> str:
+        return hmac.new(self._hash_key, value.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+encrypt_service = EncryptService()

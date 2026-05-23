@@ -1,9 +1,5 @@
+import type { AuthLayoutProps } from "@/types/props/auth-layout-props";
 import { ThemeToggler } from "../../ui/components/menu/theme-toggler";
-
-interface AuthLayoutProps {
-  children: React.ReactNode;
-  rightPanel?: React.ReactNode;
-}
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
   children,

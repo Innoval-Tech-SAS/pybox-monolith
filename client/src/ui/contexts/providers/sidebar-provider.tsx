@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
+import type { ChildrenProps } from "@/types/props/provider-props";
 import { SidebarContext } from "../sidebar-context";
 
-export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
+export const SidebarProvider: React.FC<ChildrenProps> = ({
   children,
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);

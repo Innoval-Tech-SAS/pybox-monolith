@@ -7,7 +7,7 @@ from ..utils.contact_exceptions import DuplicateContactError
 from ..utils.contact_file_parser import ContactFileParser
 
 
-class ContactServices:
+class ContactService:
 
     def __init__(self, session: AsyncSession):
         self.repository = ContactRepository(session)

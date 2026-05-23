@@ -13,4 +13,5 @@ class DebtorModel(AuditModel):
     full_name: Mapped[str] = mapped_column(String, nullable=False, name="nombre_completo")
     debtor_type: Mapped[DebtorType] = mapped_column(ENUM(DebtorType), nullable=False, name="tipo_deudor")
     document_type: Mapped[DocumentTypes] = mapped_column(ENUM(DocumentTypes), nullable=False, name="tipo_documento")
-    document_number: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True, name="numero_documento")
+    document_number: Mapped[str] = mapped_column(String, nullable=False, name="numero_documento")
+    document_number_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True, name="numero_documento_hash")

@@ -3,12 +3,9 @@ import { Input } from "@/ui/components/inputs/input";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { useUpdateProfile } from "@/hooks/use-update-profile";
 import { useNationalities } from "@/hooks/use-nationalities";
+import type { StepDoneProps } from "@/types/props/onboarding-props";
 
-interface Props {
-  onDone: () => void;
-}
-
-export const UpdateProfileStep: React.FC<Props> = ({ onDone }) => {
+export const UpdateProfileStep: React.FC<StepDoneProps> = ({ onDone }) => {
   const { nationalities, loading: loadingNat } = useNationalities();
   const { updateProfile, loading, error, clearError } = useUpdateProfile();
 

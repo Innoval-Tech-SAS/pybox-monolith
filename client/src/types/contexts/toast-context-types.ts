@@ -1,4 +1,4 @@
-import { NotificationVariant } from "../props/notification-props";
+import type { NotificationVariant } from "../props/notification-props";
 
 export interface Toast {
   id: string;

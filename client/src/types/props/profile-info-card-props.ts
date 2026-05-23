@@ -5,3 +5,10 @@ export interface ProfileInfoCardProps {
   documentType?: string;
   documentNumber?: string;
 }
+
+export interface ProfileInfoField {
+  label: string;
+  value: string;
+  key: string;
+  colSpan?: boolean;
+}
