@@ -5,13 +5,24 @@ from users.enums.user_enums import UserRole, UserScope
 
 class OrgSessionEntry(BaseModel):
     role: UserRole
-    scope: UserScope
     org_name: str
+    permissions: frozenset[str] = frozenset()
 
 
 class UserSession(BaseModel):
+    user_id: int
     full_name: str
     email: str
     role: UserRole | None = None
     scope: UserScope | None = None
+    document_type: str | None = None   # identidad para usuarios SELF
+    document_number: str | None = None
     orgs: dict[str, OrgSessionEntry] = {}
+
+    @property
+    def is_global(self) -> bool:
+        return self.scope == UserScope.GLOBAL
+
+    @property
+    def is_self(self) -> bool:
+        return self.scope == UserScope.SELF

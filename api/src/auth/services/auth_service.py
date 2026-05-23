@@ -8,6 +8,7 @@ from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.models.user_model import UserModel
 from users.models.role_assignment_model import RoleAssignmentModel
 from users.enums.user_enums import UserRole, UserScope
+from users.services.user_service import UserService
 from security.services.auth_token_service import AuthTokenService
 from security.services.encrypt_service import encrypt_service
 from security.services.password_hasher_service import PasswordHasherService
@@ -38,12 +39,14 @@ class AuthService:
         password_hasher: PasswordHasherService | None = None,
         token_service: AuthTokenService | None = None,
         oauth_provider_service: OAuthProviderService | None = None,
+        user_service: UserService | None = None,
     ):
         self.user_repository = user_repository
         self.role_assignment_repository = role_assignment_repository
         self.password_hasher = password_hasher or PasswordHasherService()
         self.token_service = token_service or AuthTokenService()
         self.oauth_provider_service = oauth_provider_service or OAuthProviderService()
+        self._user_service = user_service
 
     async def register_and_authenticate(
         self, user_data: UserCreate, role: UserRole, scope: UserScope
@@ -267,6 +270,8 @@ class AuthService:
         refresh_token = await self.token_service.generate_refresh_token(
             cast(int, user.id)
         )
+        if self._user_service is not None:
+            await self._user_service.get_user_session(cast(int, user.id))
         return AuthResponse(
             access_token=access_token,
             refresh_token=refresh_token,

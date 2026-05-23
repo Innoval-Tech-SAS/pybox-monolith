@@ -5,9 +5,13 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_main_session
+from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
+from organizations.repository.organization_repository import OrganizationRepository
 from security.services.auth_token_service import AuthTokenService
-from users.repository.user_repository import UserRepository
+from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
+from users.repository.user_repository import UserRepository
+from users.services.user_service import UserService
 from .services.auth_service import AuthService
 
 _bearer = HTTPBearer()
@@ -35,9 +39,19 @@ def _get_token_payload(
 def get_auth_service(
     session: Annotated[AsyncSession, Depends(get_main_session)],
 ) -> AuthService:
+    user_repo = UserRepository(session)
+    role_assignment_repo = RoleAssignmentRepository(session)
+    user_service = UserService(
+        user_repo=user_repo,
+        org_repo=OrganizationRepository(session),
+        membership_repo=OrganizationMembershipRepository(session),
+        role_assignment_repo=role_assignment_repo,
+        permission_assignment_repo=PermissionAssignmentRepository(session),
+    )
     return AuthService(
-        user_repository=UserRepository(session),
-        role_assignment_repository=RoleAssignmentRepository(session),
+        user_repository=user_repo,
+        role_assignment_repository=role_assignment_repo,
+        user_service=user_service,
     )
 
 

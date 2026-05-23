@@ -3,7 +3,6 @@ import json
 from fastapi import Form, HTTPException, UploadFile, status
 
 from config.api_router import APIRouter
-
 from notifications.exceptions import (
     CodeAlreadyUsedException,
     CodeExpiredException,
@@ -12,7 +11,6 @@ from notifications.exceptions import (
 from onboarding.dependencies import (
     CurrentOrg,
     CurrentScope,
-    CurrentUser,
     OnboardingServiceDep,
 )
 from onboarding.schemas.onboarding_schemas import (
@@ -22,6 +20,7 @@ from onboarding.schemas.onboarding_schemas import (
     UpdateProfileSchema,
     VerifyOtpSchema,
 )
+from security.dependencies import CurrentSession
 from users.enums.user_enums import UserScope
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
@@ -29,31 +28,31 @@ router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
 @router.get("/status", response_model=OnboardingStatusSchema)
 async def get_status(
-    user: CurrentUser,
+    session: CurrentSession,
     scope: CurrentScope,
     org: CurrentOrg,
     service: OnboardingServiceDep,
 ):
-    return service.get_status(user, scope, org)
+    return await service.get_status(session.user_id, scope, org)
 
 
 @router.post("/request-otp", status_code=status.HTTP_204_NO_CONTENT)
 async def request_otp(
     body: RequestOtpSchema,
-    user: CurrentUser,
+    session: CurrentSession,
     service: OnboardingServiceDep,
 ):
-    await service.request_otp(user, body.channel)
+    await service.request_otp(session.user_id, body.channel)
 
 
 @router.post("/verify-otp", status_code=status.HTTP_204_NO_CONTENT)
 async def verify_otp(
     body: VerifyOtpSchema,
-    user: CurrentUser,
+    session: CurrentSession,
     service: OnboardingServiceDep,
 ):
     try:
-        await service.verify_otp(user, body.channel, body.code)
+        await service.verify_otp(session.user_id, body.channel, body.code)
     except CodeNotFoundException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Código no encontrado")
     except CodeExpiredException:
@@ -65,15 +64,15 @@ async def verify_otp(
 @router.patch("/profile", status_code=status.HTTP_204_NO_CONTENT)
 async def update_profile(
     body: UpdateProfileSchema,
-    user: CurrentUser,
+    session: CurrentSession,
     service: OnboardingServiceDep,
 ):
-    await service.update_profile(user, body)
+    await service.update_profile(session.user_id, body)
 
 
 @router.post("/organization", status_code=status.HTTP_204_NO_CONTENT)
 async def create_first_org(
-    user: CurrentUser,
+    session: CurrentSession,
     scope: CurrentScope,
     service: OnboardingServiceDep,
     data: str = Form(...),
@@ -94,4 +93,4 @@ async def create_first_org(
             detail="El campo 'data' debe ser un JSON válido",
         )
 
-    await service.create_first_org(user, parsed, fiscal_document_file, mercantile_document_file)
+    await service.create_first_org(session.user_id, parsed, fiscal_document_file, mercantile_document_file)

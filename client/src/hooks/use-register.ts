@@ -7,11 +7,9 @@ import { RegisterRequest } from "@/types/auth/user";
 export const useRegister = () => {
   const { apiClient } = useApiClient();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const register = async (data: RegisterRequest, endpoint = "/auth/register"): Promise<AuthTokenResponse> => {
     setLoading(true);
-    setError(null);
     try {
       const result: AuthTokenResponse = await apiClient(endpoint, {
         method: "POST",
@@ -19,17 +17,13 @@ export const useRegister = () => {
         body: JSON.stringify(data),
       });
       sessionStorage.setItem("accessToken", result.accessToken);
+      if (result.refreshToken) sessionStorage.setItem("refreshToken", result.refreshToken);
       setSessionUser({ email: data.email });
       return result;
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Error al registrar usuario";
-      setError(message);
-      throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  return { register, loading, error };
+  return { register, loading };
 };

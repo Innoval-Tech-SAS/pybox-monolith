@@ -4,52 +4,38 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_main_session
-from onboarding.dependencies import CurrentUser
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from organizations.repository.organization_repository import OrganizationRepository
 from organizations.services.organization_service import OrganizationService
+from security.dependencies import CurrentSession
 from users.enums.user_enums import UserRole, UserScope
-from users.models.role_assignment_model import RoleAssignmentModel
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_repository import UserRepository
+from users.schemas.user_session_schema import UserSession
 
 
-async def get_admin_assignment(
-    user: CurrentUser,
-    session: Annotated[AsyncSession, Depends(get_main_session)],
-) -> RoleAssignmentModel:
-    """
-    Verifica que el usuario autenticado tenga rol ADMIN.
-    Devuelve su RoleAssignment de mayor jerarquía (GLOBAL > ORGANIZATION).
-    """
-    repo = RoleAssignmentRepository(session)
-    assignments = await repo.get_by_user_id(user.id)
-    admin_assignments = [a for a in assignments if a.role == UserRole.ADMIN]
-
-    if not admin_assignments:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requiere rol de administrador",
-        )
-
-    # GLOBAL tiene prioridad sobre ORGANIZATION
-    global_admin = next((a for a in admin_assignments if a.scope == UserScope.GLOBAL), None)
-    if global_admin:
-        return global_admin
-
-    return admin_assignments[0]
-
-
-def get_organization_service(
-    session: Annotated[AsyncSession, Depends(get_main_session)],
-) -> OrganizationService:
-    return OrganizationService(
-        org_repo=OrganizationRepository(session),
-        membership_repo=OrganizationMembershipRepository(session),
-        role_assignment_repo=RoleAssignmentRepository(session),
-        user_repo=UserRepository(session),
+async def get_admin_scope(session: CurrentSession) -> UserScope:
+    if session.is_global and session.role == UserRole.ADMIN:
+        return UserScope.GLOBAL
+    for org_entry in session.orgs.values():
+        if org_entry.role == UserRole.ADMIN:
+            return UserScope.ORGANIZATION
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Se requiere rol de administrador",
     )
 
 
-AdminAssignmentDep = Annotated[RoleAssignmentModel, Depends(get_admin_assignment)]
+def get_organization_service(
+    db: Annotated[AsyncSession, Depends(get_main_session)],
+) -> OrganizationService:
+    return OrganizationService(
+        org_repo=OrganizationRepository(db),
+        membership_repo=OrganizationMembershipRepository(db),
+        role_assignment_repo=RoleAssignmentRepository(db),
+        user_repo=UserRepository(db),
+    )
+
+
+AdminScopeDep = Annotated[UserScope, Depends(get_admin_scope)]
 OrgServiceDep = Annotated[OrganizationService, Depends(get_organization_service)]

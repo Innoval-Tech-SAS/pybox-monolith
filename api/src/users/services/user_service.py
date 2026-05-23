@@ -4,8 +4,10 @@ from database.redis import RedisClient
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from organizations.repository.organization_repository import OrganizationRepository
 from organizations.services.organization_service import OrganizationService
-from users.enums.user_enums import UserRole, UserScope
+from security.role_permissions_catalog import get_base_permissions
+from users.enums.user_enums import PermissionEffect, UserRole, UserScope
 from users.models.user_model import UserModel
+from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_repository import UserRepository
 from users.schemas.user_session_schema import OrgSessionEntry, UserSession
@@ -18,12 +20,14 @@ class UserService:
         org_repo: OrganizationRepository,
         membership_repo: OrganizationMembershipRepository,
         role_assignment_repo: RoleAssignmentRepository,
+        permission_assignment_repo: PermissionAssignmentRepository,
         redis: RedisClient | None = None,
     ):
         self.user_repo = user_repo
         self.org_repo = org_repo
         self.membership_repo = membership_repo
         self.role_assignment_repo = role_assignment_repo
+        self.permission_assignment_repo = permission_assignment_repo
         self._org_service = OrganizationService(org_repo, membership_repo, role_assignment_repo)
         self._redis = redis
 
@@ -41,12 +45,18 @@ class UserService:
 
         assignments = await self.role_assignment_repo.get_by_user_id(user_id)
 
+        doc_type = user.document_type.value if user.document_type else None
+        doc_number = user.document_number
+
         if not assignments:
             session = UserSession(
+                user_id=user_id,
                 full_name=user.full_name,
                 email=user.email,
                 role=UserRole.USER,
                 scope=UserScope.SELF,
+                document_type=doc_type,
+                document_number=doc_number,
             )
         else:
             scopes = {a.scope for a in assignments}
@@ -54,10 +64,13 @@ class UserService:
             if UserScope.GLOBAL in scopes:
                 global_assignment = next(a for a in assignments if a.scope == UserScope.GLOBAL)
                 session = UserSession(
+                    user_id=user_id,
                     full_name=user.full_name,
                     email=user.email,
                     role=global_assignment.role,
                     scope=UserScope.GLOBAL,
+                    document_type=doc_type,
+                    document_number=doc_number,
                 )
             else:
                 memberships = await self.membership_repo.get_by_user_id(user_id)
@@ -74,12 +87,25 @@ class UserService:
                     assignment = assignment_by_org.get(org_id_str)
                     org = org_models.get(org_id_str)
                     if assignment and org:
+                        base = get_base_permissions(assignment.role)
+                        overrides = await self.permission_assignment_repo.get_overrides_for_user_org(
+                            user_id, m.organization_id
+                        )
+                        grants = {name for name, effect in overrides if effect == PermissionEffect.GRANT}
+                        revokes = {name for name, effect in overrides if effect == PermissionEffect.REVOKE}
                         orgs[org_id_str] = OrgSessionEntry(
                             role=assignment.role,
-                            scope=assignment.scope,
                             org_name=org.name,
+                            permissions=(base | grants) - revokes,
                         )
-                session = UserSession(full_name=user.full_name, email=user.email, orgs=orgs)
+                session = UserSession(
+                    user_id=user_id,
+                    full_name=user.full_name,
+                    email=user.email,
+                    document_type=doc_type,
+                    document_number=doc_number,
+                    orgs=orgs,
+                )
 
         await self.redis.set_json(f"session:{user_id}", session)
         return session

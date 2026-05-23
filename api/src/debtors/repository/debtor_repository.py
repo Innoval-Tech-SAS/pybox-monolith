@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from debtors.enums.debtor_enums import DocumentTypes
+from countries.enums.country_enums import UserDocumentType
 from debtors.models.debtor_model import DebtorModel
 
 
@@ -13,7 +13,7 @@ class DebtorRepository(SoftDeleteRepositoryBase[DebtorModel]):
         super().__init__(session)
 
     async def get_by_document(
-        self, document_type: DocumentTypes, document_number_hash: str
+        self, document_type: UserDocumentType, document_number_hash: str
     ) -> DebtorModel | None:
         result = await self.session.execute(
             select(DebtorModel).where(

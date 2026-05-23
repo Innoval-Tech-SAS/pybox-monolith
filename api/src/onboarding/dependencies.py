@@ -1,83 +1,51 @@
-from typing import Annotated, Any
+import uuid
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.dependencies import TokenPayload
 from database.database import get_main_session
 from onboarding.services.onboarding_service import OnboardingService
 from organizations.models.organization_model import OrganizationModel
 from organizations.repository.organization_repository import OrganizationRepository
-from organizations.repository.organization_membership_repository import (
-    OrganizationMembershipRepository,
-)
+from security.dependencies import CurrentSession, get_session
 from users.enums.user_enums import UserScope
-from users.models.user_model import UserModel
-from users.repository.role_assignment_repository import RoleAssignmentRepository
-from users.repository.user_repository import UserRepository
+from users.schemas.user_session_schema import UserSession
 
 
-async def get_current_user(
-    payload: TokenPayload,
-    session: Annotated[AsyncSession, Depends(get_main_session)],
-) -> UserModel:
-    from config.logger import logger
-    user_id = int(payload["sub"])
-    logger.debug(f"[get_current_user] START — user_id={user_id!r} (type={type(user_id).__name__})")
-    repo = UserRepository(session)
-    user = await repo.get_by_id(user_id)
-    if not user:
-        logger.debug(f"[get_current_user] END   — NOT FOUND for id={user_id!r}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado"
-        )
-    logger.debug(f"[get_current_user] END   — OK user.id={user.id} email={user.email}")
-    return user
-
-
-async def get_current_scope(
-    payload: TokenPayload,
-    session: Annotated[AsyncSession, Depends(get_main_session)],
+def get_current_scope(
+    session: Annotated[UserSession, Depends(get_session)],
 ) -> UserScope:
-    user_id = int(payload["sub"])
-    repo = RoleAssignmentRepository(session)
-    assignments = await repo.get_by_user_id(user_id)
-    if not assignments:
-        return UserScope.SELF
-    # Primary scope: ORGANIZATION takes priority over SELF
-    scopes = {a.scope for a in assignments}
-    if UserScope.GLOBAL in scopes:
+    if session.is_global:
         return UserScope.GLOBAL
-    if UserScope.ORGANIZATION in scopes:
+    if session.orgs:
         return UserScope.ORGANIZATION
     return UserScope.SELF
 
 
 async def get_current_org(
-    user: Annotated[UserModel, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_main_session)],
+    session: Annotated[UserSession, Depends(get_session)],
+    db: Annotated[AsyncSession, Depends(get_main_session)],
 ) -> OrganizationModel | None:
-    memberships = await OrganizationMembershipRepository(session).get_by_user_id(user.id)
-    if not memberships:
+    if not session.orgs:
         return None
-    return await OrganizationRepository(session).get_by_id(
-        memberships[0].organization_id
-    )
+    first_org_id = next(iter(session.orgs))
+    return await OrganizationRepository(db).get_by_id(uuid.UUID(first_org_id))
 
 
 def get_onboarding_service(
-    session: Annotated[AsyncSession, Depends(get_main_session)],
+    db: Annotated[AsyncSession, Depends(get_main_session)],
 ) -> OnboardingService:
-    return OnboardingService(session)
+    return OnboardingService(db)
 
 
 async def require_onboarding_complete(
-    user: Annotated[UserModel, Depends(get_current_user)],
+    session: Annotated[UserSession, Depends(get_session)],
     scope: Annotated[UserScope, Depends(get_current_scope)],
     org: Annotated[OrganizationModel | None, Depends(get_current_org)],
     service: Annotated[OnboardingService, Depends(get_onboarding_service)],
 ) -> None:
-    onboarding_status = service.get_status(user, scope, org)
+    onboarding_status = await service.get_status(session.user_id, scope, org)
     if not onboarding_status.is_complete:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -88,7 +56,6 @@ async def require_onboarding_complete(
         )
 
 
-CurrentUser = Annotated[UserModel, Depends(get_current_user)]
 CurrentScope = Annotated[UserScope, Depends(get_current_scope)]
 CurrentOrg = Annotated[OrganizationModel | None, Depends(get_current_org)]
 OnboardingServiceDep = Annotated[OnboardingService, Depends(get_onboarding_service)]

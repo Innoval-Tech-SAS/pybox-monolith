@@ -5,8 +5,8 @@ from fastapi import File, Form, UploadFile, status
 
 from config.api_router import APIRouter
 from countries.enums.country_enums import Nationality, UserDocumentType
-from onboarding.dependencies import CurrentUser, CurrentScope
-from organizations.dependencies import AdminAssignmentDep, OrgServiceDep
+from onboarding.dependencies import CurrentScope
+from organizations.dependencies import AdminScopeDep, OrgServiceDep
 from organizations.schemas.organization_schemas import (
     OrgRegisterResponse,
     OrganizationCreate,
@@ -14,24 +14,24 @@ from organizations.schemas.organization_schemas import (
     OrganizationUpdate,
     RepresentativeMode,
 )
-from users.enums.user_enums import UserScope
+from security.dependencies import CurrentSession
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
 
 
 @router.get("/", response_model=list[OrganizationResponse])
 async def list_organizations(
-    user: CurrentUser,
+    session: CurrentSession,
     scope: CurrentScope,
     service: OrgServiceDep,
 ) -> list[OrganizationResponse]:
-    return await service.get_for_user(user.id, scope)
+    return await service.get_for_user(session.user_id, scope)
 
 
 @router.get("/{org_id}", response_model=OrganizationResponse)
 async def get_organization(
     org_id: uuid.UUID,
-    _: CurrentUser,
+    _: CurrentSession,
     service: OrgServiceDep,
 ) -> OrganizationResponse:
     return await service.get_by_id(org_id)
@@ -40,38 +40,38 @@ async def get_organization(
 @router.post("/", response_model=OrganizationResponse, status_code=status.HTTP_201_CREATED)
 async def create_organization(
     body: OrganizationCreate,
-    user: CurrentUser,
-    admin: AdminAssignmentDep,
+    session: CurrentSession,
+    admin_scope: AdminScopeDep,
     service: OrgServiceDep,
 ) -> OrganizationResponse:
-    return await service.create_organization(body, user.id, admin.scope)
+    return await service.create_organization(body, session.user_id, admin_scope)
 
 
 @router.patch("/{org_id}", response_model=OrganizationResponse)
 async def update_organization(
     org_id: uuid.UUID,
     body: OrganizationUpdate,
-    user: CurrentUser,
-    admin: AdminAssignmentDep,
+    session: CurrentSession,
+    admin_scope: AdminScopeDep,
     service: OrgServiceDep,
 ) -> OrganizationResponse:
-    return await service.update_organization(org_id, body, user.id, admin.scope)
+    return await service.update_organization(org_id, body, session.user_id, admin_scope)
 
 
 @router.delete("/{org_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_organization(
     org_id: uuid.UUID,
-    user: CurrentUser,
-    admin: AdminAssignmentDep,
+    session: CurrentSession,
+    admin_scope: AdminScopeDep,
     service: OrgServiceDep,
 ) -> None:
-    await service.delete_organization(org_id, user.id, admin.scope)
+    await service.delete_organization(org_id, session.user_id, admin_scope)
 
 
 @router.post("/register", response_model=OrgRegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register_organization(
-    user: CurrentUser,
-    admin: AdminAssignmentDep,
+    session: CurrentSession,
+    admin_scope: AdminScopeDep,
     service: OrgServiceDep,
     name: str = Form(...),
     country: Nationality = Form(...),
@@ -89,10 +89,8 @@ async def register_organization(
 ) -> OrgRegisterResponse:
     mercantile_bytes = await mercantile_document_file.read()
     mercantile_ext = Path(mercantile_document_file.filename or "").suffix or ".pdf"
-
     rep_bytes = await representative_document_file.read()
     rep_ext = Path(representative_document_file.filename or "").suffix or ".pdf"
-
     return await service.register_with_representative(
         name=name,
         description=description,
@@ -109,6 +107,6 @@ async def register_organization(
         mercantile_file_ext=mercantile_ext,
         representative_file_bytes=rep_bytes,
         representative_file_ext=rep_ext,
-        created_by_user_id=user.id,
-        scope=admin.scope,
+        created_by_user_id=session.user_id,
+        scope=admin_scope,
     )

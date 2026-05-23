@@ -24,10 +24,7 @@ export const useGoogleAuth = () => {
 
   const renderButtonToContainer = useCallback(
     (container: HTMLElement, width: number, onToken: (token: string) => void) => {
-      onTokenRef.current = onToken;
-      renderGoogleButton(container, width, (token) => {
-        onTokenRef.current(token);
-      });
+      renderGoogleButton(container, width, onToken);
     },
     [],
   );

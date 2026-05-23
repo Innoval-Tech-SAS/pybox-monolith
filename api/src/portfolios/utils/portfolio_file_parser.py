@@ -7,18 +7,14 @@ from typing import Any
 import polars as pl
 
 from contact_methods.enums.contact_method_enums import ContactMethodType
+from countries.enums.country_enums import UserDocumentType
 from credits.enums.credit_enums import CreditTypes
-from debtors.enums.debtor_enums import DebtorType, DocumentTypes
+from debtors.enums.debtor_enums import DebtorType
 
 _NULL_STRINGS = {"n/a", "null", "sin dato", "none", ""}
 
-_DOCUMENT_TYPE_MAP: dict[str, DocumentTypes] = {
-    "CC": DocumentTypes.CC,
-    "CE": DocumentTypes.CE,
-    "CI": DocumentTypes.CI,
-    "NIT": DocumentTypes.NIT,
-    "PASSPORT": DocumentTypes.PASSPORT,
-    "DNI": DocumentTypes.DNI,
+_DOCUMENT_TYPE_MAP: dict[str, UserDocumentType] = {
+    dt.value: dt for dt in UserDocumentType
 }
 
 _CREDIT_TYPE_MAP: dict[str, CreditTypes] = {
@@ -44,7 +40,7 @@ _DATE_FORMATS = ["%d/%m/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y"]
 class DebtorRowData:
     document_number: str
     full_name: str
-    document_type: DocumentTypes
+    document_type: UserDocumentType
     debtor_type: DebtorType
 
 
@@ -293,7 +289,7 @@ class PortfolioFileParser:
         return DebtorRowData(
             document_number=doc_number,
             full_name=name,
-            document_type=DocumentTypes.CC,
+            document_type=UserDocumentType.CC,
             debtor_type=DebtorType.CO_DEBTOR,
         )
 
@@ -410,11 +406,11 @@ class PortfolioFileParser:
     # Mappers
     # ------------------------------------------------------------------
 
-    def _map_document_type(self, value: Any) -> DocumentTypes:
+    def _map_document_type(self, value: Any) -> UserDocumentType:
         raw = self._normalize_str(value)
         if raw:
-            return _DOCUMENT_TYPE_MAP.get(raw.upper(), DocumentTypes.CC)
-        return DocumentTypes.CC
+            return _DOCUMENT_TYPE_MAP.get(raw.upper(), UserDocumentType.CC)
+        return UserDocumentType.CC
 
     def _map_credit_type(self, value: Any) -> CreditTypes:
         raw = self._normalize_str(value)

@@ -37,3 +37,12 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
             )
         )
         return list(result.scalars().all())
+
+    async def get_by_codebtor_id(self, codebtor_id: int) -> list[CreditModel]:
+        result = await self.session.execute(
+            select(CreditModel).where(
+                CreditModel.codebtor_id == codebtor_id,
+                CreditModel.deleted_at.is_(None),
+            )
+        )
+        return list(result.scalars().all())

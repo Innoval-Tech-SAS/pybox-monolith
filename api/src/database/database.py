@@ -22,6 +22,10 @@ class Database:
             bind=self.engine, expire_on_commit=False
         )
 
+    async def create_tables(self) -> None:
+        async with self.engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
     @asynccontextmanager
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         async with self._Session() as session:

@@ -1,6 +1,6 @@
 from typing import cast
 
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from countries.enums.country_enums import (
@@ -19,7 +19,6 @@ from organizations.models.organization_membership_model import OrganizationMembe
 from organizations.repository.organization_repository import OrganizationRepository
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from tools.file_tools import save_upload_file
-from users.models.user_model import UserModel
 from users.enums.user_enums import UserScope
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_repository import UserRepository
@@ -33,12 +32,16 @@ class OnboardingService:
         self._membership_repo = OrganizationMembershipRepository(session)
         self._role_repo = RoleAssignmentRepository(session)
 
-    def get_status(
+    async def get_status(
         self,
-        user: UserModel,
+        user_id: int,
         scope: UserScope,
         org: OrganizationModel | None = None,
     ) -> OnboardingStatusSchema:
+        user = await self._user_repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+
         email_verified = bool(user.is_email_verified)
         phone_verified = bool(user.is_phone_verified)
         document_complete = bool(user.document_type and user.document_number)
@@ -75,13 +78,19 @@ class OnboardingService:
             missing_steps=missing,
         )
 
-    async def request_otp(self, user: UserModel, channel: VerificationChannel) -> None:
+    async def request_otp(self, user_id: int, channel: VerificationChannel) -> None:
+        user = await self._user_repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
         service = get_verification_service(channel, self._session)
         await service.send_code(user)
 
-    async def verify_otp(self, user: UserModel, channel: VerificationChannel, code: str) -> None:
+    async def verify_otp(self, user_id: int, channel: VerificationChannel, code: str) -> None:
+        user = await self._user_repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
         service = get_verification_service(channel, self._session)
-        await service.verify_code(user.id, code)
+        await service.verify_code(user_id, code)
 
         if channel == VerificationChannel.EMAIL:
             user.is_email_verified = True
@@ -90,7 +99,10 @@ class OnboardingService:
 
         await self._user_repo.update(user)
 
-    async def update_profile(self, user: UserModel, data: UpdateProfileSchema) -> None:
+    async def update_profile(self, user_id: int, data: UpdateProfileSchema) -> None:
+        user = await self._user_repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
         user.document_type = data.document_type
         user.document_number = data.document_number
         user.nationality = data.nationality
@@ -98,16 +110,16 @@ class OnboardingService:
 
     async def create_first_org(
         self,
-        user: UserModel,
+        user_id: int,
         data: OrganizationOnboardingSchema,
         fiscal_file: UploadFile,
         mercantile_file: UploadFile,
     ) -> OrganizationModel:
         org = await self._org_repo.add(OrganizationModel(name=data.name))
         await self._membership_repo.add(OrganizationMembershipModel(
-            user_id=cast(int, user.id),
+            user_id=user_id,
             organization_id=org.id,
-            created_by=cast(int, user.id),
+            created_by=user_id,
         ))
 
         org_id = str(org.id)
@@ -122,7 +134,7 @@ class OnboardingService:
         org.mercantile_document_file = mercantile_path
         updated_org = await self._org_repo.update(org)
 
-        pending_role = await self._role_repo.get_pending_org_admin(cast(int, user.id))
+        pending_role = await self._role_repo.get_pending_org_admin(user_id)
         if pending_role is not None:
             pending_role.organization_id = updated_org.id
             await self._role_repo.update(pending_role)

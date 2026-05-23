@@ -1,0 +1,63 @@
+import uuid
+from datetime import datetime
+
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from portfolios.models.portfolio_user_access_model import PortfolioUserAccessModel
+from portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
+
+
+class PortfolioUserAccessService:
+    def __init__(self, session: AsyncSession) -> None:
+        self._repo = PortfolioUserAccessRepository(session)
+
+    async def check_access(self, user_id: int, portfolio_id: int, org_id: str) -> bool:
+        return await self._repo.check_active_access(user_id, portfolio_id)
+
+    async def grant_access(
+        self,
+        user_id: int,
+        portfolio_id: int,
+        organization_id: uuid.UUID,
+        granted_by: int,
+    ) -> PortfolioUserAccessModel:
+        existing = await self._repo.get_by_user_and_portfolio(user_id, portfolio_id)
+        if existing is not None:
+            if existing.is_active:
+                return existing
+            existing.is_active = True
+            existing.revoked_at = None
+            existing.granted_by = granted_by
+            existing.granted_at = datetime.utcnow()
+            return await self._repo.update(existing)
+
+        return await self._repo.add(PortfolioUserAccessModel(
+            user_id=user_id,
+            portfolio_id=portfolio_id,
+            organization_id=organization_id,
+            granted_by=granted_by,
+        ))
+
+    async def revoke_access(self, user_id: int, portfolio_id: int) -> None:
+        existing = await self._repo.get_by_user_and_portfolio(user_id, portfolio_id)
+        if existing is None or not existing.is_active:
+            return
+        existing.is_active = False
+        existing.revoked_at = datetime.utcnow()
+        await self._repo.update(existing)
+
+    async def get_user_portfolios(
+        self, user_id: int, organization_id: uuid.UUID
+    ) -> list[PortfolioUserAccessModel]:
+        return await self._repo.get_active_by_user_and_org(user_id, organization_id)
+
+    async def revoke_all_for_user_in_org(
+        self, user_id: int, organization_id: uuid.UUID
+    ) -> None:
+        accesses = await self._repo.get_active_by_user_and_org(user_id, organization_id)
+        now = datetime.utcnow()
+        for access in accesses:
+            access.is_active = False
+            access.revoked_at = now
+            await self._repo.update(access)
