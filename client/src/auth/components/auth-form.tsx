@@ -1,51 +1,29 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { jwtDecode } from "jwt-decode";
+import { Link } from "react-router";
 import { Input } from "../../ui/components/inputs/input";
 import { Label } from "../../ui/components/inputs/label";
 import { EyeCloseIcon, EyeIcon } from "../../ui/icons";
-import { useOAuthRegister } from "../../hooks/use-oauth-register";
-import { GooglePayload } from "../../types/auth/google";
+import { useAuth } from "../../hooks/use-auth";
 import { GoogleButton } from "./google-button";
 
-const API_URL = import.meta.env.VITE_API_URL as string;
-
 export const AuthForm: React.FC = () => {
-  const navigate = useNavigate();
+  const { login, loginWithGoogle, oauthLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { oauthRegister, loading: loadingGoogle } = useOAuthRegister();
 
-  const isLoading = loading || loadingGoogle;
+  const isLoading = loading || oauthLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error ?? "Error al iniciar sesión.");
-        return;
-      }
-
-      sessionStorage.setItem("accessToken", data.accessToken);
-      sessionStorage.setItem("refreshToken", data.refreshToken);
-      sessionStorage.setItem("user", JSON.stringify({ email }));
-      navigate("/dashboard", { replace: true });
-    } catch {
-      setError("No se pudo conectar con el servidor.");
+      await login({ email, password });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo conectar con el servidor.");
     } finally {
       setLoading(false);
     }
@@ -53,21 +31,10 @@ export const AuthForm: React.FC = () => {
 
   const handleGoogleToken = async (token: string) => {
     setError(null);
-    let payload: GooglePayload;
     try {
-      payload = jwtDecode<GooglePayload>(token);
-    } catch {
-      setError("No se pudo leer la cuenta de Google seleccionada.");
-      return;
-    }
-
-    try {
-      await oauthRegister({ provider: "GOOGLE", token }, "/auth/oauth/login");
-      sessionStorage.setItem("user", JSON.stringify({ email: payload.email }));
-      navigate("/dashboard", { replace: true });
+      await loginWithGoogle(token);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Error al iniciar sesión con Google.";
-      setError(message);
+      setError(err instanceof Error ? err.message : "Error al iniciar sesión con Google.");
     }
   };
 
@@ -149,7 +116,7 @@ export const AuthForm: React.FC = () => {
 
             <GoogleButton
               onToken={handleGoogleToken}
-              text={loadingGoogle ? "Iniciando con Google..." : "Iniciar Sesión con Google"}
+              text={oauthLoading ? "Iniciando con Google..." : "Iniciar Sesión con Google"}
               disabled={isLoading}
             />
 

@@ -1,11 +1,16 @@
 import uuid
 
-from sqlalchemy import Integer, ForeignKey, UniqueConstraint
+from sqlalchemy import CheckConstraint, Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from base.audit_model import AuditModel
-from users.enums.user_enums import UserRole, UserScope
+from users.enums.user_enums import UserRole, UserScope, VALID_ROLE_SCOPE
+
+_CHECK_SQL = " OR ".join(
+    f"(rol = '{r.value}' AND alcance = '{s.value}')"
+    for r, s in VALID_ROLE_SCOPE
+)
 
 
 class RoleAssignmentModel(AuditModel):
@@ -17,6 +22,7 @@ class RoleAssignmentModel(AuditModel):
             "id_organizacion",
             name="uq_rol_usuario_org",
         ),
+        CheckConstraint(_CHECK_SQL, name="ck_rol_alcance_valido"),
     )
 
     id: Mapped[int] = mapped_column(
@@ -35,3 +41,11 @@ class RoleAssignmentModel(AuditModel):
         nullable=True,
         name="id_organizacion",
     )
+
+    @validates("role", "scope")
+    def validate_role_scope(self, key: str, value: UserRole | UserScope) -> UserRole | UserScope:
+        role = value if key == "role" else self.role
+        scope = value if key == "scope" else self.scope
+        if role is not None and scope is not None and (role, scope) not in VALID_ROLE_SCOPE:
+            raise ValueError(f"Combinación inválida: {role} + {scope}")
+        return value

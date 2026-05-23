@@ -1,6 +1,6 @@
-import { useNavigate, Link } from "react-router";
-import { useState, useEffect } from "react";
-import { User } from "../../types/auth/user";
+import { Link } from "react-router";
+import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { Dropdown } from "../dropdown/dropdown";
 import { DropdownItem } from "../dropdown/dropdown-item";
 
@@ -11,25 +11,12 @@ const ICON_CLASS =
   "fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300";
 
 export const UserDropdown: React.FC = () => {
-  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const raw = sessionStorage.getItem("user");
-    if (raw) {
-      try { setUser(JSON.parse(raw) as User); } catch { /* ignore */ }
-    }
-  }, []);
 
   const initials = user?.fullname
     ? user.fullname.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
     : user?.email?.[0]?.toUpperCase() ?? "?";
-
-  const handleLogout = () => {
-    sessionStorage.clear();
-    navigate("/admin/sign-in");
-  };
 
   return (
     <div className="relative">
@@ -91,7 +78,7 @@ export const UserDropdown: React.FC = () => {
         </ul>
 
         <button
-          onClick={handleLogout}
+          onClick={logout}
           className={`mt-3 ${ITEM_CLASS}`}
         >
           <svg className="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

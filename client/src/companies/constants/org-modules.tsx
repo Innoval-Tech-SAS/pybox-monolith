@@ -1,0 +1,86 @@
+import {
+  BarChart2,
+  CreditCard,
+  FolderOpen,
+  Plus,
+  Settings,
+  ShieldCheck,
+  UserPlus,
+  Users,
+} from "lucide-react";
+
+export interface OrgModule {
+  key: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  gradient: string;
+  path: string | null;
+}
+
+export const ORG_MODULES: OrgModule[] = [
+  {
+    key: "portfolios",
+    title: "Mis Portafolios",
+    description: "Consulta y gestiona los portafolios de la organización.",
+    icon: <FolderOpen size={24} className="text-white" />,
+    gradient: "from-teal-500 to-teal-600",
+    path: null,
+  },
+  {
+    key: "portfolios-create",
+    title: "Crear Portafolio",
+    description: "Carga un nuevo portafolio de clientes.",
+    icon: <Plus size={24} className="text-white" />,
+    gradient: "from-green-500 to-green-600",
+    path: null,
+  },
+  {
+    key: "payment-methods",
+    title: "Métodos de Pago",
+    description: "Administra los medios de pago habilitados.",
+    icon: <CreditCard size={24} className="text-white" />,
+    gradient: "from-emerald-500 to-cyan-600",
+    path: null,
+  },
+  {
+    key: "users",
+    title: "Usuarios",
+    description: "Consulta los usuarios vinculados a la organización.",
+    icon: <Users size={24} className="text-white" />,
+    gradient: "from-blue-500 to-blue-600",
+    path: null,
+  },
+  {
+    key: "users-add",
+    title: "Crear Usuario",
+    description: "Agrega un nuevo usuario a la organización.",
+    icon: <UserPlus size={24} className="text-white" />,
+    gradient: "from-green-500 to-green-600",
+    path: null,
+  },
+  {
+    key: "reports",
+    title: "Reportes",
+    description: "Genera y consulta reportes de gestión.",
+    icon: <BarChart2 size={24} className="text-white" />,
+    gradient: "from-orange-500 to-orange-600",
+    path: null,
+  },
+  {
+    key: "roles",
+    title: "Roles",
+    description: "Administra los roles y permisos de los usuarios.",
+    icon: <ShieldCheck size={24} className="text-white" />,
+    gradient: "from-cyan-500 to-sky-600",
+    path: null,
+  },
+  {
+    key: "settings",
+    title: "Configuración",
+    description: "Edita la información y ajustes de la organización.",
+    icon: <Settings size={24} className="text-white" />,
+    gradient: "from-purple-500 to-purple-600",
+    path: null,
+  },
+];

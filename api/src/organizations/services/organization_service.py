@@ -29,6 +29,15 @@ class OrganizationService:
     async def get_all(self) -> Sequence[OrganizationModel]:
         return await self.org_repo.get_all()
 
+    async def get_for_user(self, user_id: int, scope: UserScope) -> Sequence[OrganizationModel]:
+        if scope == UserScope.GLOBAL:
+            return await self.org_repo.get_all()
+        if scope == UserScope.ORGANIZATION:
+            memberships = await self.membership_repo.get_by_user_id(user_id)
+            org_ids = [m.organization_id for m in memberships]
+            return await self.org_repo.get_by_ids(org_ids)
+        return []
+
     async def get_by_id(self, org_id: uuid.UUID) -> OrganizationModel:
         org = await self.org_repo.get_by_id(org_id)
         if not org:

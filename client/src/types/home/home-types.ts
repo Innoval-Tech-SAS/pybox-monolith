@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 
 import type { User } from "@/types/auth/user";
+import { Role, Scope } from "@/types/auth/role";
 
-export type HomeRole = string;
-export type HomeScope = string;
+export type HomeRole = Role;
+export type HomeScope = Scope;
 export type HomeContextSource = "session" | "default";
 export type HomeTone = "primary" | "success" | "warning" | "info" | "light";
 

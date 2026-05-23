@@ -21,7 +21,7 @@ const LayoutContent: React.FC = () => {
         } ${isMobileOpen ? "ml-0" : ""}`}
       >
         <NavbarMenu />
-        <div className="flex-1 overflow-y-auto p-4 mx-auto w-full max-w-(--breakpoint-2xl) md:p-6">
+        <div className="flex flex-col flex-1 overflow-hidden p-4 mx-auto w-full max-w-(--breakpoint-2xl) md:p-6">
           <Outlet />
         </div>
       </div>

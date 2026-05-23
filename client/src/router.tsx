@@ -1,6 +1,7 @@
 import { Navigate } from "react-router";
 import { AuthPage } from "./auth/pages/auth-page";
 import { SignUpPage } from "./auth/pages/sign-up-page";
+import { MyCompaniesPage } from "./companies/pages/my-companies-page";
 import { HomePage } from "./home/pages/home-page";
 import { ProfilePage } from "./profile/pages/profile-page";
 import { NotFound } from "./ui/pages/not-found";
@@ -32,5 +33,9 @@ export const authRouter = [
   {
     path: "/profile",
     element: <ProfilePage />,
+  },
+  {
+    path: "/my-companies",
+    element: <MyCompaniesPage />,
   },
 ];

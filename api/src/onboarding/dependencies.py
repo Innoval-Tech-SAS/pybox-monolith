@@ -46,6 +46,8 @@ async def get_current_scope(
         return UserScope.SELF
     # Primary scope: ORGANIZATION takes priority over SELF
     scopes = {a.scope for a in assignments}
+    if UserScope.GLOBAL in scopes:
+        return UserScope.GLOBAL
     if UserScope.ORGANIZATION in scopes:
         return UserScope.ORGANIZATION
     return UserScope.SELF

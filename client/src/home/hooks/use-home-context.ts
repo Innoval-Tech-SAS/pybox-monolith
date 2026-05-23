@@ -1,37 +1,21 @@
 import { useMemo } from "react";
-
+import { useAuth } from "@/hooks/use-auth";
 import type { HomeContext } from "@/types/home/home-types";
-import {
-  DEFAULT_HOME_ROLE,
-  DEFAULT_HOME_SCOPE,
-  getFirstAssignment,
-  hasSessionAccess,
-  readSessionUser,
-} from "../utils/home-session-utils";
+import { getFirstAssignment, hasSessionAccess, readSessionUser } from "../utils/home-session-utils";
 
 export const useHomeContext = (): HomeContext => {
+  const { getRoleScope } = useAuth();
+
   return useMemo(() => {
+    const { role, scope } = getRoleScope();
     const sessionUser = readSessionUser();
     const firstAssignment = getFirstAssignment(sessionUser);
-
-    const role =
-      sessionUser?.userRole ??
-      sessionUser?.role ??
-      firstAssignment?.role ??
-      DEFAULT_HOME_ROLE;
-    const scope =
-      sessionUser?.userScope ??
-      sessionUser?.scope ??
-      firstAssignment?.scope ??
-      DEFAULT_HOME_SCOPE;
 
     return {
       role,
       scope,
       user: sessionUser,
-      source: hasSessionAccess(sessionUser, firstAssignment)
-        ? "session"
-        : "default",
+      source: hasSessionAccess(sessionUser, firstAssignment) ? "session" : "default",
     };
   }, []);
 };

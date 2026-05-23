@@ -17,3 +17,13 @@ class UserScope(str, Enum):
 class PermissionEffect(str, Enum):
     GRANT = "GRANT"
     REVOKE = "REVOKE"
+
+
+VALID_ROLE_SCOPE: set[tuple[UserRole, UserScope]] = {
+    (UserRole.ADMIN,             UserScope.GLOBAL),
+    (UserRole.CUSTOMER_SERVICE,  UserScope.GLOBAL),
+    (UserRole.ADMIN,             UserScope.ORGANIZATION),
+    (UserRole.CUSTOMER_SERVICE,  UserScope.ORGANIZATION),
+    (UserRole.USER_ORGANIZATION, UserScope.ORGANIZATION),
+    (UserRole.USER,              UserScope.SELF),
+}

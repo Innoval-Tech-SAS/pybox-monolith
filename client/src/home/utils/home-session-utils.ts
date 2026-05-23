@@ -1,7 +1,8 @@
 import type { RoleAssignment, SessionUser } from "@/types/home/home-types";
+import { DEFAULT_ROLE_SCOPE } from "@/types/auth/role";
 
-export const DEFAULT_HOME_ROLE = "USUARIO";
-export const DEFAULT_HOME_SCOPE = "SELF";
+export const DEFAULT_HOME_ROLE = DEFAULT_ROLE_SCOPE.role;
+export const DEFAULT_HOME_SCOPE = DEFAULT_ROLE_SCOPE.scope;
 
 export const readSessionUser = (): SessionUser | null => {
   const rawUser = sessionStorage.getItem("user");

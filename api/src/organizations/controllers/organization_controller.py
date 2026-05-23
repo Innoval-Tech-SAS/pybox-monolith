@@ -3,7 +3,7 @@ import uuid
 from fastapi import status
 
 from config.api_router import APIRouter
-from onboarding.dependencies import CurrentUser
+from onboarding.dependencies import CurrentUser, CurrentScope
 from organizations.dependencies import AdminAssignmentDep, OrgServiceDep
 from organizations.schemas.organization_schemas import (
     OrganizationCreate,
@@ -17,10 +17,11 @@ router = APIRouter(prefix="/organizations", tags=["organizations"])
 
 @router.get("/", response_model=list[OrganizationResponse])
 async def list_organizations(
-    _: CurrentUser,
+    user: CurrentUser,
+    scope: CurrentScope,
     service: OrgServiceDep,
 ) -> list[OrganizationResponse]:
-    return await service.get_all()
+    return await service.get_for_user(user.id, scope)
 
 
 @router.get("/{org_id}", response_model=OrganizationResponse)
