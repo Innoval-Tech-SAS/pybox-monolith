@@ -9,7 +9,7 @@ export const useOrganizationOnboarding = () => {
 
   const clearError = () => setError(null);
 
-  const saveOrganization = async (data: OrgOnboardingData) => {
+  const saveOrganization = async (data: OrgOnboardingData): Promise<boolean> => {
     setLoading(true);
     try {
       const form = new FormData();
@@ -35,8 +35,10 @@ export const useOrganizationOnboarding = () => {
         method: "POST",
         body: form,
       });
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al guardar organización");
+      return false;
     } finally {
       setLoading(false);
     }

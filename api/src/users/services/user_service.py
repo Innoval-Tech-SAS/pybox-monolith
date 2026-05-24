@@ -112,6 +112,8 @@ class UserService:
                             role=assignment.role,
                             org_name=org.name,
                             permissions=(base | grants) - revokes,
+                            verification_status=org.verification_status,
+                            created_at=org.created_at,
                         )
                 session = UserSession(
                     user_id=user_id,

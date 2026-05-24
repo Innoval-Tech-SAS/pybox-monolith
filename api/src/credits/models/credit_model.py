@@ -1,8 +1,9 @@
+import uuid
 from datetime import datetime
 
 from sqlalchemy import ForeignKey, Integer, Numeric, String
 from sqlalchemy import DateTime
-from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from base.audit_model import AuditModel
@@ -40,6 +41,8 @@ class CreditModel(AuditModel):
     condonations_accum: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0.0, name="condonaciones_acumuladas")
     discounts_accum: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0.0, name="descuentos_acumulados")
 
-    portfolio_id: Mapped[int] = mapped_column(Integer, ForeignKey("portafolios.id"), nullable=False, name="id_portafolio")
+    portfolio_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("portafolios.id"), nullable=False, name="id_portafolio"
+    )
     debtor_id: Mapped[int] = mapped_column(Integer, ForeignKey("deudores.id"), nullable=False, name="id_deudor")
     codebtor_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("deudores.id"), nullable=True, name="id_codeudor")

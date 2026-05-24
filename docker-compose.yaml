@@ -6,6 +6,7 @@ services:
     container_name: template-api
     environment:
       ENV: ${ENV}
+      UPLOADS_DIR: ${UPLOADS_DIR}
       PROVIDER_API_KEY: ${PROVIDER_API_KEY}
       DB_HOST: db
       DB_PORT: ${DB_PORT}

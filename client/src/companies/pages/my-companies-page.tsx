@@ -1,4 +1,4 @@
-import { ArrowLeft, Building2 } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { useSearchParams } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
@@ -27,7 +27,6 @@ export const MyCompaniesPage: React.FC = () => {
       />
       <ModuleBase
         pageTitle={selectedOrg?.name ?? "Mis Empresas"}
-        sectionTitle={selectedOrg?.name ?? "Mis Empresas"}
         breadcrumbItems={isOrgView ? [{ label: "Mis Empresas", path: "/my-companies" }] : []}
       >
         {loading ? (
@@ -36,14 +35,6 @@ export const MyCompaniesPage: React.FC = () => {
           </div>
         ) : isOrgView ? (
           <div className="flex flex-col gap-6">
-            <button
-              id="tour-back-btn"
-              onClick={() => setSearchParams({})}
-              className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 w-fit"
-            >
-              <ArrowLeft size={16} />
-              Volver a Mis Empresas
-            </button>
             <div id="tour-modules-grid" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {ORG_MODULES.map((mod) => (
                 <ModuleCard

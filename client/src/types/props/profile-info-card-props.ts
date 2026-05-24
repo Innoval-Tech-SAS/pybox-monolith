@@ -1,9 +1,10 @@
+import type { OrgSessionEntry } from "@/types/auth/user";
+
 export interface ProfileInfoCardProps {
   email: string;
-  phone?: string;
-  nationality?: string;
   documentType?: string;
   documentNumber?: string;
+  orgs?: Record<string, OrgSessionEntry>;
 }
 
 export interface ProfileInfoField {

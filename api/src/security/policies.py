@@ -1,3 +1,4 @@
+import uuid
 from typing import Awaitable, Callable
 
 from fastapi import HTTPException, status
@@ -37,8 +38,8 @@ def get_self_identity(session: UserSession) -> SelfIdentity:
 async def require_portfolio_access(
     session: UserSession,
     org_id: str,
-    portfolio_id: int,
-    check_access: Callable[[int, int, str], Awaitable[bool]],
+    portfolio_id: uuid.UUID,
+    check_access: Callable[[int, uuid.UUID, str], Awaitable[bool]],
 ) -> None:
     if session.is_global:
         return

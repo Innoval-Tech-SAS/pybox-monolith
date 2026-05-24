@@ -11,7 +11,14 @@ from countries.enums.country_enums import Nationality
 class PortfolioModel(AuditModel):
     __tablename__ = "portafolios"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        unique=True,
+        nullable=False,
+        name="id",
+    )
     name: Mapped[str] = mapped_column(String, nullable=False, name="nombre")
     description: Mapped[str | None] = mapped_column(String, nullable=True, name="descripcion")
     organization_id: Mapped[uuid.UUID] = mapped_column(

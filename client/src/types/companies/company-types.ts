@@ -21,7 +21,9 @@ export interface OrgModule {
 }
 
 export interface CreatePortfolioResult {
-  message: string;
+  total_rows: number;
   processed_rows: number;
   failed_rows: number;
+  portfolio_id: string;
+  errors: string[];
 }

@@ -1,4 +1,3 @@
-import os
 import secrets
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
@@ -6,6 +5,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.logger import logger
+from tools.config_tools import get_or_throw
 from messaging.enums.notification_enums import VerificationChannel
 from messaging.exceptions import (
     CodeAlreadyUsedException,
@@ -40,7 +40,7 @@ class VerificationService(ABC):
         )
         await self._repo.add(record)
 
-        if os.getenv("ENV") == "development":
+        if get_or_throw("ENV") == "development":
             logger.info(f"[DEV] Código de verificación — canal={self.channel.value} user_id={user.id} code={code}")
             return
 

@@ -17,7 +17,7 @@ export const ORG_MODULES: OrgModule[] = [
     description: "Consulta y gestiona los portafolios de la organización.",
     icon: <FolderOpen size={24} className="text-white" />,
     gradient: "from-teal-500 to-teal-600",
-    path: null,
+    path: "/my-companies/portfolios",
   },
   {
     key: "portfolios-create",

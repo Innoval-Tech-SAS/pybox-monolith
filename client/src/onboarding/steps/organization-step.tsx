@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, UserPlus } from "lucide-react";
+import { CheckCircle, User, UserPlus } from "lucide-react";
 import { Input } from "@/ui/components/inputs/input";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
@@ -23,6 +23,7 @@ const ICONS: Record<"user" | "user-plus", React.ReactNode> = {
 export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
   const { saveOrganization, loading, error, clearError } = useOrganizationOnboarding();
   const { countries, loading: loadingCountries } = useCountries();
+  const [submitted, setSubmitted] = useState(false);
 
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
@@ -57,7 +58,7 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
     e.preventDefault();
     clearError();
     if (!repFile) return;
-    await saveOrganization({
+    const ok = await saveOrganization({
       name,
       country,
       fiscalDocumentNumber: fiscalNumber,
@@ -71,8 +72,31 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
       repDocType,
       repDocNumber,
     });
-    onDone();
+    if (ok) setSubmitted(true);
   };
+
+  if (submitted) {
+    return (
+      <div className="flex flex-col items-center gap-6 py-8 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success-50 dark:bg-success-500/10">
+          <CheckCircle size={32} className="text-success-500" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-white/90">¡Empresa registrada!</h2>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Tu solicitud fue enviada. Creamos un ticket de verificación para revisar los documentos.
+            Te notificaremos cuando sea aprobada.
+          </p>
+        </div>
+        <button
+          onClick={onDone}
+          className="rounded-lg bg-brand-500 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600"
+        >
+          Entendido
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">

@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +13,9 @@ class PortfolioDailyCounterConfigRepository(SoftDeleteRepositoryBase[PortfolioDa
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def get_by_portfolio_id(self, portfolio_id: int) -> PortfolioDailyCounterConfigModel | None:
+    async def get_by_portfolio_id(
+        self, portfolio_id: uuid.UUID
+    ) -> PortfolioDailyCounterConfigModel | None:
         result = await self.session.execute(
             select(PortfolioDailyCounterConfigModel).where(
                 PortfolioDailyCounterConfigModel.portfolio_id == portfolio_id,

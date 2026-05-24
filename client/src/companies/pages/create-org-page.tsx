@@ -7,7 +7,6 @@ export const CreateOrgPage: React.FC = () => (
     <PageMeta title="Crear organización" description="Registra una nueva organización" />
     <ModuleBase
       pageTitle="Crear organización"
-      sectionTitle="Nueva organización"
       breadcrumbItems={[{ label: "Mis Empresas", path: "/my-companies" }]}
     >
       <div className="mx-auto w-full max-w-3xl">

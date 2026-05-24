@@ -4,7 +4,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_main_session
+from portfolios.repository.portfolio_repository import PortfolioRepository
 from portfolios.services.portfolio_csv_service import PortfolioCsvService
+from portfolios.services.portfolio_service import PortfolioService
 
 
 def get_portfolio_csv_service(
@@ -13,4 +15,11 @@ def get_portfolio_csv_service(
     return PortfolioCsvService(session)
 
 
+def get_portfolio_service(
+    session: Annotated[AsyncSession, Depends(get_main_session)],
+) -> PortfolioService:
+    return PortfolioService(PortfolioRepository(session))
+
+
 PortfolioCsvServiceDep = Annotated[PortfolioCsvService, Depends(get_portfolio_csv_service)]
+PortfolioServiceDep = Annotated[PortfolioService, Depends(get_portfolio_service)]

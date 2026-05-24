@@ -24,8 +24,12 @@ class PortfolioUserAccessModel(AuditModel):
     organization_id: Mapped[uuid.UUID] = mapped_column(
         PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, index=True, name="id_organizacion"
     )
-    portfolio_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("portafolios.id", ondelete="CASCADE"), nullable=False, index=True, name="id_portafolio"
+    portfolio_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("portafolios.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        name="id_portafolio",
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="activo")
     granted_by: Mapped[int | None] = mapped_column(

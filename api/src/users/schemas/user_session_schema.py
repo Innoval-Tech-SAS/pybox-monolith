@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
+from organizations.enums.organization_enums import VerificationStatus
 from users.enums.user_enums import UserRole, UserScope
 
 SESSION_KEY_PREFIX = "session:"
@@ -13,6 +16,8 @@ class OrgSessionEntry(BaseModel):
     role: UserRole
     org_name: str
     permissions: frozenset[str] = frozenset()
+    verification_status: VerificationStatus = VerificationStatus.PENDING
+    created_at: datetime | None = None
 
 
 class UserSession(BaseModel):

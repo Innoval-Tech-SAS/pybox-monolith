@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { useModal } from "@/hooks/use-modal";
-import { Modal } from "@/ui/components/modal/modal";
-import { Button } from "@/ui/components/button/button";
-import { Input } from "@/ui/components/inputs/input";
-import type {
-  ProfileInfoCardProps,
-  ProfileInfoField,
-} from "@/types/props/profile-info-card-props";
+import { Check, Copy } from "lucide-react";
+import type { OrgVerificationStatus } from "@/types/auth/user";
+import type { ProfileInfoCardProps } from "@/types/props/profile-info-card-props";
+
+const VERIFICATION_CONFIG: Record<OrgVerificationStatus, { label: string; classes: string }> = {
+  approved: { label: "Verificada", classes: "bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400" },
+  pending:  { label: "Pendiente",  classes: "bg-warning-50 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400" },
+  denied:   { label: "Rechazada",  classes: "bg-error-50 text-error-700 dark:bg-error-500/10 dark:text-error-400" },
+};
 
 const EditIcon: React.FC = () => (
   <svg className="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -14,134 +15,122 @@ const EditIcon: React.FC = () => (
   </svg>
 );
 
+const formatDate = (iso: string | null | undefined): string => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" });
+};
+
+const CopyIdButton: React.FC<{ id: string }> = ({ id }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copiar ID"
+      className="ml-1.5 inline-flex items-center rounded p-0.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+    >
+      {copied ? <Check size={13} /> : <Copy size={13} />}
+    </button>
+  );
+};
+
 export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
   email,
-  phone = "",
-  nationality = "",
-  documentType = "",
-  documentNumber = "",
+  documentType,
+  documentNumber,
+  orgs,
 }) => {
-  const { isOpen, openModal, closeModal } = useModal();
-  const [form, setForm] = useState({ email, phone, nationality, documentType, documentNumber });
-
-  const fields: ProfileInfoField[] = [
-    { label: "Correo electrónico", value: form.email, key: "email" },
-    { label: "Teléfono", value: form.phone, key: "phone" },
-    { label: "Nacionalidad", value: form.nationality, key: "nationality" },
-    { label: "Tipo de documento", value: form.documentType, key: "documentType" },
-    { label: "Número de documento", value: form.documentNumber, key: "documentNumber", colSpan: true },
-  ];
+  const orgEntries = orgs ? Object.entries(orgs) : [];
 
   return (
-    <>
+    <div className="space-y-5">
+      {/* Información personal */}
       <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
             <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
               Información personal
             </h4>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
-              {fields.map((field) => (
-                field.value && (
-                  <div key={field.key} className={field.colSpan ? "col-span-2 lg:col-span-1" : ""}>
-                    <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                      {field.label}
-                    </p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                      {field.value}
-                    </p>
-                  </div>
-                )
-              ))}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6">
+              <div>
+                <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">Correo electrónico</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">{email}</p>
+              </div>
+              {documentType && (
+                <div>
+                  <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">Tipo de documento</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">{documentType}</p>
+                </div>
+              )}
+              {documentNumber && (
+                <div>
+                  <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">Número de documento</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-white/90">{documentNumber}</p>
+                </div>
+              )}
             </div>
           </div>
-
-          <button
-            onClick={openModal}
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3 dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-          >
+          <button className="shrink-0 flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3">
             <EditIcon />
             Editar
           </button>
         </div>
       </div>
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-175 m-4">
-        <div className="no-scrollbar relative w-full max-w-175 overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-          <div className="px-2 pr-14">
-            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Editar información personal
-            </h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Mantén tus datos actualizados.
-            </p>
+      {/* Empresas */}
+      {orgEntries.length > 0 && (
+        <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+          <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
+            Mis Empresas
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 dark:border-gray-800">
+                  <th className="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Empresa</th>
+                  <th className="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Rol</th>
+                  <th className="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Verificación</th>
+                  <th className="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">ID</th>
+                  <th className="pb-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Registrada</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {orgEntries.map(([orgId, entry]) => {
+                  const verification = VERIFICATION_CONFIG[entry.verification_status] ?? VERIFICATION_CONFIG.pending;
+                  return (
+                    <tr key={orgId}>
+                      <td className="py-3 font-medium text-gray-800 dark:text-white/90">{entry.org_name}</td>
+                      <td className="py-3">
+                        <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-500/10 dark:text-brand-400">
+                          {entry.role}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${verification.classes}`}>
+                          {verification.label}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        <span className="inline-flex items-center font-mono text-xs text-gray-400 dark:text-gray-500">
+                          {orgId}
+                          <CopyIdButton id={orgId} />
+                        </span>
+                      </td>
+                      <td className="py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        {formatDate(entry.created_at)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          <form className="flex flex-col">
-            <div className="custom-scrollbar h-100 overflow-y-auto px-2 pb-3">
-              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                <div className="col-span-2 lg:col-span-1">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Correo electrónico
-                  </label>
-                  <Input
-                    value={form.email}
-                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                    placeholder="correo@ejemplo.com"
-                  />
-                </div>
-                <div className="col-span-2 lg:col-span-1">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Teléfono
-                  </label>
-                  <Input
-                    value={form.phone}
-                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                    placeholder="+58 412 0000000"
-                  />
-                </div>
-                <div className="col-span-2 lg:col-span-1">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Nacionalidad
-                  </label>
-                  <Input
-                    value={form.nationality}
-                    onChange={(e) => setForm((f) => ({ ...f, nationality: e.target.value }))}
-                    placeholder="Venezuela"
-                  />
-                </div>
-                <div className="col-span-2 lg:col-span-1">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Tipo de documento
-                  </label>
-                  <Input
-                    value={form.documentType}
-                    onChange={(e) => setForm((f) => ({ ...f, documentType: e.target.value }))}
-                    placeholder="Cédula"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Número de documento
-                  </label>
-                  <Input
-                    value={form.documentNumber}
-                    onChange={(e) => setForm((f) => ({ ...f, documentNumber: e.target.value }))}
-                    placeholder="V-12345678"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
-                Cerrar
-              </Button>
-              <Button size="sm" onClick={closeModal}>
-                Guardar cambios
-              </Button>
-            </div>
-          </form>
         </div>
-      </Modal>
-    </>
+      )}
+    </div>
   );
 };

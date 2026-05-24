@@ -12,13 +12,18 @@ class PortfolioUserAccessService:
     def __init__(self, session: AsyncSession) -> None:
         self._repo = PortfolioUserAccessRepository(session)
 
-    async def check_access(self, user_id: int, portfolio_id: int, org_id: str) -> bool:
-        return await self._repo.check_active_access(user_id, portfolio_id)
+    async def check_access(self, user_id: int, portfolio_id: uuid.UUID, org_id: str) -> bool:
+        try:
+            organization_id = uuid.UUID(str(org_id))
+            portfolio_uuid = uuid.UUID(str(portfolio_id))
+        except ValueError:
+            return False
+        return await self._repo.check_active_access(user_id, portfolio_uuid, organization_id)
 
     async def grant_access(
         self,
         user_id: int,
-        portfolio_id: int,
+        portfolio_id: uuid.UUID,
         organization_id: uuid.UUID,
         granted_by: int,
     ) -> PortfolioUserAccessModel:
@@ -39,7 +44,7 @@ class PortfolioUserAccessService:
             granted_by=granted_by,
         ))
 
-    async def revoke_access(self, user_id: int, portfolio_id: int) -> None:
+    async def revoke_access(self, user_id: int, portfolio_id: uuid.UUID) -> None:
         existing = await self._repo.get_by_user_and_portfolio(user_id, portfolio_id)
         if existing is None or not existing.is_active:
             return

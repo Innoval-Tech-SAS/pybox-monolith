@@ -22,7 +22,7 @@ export const ProfilePage: React.FC = () => {
   }, []);
 
   return (
-    <ModuleBase pageTitle="Perfil" sectionTitle="Mi perfil">
+    <ModuleBase pageTitle="Perfil">
       {loading ? (
         <div className="py-20">
           <Loader />
@@ -30,16 +30,15 @@ export const ProfilePage: React.FC = () => {
       ) : (
         <div className="space-y-6">
           <ProfileMetaCard
-            firstname={profile?.firstname ?? ""}
-            lastname={profile?.lastname ?? ""}
+            fullName={profile?.full_name ?? profile?.fullname ?? ""}
             role={profile?.role}
+            scope={profile?.scope}
           />
           <ProfileInfoCard
             email={profile?.email ?? ""}
-            phone={profile?.phoneNumber}
-            nationality={profile?.nationality}
-            documentType={profile?.documentType}
-            documentNumber={profile?.documentNumber}
+            documentType={profile?.document_type ?? profile?.documentType}
+            documentNumber={profile?.document_number ?? profile?.documentNumber}
+            orgs={profile?.orgs}
           />
         </div>
       )}

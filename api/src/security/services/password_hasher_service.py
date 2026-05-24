@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import base64
-import os
 from typing import Optional
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerifyMismatchError
+
+from tools.config_tools import get_or_throw
 
 
 def _b64d_url(value: str) -> bytes:
@@ -23,7 +24,7 @@ class PasswordHasherService:
         self._ph = ph or PasswordHasher()
 
         if pepper is None:
-            raw = os.getenv(self.ENV_PEPPER, "").strip()
+            raw = get_or_throw(self.ENV_PEPPER).strip()
             pepper = _b64d_url(raw) if raw else b""
 
         self._pepper = pepper

@@ -4,6 +4,7 @@ import { SignUpPage } from "./auth/pages/sign-up-page";
 import { MyCompaniesPage } from "./companies/pages/my-companies-page";
 import { CreateOrgPage } from "./companies/pages/create-org-page";
 import { CreatePortfolioPage } from "./companies/pages/create-portfolio-page";
+import { MyPortfoliosPage } from "./companies/pages/my-portfolios-page";
 import { HomePage } from "./home/pages/home-page";
 import { ProfilePage } from "./profile/pages/profile-page";
 import { NotFound } from "./ui/pages/not-found";
@@ -43,6 +44,10 @@ export const authRouter = [
   {
     path: "/my-companies/add",
     element: <CreateOrgPage />,
+  },
+  {
+    path: "/my-companies/portfolios",
+    element: <MyPortfoliosPage />,
   },
   {
     path: "/my-companies/add-portfolio",

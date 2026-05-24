@@ -1,7 +1,9 @@
+import uuid
 from datetime import date, datetime
 
 from sqlalchemy import Boolean, Date, ForeignKey, Integer, String
 from sqlalchemy import DateTime
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from base.audit_model import AuditModel
@@ -11,8 +13,13 @@ class PortfolioDailyCounterConfigModel(AuditModel):
     __tablename__ = "config_actualizacion_diaria_portafolio"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
-    portfolio_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("portafolios.id"), nullable=False, unique=True, index=True, name="id_portafolio"
+    portfolio_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("portafolios.id"),
+        nullable=False,
+        unique=True,
+        index=True,
+        name="id_portafolio",
     )
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="habilitado")
     reactivation_mode: Mapped[str] = mapped_column(

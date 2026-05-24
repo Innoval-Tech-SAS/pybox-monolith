@@ -1,7 +1,8 @@
-import os
 from pathlib import Path
 
-UPLOADS_DIR = os.environ.get("UPLOADS_DIR", "./uploads")
+from tools.config_tools import get_or_throw
+
+UPLOADS_DIR = get_or_throw("UPLOADS_DIR")
 
 
 def save_file(file_bytes: bytes, filename: str, subdir: str = "documents") -> str:

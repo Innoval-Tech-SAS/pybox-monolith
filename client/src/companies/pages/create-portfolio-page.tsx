@@ -12,10 +12,9 @@ export const CreatePortfolioPage: React.FC = () => {
       <PageMeta title="Crear portafolio" description="Carga un nuevo portafolio de clientes" />
       <ModuleBase
         pageTitle="Crear portafolio"
-        sectionTitle="Nuevo portafolio"
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: "Organización", path: `/my-companies?org=${orgId}` }] : []),
+          ...(orgId ? [{ label: "Empresa", path: `/my-companies?org=${orgId}` }] : []),
         ]}
       >
         <div className="mx-auto w-full max-w-2xl">

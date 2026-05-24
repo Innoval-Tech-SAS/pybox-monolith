@@ -47,7 +47,10 @@ export const useTour = (
       },
     });
 
-    const timeout = setTimeout(() => driverObj.drive(), 600);
+    const timeout = setTimeout(() => {
+      driverObj.drive();
+    }, 600);
+
     return () => clearTimeout(timeout);
   }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
 };

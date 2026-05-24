@@ -4,6 +4,7 @@ import { Modal } from "@/ui/components/modal/modal";
 import { Button } from "@/ui/components/button/button";
 import { Input } from "@/ui/components/inputs/input";
 import { ProfileMetaCardProps } from "@/types/props/profile-meta-card-props";
+import { getRoleHierarchy } from "@/constants/profile/role-hierarchy";
 
 const EditIcon: React.FC = () => (
   <svg className="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -17,18 +18,24 @@ const CameraIcon: React.FC = () => (
   </svg>
 );
 
-export const ProfileMetaCard: React.FC<ProfileMetaCardProps> = ({ firstname, lastname, role, avatarUrl }) => {
+export const ProfileMetaCard: React.FC<ProfileMetaCardProps> = ({ fullName, role, scope, avatarUrl }) => {
   const { isOpen, openModal, closeModal } = useModal();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(avatarUrl ?? null);
-  const [form, setForm] = useState({ firstname, lastname, role: role ?? "" });
+
+  const hierarchy = getRoleHierarchy(role, scope);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setPreview(URL.createObjectURL(file));
   };
 
-  const initials = `${firstname[0] ?? ""}${lastname[0] ?? ""}`.toUpperCase();
+  const initials = fullName
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0] ?? "")
+    .join("")
+    .toUpperCase();
 
   return (
     <>
@@ -61,14 +68,32 @@ export const ProfileMetaCard: React.FC<ProfileMetaCardProps> = ({ firstname, las
               />
             </div>
 
-            <div className="order-3 xl:order-2">
-              <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-                {firstname} {lastname}
-              </h4>
-              {role && (
-                <p className="text-sm text-center text-gray-500 dark:text-gray-400 xl:text-left">
-                  {role}
-                </p>
+            <div className="order-3 xl:order-2 text-center xl:text-left">
+              <div className="flex items-center justify-center xl:justify-start gap-2 mb-1">
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                  {fullName}
+                </h4>
+                {hierarchy && (
+                  <span
+                    title={`Nivel ${hierarchy.tier} de 6`}
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${hierarchy.containerClass}`}
+                  >
+                    <span className={hierarchy.iconClass}>{hierarchy.icon}</span>
+                    <span className={hierarchy.textClass}>{hierarchy.label}</span>
+                  </span>
+                )}
+              </div>
+              {hierarchy && (
+                <div className="flex items-center justify-center xl:justify-start gap-1.5">
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 w-4 rounded-full transition-colors ${
+                        i < (7 - hierarchy.tier) ? hierarchy.dotClass : "bg-gray-200 dark:bg-gray-700"
+                      }`}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -95,37 +120,11 @@ export const ProfileMetaCard: React.FC<ProfileMetaCardProps> = ({ firstname, las
           </div>
           <form className="flex flex-col">
             <div className="custom-scrollbar overflow-y-auto px-2 pb-3">
-              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Nombre
-                  </label>
-                  <Input
-                    value={form.firstname}
-                    onChange={(e) => setForm((f) => ({ ...f, firstname: e.target.value }))}
-                    placeholder="Nombre"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Apellido
-                  </label>
-                  <Input
-                    value={form.lastname}
-                    onChange={(e) => setForm((f) => ({ ...f, lastname: e.target.value }))}
-                    placeholder="Apellido"
-                  />
-                </div>
-                <div className="col-span-2 lg:col-span-1">
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Cargo / Rol
-                  </label>
-                  <Input
-                    value={form.role}
-                    onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-                    placeholder="Ej. Gerente"
-                  />
-                </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Nombre completo
+                </label>
+                <Input defaultValue={fullName} placeholder="Nombre completo" />
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">

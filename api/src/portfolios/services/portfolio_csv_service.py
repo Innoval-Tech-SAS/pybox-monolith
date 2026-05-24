@@ -41,7 +41,7 @@ class CsvProcessResult:
     total_rows: int
     processed_rows: int
     failed_rows: int
-    portfolio_id: int
+    portfolio_id: uuid.UUID
     errors: list[str] = field(default_factory=list)
 
 
@@ -102,7 +102,7 @@ class PortfolioCsvService:
     # ------------------------------------------------------------------
 
     async def _process_row(
-        self, row: PortfolioRowData, portfolio_id: int, row_number: int
+        self, row: PortfolioRowData, portfolio_id: uuid.UUID, row_number: int
     ) -> str | None:
         try:
             async with self.session.begin_nested():
@@ -198,7 +198,7 @@ class PortfolioCsvService:
     async def _upsert_credit(
         self,
         data: CreditRowData,
-        portfolio_id: int,
+        portfolio_id: uuid.UUID,
         debtor_id: int,
         codebtor_id: int | None,
     ) -> CreditModel:

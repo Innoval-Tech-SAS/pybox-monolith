@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,7 +22,7 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         )
         return result.scalars().first()
 
-    async def get_by_portfolio_id(self, portfolio_id: int) -> list[CreditModel]:
+    async def get_by_portfolio_id(self, portfolio_id: uuid.UUID) -> list[CreditModel]:
         result = await self.session.execute(
             select(CreditModel).where(
                 CreditModel.portfolio_id == portfolio_id,
