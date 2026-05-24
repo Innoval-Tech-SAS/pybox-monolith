@@ -18,7 +18,7 @@ def get_current_scope(
 ) -> UserScope:
     if session.is_global:
         return UserScope.GLOBAL
-    if session.orgs:
+    if session.orgs or session.scope == UserScope.ORGANIZATION:
         return UserScope.ORGANIZATION
     return UserScope.SELF
 

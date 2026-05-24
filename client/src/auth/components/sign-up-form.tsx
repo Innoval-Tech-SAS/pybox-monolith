@@ -116,7 +116,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
         {/* Mode toggle */}
         <div className="flex gap-1 p-1.5 mb-4 bg-gray-100 rounded-lg dark:bg-gray-800">
-          {(["admin", "user"] as const).map((m) => (
+          {(["user", "admin"] as const).map((m) => (
             <button
               key={m}
               type="button"

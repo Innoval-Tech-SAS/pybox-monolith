@@ -10,7 +10,7 @@ class RedisConfig:
     port: str = field(default_factory=lambda: get_or_throw("REDIS_PORT"))
     password: str = field(default_factory=lambda: get_or_throw("REDIS_PASSWORD"))
     db: str = "0"
-    DEFAULT_TTL = 3600
+    DEFAULT_TTL = 10800  # 3 hours
 
     @property
     def url(self) -> str:

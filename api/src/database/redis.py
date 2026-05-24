@@ -53,6 +53,12 @@ class RedisClient:
     async def delete(self, key: str) -> None:
         await self._client.delete(key)
 
+    async def expire(self, key: str, ttl_seconds: int = RedisConfig.DEFAULT_TTL) -> None:
+        await self._client.expire(key, ttl_seconds)
+
+    async def config_set(self, name: str, value: str) -> None:
+        await self._client.config_set(name, value)
+
     async def close(self) -> None:
         await self._client.aclose()
 

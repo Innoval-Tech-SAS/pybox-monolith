@@ -17,6 +17,7 @@ test/
 
 api/alembic/versions/
 
+.agents/
 # Logs
 logs
 *.log

@@ -2,6 +2,12 @@ from pydantic import BaseModel
 
 from users.enums.user_enums import UserRole, UserScope
 
+SESSION_KEY_PREFIX = "session:"
+
+
+def session_key(user_id: int) -> str:
+    return f"{SESSION_KEY_PREFIX}{user_id}"
+
 
 class OrgSessionEntry(BaseModel):
     role: UserRole

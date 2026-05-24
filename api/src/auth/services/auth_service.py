@@ -136,10 +136,11 @@ class AuthService:
             provider, token
         )
         user, is_new = await self._get_or_create_provider_user(provider_profile, provider_data)
-        if is_new:
-            await self.role_assignment_repository.add(
-                RoleAssignmentModel(user_id=cast(int, user.id), role=role, scope=scope)
-            )
+        if not is_new:
+            raise ValueError("Ya tienes una cuenta registrada con este proveedor. Inicia sesión.")
+        await self.role_assignment_repository.add(
+            RoleAssignmentModel(user_id=cast(int, user.id), role=role, scope=scope)
+        )
         return await self._build_response(user, provider)
 
     async def authenticate_existing_provider_user(

@@ -10,7 +10,7 @@ from users.models.user_model import UserModel
 from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_repository import UserRepository
-from users.schemas.user_session_schema import OrgSessionEntry, UserSession
+from users.schemas.user_session_schema import OrgSessionEntry, UserSession, session_key
 
 
 class UserService:
@@ -104,10 +104,11 @@ class UserService:
                     email=user.email,
                     document_type=doc_type,
                     document_number=doc_number,
+                    scope=UserScope.ORGANIZATION,
                     orgs=orgs,
                 )
 
-        await self.redis.set_json(f"session:{user_id}", session)
+        await self.redis.set_json(session_key(user_id), session)
         return session
 
     async def get_profile(self, user_id: int) -> UserModel:

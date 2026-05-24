@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 import os
 from contextlib import asynccontextmanager
 
@@ -7,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from config.error_handlers import register_error_handlers
 from database.database import db
+from database.session_expiry_listener import start_session_expiry_listener
 from tools.config_tools import get_or_throw
 
 import campaigns.models.campaign_model  # noqa: F401
@@ -50,7 +53,11 @@ os.makedirs(_UPLOADS_DIR, exist_ok=True)
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await db.create_tables()
+    expiry_task = await start_session_expiry_listener()
     yield
+    expiry_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await expiry_task
     await db.engine.dispose()
 
 

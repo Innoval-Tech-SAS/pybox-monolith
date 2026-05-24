@@ -5,7 +5,7 @@ import { PageMeta } from "../../ui/pages/page-meta";
 import { RegisterMode, REGISTER_PANEL } from "../../types/auth/register-mode";
 
 export const SignUpPage: React.FC = () => {
-  const [mode, setMode] = useState<RegisterMode>("admin");
+  const [mode, setMode] = useState<RegisterMode>("user");
   const panel = REGISTER_PANEL[mode];
 
   const rightPanel = (
