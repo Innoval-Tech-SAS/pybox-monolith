@@ -7,7 +7,7 @@ import { SuccessModal } from "../../ui/components/modal/success-modal";
 import { ErrorModal } from "../../ui/components/modal/error-modal";
 import { useModal } from "../../hooks/use-modal";
 import { useOAuthRegister } from "../../hooks/use-oauth-register";
-import { useNationalities } from "../../hooks/use-nationalities";
+import { useCountries } from "../../hooks/use-countries";
 import { CompleteProfileFormProps } from "../../types/props/complete-profile-form-props";
 
 export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token, email }) => {
@@ -17,14 +17,14 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { oauthRegister, loading, error } = useOAuthRegister();
-  const { nationalities, loading: loadingNationalities } = useNationalities();
+  const { countries, loading: loadingNationalities } = useCountries();
   const navigate = useNavigate();
   const successModal = useModal();
   const errorModal = useModal();
 
   const handleNationalityChange = (code: string) => {
     setNationality(code);
-    const nation = nationalities.find((n) => n.code === code);
+    const nation = countries.find((n) => n.code === code);
     if (nation) setPhonePrefix(nation.phonePrefix);
   };
 
@@ -54,7 +54,7 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
             </Label>
             <CountrySelect
               mode="NAME"
-              nationalities={nationalities}
+              countries={countries}
               placeholder={loadingNationalities ? "Cargando..." : "Selecciona tu nacionalidad"}
               value={nationality}
               onChange={handleNationalityChange}
@@ -71,7 +71,7 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
                 <CountrySelect
                   mode="PHONE"
                   valueKey="phonePrefix"
-                  nationalities={nationalities}
+                  countries={countries}
                   placeholder="+"
                   value={phonePrefix}
                   onChange={setPhonePrefix}

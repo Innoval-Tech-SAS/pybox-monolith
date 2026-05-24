@@ -1,0 +1,16 @@
+export const DOC_TYPE_LABELS: Record<string, string> = {
+  CC: "Cédula de ciudadanía",
+  CE: "Cédula de extranjería",
+  NIT: "NIT",
+  PEP: "Permiso especial de permanencia",
+  CURP: "CURP",
+  INE: "INE",
+  RFC: "RFC",
+  DNI: "DNI",
+  CUIL: "CUIL",
+  CUIT: "CUIT",
+  RUC: "RUC",
+  CI: "Cédula de identidad",
+  RIF: "RIF",
+  PASAPORTE: "Pasaporte",
+};

@@ -24,6 +24,13 @@ export const OrgCard: React.FC<OrgCardProps> = ({ org, onClick }) => (
           {org.fiscalDocumentType} · {org.fiscalDocumentNumber}
         </p>
       )}
+      {org.country && (
+        <span
+          aria-hidden="true"
+          className={`fi fi-${org.country.toLowerCase()} mt-2 block rounded-sm`}
+          style={{ width: "1.5rem", height: "1rem" }}
+        />
+      )}
     </div>
 
     <div className="mt-auto flex items-center justify-between">

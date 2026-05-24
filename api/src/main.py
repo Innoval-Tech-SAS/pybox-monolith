@@ -14,7 +14,7 @@ from tools.config_tools import get_or_throw
 
 import campaigns.models.campaign_model  # noqa: F401
 import contacts.models.contact_model  # noqa: F401
-import notifications.models.verification_code_model  # noqa: F401
+import messaging.models.verification_code_model  # noqa: F401
 import organizations.models.organization_model  # noqa: F401
 import organizations.models.organization_membership_model  # noqa: F401
 import users.models.user_model  # noqa: F401
@@ -34,8 +34,12 @@ import payments.models.payment_model  # noqa: F401
 import payment_methods.models.payment_method_model  # noqa: F401
 import contact_methods.models.contact_method_model  # noqa: F401
 import reports.models.report_model  # noqa: F401
+import support.models.support_ticket_model  # noqa: F401
+import notifications.models.notification_model  # noqa: F401
 
 from auth.controllers.auth_controller import router as auth_router
+from notifications.controllers.notification_controller import router as notifications_router
+from support.controllers.support_controller import router as support_router
 from contacts.controllers.contact_controller import router as contacts_router
 from countries.controllers.countries_controller import router as countries_router
 from credits.controllers.my_credits_controller import router as my_credits_router
@@ -87,6 +91,8 @@ app.include_router(onboarding_router, prefix=API_PREFIX)
 app.include_router(organizations_router, prefix=API_PREFIX)
 app.include_router(portfolios_router, prefix=API_PREFIX)
 app.include_router(users_router, prefix=API_PREFIX)
+app.include_router(notifications_router, prefix=API_PREFIX)
+app.include_router(support_router, prefix=API_PREFIX)
 
 
 @app.get("/")

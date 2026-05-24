@@ -6,8 +6,8 @@ from countries.enums.country_enums import (
     ORG_FISCAL_DOCUMENT_BY_NATIONALITY,
     ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY,
 )
-from notifications.dependencies import get_verification_service
-from notifications.enums.notification_enums import VerificationChannel
+from messaging.dependencies import get_verification_service
+from messaging.enums.notification_enums import VerificationChannel
 from onboarding.schemas.onboarding_schemas import (
     OnboardingStatusSchema,
     OrganizationOnboardingSchema,
@@ -15,7 +15,9 @@ from onboarding.schemas.onboarding_schemas import (
 )
 from auth.enums.auth_enums import AuthProvider
 from onboarding.schemas.onboarding_schemas import OnboardingRepMode
+from organizations.enums.organization_enums import VerificationStatus
 from organizations.models.organization_model import OrganizationModel
+from support.services.support_service import SupportService
 from organizations.models.organization_membership_model import OrganizationMembershipModel
 from organizations.repository.organization_repository import OrganizationRepository
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
@@ -42,6 +44,7 @@ class OnboardingService:
             role_assignment_repo=self._role_repo,
             permission_assignment_repo=PermissionAssignmentRepository(session),
         )
+        self._support_service = SupportService(session)
 
     async def get_status(
         self,
@@ -127,7 +130,7 @@ class OnboardingService:
         mercantile_file: UploadFile,
         representative_file: UploadFile,
     ) -> OrganizationModel:
-        org = await self._org_repo.add(OrganizationModel(name=data.name))
+        org = await self._org_repo.add(OrganizationModel(name=data.name, verification_status=VerificationStatus.PENDING))
 
         org_id = str(org.id)
         fiscal_path = await save_upload_file(fiscal_file, org_id, "fiscal")
@@ -177,6 +180,7 @@ class OnboardingService:
             pending_role.organization_id = updated_org.id
             await self._role_repo.update(pending_role)
 
+        await self._support_service.create_org_verification_ticket(updated_org.id, user_id)
         await self._user_service.get_user_session(user_id)
 
         return updated_org

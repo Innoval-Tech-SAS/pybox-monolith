@@ -7,6 +7,12 @@ from base.schema_base import BaseSchema
 from countries.enums.country_enums import Nationality, UserDocumentType
 
 
+class UserSummarySchema(BaseSchema):
+    id: int
+    full_name: str
+    email: str
+
+
 class UserProfile(BaseSchema):
 
     id: int

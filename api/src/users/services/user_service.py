@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import uuid
+
 from fastapi import HTTPException, status
 
 from database.redis import RedisClient
@@ -147,6 +151,14 @@ class UserService:
         user = await self.user_repo.get_by_id(user_id)
         if user is not None:
             await self.user_repo.delete(user)
+
+    async def get_accessible_users(self, session: UserSession) -> list[UserModel]:
+        if session.scope == UserScope.GLOBAL:
+            return list(await self.user_repo.get_accessible(org_ids=None))
+        if session.scope == UserScope.ORGANIZATION:
+            org_ids = [uuid.UUID(o) for o in session.orgs.keys()]
+            return list(await self.user_repo.get_accessible(org_ids=org_ids))
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
 
     async def restore_user(self, user_id: int) -> UserModel | None:
         user = await self.user_repo.get_by_id_including_deleted(user_id)

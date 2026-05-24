@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useToast } from "@/context/toast-context";
 import { useApiClient } from "@/hooks/use-api-client";
 import type { RepresentativeMode } from "@/types/companies/company-types";
+import type { UserSummary } from "@/types/users/user-types";
 import { validateOrgDocumentFile } from "../utils/org-file-validation";
 
 export const useRegisterOrg = () => {
@@ -19,6 +20,8 @@ export const useRegisterOrg = () => {
   const [description, setDescription] = useState("");
 
   // Files
+  const [fiscalFile, setFiscalFile] = useState<File | null>(null);
+  const [fiscalError, setFiscalError] = useState<string | null>(null);
   const [mercantileFile, setMercantileFile] = useState<File | null>(null);
   const [mercantileError, setMercantileError] = useState<string | null>(null);
   const [repFile, setRepFile] = useState<File | null>(null);
@@ -28,7 +31,7 @@ export const useRegisterOrg = () => {
   const [repMode, setRepMode] = useState<RepresentativeMode>("self");
 
   // SELECT mode
-  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedUser, setSelectedUser] = useState<UserSummary | null>(null);
 
   // CREATE mode
   const [repFirstname, setRepFirstname] = useState("");
@@ -38,6 +41,12 @@ export const useRegisterOrg = () => {
   const [repDocNumber, setRepDocNumber] = useState("");
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  const handleFiscalFileChange = useCallback((file: File | null) => {
+    const err = validateOrgDocumentFile(file, "documento fiscal");
+    setFiscalError(err);
+    setFiscalFile(err ? null : file);
+  }, []);
 
   const handleMercantileFileChange = useCallback((file: File | null) => {
     const err = validateOrgDocumentFile(file, "documento mercantil");
@@ -56,12 +65,14 @@ export const useRegisterOrg = () => {
     setCountry("");
     setFiscalDocNumber("");
     setDescription("");
+    setFiscalFile(null);
+    setFiscalError(null);
     setMercantileFile(null);
     setMercantileError(null);
     setRepFile(null);
     setRepFileError(null);
     setRepMode("self");
-    setSelectedUserId("");
+    setSelectedUser(null);
     setRepFirstname("");
     setRepLastname("");
     setRepEmail("");
@@ -74,6 +85,9 @@ export const useRegisterOrg = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const fiscalErr = validateOrgDocumentFile(fiscalFile, "documento fiscal");
+      if (fiscalErr) { setFiscalError(fiscalErr); warning("Validación", fiscalErr); return; }
+
       const mercantileErr = validateOrgDocumentFile(mercantileFile, "documento mercantil");
       if (mercantileErr) { setMercantileError(mercantileErr); warning("Validación", mercantileErr); return; }
 
@@ -86,12 +100,13 @@ export const useRegisterOrg = () => {
       data.set("representative_mode", repMode);
       if (fiscalDocNumber) data.set("fiscal_document_number", fiscalDocNumber);
       if (description) data.set("description", description);
+      data.set("fiscal_document_file", fiscalFile!);
       data.set("mercantile_document_file", mercantileFile!);
       data.set("representative_document_file", repFile!);
 
       if (repMode === "select") {
-        if (!selectedUserId) { warning("Validación", "Selecciona un representante legal."); return; }
-        data.set("representative_user_id", selectedUserId);
+        if (!selectedUser) { warning("Validación", "Selecciona un representante legal."); return; }
+        data.set("representative_user_id", String(selectedUser.id));
       } else if (repMode === "create") {
         data.set("rep_firstname", repFirstname);
         data.set("rep_lastname", repLastname);
@@ -118,10 +133,11 @@ export const useRegisterOrg = () => {
     country, setCountry,
     fiscalDocNumber, setFiscalDocNumber,
     description, setDescription,
+    fiscalFile, fiscalError, handleFiscalFileChange,
     mercantileFile, mercantileError, handleMercantileFileChange,
     repFile, repFileError, handleRepFileChange,
     repMode, setRepMode,
-    selectedUserId, setSelectedUserId,
+    selectedUser, setSelectedUser,
     repFirstname, setRepFirstname,
     repLastname, setRepLastname,
     repEmail, setRepEmail,

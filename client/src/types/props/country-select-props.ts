@@ -9,7 +9,7 @@ export interface CountrySelectProps {
   value?: string;
   onChange: (value: string) => void;
   /** Si se provee, no hace fetch interno (evita petición duplicada). */
-  nationalities?: NationalityOption[];
+  countries?: NationalityOption[];
   placeholder?: string;
   className?: string;
   disabled?: boolean;

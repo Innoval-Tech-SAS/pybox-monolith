@@ -10,7 +10,7 @@ from countries.enums.country_enums import (
     UserDocumentType,
     DOCUMENTS_BY_NATIONALITY,
 )
-from notifications.enums.notification_enums import VerificationChannel
+from messaging.enums.notification_enums import VerificationChannel
 
 
 class RequestOtpSchema(BaseSchema):

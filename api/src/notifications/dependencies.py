@@ -1,14 +1,16 @@
+from typing import Annotated
+
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from notifications.enums.notification_enums import VerificationChannel
-from notifications.services.email_verification_service import EmailVerificationService
-from notifications.services.sms_verification_service import SMSVerificationService
-from notifications.services.verification_service import VerificationService
+from database.database import get_main_session
+from notifications.services.notification_service import NotificationService
 
 
-def get_verification_service(
-    channel: VerificationChannel, session: AsyncSession
-) -> VerificationService:
-    if channel == VerificationChannel.EMAIL:
-        return EmailVerificationService(session)
-    return SMSVerificationService(session)
+def get_notification_service(
+    db: Annotated[AsyncSession, Depends(get_main_session)],
+) -> NotificationService:
+    return NotificationService(db)
+
+
+NotificationServiceDep = Annotated[NotificationService, Depends(get_notification_service)]

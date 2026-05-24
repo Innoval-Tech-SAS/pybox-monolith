@@ -118,6 +118,8 @@ class OrganizationService:
         rep_email: str | None,
         rep_document_type: UserDocumentType | None,
         rep_document_number: str | None,
+        fiscal_file_bytes: bytes,
+        fiscal_file_ext: str,
         mercantile_file_bytes: bytes,
         mercantile_file_ext: str,
         representative_file_bytes: bytes,
@@ -177,7 +179,10 @@ class OrganizationService:
         rep_file_name = f"user_{rep_user_id}{representative_file_ext}"
         rep_file_path = save_file(representative_file_bytes, rep_file_name)
 
-        mercantile_file_name = f"org_{org_id}{mercantile_file_ext}"
+        fiscal_file_name = f"org_{org_id}_fiscal{fiscal_file_ext}"
+        fiscal_file_path = save_file(fiscal_file_bytes, fiscal_file_name)
+
+        mercantile_file_name = f"org_{org_id}_mercantile{mercantile_file_ext}"
         mercantile_file_path = save_file(mercantile_file_bytes, mercantile_file_name)
 
         # 4. Resolve doc types from country
@@ -192,6 +197,7 @@ class OrganizationService:
             country=country,
             fiscal_document_type=fiscal_doc_type,
             fiscal_document_number=encrypt_service.encrypt_to_str(fiscal_document_number) if fiscal_document_number else None,
+            fiscal_document_file=fiscal_file_path,
             mercantile_document_type=mercantile_doc_type,
             mercantile_document_file=mercantile_file_path,
             representative_document_file=rep_file_path,

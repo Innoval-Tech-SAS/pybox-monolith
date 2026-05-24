@@ -10,7 +10,7 @@ import { ErrorModal } from "../../ui/components/modal/error-modal";
 import { useModal } from "../../hooks/use-modal";
 import { useRegister } from "../../hooks/use-register";
 import { useOAuthRegister } from "../../hooks/use-oauth-register";
-import { useNationalities } from "../../hooks/use-nationalities";
+import { useCountries } from "../../hooks/use-countries";
 import { GooglePayload } from "../../types/auth/google";
 import { MANUAL_INITIAL } from "../../constants/auth/sign-up-form";
 import { SignUpFormProps } from "../../types/props/sign-up-form-props";
@@ -34,7 +34,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     loading: loadingOAuth,
     error: errorOAuth,
   } = useOAuthRegister();
-  const { nationalities, loading: loadingNationalities } = useNationalities();
+  const { countries, loading: loadingNationalities } = useCountries();
   const navigate = useNavigate();
   const successModal = useModal();
   const errorModal = useModal();
@@ -76,7 +76,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
   const handleNationalityChange = (code: string) => {
     setManualForm((prev) => ({ ...prev, nationality: code }));
-    const nation = nationalities.find((n) => n.code === code);
+    const nation = countries.find((n) => n.code === code);
     if (nation) setPhonePrefix(nation.phonePrefix);
   };
 
@@ -202,7 +202,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
               </Label>
               <CountrySelect
                 mode="NAME"
-                nationalities={nationalities}
+                countries={countries}
                 placeholder={
                   loadingNationalities
                     ? "Cargando..."
@@ -224,7 +224,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
                   <CountrySelect
                     mode="PHONE"
                     valueKey="phonePrefix"
-                    nationalities={nationalities}
+                    countries={countries}
                     placeholder="+"
                     value={phonePrefix}
                     onChange={setPhonePrefix}

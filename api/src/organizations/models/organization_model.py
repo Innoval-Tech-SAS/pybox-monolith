@@ -10,6 +10,7 @@ from countries.enums.country_enums import (
     OrgFiscalDocumentType,
     OrgMercantileDocumentType,
 )
+from organizations.enums.organization_enums import VerificationStatus
 
 
 class OrganizationModel(AuditModel):
@@ -45,6 +46,9 @@ class OrganizationModel(AuditModel):
     )
     representative_document_file: Mapped[str | None] = mapped_column(
         String(500), nullable=True, name="archivo_documento_representante"
+    )
+    verification_status: Mapped[VerificationStatus] = mapped_column(
+        ENUM(VerificationStatus), nullable=False, default=VerificationStatus.PENDING, name="estado_verificacion"
     )
 
     memberships = relationship(

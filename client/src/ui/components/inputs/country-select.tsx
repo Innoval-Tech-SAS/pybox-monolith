@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import { useNationalities } from "@/hooks/use-nationalities";
+import { useCountries } from "@/hooks/use-countries";
 import type { NationalityOption } from "@/types/countries/country-types";
 import type {
   CountrySelectProps,
@@ -24,7 +24,7 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
   valueKey = "code",
   value = "",
   onChange,
-  nationalities: externalNationalities,
+  countries: externalCountries,
   placeholder = "Selecciona un país",
   className = "",
   disabled = false,
@@ -33,12 +33,12 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
   const listboxId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const { nationalities: fetched, loading } = useNationalities();
-  const nationalities = externalNationalities ?? fetched;
+  const { countries: fetched, loading } = useCountries();
+  const countries = externalCountries ?? fetched;
   const isDisabled = disabled || loading;
   const selected = useMemo(
-    () => nationalities.find((n) => getCountrySelectOptionValue(n, valueKey) === value),
-    [nationalities, value, valueKey],
+    () => countries.find((n) => getCountrySelectOptionValue(n, valueKey) === value),
+    [countries, value, valueKey],
   );
 
   useEffect(() => {
@@ -99,7 +99,7 @@ export const CountrySelect: React.FC<CountrySelectProps> = ({
           role="listbox"
           className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900"
         >
-          {nationalities.map((n) => {
+          {countries.map((n) => {
             const optionValue = getCountrySelectOptionValue(n, valueKey);
             const isSelected = optionValue === value;
             return (

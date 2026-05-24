@@ -17,7 +17,7 @@ load_dotenv()
 from database.database import Base  # noqa: E402
 import campaigns.models.campaign_model  # noqa: E402, F401
 import contacts.models.contact_model  # noqa: E402, F401
-import notifications.models.verification_code_model  # noqa: E402, F401
+import messaging.models.verification_code_model  # noqa: E402, F401
 import organizations.models.organization_model  # noqa: E402, F401
 import organizations.models.organization_membership_model  # noqa: E402, F401
 import users.models.user_model  # noqa: E402, F401
@@ -37,6 +37,8 @@ import payments.models.payment_model  # noqa: E402, F401
 import payment_methods.models.payment_method_model  # noqa: E402, F401
 import contact_methods.models.contact_method_model  # noqa: E402, F401
 import reports.models.report_model  # noqa: E402, F401
+import support.models.support_ticket_model  # noqa: E402, F401
+import notifications.models.notification_model  # noqa: E402, F401
 
 config = context.config
 
@@ -44,6 +46,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+
 
 # Construir la URL desde las variables de entorno del proyecto
 def _get_url() -> str:

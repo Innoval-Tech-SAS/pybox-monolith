@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+import uuid
+from typing import Sequence
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -56,4 +61,23 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
             .where(UserModel.deleted_at.is_(None))
         )
         return result.scalars().first()
+
+    async def get_accessible(self, org_ids: list[uuid.UUID] | None) -> Sequence[UserModel]:
+        if org_ids is None:
+            result = await self.session.execute(
+                select(UserModel).where(UserModel.deleted_at.is_(None))
+            )
+        else:
+            from organizations.models.organization_membership_model import OrganizationMembershipModel
+            result = await self.session.execute(
+                select(UserModel)
+                .join(OrganizationMembershipModel, OrganizationMembershipModel.user_id == UserModel.id)
+                .where(
+                    OrganizationMembershipModel.organization_id.in_(org_ids),
+                    OrganizationMembershipModel.deleted_at.is_(None),
+                    UserModel.deleted_at.is_(None),
+                )
+                .distinct()
+            )
+        return result.scalars().all()
 

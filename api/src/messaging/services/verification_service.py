@@ -6,14 +6,14 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.logger import logger
-from notifications.enums.notification_enums import VerificationChannel
-from notifications.exceptions import (
+from messaging.enums.notification_enums import VerificationChannel
+from messaging.exceptions import (
     CodeAlreadyUsedException,
     CodeExpiredException,
     CodeNotFoundException,
 )
-from notifications.models.verification_code_model import VerificationCodeModel
-from notifications.repositories.verification_code_repository import (
+from messaging.models.verification_code_model import VerificationCodeModel
+from messaging.repositories.verification_code_repository import (
     VerificationCodeRepository,
 )
 

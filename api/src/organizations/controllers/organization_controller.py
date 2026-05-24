@@ -84,9 +84,12 @@ async def register_organization(
     rep_email: str | None = Form(None),
     rep_document_type: UserDocumentType | None = Form(None),
     rep_document_number: str | None = Form(None),
+    fiscal_document_file: UploadFile = File(...),
     mercantile_document_file: UploadFile = File(...),
     representative_document_file: UploadFile = File(...),
 ) -> OrgRegisterResponse:
+    fiscal_bytes = await fiscal_document_file.read()
+    fiscal_ext = Path(fiscal_document_file.filename or "").suffix or ".pdf"
     mercantile_bytes = await mercantile_document_file.read()
     mercantile_ext = Path(mercantile_document_file.filename or "").suffix or ".pdf"
     rep_bytes = await representative_document_file.read()
@@ -103,6 +106,8 @@ async def register_organization(
         rep_email=rep_email,
         rep_document_type=rep_document_type,
         rep_document_number=rep_document_number,
+        fiscal_file_bytes=fiscal_bytes,
+        fiscal_file_ext=fiscal_ext,
         mercantile_file_bytes=mercantile_bytes,
         mercantile_file_ext=mercantile_ext,
         representative_file_bytes=rep_bytes,

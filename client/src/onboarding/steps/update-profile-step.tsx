@@ -2,18 +2,18 @@ import React, { useState } from "react";
 import { Input } from "@/ui/components/inputs/input";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { useUpdateProfile } from "@/hooks/use-update-profile";
-import { useNationalities } from "@/hooks/use-nationalities";
+import { useCountries } from "@/hooks/use-countries";
 import type { StepDoneProps } from "@/types/props/onboarding-props";
 
 export const UpdateProfileStep: React.FC<StepDoneProps> = ({ onDone }) => {
-  const { nationalities, loading: loadingNat } = useNationalities();
+  const { countries, loading: loadingNat } = useCountries();
   const { updateProfile, loading, error, clearError } = useUpdateProfile();
 
   const [nationality, setNationality] = useState("");
   const [documentType, setDocumentType] = useState("");
   const [documentNumber, setDocumentNumber] = useState("");
 
-  const selectedNat = nationalities.find((n) => n.code === nationality);
+  const selectedNat = countries.find((n) => n.code === nationality);
   const docTypes = selectedNat?.documentTypes ?? [];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,7 +40,7 @@ export const UpdateProfileStep: React.FC<StepDoneProps> = ({ onDone }) => {
           <CountrySelect
             mode="NAME"
             required
-            nationalities={nationalities}
+            countries={countries}
             placeholder={loadingNat ? "Cargando países..." : "Selecciona tu país"}
             value={nationality}
             onChange={(v) => { setNationality(v); setDocumentType(""); }}

@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from notifications.enums.notification_enums import VerificationChannel
-from notifications.providers.nrs360_provider import NRS360Provider
-from notifications.services.verification_service import VerificationService
+from messaging.enums.notification_enums import VerificationChannel
+from messaging.providers.nrs360_provider import NRS360Provider
+from messaging.services.verification_service import VerificationService
 from ..constants.verification_contants import SMS_TEMPLATE as _SMS_TEMPLATE
 
 
