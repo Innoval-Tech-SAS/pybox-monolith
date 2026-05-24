@@ -4,6 +4,7 @@ import { Link } from "react-router";
 import { useSidebar } from "../../../hooks/use-sidebar";
 import { UserDropdown } from "./user-dropdown";
 import { ThemeToggleButton } from "./theme-toggle-button";
+import { NotificationDropdown } from "./notification-dropdown";
 
 export const NavbarMenu: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
@@ -117,6 +118,7 @@ export const NavbarMenu: React.FC = () => {
         >
           <div className="flex items-center gap-2 2xsm:gap-3">
             <ThemeToggleButton />
+            <NotificationDropdown />
           </div>
           <UserDropdown />
         </div>
