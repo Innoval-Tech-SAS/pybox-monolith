@@ -8,7 +8,6 @@ import { useCreatePortfolio } from "../hooks/use-create-portfolio";
 
 export const CreatePortfolioForm: React.FC = () => {
   const {
-    isSubmitting,
     portfolioName, setPortfolioName,
     selectedFile, setSelectedFile,
     selectedCountry, setSelectedCountry,
@@ -31,7 +30,6 @@ export const CreatePortfolioForm: React.FC = () => {
               placeholder="Nombre descriptivo"
               value={portfolioName}
               onChange={(e) => setPortfolioName(e.target.value)}
-              disabled={isSubmitting}
               className="pl-11"
               required
             />
@@ -44,7 +42,6 @@ export const CreatePortfolioForm: React.FC = () => {
             mode="NAME"
             value={selectedCountry}
             onChange={setSelectedCountry}
-            disabled={isSubmitting}
           />
         </div>
       </div>
@@ -62,18 +59,16 @@ export const CreatePortfolioForm: React.FC = () => {
         <button
           type="button"
           onClick={handleReset}
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/3 dark:hover:text-gray-300"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/3 dark:hover:text-gray-300"
         >
           Limpiar
         </button>
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:bg-brand-300"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
         >
           <UploadCloud size={16} />
-          {isSubmitting ? "Creando portafolio..." : "Crear portafolio"}
+          Crear portafolio
         </button>
       </div>
     </form>

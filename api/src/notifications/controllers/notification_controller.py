@@ -5,7 +5,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from notifications.dependencies import NotificationServiceDep
 from notifications.schemas.notification_schemas import NotificationSchema
-from security.dependencies import CurrentSession
+from security.dependencies import CurrentSession, SSESession
 from sse.sse_emitter import sse_emitter
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
@@ -22,7 +22,7 @@ async def mark_all_read(session: CurrentSession, service: NotificationServiceDep
 
 
 @router.get("/stream")
-async def notification_stream(session: CurrentSession):
+async def notification_stream(session: SSESession):
     user_id = session.user_id
     queue = sse_emitter.subscribe(user_id)
 

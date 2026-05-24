@@ -10,6 +10,7 @@ from organizations.repository.organization_membership_repository import (
 from organizations.repository.organization_repository import OrganizationRepository
 from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
+from users.repository.user_preferences_repository import UserPreferencesRepository
 from users.repository.user_repository import UserRepository
 from users.services.user_service import UserService
 
@@ -23,6 +24,7 @@ def get_user_service(
         membership_repo=OrganizationMembershipRepository(session),
         role_assignment_repo=RoleAssignmentRepository(session),
         permission_assignment_repo=PermissionAssignmentRepository(session),
+        preferences_repo=UserPreferencesRepository(session),
     )
 
 

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { setSessionUser } from "@/auth/utils/auth-session-utils";
 import {
   USER_DROPDOWN_ICON_CLASS,
   USER_DROPDOWN_ITEM_CLASS,
@@ -9,11 +10,27 @@ import { Dropdown } from "../dropdown/dropdown";
 import { DropdownItem } from "../dropdown/dropdown-item";
 
 export const UserDropdown: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, fetchMe } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [fullName, setFullName] = useState<string | null>(
+    user?.full_name ?? user?.fullname ?? null
+  );
 
-  const initials = user?.fullname
-    ? user.fullname.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+  useEffect(() => {
+    if (fullName) return;
+    fetchMe()
+      .then((data) => {
+        const name = data.full_name ?? data.fullname ?? null;
+        if (name) {
+          setFullName(name);
+          setSessionUser({ ...user, full_name: name });
+        }
+      })
+      .catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const initials = fullName
+    ? fullName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
     : user?.email?.[0]?.toUpperCase() ?? "?";
 
   return (
@@ -31,8 +48,8 @@ export const UserDropdown: React.FC = () => {
             </span>
           )}
         </span>
-        {user?.fullname && (
-          <span className="hidden font-medium text-theme-sm lg:block">{user.fullname}</span>
+        {fullName && (
+          <span className="hidden font-medium text-theme-sm lg:block">{fullName}</span>
         )}
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
@@ -49,9 +66,9 @@ export const UserDropdown: React.FC = () => {
       >
         <div className="px-3 pb-3 border-b border-gray-200 dark:border-gray-800">
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            {user?.fullname ?? user?.email ?? "Usuario"}
+            {fullName ?? user?.email ?? "Usuario"}
           </span>
-          {user?.email && (
+          {fullName && user?.email && (
             <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
               {user.email}
             </span>

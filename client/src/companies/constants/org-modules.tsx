@@ -2,10 +2,8 @@ import {
   BarChart2,
   CreditCard,
   FolderOpen,
-  Plus,
   Settings,
   ShieldCheck,
-  UserPlus,
   Users,
 } from "lucide-react";
 import type { OrgModule } from "@/types/companies/company-types";
@@ -20,19 +18,11 @@ export const ORG_MODULES: OrgModule[] = [
     path: "/my-companies/portfolios",
   },
   {
-    key: "portfolios-create",
-    title: "Crear Portafolio",
-    description: "Carga un nuevo portafolio de clientes.",
-    icon: <Plus size={24} className="text-white" />,
-    gradient: "from-green-500 to-green-600",
-    path: "/my-companies/add-portfolio",
-  },
-  {
-    key: "payment-methods",
-    title: "Métodos de Pago",
-    description: "Administra los medios de pago habilitados.",
-    icon: <CreditCard size={24} className="text-white" />,
-    gradient: "from-emerald-500 to-cyan-600",
+    key: "roles",
+    title: "Roles",
+    description: "Administra los roles y permisos de los usuarios.",
+    icon: <ShieldCheck size={24} className="text-white" />,
+    gradient: "from-cyan-500 to-sky-600",
     path: null,
   },
   {
@@ -44,11 +34,11 @@ export const ORG_MODULES: OrgModule[] = [
     path: null,
   },
   {
-    key: "users-add",
-    title: "Crear Usuario",
-    description: "Agrega un nuevo usuario a la organización.",
-    icon: <UserPlus size={24} className="text-white" />,
-    gradient: "from-green-500 to-green-600",
+    key: "payment-methods",
+    title: "Métodos de Pago",
+    description: "Administra los medios de pago habilitados.",
+    icon: <CreditCard size={24} className="text-white" />,
+    gradient: "from-emerald-500 to-cyan-600",
     path: null,
   },
   {
@@ -57,14 +47,6 @@ export const ORG_MODULES: OrgModule[] = [
     description: "Genera y consulta reportes de gestión.",
     icon: <BarChart2 size={24} className="text-white" />,
     gradient: "from-orange-500 to-orange-600",
-    path: null,
-  },
-  {
-    key: "roles",
-    title: "Roles",
-    description: "Administra los roles y permisos de los usuarios.",
-    icon: <ShieldCheck size={24} className="text-white" />,
-    gradient: "from-cyan-500 to-sky-600",
     path: null,
   },
   {

@@ -5,6 +5,7 @@ from fastapi import HTTPException, Query, UploadFile, status
 
 from config.api_router import APIRouter
 from countries.enums.country_enums import Nationality
+from notifications.dependencies import NotificationServiceDep
 from onboarding.dependencies import CurrentOrg
 from portfolios.dependencies import PortfolioCsvServiceDep, PortfolioServiceDep
 from portfolios.models.portfolio_model import PortfolioModel
@@ -42,6 +43,7 @@ async def upload_csv(
     session: CurrentSession,
     org: CurrentOrg,
     service: PortfolioCsvServiceDep,
+    notification_service: NotificationServiceDep,
     portfolio_name: Annotated[str | None, Query(alias="portfolioName")] = None,
     tenant_id: Annotated[uuid.UUID | None, Query(alias="tenantId")] = None,
     country: Annotated[Nationality | None, Query()] = None,
@@ -74,9 +76,20 @@ async def upload_csv(
         )
 
     file_bytes = await file.read()
-    return await service.process_csv(
+    result = await service.process_csv(
         file_bytes=file_bytes,
         organization_id=selected_org_id,
         portfolio_name=(portfolio_name or "").strip() or None,
         country=country or country_id,
     )
+
+    failed_note = f", {result.failed_rows} fallidos" if result.failed_rows > 0 else ""
+    await notification_service.create_notification(
+        user_id=session.user_id,
+        title="Portafolio listo",
+        body=f"{result.processed_rows} registros procesados{failed_note}.",
+        category="portfolio",
+        link=f"/my-companies/portfolios?org={selected_org_id}",
+    )
+
+    return result

@@ -1,4 +1,5 @@
 import { useTour, type TourStep } from "@/hooks/use-tour";
+import { useDismissedTours } from "@/hooks/use-dismissed-tours";
 import {
   ORG_MODULE_TOUR_STEPS,
   ORG_TOUR_KEY,
@@ -23,5 +24,10 @@ const STEPS: TourStep[] = [
 ];
 
 export const useOrgTour = (ready: boolean) => {
-  useTour(ready, ORG_TOUR_KEY, STEPS);
+  const { isDismissed, dismiss, loading } = useDismissedTours();
+
+  useTour(ready && !loading, ORG_TOUR_KEY, STEPS, {
+    dismissed: isDismissed(ORG_TOUR_KEY),
+    onPermanentDismiss: () => dismiss(ORG_TOUR_KEY),
+  });
 };

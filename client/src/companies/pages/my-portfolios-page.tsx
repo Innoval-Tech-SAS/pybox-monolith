@@ -1,12 +1,14 @@
-import { FolderOpen, Plus } from "lucide-react";
-import { useSearchParams, useNavigate } from "react-router";
+import { useSearchParams } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
 import { ModuleCard } from "../components/module-card";
 import { PortfolioCard } from "../components/portfolio-card";
+import { CreatePortfolioCard } from "../components/create-portfolio-card";
 import { usePortfolios } from "../hooks/use-portfolios";
 import { PORTFOLIO_MODULES } from "../constants/portfolio-modules";
+import { usePortfoliosListTour } from "../hooks/use-portfolios-list-tour";
+import { usePortfolioModulesTour } from "../hooks/use-portfolio-modules-tour";
 
 const CARD_GRADIENTS = [
   "from-indigo-500 to-purple-600",
@@ -19,13 +21,15 @@ const CARD_GRADIENTS = [
 
 export const MyPortfoliosPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const orgId = searchParams.get("org") ?? "";
   const portfolioId = searchParams.get("portfolio") ?? "";
   const { portfolios, loading } = usePortfolios(orgId);
 
   const selectedPortfolio = portfolios.find((p) => p.id === portfolioId);
   const isPortfolioView = !!portfolioId && !!selectedPortfolio;
+
+  usePortfoliosListTour(!loading && !isPortfolioView);
+  usePortfolioModulesTour(!loading && isPortfolioView);
 
   const pageTitle = isPortfolioView ? (selectedPortfolio.name ?? "Portafolio") : "Mis Portafolios";
 
@@ -46,44 +50,20 @@ export const MyPortfoliosPage: React.FC = () => {
         ) : isPortfolioView ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {PORTFOLIO_MODULES.map((mod) => (
-              <ModuleCard key={mod.key} module={mod} orgId={orgId} />
+              <ModuleCard key={mod.key} id={`tour-pf-module-${mod.key}`} module={mod} orgId={orgId} />
             ))}
           </div>
-        ) : portfolios.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 py-24 text-gray-400">
-            <FolderOpen size={48} strokeWidth={1.5} />
-            <p className="text-sm">No hay portafolios registrados</p>
-            {orgId && (
-              <button
-                onClick={() => navigate(`/my-companies/add-portfolio?org=${orgId}`)}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
-              >
-                <Plus size={15} />
-                Crear primer portafolio
-              </button>
-            )}
-          </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex justify-end">
-              <button
-                onClick={() => navigate(`/my-companies/add-portfolio?org=${orgId}`)}
-                className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
-              >
-                <Plus size={15} />
-                Nuevo portafolio
-              </button>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {portfolios.map((p, i) => (
-                <PortfolioCard
-                  key={p.id}
-                  portfolio={p}
-                  colorGradient={CARD_GRADIENTS[i % CARD_GRADIENTS.length]}
-                  onClick={() => setSearchParams({ org: orgId, portfolio: p.id })}
-                />
-              ))}
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <CreatePortfolioCard id="tour-create-portfolio" />
+            {portfolios.map((p, i) => (
+              <PortfolioCard
+                key={p.id}
+                portfolio={p}
+                colorGradient={CARD_GRADIENTS[i % CARD_GRADIENTS.length]}
+                onClick={() => setSearchParams({ org: orgId, portfolio: p.id })}
+              />
+            ))}
           </div>
         )}
       </ModuleBase>

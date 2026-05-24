@@ -157,7 +157,7 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
             )}
 
             {step === 1 && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <DropZone
                   label={`Documento: ${fiscalLabel}`}
                   file={fiscalFile}

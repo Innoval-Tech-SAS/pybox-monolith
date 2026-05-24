@@ -27,8 +27,8 @@ export const WizardForm: React.FC<WizardFormProps> = ({
       <StepIndicator current={step} total={steps.length} />
 
       <div className="mb-1">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{steps[step].title}</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500">{steps[step].description}</p>
+        <p className="text-base font-semibold text-gray-800 dark:text-white/90">{steps[step].title}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{steps[step].description}</p>
       </div>
 
       <form onSubmit={onSubmit}>

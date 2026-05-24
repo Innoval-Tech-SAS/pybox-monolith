@@ -10,7 +10,7 @@ const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
   return (
-    <div className="h-screen overflow-hidden xl:flex">
+    <div className="h-screen overflow-hidden flex flex-col xl:flex-row">
       <div>
         <AsideMenu navItems={signInNavbarItems} othersItems={otherSignInItems} />
         <Backdrop />

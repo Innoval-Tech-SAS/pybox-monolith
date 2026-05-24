@@ -21,6 +21,7 @@ import users.models.user_model  # noqa: F401
 import users.models.permission_model  # noqa: F401
 import users.models.role_assignment_model  # noqa: F401
 import users.models.permission_assignment_model  # noqa: F401
+import users.models.user_preferences_model  # noqa: F401
 import portfolios.models.portfolio_model  # noqa: F401
 import portfolios.models.portfolio_user_access_model  # noqa: F401
 import portfolios.models.portfolio_daily_counter_config_model  # noqa: F401

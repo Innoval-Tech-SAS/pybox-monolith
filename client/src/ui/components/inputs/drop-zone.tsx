@@ -30,13 +30,15 @@ export const DropZone: React.FC<DropZoneProps> = ({ label, file, onChange, error
     ? "border-error-500"
     : dragging
       ? "border-brand-400 bg-brand-50 dark:bg-brand-900/20"
-      : "border-gray-300 dark:border-gray-700";
+      : file
+        ? "border-brand-500 dark:border-brand-400"
+        : "border-gray-300 dark:border-gray-700";
 
   return (
     <div className="space-y-1.5">
       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
       <div
-        className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 cursor-pointer transition-colors ${borderClass}`}
+        className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 min-h-28 cursor-pointer transition-colors ${borderClass}`}
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}

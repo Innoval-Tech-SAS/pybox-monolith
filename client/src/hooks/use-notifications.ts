@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useApiClient } from "./use-api-client";
+import { useApiClient, API_URL } from "./use-api-client";
 import type { AppNotification } from "@/types/notifications/notification";
 
 export const useNotifications = () => {
@@ -20,6 +20,25 @@ export const useNotifications = () => {
   }, [apiClient]);
 
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+
+  // SSE: receive real-time notifications via /notifications/stream?token=<jwt>
+  useEffect(() => {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return;
+
+    const es = new EventSource(`${API_URL}/notifications/stream?token=${encodeURIComponent(token)}`);
+
+    es.addEventListener("notification", (e) => {
+      try {
+        const notif: AppNotification = JSON.parse(e.data);
+        setNotifications((prev) => [notif, ...prev]);
+      } catch {
+        // malformed event
+      }
+    });
+
+    return () => es.close();
+  }, []);
 
   const markAllRead = useCallback(async () => {
     try {

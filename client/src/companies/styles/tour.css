@@ -128,6 +128,37 @@ body.driver-active header {
   color: #344054 !important;
 }
 
+/* ── Dismiss button ─────────────────────────────────────────────────── */
+.driver-popover.driverjs-theme .tour-dismiss-btn {
+  display: block !important;
+  width: 100% !important;
+  background: transparent !important;
+  color: #98a2b3 !important;
+  border: none !important;
+  font-size: 11px !important;
+  padding: 8px 0 0 !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  font-family: "Outfit", sans-serif !important;
+  line-height: 1 !important;
+  transition: color 0.15s !important;
+}
+
+.driver-popover.driverjs-theme .tour-dismiss-btn:hover {
+  background: transparent !important;
+  color: #667085 !important;
+}
+
+.dark .driver-popover.driverjs-theme .tour-dismiss-btn {
+  color: #475467 !important;
+}
+
+.dark .driver-popover.driverjs-theme .tour-dismiss-btn:hover {
+  color: #98a2b3 !important;
+}
+
 /* ── Arrow ──────────────────────────────────────────────────────────── */
 .driver-popover.driverjs-theme.driver-popover-arrow-side-left .driver-popover-arrow {
   border-right-color: #ffffff !important;

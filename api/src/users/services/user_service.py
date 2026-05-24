@@ -13,6 +13,7 @@ from users.enums.user_enums import PermissionEffect, UserRole, UserScope
 from users.models.user_model import UserModel
 from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
+from users.repository.user_preferences_repository import UserPreferencesRepository
 from users.repository.user_repository import UserRepository
 from users.schemas.user_session_schema import OrgSessionEntry, UserSession, session_key
 
@@ -25,6 +26,7 @@ class UserService:
         membership_repo: OrganizationMembershipRepository,
         role_assignment_repo: RoleAssignmentRepository,
         permission_assignment_repo: PermissionAssignmentRepository,
+        preferences_repo: UserPreferencesRepository,
         redis: RedisClient | None = None,
     ):
         self.user_repo = user_repo
@@ -32,6 +34,7 @@ class UserService:
         self.membership_repo = membership_repo
         self.role_assignment_repo = role_assignment_repo
         self.permission_assignment_repo = permission_assignment_repo
+        self.preferences_repo = preferences_repo
         self._org_service = OrganizationService(org_repo, membership_repo, role_assignment_repo)
         self._redis = redis
 
@@ -161,6 +164,14 @@ class UserService:
             org_ids = [uuid.UUID(o) for o in session.orgs.keys()]
             return list(await self.user_repo.get_accessible(org_ids=org_ids))
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+
+    async def get_dismissed_tours(self, user_id: int) -> list[str]:
+        prefs = await self.preferences_repo.get_by_user_id(user_id)
+        return prefs.dismissed_tours if prefs else []
+
+    async def dismiss_tour(self, user_id: int, tour_key: str) -> list[str]:
+        prefs = await self.preferences_repo.dismiss_tour(user_id, tour_key)
+        return prefs.dismissed_tours
 
     async def restore_user(self, user_id: int) -> UserModel | None:
         user = await self.user_repo.get_by_id_including_deleted(user_id)

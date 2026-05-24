@@ -26,6 +26,7 @@ from users.enums.user_enums import UserScope
 from users.models.user_model import UserModel
 from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
+from users.repository.user_preferences_repository import UserPreferencesRepository
 from users.repository.user_repository import UserRepository
 from users.services.user_service import UserService
 
@@ -43,6 +44,7 @@ class OnboardingService:
             membership_repo=self._membership_repo,
             role_assignment_repo=self._role_repo,
             permission_assignment_repo=PermissionAssignmentRepository(session),
+            preferences_repo=UserPreferencesRepository(session),
         )
         self._support_service = SupportService(session)
 

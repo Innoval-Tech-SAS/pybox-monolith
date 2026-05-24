@@ -5,13 +5,12 @@ import { useApiClient } from "@/hooks/use-api-client";
 import type { CreatePortfolioResult } from "@/types/companies/company-types";
 
 export const useCreatePortfolio = () => {
-  const { success, error: toastError } = useToast();
+  const { error: toastError } = useToast();
   const navigate = useNavigate();
   const { apiClient } = useApiClient();
   const [searchParams] = useSearchParams();
   const orgId = searchParams.get("org") ?? "";
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [portfolioName, setPortfolioName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -25,39 +24,29 @@ export const useCreatePortfolio = () => {
     formRef.current?.reset();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!orgId) { toastError("Error", "No se pudo identificar la organización."); return; }
     if (!selectedFile) { toastError("Validación", "Debes adjuntar el archivo CSV."); return; }
 
-    setIsSubmitting(true);
-    try {
-      const data = new FormData();
-      data.set("file", selectedFile);
+    const data = new FormData();
+    data.set("file", selectedFile);
 
-      const params = new URLSearchParams({ portfolioName, tenantId: orgId });
-      if (selectedCountry) params.set("countryId", selectedCountry);
+    const params = new URLSearchParams({ portfolioName, tenantId: orgId });
+    if (selectedCountry) params.set("countryId", selectedCountry);
 
-      const result: CreatePortfolioResult = await apiClient(`/portfolios/upload-csv?${params}`, {
-        method: "POST",
-        body: data,
+    // Navigate immediately — user can keep working
+    navigate(`/my-companies/portfolios?org=${orgId}`);
+
+    // Fire-and-forget: backend creates a bell notification when done via SSE
+    apiClient(`/portfolios/upload-csv?${params}`, { method: "POST", body: data })
+      .catch(() => {
+        // apiClient already shows an error toast on failure
       });
-      if (result) {
-        success(
-          "Portafolio creado",
-          `${result.processed_rows} registros procesados${result.failed_rows > 0 ? `, ${result.failed_rows} fallidos` : ""}.`,
-        );
-        navigate(`/my-companies?org=${orgId}`);
-      }
-    } catch {
-      // handled by apiClient
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   return {
-    isSubmitting,
+    isSubmitting: false,
     orgId,
     portfolioName, setPortfolioName,
     selectedFile, setSelectedFile,

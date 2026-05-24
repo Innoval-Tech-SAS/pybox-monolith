@@ -31,7 +31,7 @@ export const ProfilePage: React.FC = () => {
         <div className="space-y-6">
           <ProfileMetaCard
             fullName={profile?.full_name ?? profile?.fullname ?? ""}
-            role={profile?.role}
+            role={profile?.role ?? (profile?.orgs ? Object.values(profile.orgs)[0]?.role : undefined)}
             scope={profile?.scope}
           />
           <ProfileInfoCard

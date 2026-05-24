@@ -1,5 +1,5 @@
 export interface AppNotification {
-  id: string;
+  id: number;
   title: string;
   body: string;
   category: string;

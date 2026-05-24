@@ -10,6 +10,7 @@ from organizations.repository.organization_repository import OrganizationReposit
 from security.services.auth_token_service import AuthTokenService
 from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
+from users.repository.user_preferences_repository import UserPreferencesRepository
 from users.repository.user_repository import UserRepository
 from users.services.user_service import UserService
 from .services.auth_service import AuthService
@@ -47,6 +48,7 @@ def get_auth_service(
         membership_repo=OrganizationMembershipRepository(session),
         role_assignment_repo=role_assignment_repo,
         permission_assignment_repo=PermissionAssignmentRepository(session),
+        preferences_repo=UserPreferencesRepository(session),
     )
     return AuthService(
         user_repository=user_repo,

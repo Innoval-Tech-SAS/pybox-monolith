@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { driver, type Config } from "driver.js";
+import { driver, type Config, type PopoverDOM } from "driver.js";
 
 export interface TourStep {
-  id: string;
+  id?: string;
   title: string;
   description: string;
   side?: "top" | "right" | "bottom" | "left" | "over";
@@ -11,9 +11,12 @@ export interface TourStep {
 
 type TourOptions = Partial<
   Pick<Config, "nextBtnText" | "prevBtnText" | "doneBtnText" | "popoverClass" | "showProgress">
->;
+> & {
+  dismissed?: boolean;
+  onPermanentDismiss?: () => void;
+};
 
-const DEFAULTS: Required<TourOptions> = {
+const DEFAULTS = {
   showProgress: true,
   popoverClass: "driverjs-theme",
   nextBtnText: "Siguiente →",
@@ -27,14 +30,18 @@ export const useTour = (
   steps: TourStep[],
   options?: TourOptions,
 ) => {
-  useEffect(() => {
-    if (!ready || sessionStorage.getItem(storageKey)) return;
+  const { dismissed, onPermanentDismiss, ...driverOptions } = options ?? {};
 
-    const driverObj = driver({
+  useEffect(() => {
+    if (!ready || dismissed || sessionStorage.getItem(storageKey)) return;
+
+    let driverObj: ReturnType<typeof driver>;
+
+    driverObj = driver({
       ...DEFAULTS,
-      ...options,
+      ...driverOptions,
       steps: steps.map((step) => ({
-        element: `#${step.id}`,
+        ...(step.id ? { element: `#${step.id}` } : {}),
         popover: {
           title: step.title,
           description: step.description,
@@ -42,6 +49,21 @@ export const useTour = (
           align: step.align ?? "center",
         },
       })),
+      onPopoverRender: onPermanentDismiss
+        ? (popover: PopoverDOM, { state, config }: { state: { activeIndex?: number }; config: { steps?: unknown[] } }) => {
+            popover.wrapper.querySelector(".tour-dismiss-btn")?.remove();
+            const isLastStep = (state.activeIndex ?? 0) === (config.steps?.length ?? 1) - 1;
+            if (!isLastStep) return;
+            const btn = document.createElement("button");
+            btn.textContent = "No volver a mostrar";
+            btn.className = "tour-dismiss-btn";
+            btn.onclick = () => {
+              onPermanentDismiss();
+              driverObj.destroy();
+            };
+            popover.footer.after(btn);
+          }
+        : undefined,
       onDestroyed: () => {
         sessionStorage.setItem(storageKey, "1");
       },
@@ -52,5 +74,5 @@ export const useTour = (
     }, 600);
 
     return () => clearTimeout(timeout);
-  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ready, dismissed]); // eslint-disable-line react-hooks/exhaustive-deps
 };
