@@ -13,16 +13,23 @@ export const useOrganizationOnboarding = () => {
     setLoading(true);
     try {
       const form = new FormData();
-      form.append(
-        "data",
-        JSON.stringify({
-          name: data.name,
-          country: data.country,
-          fiscalDocumentNumber: data.fiscalDocumentNumber,
-        }),
-      );
+      const payload: Record<string, unknown> = {
+        name: data.name,
+        country: data.country,
+        fiscal_document_number: data.fiscalDocumentNumber,
+        representative_mode: data.representativeMode,
+      };
+      if (data.representativeMode === "create") {
+        payload.rep_firstname = data.repFirstname;
+        payload.rep_lastname = data.repLastname;
+        payload.rep_email = data.repEmail;
+        payload.rep_document_type = data.repDocType;
+        payload.rep_document_number = data.repDocNumber;
+      }
+      form.append("data", JSON.stringify(payload));
       form.append("fiscal_document_file", data.fiscalDocumentFile);
       form.append("mercantile_document_file", data.mercantileDocumentFile);
+      form.append("representative_document_file", data.representativeDocumentFile);
 
       await apiClient("/onboarding/organization", {
         method: "POST",

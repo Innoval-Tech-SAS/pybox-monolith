@@ -26,10 +26,19 @@ export interface UpdateProfileRequest {
   nationality: string;
 }
 
+export type OnboardingRepMode = "self" | "create";
+
 export interface OrgOnboardingData {
   name: string;
   country: string;
   fiscalDocumentNumber: string;
   fiscalDocumentFile: File;
   mercantileDocumentFile: File;
+  representativeMode: OnboardingRepMode;
+  representativeDocumentFile: File;
+  repFirstname?: string;
+  repLastname?: string;
+  repEmail?: string;
+  repDocType?: string;
+  repDocNumber?: string;
 }

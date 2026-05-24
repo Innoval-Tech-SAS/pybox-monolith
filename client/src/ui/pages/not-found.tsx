@@ -7,7 +7,7 @@ export const NotFound: React.FC = () => {
   const goBack = useGoBack();
   return (
     <>
-      <PageMeta title="NOT FOUND" description="This page not found" />
+      <PageMeta title="Página no encontrada" description="Esta página no existe" />
       <div className="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden z-1">
         <div className="mx-auto w-full max-w-60.5 text-center sm:sm:max-w-118">
           <h1 className="mb-8 font-bold text-gray-800 text-title-md dark:text-white/90 xl:text-title-2xl">

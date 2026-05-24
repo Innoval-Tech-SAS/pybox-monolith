@@ -1,3 +1,5 @@
+from enum import Enum
+
 from pydantic import field_validator
 
 from base.schema_base import BaseSchema
@@ -38,10 +40,21 @@ class UpdateProfileSchema(BaseSchema):
         return document_type
 
 
+class OnboardingRepMode(str, Enum):
+    SELF = "self"
+    CREATE = "create"
+
+
 class OrganizationOnboardingSchema(BaseSchema):
     name: str
     country: Nationality
     fiscal_document_number: str
+    representative_mode: OnboardingRepMode
+    rep_firstname: str | None = None
+    rep_lastname: str | None = None
+    rep_email: str | None = None
+    rep_document_type: UserDocumentType | None = None
+    rep_document_number: str | None = None
 
 
 class OnboardingStatusSchema(BaseSchema):

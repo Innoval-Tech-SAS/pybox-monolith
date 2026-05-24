@@ -78,6 +78,7 @@ async def create_first_org(
     data: str = Form(...),
     fiscal_document_file: UploadFile = Form(...),
     mercantile_document_file: UploadFile = Form(...),
+    representative_document_file: UploadFile = Form(...),
 ):
     if scope != UserScope.ORGANIZATION:
         raise HTTPException(
@@ -93,4 +94,4 @@ async def create_first_org(
             detail="El campo 'data' debe ser un JSON válido",
         )
 
-    await service.create_first_org(session.user_id, parsed, fiscal_document_file, mercantile_document_file)
+    await service.create_first_org(session.user_id, parsed, fiscal_document_file, mercantile_document_file, representative_document_file)

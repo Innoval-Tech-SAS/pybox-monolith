@@ -13,12 +13,15 @@ from onboarding.schemas.onboarding_schemas import (
     OrganizationOnboardingSchema,
     UpdateProfileSchema,
 )
+from auth.enums.auth_enums import AuthProvider
+from onboarding.schemas.onboarding_schemas import OnboardingRepMode
 from organizations.models.organization_model import OrganizationModel
 from organizations.models.organization_membership_model import OrganizationMembershipModel
 from organizations.repository.organization_repository import OrganizationRepository
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from tools.file_tools import save_upload_file
 from users.enums.user_enums import UserScope
+from users.models.user_model import UserModel
 from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_repository import UserRepository
@@ -122,17 +125,14 @@ class OnboardingService:
         data: OrganizationOnboardingSchema,
         fiscal_file: UploadFile,
         mercantile_file: UploadFile,
+        representative_file: UploadFile,
     ) -> OrganizationModel:
         org = await self._org_repo.add(OrganizationModel(name=data.name))
-        await self._membership_repo.add(OrganizationMembershipModel(
-            user_id=user_id,
-            organization_id=org.id,
-            created_by=user_id,
-        ))
 
         org_id = str(org.id)
         fiscal_path = await save_upload_file(fiscal_file, org_id, "fiscal")
         mercantile_path = await save_upload_file(mercantile_file, org_id, "mercantile")
+        representative_path = await save_upload_file(representative_file, org_id, "representative")
 
         org.country = data.country
         org.fiscal_document_type = ORG_FISCAL_DOCUMENT_BY_NATIONALITY[data.country]
@@ -140,7 +140,37 @@ class OnboardingService:
         org.fiscal_document_file = fiscal_path
         org.mercantile_document_type = ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY[data.country]
         org.mercantile_document_file = mercantile_path
+        org.representative_document_file = representative_path
         updated_org = await self._org_repo.update(org)
+
+        if data.representative_mode == OnboardingRepMode.SELF:
+            await self._membership_repo.add(OrganizationMembershipModel(
+                user_id=user_id,
+                organization_id=updated_org.id,
+                created_by=user_id,
+                is_legal_representative=True,
+            ))
+        else:
+            await self._membership_repo.add(OrganizationMembershipModel(
+                user_id=user_id,
+                organization_id=updated_org.id,
+                created_by=user_id,
+            ))
+            rep_user = await self._user_repo.add(UserModel(
+                firstname=data.rep_firstname,
+                lastname=data.rep_lastname,
+                email=data.rep_email,
+                hashed_password=None,
+                auth_provider=AuthProvider.SELF,
+                document_type=data.rep_document_type,
+                document_number=data.rep_document_number,
+            ))
+            await self._membership_repo.add(OrganizationMembershipModel(
+                user_id=rep_user.id,
+                organization_id=updated_org.id,
+                created_by=user_id,
+                is_legal_representative=True,
+            ))
 
         pending_role = await self._role_repo.get_pending_org_admin(user_id)
         if pending_role is not None:
