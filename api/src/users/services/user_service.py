@@ -72,6 +72,17 @@ class UserService:
                     document_type=doc_type,
                     document_number=doc_number,
                 )
+            elif UserScope.SELF in scopes and UserScope.ORGANIZATION not in scopes:
+                self_assignment = next(a for a in assignments if a.scope == UserScope.SELF)
+                session = UserSession(
+                    user_id=user_id,
+                    full_name=user.full_name,
+                    email=user.email,
+                    role=self_assignment.role,
+                    scope=UserScope.SELF,
+                    document_type=doc_type,
+                    document_number=doc_number,
+                )
             else:
                 memberships = await self.membership_repo.get_by_user_id(user_id)
                 org_ids = [m.organization_id for m in memberships]

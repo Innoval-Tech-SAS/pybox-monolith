@@ -18,6 +18,7 @@ test/
 api/alembic/versions/
 
 .agents/
+.vscode/
 # Logs
 logs
 *.log

@@ -5,6 +5,9 @@ import type { OrgOnboardingData } from "@/types/onboarding/onboarding-types";
 export const useOrganizationOnboarding = () => {
   const { apiClient } = useApiClient();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const clearError = () => setError(null);
 
   const saveOrganization = async (data: OrgOnboardingData) => {
     setLoading(true);
@@ -25,10 +28,12 @@ export const useOrganizationOnboarding = () => {
         method: "POST",
         body: form,
       });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al guardar organización");
     } finally {
       setLoading(false);
     }
   };
 
-  return { saveOrganization, loading };
+  return { saveOrganization, loading, error, clearError };
 };

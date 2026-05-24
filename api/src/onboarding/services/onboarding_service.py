@@ -1,4 +1,3 @@
-from typing import cast
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,8 +19,10 @@ from organizations.repository.organization_repository import OrganizationReposit
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from tools.file_tools import save_upload_file
 from users.enums.user_enums import UserScope
+from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_repository import UserRepository
+from users.services.user_service import UserService
 
 
 class OnboardingService:
@@ -31,6 +32,13 @@ class OnboardingService:
         self._org_repo = OrganizationRepository(session)
         self._membership_repo = OrganizationMembershipRepository(session)
         self._role_repo = RoleAssignmentRepository(session)
+        self._user_service = UserService(
+            user_repo=self._user_repo,
+            org_repo=self._org_repo,
+            membership_repo=self._membership_repo,
+            role_assignment_repo=self._role_repo,
+            permission_assignment_repo=PermissionAssignmentRepository(session),
+        )
 
     async def get_status(
         self,
@@ -138,5 +146,7 @@ class OnboardingService:
         if pending_role is not None:
             pending_role.organization_id = updated_org.id
             await self._role_repo.update(pending_role)
+
+        await self._user_service.get_user_session(user_id)
 
         return updated_org
