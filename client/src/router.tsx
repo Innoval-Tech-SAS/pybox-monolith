@@ -6,6 +6,8 @@ import { CreateOrgPage } from "./companies/pages/create-org-page";
 import { CreatePortfolioPage } from "./companies/pages/create-portfolio-page";
 import { MyPortfoliosPage } from "./companies/pages/my-portfolios-page";
 import { HomePage } from "./home/pages/home-page";
+import { NotificationDetailPage } from "./notifications/pages/notification-detail-page";
+import { NotificationsPage } from "./notifications/pages/notifications-page";
 import { ProfilePage } from "./profile/pages/profile-page";
 import { UsersPage } from "./users/pages/users-page";
 import { UserDetailPage } from "./users/pages/user-detail-page";
@@ -67,5 +69,13 @@ export const authRouter = [
   {
     path: "/my-users/:id/edit",
     element: <UserEditPage />,
+  },
+  {
+    path: "/notifications",
+    element: <NotificationsPage />,
+  },
+  {
+    path: "/notifications/:id",
+    element: <NotificationDetailPage />,
   },
 ];

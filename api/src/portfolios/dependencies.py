@@ -18,7 +18,7 @@ def get_portfolio_csv_service(
 def get_portfolio_service(
     session: Annotated[AsyncSession, Depends(get_main_session)],
 ) -> PortfolioService:
-    return PortfolioService(PortfolioRepository(session))
+    return PortfolioService(session, PortfolioRepository(session))
 
 
 PortfolioCsvServiceDep = Annotated[PortfolioCsvService, Depends(get_portfolio_csv_service)]

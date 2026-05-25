@@ -44,6 +44,10 @@ class CsvProcessResult:
     processed_rows: int
     failed_rows: int
     portfolio_id: uuid.UUID
+    titulares: int
+    codeudores: int
+    creditos: int
+    clientes_unicos: int
     errors: list[str] = field(default_factory=list)
 
 
@@ -83,6 +87,16 @@ class PortfolioCsvService:
         logger.info("[process_csv] portfolio creado | id=%s", portfolio.id)
 
         total_rows = len(file_data.rows) + file_data.total_skipped
+
+        titulares_docs = {
+            encrypt_service.hash_document(r.debtor.document_number) for r in file_data.rows
+        }
+        codeudores_docs = {
+            encrypt_service.hash_document(r.codebtor.document_number)
+            for r in file_data.rows
+            if r.codebtor
+        }
+
         processed = 0
         errors: list[str] = []
 
@@ -100,6 +114,10 @@ class PortfolioCsvService:
             processed_rows=processed,
             failed_rows=failed,
             portfolio_id=portfolio.id,
+            titulares=len(titulares_docs),
+            codeudores=len(codeudores_docs),
+            creditos=len(file_data.rows),
+            clientes_unicos=len(titulares_docs | codeudores_docs),
             errors=errors,
         )
         logger.info("[process_csv] END | procesados=%d fallidos=%d total=%d", processed, failed, total_rows)

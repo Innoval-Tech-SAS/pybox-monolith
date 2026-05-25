@@ -10,7 +10,7 @@ from notifications.dependencies import NotificationServiceDep
 from onboarding.dependencies import CurrentOrg
 from portfolios.dependencies import PortfolioCsvServiceDep, PortfolioServiceDep
 from portfolios.models.portfolio_model import PortfolioModel
-from portfolios.schemas.portfolio_schemas import PortfolioResponse
+from portfolios.schemas.portfolio_schemas import PortfolioResponse, PortfolioStatsResponse
 from portfolios.services.portfolio_csv_service import CsvProcessResult
 from security.dependencies import CurrentSession
 
@@ -63,12 +63,22 @@ async def _process_and_notify(
         logger.info("[portfolio] process_csv terminado | procesados=%d fallidos=%d", result.processed_rows, result.failed_rows)
 
         failed_note = f", {result.failed_rows} fallidos" if result.failed_rows > 0 else ""
+        notif_type = "error" if result.failed_rows == result.total_rows else (
+            "warning" if result.failed_rows > 0 else "success"
+        )
         await notification_service.create_notification(
             user_id=user_id,
             title="Portafolio listo",
             body=f"{result.processed_rows} registros procesados{failed_note}.",
             category="portfolio",
-            link=f"/my-companies/portfolios?org={organization_id}",
+            notif_type=notif_type,
+            link=f"/my-companies/portfolios?org={organization_id}&portfolioId={result.portfolio_id}",
+            details={
+                "creditos": result.creditos,
+                "titulares": result.titulares,
+                "codeudores": result.codeudores,
+                "clientes_unicos": result.clientes_unicos,
+            },
         )
         logger.info("[portfolio] notificación enviada al usuario %s", user_id)
     except Exception:
@@ -76,6 +86,15 @@ async def _process_and_notify(
     finally:
         _uploading_orgs.discard(organization_id)
         logger.info("[portfolio] org liberada del set activo | org=%s", organization_id)
+
+
+@router.get("/{portfolio_id}/stats", response_model=PortfolioStatsResponse)
+async def get_portfolio_stats(
+    portfolio_id: uuid.UUID,
+    session: CurrentSession,
+    service: PortfolioServiceDep,
+) -> PortfolioStatsResponse:
+    return await service.get_stats(portfolio_id)
 
 
 @router.post("/upload-csv", status_code=status.HTTP_202_ACCEPTED, response_model=None)

@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from sse_starlette.sse import EventSourceResponse
 
 from notifications.dependencies import NotificationServiceDep
@@ -37,3 +37,15 @@ async def notification_stream(session: SSESession):
             sse_emitter.unsubscribe(user_id, queue)
 
     return EventSourceResponse(generator())
+
+
+@router.get("/{notification_id}", response_model=NotificationSchema)
+async def get_notification(
+    notification_id: int,
+    session: CurrentSession,
+    service: NotificationServiceDep,
+):
+    n = await service.get_notification(notification_id, session.user_id)
+    if not n:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notificación no encontrada")
+    return n

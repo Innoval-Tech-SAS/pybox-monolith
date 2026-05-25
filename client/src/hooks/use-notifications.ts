@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useApiClient, API_URL } from "./use-api-client";
 import type { AppNotification } from "@/types/notifications/notification";
+import { playNotificationSound } from "@/utils/notification-sound";
 
 export const useNotifications = () => {
   const { apiClient } = useApiClient();
@@ -32,6 +33,7 @@ export const useNotifications = () => {
       try {
         const notif: AppNotification = JSON.parse(e.data);
         setNotifications((prev) => [notif, ...prev]);
+        playNotificationSound();
       } catch {
         // malformed event
       }

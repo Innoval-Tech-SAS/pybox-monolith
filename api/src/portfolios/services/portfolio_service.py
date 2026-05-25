@@ -1,16 +1,21 @@
 import uuid
 
 from fastapi import HTTPException, status
+from sqlalchemy import func, select, union
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from credits.models.credit_model import CreditModel
 from portfolios.models.portfolio_model import PortfolioModel
 from portfolios.repository.portfolio_repository import PortfolioRepository
+from portfolios.schemas.portfolio_schemas import PortfolioStatsResponse
 from security.permissions import PORTFOLIO_READ
 from users.enums.user_enums import UserRole
 from users.schemas.user_session_schema import UserSession
 
 
 class PortfolioService:
-    def __init__(self, portfolio_repo: PortfolioRepository) -> None:
+    def __init__(self, session: AsyncSession, portfolio_repo: PortfolioRepository) -> None:
+        self._session = session
         self.portfolio_repo = portfolio_repo
 
     async def list_accessible_portfolios(
@@ -51,6 +56,35 @@ class PortfolioService:
             session.user_id,
             selected_org_id,
             is_active=is_active,
+        )
+
+    async def get_stats(self, portfolio_id: uuid.UUID) -> PortfolioStatsResponse:
+        result = await self._session.execute(
+            select(
+                func.count(CreditModel.id).label("creditos"),
+                func.count(func.distinct(CreditModel.debtor_id)).label("titulares"),
+                func.count(func.distinct(CreditModel.codebtor_id)).label("codeudores"),
+            ).where(CreditModel.portfolio_id == portfolio_id)
+        )
+        row = result.one()
+
+        debtors_q = select(CreditModel.debtor_id.label("id")).where(
+            CreditModel.portfolio_id == portfolio_id
+        )
+        codebtors_q = select(CreditModel.codebtor_id.label("id")).where(
+            CreditModel.portfolio_id == portfolio_id,
+            CreditModel.codebtor_id.is_not(None),
+        )
+        all_ids = union(debtors_q, codebtors_q).subquery()
+        clientes_unicos: int = await self._session.scalar(
+            select(func.count()).select_from(all_ids)
+        ) or 0
+
+        return PortfolioStatsResponse(
+            creditos=row.creditos,
+            titulares=row.titulares,
+            codeudores=row.codeudores,
+            clientes_unicos=clientes_unicos,
         )
 
     def _first_session_org_id(self, session: UserSession) -> uuid.UUID:

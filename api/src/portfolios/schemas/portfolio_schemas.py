@@ -14,3 +14,10 @@ class PortfolioResponse(BaseSchema):
     is_active: bool
     created_at: datetime
     updated_at: datetime | None = None
+
+
+class PortfolioStatsResponse(BaseSchema):
+    creditos: int
+    titulares: int
+    codeudores: int
+    clientes_unicos: int

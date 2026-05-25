@@ -68,8 +68,8 @@ export const NotificationDropdown: React.FC = () => {
             notifications.map((n) => (
               <li key={n.id}>
                 <DropdownItem
-                  tag={n.link ? "a" : "button"}
-                  to={n.link}
+                  tag="a"
+                  to={`/notifications/${n.id}`}
                   onItemClick={() => setIsOpen(false)}
                   baseClassName=""
                   className={`flex gap-3 rounded-lg border-b border-gray-100 px-4 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5 ${!n.isRead ? "bg-brand-50 dark:bg-brand-500/5" : ""}`}

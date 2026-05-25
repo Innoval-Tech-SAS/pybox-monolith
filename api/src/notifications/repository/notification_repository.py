@@ -21,6 +21,15 @@ class NotificationRepository(RepositoryBase[NotificationModel]):
         )
         return result.scalars().all()
 
+    async def get_by_id_and_user(self, notification_id: int, user_id: int) -> NotificationModel | None:
+        result = await self.session.execute(
+            select(NotificationModel).where(
+                NotificationModel.id == notification_id,
+                NotificationModel.user_id == user_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def mark_all_read(self, user_id: int) -> None:
         await self.session.execute(
             update(NotificationModel)
