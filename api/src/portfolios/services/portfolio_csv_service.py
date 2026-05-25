@@ -89,10 +89,11 @@ class PortfolioCsvService:
         total_rows = len(file_data.rows) + file_data.total_skipped
 
         titulares_docs = {
-            encrypt_service.hash_document(r.debtor.document_number) for r in file_data.rows
+            (r.debtor.document_type, encrypt_service.hash_document(r.debtor.document_number))
+            for r in file_data.rows
         }
         codeudores_docs = {
-            encrypt_service.hash_document(r.codebtor.document_number)
+            (r.codebtor.document_type, encrypt_service.hash_document(r.codebtor.document_number))
             for r in file_data.rows
             if r.codebtor
         }
@@ -117,7 +118,7 @@ class PortfolioCsvService:
             titulares=len(titulares_docs),
             codeudores=len(codeudores_docs),
             creditos=len(file_data.rows),
-            clientes_unicos=len(titulares_docs | codeudores_docs),
+            clientes_unicos=len(titulares_docs),
             errors=errors,
         )
         logger.info("[process_csv] END | procesados=%d fallidos=%d total=%d", processed, failed, total_rows)
