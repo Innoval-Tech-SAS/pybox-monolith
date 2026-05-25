@@ -124,7 +124,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       </div>
 
       {/* Right panel */}
-      <div className="flex flex-1 flex-col overflow-y-auto">
+      <div className="flex flex-1 flex-col">
         {/* Progress bar */}
         <div className="h-1 w-full bg-gray-100 dark:bg-gray-800">
           <div
@@ -133,7 +133,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           />
         </div>
 
-        <div className="flex flex-1 items-center justify-center px-6 py-12 sm:px-12 lg:px-16">
+        <div className="flex flex-1 items-center justify-center px-6 py-6 sm:px-12 lg:px-16">
           <div className="w-full max-w-lg">
             {/* Mobile step indicator */}
             <div className="mb-8 flex items-center gap-2 lg:hidden">

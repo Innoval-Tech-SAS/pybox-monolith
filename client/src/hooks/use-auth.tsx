@@ -23,7 +23,8 @@ export const useAuth = () => {
     });
     sessionStorage.setItem("accessToken", data.accessToken);
     if (data.refreshToken) sessionStorage.setItem("refreshToken", data.refreshToken);
-    setSessionUser({ email });
+    const me = await apiClient("/users/me", {}).catch(() => null);
+    setSessionUser(me ?? { email });
     navigate("/dashboard", { replace: true });
   };
 

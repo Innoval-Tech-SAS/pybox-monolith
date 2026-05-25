@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from sse_starlette.sse import EventSourceResponse
 
 from notifications.dependencies import NotificationServiceDep
@@ -22,7 +22,8 @@ async def mark_all_read(session: CurrentSession, service: NotificationServiceDep
 
 
 @router.get("/stream")
-async def notification_stream(session: SSESession):
+async def notification_stream(session: SSESession, request: Request):
+    origin = request.headers.get("origin", "")
     user_id = session.user_id
     queue = sse_emitter.subscribe(user_id)
 
@@ -36,4 +37,8 @@ async def notification_stream(session: SSESession):
         finally:
             sse_emitter.unsubscribe(user_id, queue)
 
-    return EventSourceResponse(generator())
+    cors_headers = {}
+    if origin:
+        cors_headers["Access-Control-Allow-Origin"] = origin
+        cors_headers["Access-Control-Allow-Credentials"] = "true"
+    return EventSourceResponse(generator(), headers=cors_headers)
