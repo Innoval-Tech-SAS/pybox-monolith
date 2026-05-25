@@ -1,4 +1,5 @@
 import asyncio
+import json
 from collections import defaultdict
 
 
@@ -20,7 +21,7 @@ class SSEEmitter:
 
     async def emit(self, user_id: int, event: str, data: dict) -> None:
         for q in list(self._queues.get(user_id, [])):
-            await q.put({"event": event, "data": data})
+            await q.put({"event": event, "data": json.dumps(data)})
 
 
 sse_emitter = SSEEmitter()

@@ -17,6 +17,8 @@ from onboarding.schemas.onboarding_schemas import (
     OnboardingStatusSchema,
     OrganizationOnboardingSchema,
     RequestOtpSchema,
+    SetOnboardingPasswordSchema,
+    SetPhoneSchema,
     UpdateProfileSchema,
     VerifyOtpSchema,
 )
@@ -59,6 +61,24 @@ async def verify_otp(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código ha expirado")
     except CodeAlreadyUsedException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código ya fue utilizado")
+
+
+@router.patch("/set-password", status_code=status.HTTP_204_NO_CONTENT)
+async def set_onboarding_password(
+    body: SetOnboardingPasswordSchema,
+    session: CurrentSession,
+    service: OnboardingServiceDep,
+):
+    await service.set_onboarding_password(session.user_id, body)
+
+
+@router.patch("/phone", status_code=status.HTTP_204_NO_CONTENT)
+async def set_phone(
+    body: SetPhoneSchema,
+    session: CurrentSession,
+    service: OnboardingServiceDep,
+):
+    await service.set_phone(session.user_id, body)
 
 
 @router.patch("/profile", status_code=status.HTTP_204_NO_CONTENT)

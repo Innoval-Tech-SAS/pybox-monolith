@@ -14,6 +14,17 @@ class PortfolioRepository(SoftDeleteRepositoryBase[PortfolioModel]):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
+    async def get_by_ids(self, ids: list[uuid.UUID]) -> list[PortfolioModel]:
+        if not ids:
+            return []
+        result = await self.session.execute(
+            select(PortfolioModel).where(
+                PortfolioModel.id.in_(ids),
+                PortfolioModel.deleted_at.is_(None),
+            )
+        )
+        return list(result.scalars().all())
+
     async def get_by_organization_id(self, organization_id: uuid.UUID) -> list[PortfolioModel]:
         return await self.list_by_organization_id(organization_id)
 

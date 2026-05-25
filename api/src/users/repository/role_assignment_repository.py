@@ -31,6 +31,14 @@ class RoleAssignmentRepository(RepositoryBase[RoleAssignmentModel]):
         )
         return result.scalar_one_or_none()
 
+    async def get_by_user_ids(self, user_ids: list[int]) -> list[RoleAssignmentModel]:
+        if not user_ids:
+            return []
+        result = await self.session.execute(
+            select(RoleAssignmentModel).where(RoleAssignmentModel.user_id.in_(user_ids))
+        )
+        return list(result.scalars().all())
+
     async def get_admin_org_ids(self, user_id: int) -> list[uuid.UUID]:
         result = await self.session.execute(
             select(RoleAssignmentModel.organization_id).where(

@@ -21,28 +21,25 @@ export const PortfolioCard: React.FC<PortfolioCardProps> = ({ portfolio, onClick
   return (
     <button
       onClick={onClick}
-      className="group w-full overflow-hidden rounded-3xl border-2 border-gray-200 bg-white shadow-lg text-left transition-all duration-300
+      className="group relative w-full overflow-hidden rounded-3xl border-2 border-gray-200 bg-white shadow-lg text-left transition-all duration-300
         hover:border-indigo-400 hover:shadow-xl hover:scale-[1.02]
         dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-500
         animate-in fade-in-0 slide-in-from-bottom-4"
     >
+      {/* Status dot */}
+      <span
+        className={`absolute top-3 right-3 z-20 h-2.5 w-2.5 rounded-full ring-2 ring-white dark:ring-gray-900 ${
+          portfolio.isActive ? "bg-success-500" : "bg-gray-400"
+        }`}
+      />
+
       {/* Hero */}
-      <div className={`relative h-32 overflow-hidden bg-linear-to-br ${colorGradient}`}>
+      <div className={`relative h-24 overflow-hidden bg-linear-to-br ${colorGradient}`}>
         <div className="absolute inset-0 flex items-center justify-center">
-          <FolderOpen size={72} className="text-white/20" />
+          <FolderOpen size={56} className="text-white/20" />
         </div>
 
         <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
-
-        <span
-          className={`absolute top-3 left-3 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-            portfolio.isActive
-              ? "bg-success-50 text-success-700 dark:bg-success-500/20 dark:text-success-400"
-              : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
-          }`}
-        >
-          {portfolio.isActive ? "Activo" : "Inactivo"}
-        </span>
 
         <div className="absolute bottom-3 left-3 right-3 z-10">
           <h3 className="text-base font-bold text-white leading-tight line-clamp-2 drop-shadow-lg mb-1">
@@ -59,7 +56,7 @@ export const PortfolioCard: React.FC<PortfolioCardProps> = ({ portfolio, onClick
       </div>
 
       {/* Body */}
-      <div className="flex flex-col gap-4 p-5">
+      <div className="flex flex-col gap-3 p-4">
         <p className="text-sm leading-relaxed text-gray-500 line-clamp-2 dark:text-gray-400 min-h-10">
           {portfolio.description ?? "Sin descripción disponible"}
         </p>

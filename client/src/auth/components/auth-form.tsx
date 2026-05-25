@@ -23,7 +23,12 @@ export const AuthForm: React.FC = () => {
     try {
       await login({ email, password });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo conectar con el servidor.");
+      const msg = err instanceof Error ? err.message : "";
+      setError(
+        msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")
+          ? "No se pudo conectar con el servidor. Verifica tu conexión."
+          : msg || "No se pudo conectar con el servidor.",
+      );
     } finally {
       setLoading(false);
     }
@@ -34,16 +39,32 @@ export const AuthForm: React.FC = () => {
     try {
       await loginWithGoogle(token);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al iniciar sesión con Google.");
+      const msg = err instanceof Error ? err.message : "";
+      setError(
+        msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")
+          ? "No se pudo conectar con el servidor. Verifica tu conexión."
+          : msg || "Error al iniciar sesión con Google.",
+      );
     }
   };
 
   return (
     <div className="flex flex-col flex-1">
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+        <div className="mb-5 sm:mb-8 flex items-center justify-end gap-4">
+          <p className="shrink-0 pt-1 text-sm text-gray-500 dark:text-gray-400">
+            <Link
+              to="/admin/sign-up"
+              className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
+            >
+              ¿No tienes una cuenta? Regístrate
+            </Link>
+          </p>
+        </div>
+
         <div>
-          <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
+          <div className="mb-5 sm:mb-8 flex items-center justify-start gap-4">
+            <h1 className="mb-2 font-semibold text-brand-500 text-title-sm dark:text-white/90 sm:text-title-md">
               Ingresa a tu cuenta
             </h1>
           </div>
@@ -89,9 +110,7 @@ export const AuthForm: React.FC = () => {
                   </div>
                 </div>
 
-                {error && (
-                  <p className="text-sm text-red-500">{error}</p>
-                )}
+                {error && <p className="text-sm text-red-500">{error}</p>}
 
                 <div>
                   <button
@@ -110,27 +129,21 @@ export const AuthForm: React.FC = () => {
                 <div className="w-full border-t border-gray-200 dark:border-gray-800" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 py-1 text-gray-400 bg-white dark:bg-gray-900">O</span>
+                <span className="px-4 py-1 text-gray-400 bg-white dark:bg-gray-900">
+                  O
+                </span>
               </div>
             </div>
 
             <GoogleButton
               onToken={handleGoogleToken}
-              text={oauthLoading ? "Iniciando con Google..." : "Iniciar Sesión con Google"}
+              text={
+                oauthLoading
+                  ? "Iniciando con Google..."
+                  : "Iniciar Sesión con Google"
+              }
               disabled={isLoading}
             />
-
-            <div className="mt-5">
-              <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                No tienes cuenta?{" "}
-                <Link
-                  to="/admin/sign-up"
-                  className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
-                  Solicita Aquí
-                </Link>
-              </p>
-            </div>
           </div>
         </div>
       </div>

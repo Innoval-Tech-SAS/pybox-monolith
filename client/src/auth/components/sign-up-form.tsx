@@ -32,7 +32,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   const {
     oauthRegister,
     loading: loadingOAuth,
-    error: errorOAuth,
   } = useOAuthRegister();
   const { countries, loading: loadingNationalities } = useCountries();
   const navigate = useNavigate();
@@ -42,7 +41,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const loading = loadingManual || loadingOAuth;
-  const error = errorManual || errorOAuth;
+  const error = errorManual;
 
   useEffect(() => {
     if (!successModal.isOpen) return;
@@ -54,6 +53,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     return () => clearTimeout(timer);
   }, [successModal.isOpen, countdown, navigate]);
 
+  const sanitize = (err: unknown, fallback: string) => {
+    if (!(err instanceof Error)) return fallback;
+    if (err.message.toLowerCase().includes("network") || err.message.toLowerCase().includes("fetch"))
+      return "No se pudo conectar con el servidor. Verifica tu conexión.";
+    return err.message || fallback;
+  };
+
   const handleGoogleToken = async (token: string) => {
     try {
       const payload = jwtDecode<GooglePayload>(token);
@@ -63,9 +69,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       setCountdown(10);
       successModal.openModal();
     } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "Error al registrar con Google",
-      );
+      setErrorMessage(sanitize(err, "Error al registrar con Google."));
       errorModal.openModal();
     }
   };
@@ -93,9 +97,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
       setCountdown(10);
       successModal.openModal();
     } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "Error al registrar usuario",
-      );
+      setErrorMessage(sanitize(err, "Error al registrar usuario."));
       errorModal.openModal();
     }
   };

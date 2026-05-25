@@ -28,6 +28,7 @@ class UserSession(BaseModel):
     scope: UserScope | None = None
     document_type: str | None = None   # identidad para usuarios SELF
     document_number: str | None = None
+    must_change_password: bool = False
     orgs: dict[str, OrgSessionEntry] = {}
 
     @property

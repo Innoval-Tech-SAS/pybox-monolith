@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 export interface NavSubItem {
   name: string;
   path: string;
+  new?: boolean;
 }
 
 export interface NavItem {

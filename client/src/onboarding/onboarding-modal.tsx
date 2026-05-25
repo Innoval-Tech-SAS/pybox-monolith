@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Modal } from "@/ui/components/modal/modal";
 import { VerifyChannelStep } from "./steps/verify-channel-step";
+import { SetPhoneStep } from "./steps/set-phone-step";
+import { SetPasswordStep } from "./steps/set-password-step";
 import { UpdateProfileStep } from "./steps/update-profile-step";
 import { OrganizationStep } from "./steps/organization-step";
 import { useVerifyOtp } from "@/hooks/use-verify-otp";
@@ -159,6 +161,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 error={error}
                 clearError={clearError}
               />
+            )}
+
+            {currentStep === "set_password" && (
+              <SetPasswordStep onDone={next} />
+            )}
+
+            {currentStep === "set_phone" && (
+              <SetPhoneStep onDone={next} />
             )}
 
             {currentStep === "phone" && (

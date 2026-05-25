@@ -1,12 +1,14 @@
 export type VerificationChannel = "EMAIL" | "SMS";
 
-export type OnboardingStep = "email" | "phone" | "profile" | "organization";
+export type OnboardingStep = "email" | "set_phone" | "phone" | "profile" | "organization" | "set_password";
 
 export interface OnboardingStatus {
   emailVerified: boolean;
+  phoneSet: boolean;
   phoneVerified: boolean;
   documentComplete: boolean;
   orgComplete: boolean | null;
+  mustChangePassword: boolean;
   isComplete: boolean;
   missingSteps: string[];
 }
@@ -41,4 +43,5 @@ export interface OrgOnboardingData {
   repEmail?: string;
   repDocType?: string;
   repDocNumber?: string;
+  repPassword?: string;
 }

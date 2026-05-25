@@ -7,6 +7,9 @@ import { CreatePortfolioPage } from "./companies/pages/create-portfolio-page";
 import { MyPortfoliosPage } from "./companies/pages/my-portfolios-page";
 import { HomePage } from "./home/pages/home-page";
 import { ProfilePage } from "./profile/pages/profile-page";
+import { UsersPage } from "./users/pages/users-page";
+import { UserDetailPage } from "./users/pages/user-detail-page";
+import { UserEditPage } from "./users/pages/user-edit-page";
 import { NotFound } from "./ui/pages/not-found";
 
 export const noAuthRouter = [
@@ -52,5 +55,17 @@ export const authRouter = [
   {
     path: "/my-companies/add-portfolio",
     element: <CreatePortfolioPage />,
+  },
+  {
+    path: "/my-users",
+    element: <UsersPage />,
+  },
+  {
+    path: "/my-users/:id",
+    element: <UserDetailPage />,
+  },
+  {
+    path: "/my-users/:id/edit",
+    element: <UserEditPage />,
   },
 ];

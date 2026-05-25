@@ -81,6 +81,14 @@ NATIONALITY_PHONE_PREFIX: dict["Nationality", str] = {
     Nationality.VE: "+58",
 }
 
+NATIONALITY_CURRENCY_CODE: dict["Nationality", str] = {
+    Nationality.CO: "COP",
+    Nationality.MX: "MXN",
+    Nationality.AR: "ARS",
+    Nationality.PE: "PEN",
+    Nationality.VE: "VES",
+}
+
 
 class OrgFiscalDocumentType(str, Enum):
     NIT = "NIT"  # Colombia

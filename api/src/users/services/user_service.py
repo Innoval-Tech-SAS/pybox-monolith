@@ -10,11 +10,18 @@ from organizations.repository.organization_repository import OrganizationReposit
 from organizations.services.organization_service import OrganizationService
 from security.role_permissions_catalog import get_base_permissions
 from users.enums.user_enums import PermissionEffect, UserRole, UserScope
+from users.models.role_assignment_model import RoleAssignmentModel
 from users.models.user_model import UserModel
 from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_preferences_repository import UserPreferencesRepository
 from users.repository.user_repository import UserRepository
+from users.schemas.user_schemas import (
+    AdminUserDetailSchema,
+    AdminUserSummarySchema,
+    RoleEntrySchema,
+    UpdateUserSchema,
+)
 from users.schemas.user_session_schema import OrgSessionEntry, UserSession, session_key
 
 
@@ -35,7 +42,6 @@ class UserService:
         self.role_assignment_repo = role_assignment_repo
         self.permission_assignment_repo = permission_assignment_repo
         self.preferences_repo = preferences_repo
-        self._org_service = OrganizationService(org_repo, membership_repo, role_assignment_repo)
         self._redis = redis
 
     @property
@@ -54,6 +60,7 @@ class UserService:
 
         doc_type = user.document_type.value if user.document_type else None
         doc_number = user.document_number
+        must_change_pw = user.must_change_password
 
         if not assignments:
             session = UserSession(
@@ -64,6 +71,7 @@ class UserService:
                 scope=UserScope.SELF,
                 document_type=doc_type,
                 document_number=doc_number,
+                must_change_password=must_change_pw,
             )
         else:
             scopes = {a.scope for a in assignments}
@@ -143,11 +151,9 @@ class UserService:
     async def soft_delete_user(self, user_id: int) -> None:
         admin_org_ids = await self.role_assignment_repo.get_admin_org_ids(user_id)
 
-        # Cascade: delete orgs where this user is admin (takes their memberships with them)
         for org_id in admin_org_ids:
             await self._org_service.soft_delete_organization(org_id)
 
-        # Soft delete user's remaining memberships in orgs they didn't own
         remaining_memberships = await self.membership_repo.get_by_user_id(user_id)
         for membership in remaining_memberships:
             if membership.organization_id not in admin_org_ids:
@@ -157,13 +163,112 @@ class UserService:
         if user is not None:
             await self.user_repo.delete(user)
 
-    async def get_accessible_users(self, session: UserSession) -> list[UserModel]:
+    async def _build_role_entries(self, assignments: list[RoleAssignmentModel]) -> list[RoleEntrySchema]:
+        org_ids = [a.organization_id for a in assignments if a.organization_id]
+        orgs = {o.id: o for o in await self.org_repo.get_by_ids(org_ids)} if org_ids else {}
+        return [
+            RoleEntrySchema(
+                role=a.role.value,
+                scope=a.scope.value,
+                org_id=str(a.organization_id) if a.organization_id else None,
+                org_name=orgs[a.organization_id].name if a.organization_id and a.organization_id in orgs else None,
+            )
+            for a in assignments
+        ]
+
+    async def _enrich_users(self, users: list[UserModel]) -> list[AdminUserSummarySchema]:
+        if not users:
+            return []
+        user_ids = [u.id for u in users]
+        assignments = await self.role_assignment_repo.get_by_user_ids(user_ids)
+        org_ids = list({a.organization_id for a in assignments if a.organization_id})
+        orgs = {o.id: o for o in await self.org_repo.get_by_ids(org_ids)} if org_ids else {}
+
+        assignments_by_user: dict[int, list[RoleAssignmentModel]] = {}
+        for a in assignments:
+            assignments_by_user.setdefault(a.user_id, []).append(a)
+
+        return [
+            AdminUserSummarySchema(
+                id=u.id,
+                full_name=u.full_name,
+                email=u.email,
+                is_active=u.is_active,
+                created_at=u.created_at,
+                roles=[
+                    RoleEntrySchema(
+                        role=a.role.value,
+                        scope=a.scope.value,
+                        org_id=str(a.organization_id) if a.organization_id else None,
+                        org_name=orgs[a.organization_id].name if a.organization_id and a.organization_id in orgs else None,
+                    )
+                    for a in assignments_by_user.get(u.id, [])
+                ],
+            )
+            for u in users
+        ]
+
+    async def get_accessible_users(self, session: UserSession, org_id: str | None = None) -> list[AdminUserSummarySchema]:
         if session.scope == UserScope.GLOBAL:
-            return list(await self.user_repo.get_accessible(org_ids=None))
-        if session.scope == UserScope.ORGANIZATION:
-            org_ids = [uuid.UUID(o) for o in session.orgs.keys()]
-            return list(await self.user_repo.get_accessible(org_ids=org_ids))
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+            if org_id:
+                users = list(await self.user_repo.get_accessible(org_ids=[uuid.UUID(org_id)]))
+            else:
+                users = list(await self.user_repo.get_accessible(org_ids=None))
+        elif session.scope == UserScope.ORGANIZATION:
+            accessible_org_ids = [uuid.UUID(o) for o in session.orgs.keys()]
+            if org_id:
+                target = uuid.UUID(org_id)
+                if target not in accessible_org_ids:
+                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+                users = list(await self.user_repo.get_accessible(org_ids=[target]))
+            else:
+                users = list(await self.user_repo.get_accessible(org_ids=accessible_org_ids))
+        else:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+        return await self._enrich_users(users)
+
+    async def get_user_detail(self, user_id: int) -> AdminUserDetailSchema:
+        user = await self.user_repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+        assignments = await self.role_assignment_repo.get_by_user_id(user_id)
+        roles = await self._build_role_entries(assignments)
+        return AdminUserDetailSchema(
+            id=user.id,
+            full_name=user.full_name,
+            firstname=user.firstname,
+            lastname=user.lastname,
+            email=user.email,
+            phone_number=user.phone_number,
+            auth_provider=user.auth_provider.value,
+            document_type=user.document_type.value if user.document_type else None,
+            document_number=user.document_number,
+            is_active=user.is_active,
+            is_email_verified=user.is_email_verified,
+            is_phone_verified=user.is_phone_verified,
+            mfa_enabled=user.mfa_enabled,
+            is_active_sessions=user.is_active_sessions,
+            created_at=user.created_at,
+            updated_at=user.updated_at,
+            roles=roles,
+        )
+
+    async def update_user(self, user_id: int, data: UpdateUserSchema) -> AdminUserDetailSchema:
+        user = await self.user_repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+        if data.firstname is not None:
+            user.firstname = data.firstname
+        if data.lastname is not None:
+            user.lastname = data.lastname
+        if data.email is not None:
+            user.email = data.email
+        if data.phone_number is not None:
+            user.phone_number = data.phone_number
+        if data.is_active is not None:
+            user.is_active = data.is_active
+        await self.user_repo.update(user)
+        return await self.get_user_detail(user_id)
 
     async def get_dismissed_tours(self, user_id: int) -> list[str]:
         prefs = await self.preferences_repo.get_by_user_id(user_id)
@@ -177,19 +282,16 @@ class UserService:
         user = await self.user_repo.get_by_id_including_deleted(user_id)
         if user is None or user.deleted_at is None:
             return user
-
         await self.user_repo.restore(user)
-
         admin_org_ids = await self.role_assignment_repo.get_admin_org_ids(user_id)
-
-        # Cascade: restore orgs where this user is admin (and their memberships)
         for org_id in admin_org_ids:
             await self._org_service.restore_organization(org_id)
-
-        # Restore user's memberships in orgs they didn't own
         all_memberships = await self.membership_repo.get_by_user_id_including_deleted(user_id)
         for membership in all_memberships:
             if membership.organization_id not in admin_org_ids and membership.deleted_at is not None:
                 await self.membership_repo.restore(membership)
-
         return user
+
+    @property
+    def _org_service(self) -> OrganizationService:
+        return OrganizationService(self.org_repo, self.membership_repo, self.role_assignment_repo)

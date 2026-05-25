@@ -55,12 +55,23 @@ class OrganizationOnboardingSchema(BaseSchema):
     rep_email: str | None = None
     rep_document_type: UserDocumentType | None = None
     rep_document_number: str | None = None
+    rep_password: str | None = None
+
+
+class SetOnboardingPasswordSchema(BaseSchema):
+    new_password: str
+
+
+class SetPhoneSchema(BaseSchema):
+    phone_number: str
 
 
 class OnboardingStatusSchema(BaseSchema):
     email_verified: bool
+    phone_set: bool
     phone_verified: bool
     document_complete: bool
     org_complete: bool | None
+    must_change_password: bool
     is_complete: bool
     missing_steps: list[str]

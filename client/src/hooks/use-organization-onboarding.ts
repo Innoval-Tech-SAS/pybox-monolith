@@ -25,6 +25,7 @@ export const useOrganizationOnboarding = () => {
         payload.rep_email = data.repEmail;
         payload.rep_document_type = data.repDocType;
         payload.rep_document_number = data.repDocNumber;
+        payload.rep_password = data.repPassword;
       }
       form.append("data", JSON.stringify(payload));
       form.append("fiscal_document_file", data.fiscalDocumentFile);

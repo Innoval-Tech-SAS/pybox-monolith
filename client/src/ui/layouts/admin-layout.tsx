@@ -5,14 +5,22 @@ import { NavbarMenu } from "../components/menu/navbar-menu";
 import { SidebarProvider } from "../contexts/providers/sidebar-provider";
 import { signInNavbarItems, otherSignInItems } from "../../config/navbar/sign-in-navbar-items";
 import { Backdrop } from "../components/menu/backdrop";
+import { useAuth } from "../../hooks/use-auth";
+import { Scope } from "../../types/auth/role";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const { getRoleScope } = useAuth();
+  const { scope } = getRoleScope();
+
+  const isOrgOrGlobal = scope === Scope.ORG || scope === Scope.GLOBAL;
+  const navItems = isOrgOrGlobal ? signInNavbarItems : signInNavbarItems.slice(0, 1);
+  const othersItems = isOrgOrGlobal ? otherSignInItems : [];
 
   return (
     <div className="h-screen overflow-hidden flex flex-col xl:flex-row">
       <div>
-        <AsideMenu navItems={signInNavbarItems} othersItems={otherSignInItems} />
+        <AsideMenu navItems={navItems} othersItems={othersItems} othersLabel="Administración" />
         <Backdrop />
       </div>
       <div

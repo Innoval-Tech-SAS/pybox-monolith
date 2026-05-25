@@ -7,7 +7,7 @@ import type { AsideMenuProps } from "@/types/props/aside-menu-props";
 
 import { ChevronDownIcon, HorizontaLDots } from "../../icons";
 
-export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems = [] }) => {
+export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems = [], othersLabel = "Others" }) => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
@@ -81,7 +81,7 @@ export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems
           {nav.subItems ? (
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group text-gray-500 ${
+              className={`menu-item group ${
                 openSubmenu?.type === menuType && openSubmenu?.index === index
                   ? "menu-item-active"
                   : "menu-item-inactive"
@@ -92,7 +92,7 @@ export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems
               }`}
             >
               <span
-                className={`menu-item-icon-size text-gray-500  ${
+                className={`menu-item-icon-size ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
@@ -101,7 +101,7 @@ export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems
                 {nav.icon}
               </span>
               {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="menu-item-text text-gray-500">{nav.name}</span>
+                <span className="menu-item-text">{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
@@ -259,7 +259,7 @@ export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems
                     }`}
                   >
                     {isExpanded || isHovered || isMobileOpen ? (
-                      "Others"
+                      othersLabel
                     ) : (
                       <HorizontaLDots />
                     )}

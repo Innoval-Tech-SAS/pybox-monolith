@@ -11,6 +11,8 @@ from messaging.enums.notification_enums import VerificationChannel
 from onboarding.schemas.onboarding_schemas import (
     OnboardingStatusSchema,
     OrganizationOnboardingSchema,
+    SetOnboardingPasswordSchema,
+    SetPhoneSchema,
     UpdateProfileSchema,
 )
 from auth.enums.auth_enums import AuthProvider
@@ -22,12 +24,14 @@ from organizations.models.organization_membership_model import OrganizationMembe
 from organizations.repository.organization_repository import OrganizationRepository
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from tools.file_tools import save_upload_file
-from users.enums.user_enums import UserScope
+from users.enums.user_enums import UserRole, UserScope
+from users.models.role_assignment_model import RoleAssignmentModel
 from users.models.user_model import UserModel
 from users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_preferences_repository import UserPreferencesRepository
 from users.repository.user_repository import UserRepository
+from security.services.password_hasher_service import PasswordHasherService
 from users.services.user_service import UserService
 
 
@@ -59,16 +63,22 @@ class OnboardingService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
 
         email_verified = bool(user.is_email_verified)
+        phone_set = bool(user.phone_number)
         phone_verified = bool(user.is_phone_verified)
         document_complete = bool(user.document_type and user.document_number)
+        must_change_pw = bool(user.must_change_password)
 
         missing: list[str] = []
         if not email_verified:
             missing.append("email_verification")
+        if not phone_set:
+            missing.append("phone_set")
         if not phone_verified:
             missing.append("phone_verification")
         if not document_complete:
             missing.append("profile_document")
+        if must_change_pw:
+            missing.append("set_password")
 
         org_complete: bool | None = None
         if scope == UserScope.ORGANIZATION:
@@ -82,14 +92,16 @@ class OnboardingService:
             if not org_complete:
                 missing.append("organization_data")
 
-        base_complete = email_verified and phone_verified and document_complete
+        base_complete = email_verified and phone_set and phone_verified and document_complete and not must_change_pw
         is_complete = base_complete if scope == UserScope.SELF else base_complete and bool(org_complete)
 
         return OnboardingStatusSchema(
             email_verified=email_verified,
+            phone_set=phone_set,
             phone_verified=phone_verified,
             document_complete=document_complete,
             org_complete=org_complete,
+            must_change_password=must_change_pw,
             is_complete=is_complete,
             missing_steps=missing,
         )
@@ -115,6 +127,17 @@ class OnboardingService:
 
         await self._user_repo.update(user)
 
+    async def set_phone(self, user_id: int, data: SetPhoneSchema) -> None:
+        user = await self._user_repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+        existing = await self._user_repo.get_by_phone_number(data.phone_number)
+        if existing and existing.id != user_id:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El número de teléfono ya está registrado.")
+        user.phone_number = data.phone_number
+        user.is_phone_verified = False
+        await self._user_repo.update(user)
+
     async def update_profile(self, user_id: int, data: UpdateProfileSchema) -> None:
         user = await self._user_repo.get_by_id(user_id)
         if user is None:
@@ -123,6 +146,7 @@ class OnboardingService:
         user.document_number = data.document_number
         user.nationality = data.nationality
         await self._user_repo.update(user)
+        await self._user_service.get_user_session(user_id)
 
     async def create_first_org(
         self,
@@ -161,11 +185,14 @@ class OnboardingService:
                 organization_id=updated_org.id,
                 created_by=user_id,
             ))
+            hasher = PasswordHasherService()
+            hashed_pw = hasher.hash_password(data.rep_password) if data.rep_password else None
             rep_user = await self._user_repo.add(UserModel(
                 firstname=data.rep_firstname,
                 lastname=data.rep_lastname,
                 email=data.rep_email,
-                hashed_password=None,
+                hashed_password=hashed_pw,
+                must_change_password=hashed_pw is not None,
                 auth_provider=AuthProvider.SELF,
                 document_type=data.rep_document_type,
                 document_number=data.rep_document_number,
@@ -175,6 +202,12 @@ class OnboardingService:
                 organization_id=updated_org.id,
                 created_by=user_id,
                 is_legal_representative=True,
+            ))
+            await self._role_repo.add(RoleAssignmentModel(
+                user_id=rep_user.id,
+                role=UserRole.ADMIN,
+                scope=UserScope.ORGANIZATION,
+                organization_id=updated_org.id,
             ))
 
         pending_role = await self._role_repo.get_pending_org_admin(user_id)
@@ -186,3 +219,13 @@ class OnboardingService:
         await self._user_service.get_user_session(user_id)
 
         return updated_org
+
+    async def set_onboarding_password(self, user_id: int, data: SetOnboardingPasswordSchema) -> None:
+        user = await self._user_repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+        hasher = PasswordHasherService()
+        user.hashed_password = hasher.hash_password(data.new_password)
+        user.must_change_password = False
+        await self._user_repo.update(user)
+        await self._user_service.get_user_session(user_id)

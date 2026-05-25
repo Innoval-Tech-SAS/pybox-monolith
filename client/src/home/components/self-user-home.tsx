@@ -1,56 +1,29 @@
-import { CheckCircleIcon, DocsIcon, MailIcon, UserCircleIcon } from "@/ui/icons";
-import { HomeShell } from "./home-shell";
+import { Calendar } from "@/ui/components/calendar/calendar";
+import { useMyCredits } from "@/credits/hooks/use-my-credits";
 
-export const SelfUserHome: React.FC = () => (
-  <HomeShell
-    eyebrow="Home personal"
-    title="Tu cuenta"
-    description="Vista principal para revisar tu perfil, completar verificaciones y continuar tus procesos personales."
-    metrics={[
-      {
-        label: "Cuenta",
-        value: "Personal",
-        helper: "Acceso limitado a tu propia información.",
-        tone: "primary",
-      },
-      {
-        label: "Verificación",
-        value: "Pendiente",
-        helper: "Completa canales requeridos cuando el sistema lo solicite.",
-        tone: "warning",
-      },
-      {
-        label: "Documentos",
-        value: "Privados",
-        helper: "Los datos visibles pertenecen solo a tu cuenta.",
-        tone: "info",
-      },
-    ]}
-    actions={[
-      {
-        title: "Perfil personal",
-        description: "Revisa tu nombre, documento y datos de contacto.",
-        icon: <UserCircleIcon className="size-5" />,
-        tone: "primary",
-      },
-      {
-        title: "Canales de contacto",
-        description: "Administra correo y teléfono usados para verificación.",
-        icon: <MailIcon className="size-5" />,
-        tone: "info",
-      },
-      {
-        title: "Verificaciones",
-        description: "Completa pasos pendientes para habilitar tu cuenta.",
-        icon: <CheckCircleIcon className="size-5" />,
-        tone: "success",
-      },
-      {
-        title: "Mis documentos",
-        description: "Consulta información asociada a tu perfil.",
-        icon: <DocsIcon className="size-5" />,
-        tone: "light",
-      },
-    ]}
-  />
-);
+export const SelfUserHome: React.FC = () => {
+  const { credits, loading, error, refetch } = useMyCredits();
+
+  return (
+    <div className="flex flex-col gap-6">
+      <header className="rounded-lg border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-brand-500 dark:text-brand-400">
+          Home personal
+        </p>
+        <h1 className="text-title-sm font-semibold text-gray-800 dark:text-white/90">
+          Calendario financiero
+        </h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Visualiza la fecha de tu próximo pago por crédito y el histórico de pagos aplicados.
+        </p>
+      </header>
+
+      <Calendar
+        credits={credits}
+        loading={loading}
+        error={error}
+        onRetry={refetch}
+      />
+    </div>
+  );
+};

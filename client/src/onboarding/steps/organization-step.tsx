@@ -37,6 +37,7 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
   const [repEmail, setRepEmail] = useState("");
   const [repDocType, setRepDocType] = useState("");
   const [repDocNumber, setRepDocNumber] = useState("");
+  const [repPassword, setRepPassword] = useState("");
 
   const selectedCountry = countries.find((c) => c.code === country);
   const fiscalLabel = country ? ORG_FISCAL_NAMES[country] ?? "Registro fiscal" : "Registro fiscal";
@@ -52,7 +53,7 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
   const canSubmit =
     !!repFile &&
     (repMode === "self" ||
-      (!!repFirstname.trim() && !!repLastname.trim() && !!repEmail.trim() && !!repDocType && !!repDocNumber.trim()));
+      (!!repFirstname.trim() && !!repLastname.trim() && !!repEmail.trim() && !!repDocType && !!repDocNumber.trim() && !!repPassword.trim()));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +72,7 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
       repEmail,
       repDocType,
       repDocNumber,
+      repPassword,
     });
     if (ok) setSubmitted(true);
   };
@@ -229,6 +231,10 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
                       <div>
                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Número de documento</label>
                         <Input placeholder="Número" value={repDocNumber} onChange={(e) => setRepDocNumber(e.target.value)} />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña temporal</label>
+                        <Input type="password" placeholder="Debe cambiarla en su primer acceso" value={repPassword} onChange={(e) => setRepPassword(e.target.value)} />
                       </div>
                     </div>
                   </div>
