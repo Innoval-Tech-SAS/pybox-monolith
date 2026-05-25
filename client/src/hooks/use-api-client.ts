@@ -54,7 +54,8 @@ export const useApiClient = () => {
           }
         } else if (
           message === "Usuario no encontrado" ||
-          message === "Sesión expirada. Inicia sesión nuevamente."
+          message === "Sesión expirada. Inicia sesión nuevamente." ||
+          message === "Not authenticated"
         ) {
           sessionStorage.clear();
           navigate("/admin/sign-in", { replace: true });

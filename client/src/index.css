@@ -763,7 +763,14 @@ span.flatpickr-weekday,
   color: black;
 }
 .fc.fc-media-screen {
-  @apply min-h-screen;
+  min-height: 0;
+}
+.fc .fc-daygrid-day-frame {
+  min-height: 100px;
+}
+.fc-dayGridWeek-view .fc-daygrid-day-frame,
+.fc-dayGridDay-view .fc-daygrid-day-frame {
+  min-height: 160px;
 }
 
 .simplebar-scrollbar::before {

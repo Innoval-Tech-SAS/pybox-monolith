@@ -1,9 +1,11 @@
+import logging
 import uuid
 from dataclasses import dataclass, field
 
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from countries.enums.country_enums import Nationality
+
+logger = logging.getLogger(__name__)
 
 from contact_methods.models.contact_method_model import ContactMethodModel
 from contact_methods.repository.contact_method_repository import ContactMethodRepository
@@ -66,7 +68,10 @@ class PortfolioCsvService:
         portfolio_name: str | None = None,
         country: Nationality | None = None,
     ) -> CsvProcessResult:
+        logger.info("[process_csv] START | org=%s nombre=%s bytes=%d", organization_id, portfolio_name, len(file_bytes))
+
         file_data = self.parser.parse(file_bytes)
+        logger.info("[process_csv] parsed | filas=%d skipped=%d", len(file_data.rows), file_data.total_skipped)
 
         portfolio = await self.portfolio_repo.add(
             PortfolioModel(
@@ -75,6 +80,7 @@ class PortfolioCsvService:
                 country=country,
             )
         )
+        logger.info("[process_csv] portfolio creado | id=%s", portfolio.id)
 
         total_rows = len(file_data.rows) + file_data.total_skipped
         processed = 0
@@ -89,13 +95,15 @@ class PortfolioCsvService:
                 processed += 1
 
         failed = len(file_data.rows) - processed
-        return CsvProcessResult(
+        result = CsvProcessResult(
             total_rows=total_rows,
             processed_rows=processed,
             failed_rows=failed,
             portfolio_id=portfolio.id,
             errors=errors,
         )
+        logger.info("[process_csv] END | procesados=%d fallidos=%d total=%d", processed, failed, total_rows)
+        return result
 
     # ------------------------------------------------------------------
     # Row processor
@@ -104,6 +112,7 @@ class PortfolioCsvService:
     async def _process_row(
         self, row: PortfolioRowData, portfolio_id: uuid.UUID, row_number: int
     ) -> str | None:
+        logger.debug("[_process_row] START | fila=%d doc=%s", row_number, row.debtor.document_number)
         try:
             async with self.session.begin_nested():
                 debtor = await self._upsert_debtor(row.debtor)
@@ -129,7 +138,9 @@ class PortfolioCsvService:
                 if row.credit_adjustment:
                     await self._insert_credit_adjustment(credit.id, row.credit_adjustment)
         except Exception as exc:
+            logger.warning("[_process_row] ERROR | fila=%d doc=%s error=%s", row_number, row.debtor.document_number, exc)
             return f"Fila {row_number} (doc: {row.debtor.document_number}): {exc}"
+        logger.debug("[_process_row] END OK | fila=%d", row_number)
         return None
 
     # ------------------------------------------------------------------
@@ -137,13 +148,16 @@ class PortfolioCsvService:
     # ------------------------------------------------------------------
 
     async def _upsert_debtor(self, data: DebtorRowData) -> DebtorModel:
+        logger.debug("[_upsert_debtor] START | doc=%s", data.document_number)
         doc_hash = encrypt_service.hash_document(data.document_number)
         existing = await self.debtor_repo.get_by_document_number(doc_hash)
         if existing:
             existing.full_name = data.full_name
             existing.document_type = data.document_type
-            return await self.debtor_repo.update(existing)
-        return await self.debtor_repo.add(
+            result = await self.debtor_repo.update(existing)
+            logger.debug("[_upsert_debtor] END updated | id=%d", result.id)
+            return result
+        result = await self.debtor_repo.add(
             DebtorModel(
                 document_number=encrypt_service.encrypt_to_str(data.document_number),
                 document_number_hash=doc_hash,
@@ -152,8 +166,11 @@ class PortfolioCsvService:
                 debtor_type=data.debtor_type,
             )
         )
+        logger.debug("[_upsert_debtor] END created | id=%d", result.id)
+        return result
 
     async def _upsert_address(self, debtor_id: int, data: AddressRowData) -> None:
+        logger.debug("[_upsert_address] START | debtor_id=%d type=%s", debtor_id, data.address_type)
         existing_list = await self.address_repo.get_by_debtor_id(debtor_id)
         existing = next(
             (a for a in existing_list if a.address_type == data.address_type), None
@@ -179,6 +196,7 @@ class PortfolioCsvService:
     async def _upsert_contact_methods(
         self, debtor_id: int, contacts: list
     ) -> None:
+        logger.debug("[_upsert_contact_methods] START | debtor_id=%d count=%d", debtor_id, len(contacts))
         existing_list = await self.contact_method_repo.get_by_debtor_id(debtor_id)
         existing_by_type = {c.contact_type: c for c in existing_list}
         for contact_data in contacts:
@@ -194,6 +212,7 @@ class PortfolioCsvService:
                         contact_value=contact_data.contact_value,
                     )
                 )
+        logger.debug("[_upsert_contact_methods] END | debtor_id=%d", debtor_id)
 
     async def _upsert_credit(
         self,
@@ -202,6 +221,7 @@ class PortfolioCsvService:
         debtor_id: int,
         codebtor_id: int | None,
     ) -> CreditModel:
+        logger.debug("[_upsert_credit] START | credit_number=%s debtor_id=%d", data.credit_number, debtor_id)
         fields = dict(
             credit_number=data.credit_number,
             credit_date=data.credit_date,
@@ -236,10 +256,15 @@ class PortfolioCsvService:
         if existing:
             for attr, val in fields.items():
                 setattr(existing, attr, val)
-            return await self.credit_repo.update(existing)
-        return await self.credit_repo.add(CreditModel(**fields))
+            result = await self.credit_repo.update(existing)
+            logger.debug("[_upsert_credit] END updated | id=%d", result.id)
+            return result
+        result = await self.credit_repo.add(CreditModel(**fields))
+        logger.debug("[_upsert_credit] END created | id=%d", result.id)
+        return result
 
     async def _insert_payment(self, credit_id: int, data: PaymentRowData) -> None:
+        logger.debug("[_insert_payment] START | credit_id=%d", credit_id)
         insurances_total = data.life_insurance_charge + data.vehicle_insurance_charge
         total_interest = data.current_interest_amount + data.overdue_interest_amount
         await self.payment_repo.add(
@@ -265,8 +290,10 @@ class PortfolioCsvService:
                 discount_amount=0.0,
             )
         )
+        logger.debug("[_insert_payment] END | credit_id=%d", credit_id)
 
     async def _insert_uvr_quote(self, credit_id: int, data: UVRQuoteRowData) -> None:
+        logger.debug("[_insert_uvr_quote] START | credit_id=%d", credit_id)
         await self.uvr_quote_repo.add(
             UVRQuoteModel(
                 credit_id=credit_id,
@@ -274,10 +301,12 @@ class PortfolioCsvService:
                 quote_date=data.quote_date,
             )
         )
+        logger.debug("[_insert_uvr_quote] END | credit_id=%d", credit_id)
 
     async def _insert_credit_adjustment(
         self, credit_id: int, data: CreditAdjustmentRowData
     ) -> None:
+        logger.debug("[_insert_credit_adjustment] START | credit_id=%d type=%s", credit_id, data.adjustment_type)
         await self.credit_adjustment_repo.add(
             CreditAdjustmentModel(
                 credit_id=credit_id,
@@ -286,3 +315,4 @@ class PortfolioCsvService:
                 applied_date=data.applied_date,
             )
         )
+        logger.debug("[_insert_credit_adjustment] END | credit_id=%d", credit_id)

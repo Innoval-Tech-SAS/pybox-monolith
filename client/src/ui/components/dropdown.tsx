@@ -1,12 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router";
-
-interface DropdownProps {
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-  className?: string;
-}
+import type { DropdownProps } from "@/types/props/dropdown-props";
+import type { DropdownItemProps } from "@/types/props/dropdown-item-props";
 
 export const Dropdown: React.FC<DropdownProps> = ({ isOpen, onClose, children, className = "" }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -32,14 +27,6 @@ export const Dropdown: React.FC<DropdownProps> = ({ isOpen, onClose, children, c
     </div>
   );
 };
-
-interface DropdownItemProps {
-  tag?: "button" | "link";
-  to?: string;
-  onClick?: () => void;
-  className?: string;
-  children: React.ReactNode;
-}
 
 export const DropdownItem: React.FC<DropdownItemProps> = ({
   tag = "button",

@@ -35,5 +35,5 @@ class NotificationService:
             )
         )
         schema = NotificationSchema.model_validate(notification)
-        await sse_emitter.emit(user_id, "notification", schema.model_dump(by_alias=True))
+        await sse_emitter.emit(user_id, "notification", schema.model_dump(mode="json", by_alias=True))
         return schema

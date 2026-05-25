@@ -1,12 +1,6 @@
 import { ArrowRight, Check, Copy, FolderOpen } from "lucide-react";
 import { useState } from "react";
-import type { Portfolio } from "@/types/companies/portfolio-types";
-
-interface PortfolioCardProps {
-  portfolio: Portfolio;
-  onClick: () => void;
-  colorGradient: string;
-}
+import type { PortfolioCardProps } from "@/types/props/portfolio-card-props";
 
 export const PortfolioCard: React.FC<PortfolioCardProps> = ({ portfolio, onClick, colorGradient }) => {
   const [copied, setCopied] = useState(false);

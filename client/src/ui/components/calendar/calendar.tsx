@@ -7,6 +7,8 @@ import type { CreditWithPayments, PaymentSummary } from "@/credits/types/credit-
 import type { FinancialCalendarEvent, FinancialPaymentStatus } from "@/credits/types/financial-calendar-types";
 import type { CalendarProps } from "@/types/props/calendar-props";
 import { STATUS_META } from "@/constants/credits/financial-calendar";
+import { Modal } from "@/ui/components/modal/modal";
+import { useModal } from "@/hooks/use-modal";
 
 const toValidDate = (value: string | null): Date | null => {
   if (!value) return null;
@@ -109,15 +111,22 @@ export const Calendar: React.FC<CalendarProps> = ({
   onRetry,
 }) => {
   const [selected, setSelected] = useState<FinancialCalendarEvent | null>(null);
+  const { isOpen, openModal, closeModal } = useModal();
   const events = useMemo(() => buildEvents(credits), [credits]);
 
   const handleClick = (info: EventClickArg) => {
     setSelected(info.event.extendedProps as FinancialCalendarEvent);
+    openModal();
+  };
+
+  const handleClose = () => {
+    closeModal();
+    setSelected(null);
   };
 
   if (loading) {
     return (
-      <div className="flex min-h-72 items-center justify-center rounded-lg border border-gray-200 bg-white p-8 dark:border-gray-800 dark:bg-gray-900">
+      <div className="flex min-h-72 items-center justify-center rounded-2xl border border-gray-200 bg-white p-8 dark:border-gray-800 dark:bg-white/3">
         <p className="text-sm text-gray-500 dark:text-gray-400">Cargando calendario financiero...</p>
       </div>
     );
@@ -125,7 +134,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   if (error) {
     return (
-      <div className="flex flex-col gap-3 rounded-lg border border-red-200 bg-white p-6 dark:border-red-800 dark:bg-gray-900">
+      <div className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-white p-6 dark:border-red-800 dark:bg-white/3">
         <p className="text-sm font-semibold text-red-700 dark:text-red-400">
           No se pudo cargar el calendario financiero
         </p>
@@ -144,14 +153,18 @@ export const Calendar: React.FC<CalendarProps> = ({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
-        <div className="p-4 sm:p-6">
+    <>
+      <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/3">
+        <div className="custom-calendar">
           <FullCalendar
             plugins={[dayGridPlugin]}
             initialView="dayGridMonth"
             locale={esLocale}
-            headerToolbar={{ left: "prev,next", center: "title", right: "" }}
+            headerToolbar={{
+              left: "prev,next",
+              center: "title",
+              right: "dayGridMonth,dayGridWeek,dayGridDay",
+            }}
             events={events}
             eventClick={handleClick}
             dayMaxEvents={3}
@@ -162,56 +175,65 @@ export const Calendar: React.FC<CalendarProps> = ({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
-          <p className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Leyenda</p>
-          {(Object.entries(STATUS_META) as [FinancialPaymentStatus, typeof STATUS_META[FinancialPaymentStatus]][]).map(
-            ([, meta]) => (
-              <div key={meta.label} className="mb-2 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <span className={`size-2.5 rounded-full ${meta.dotClass}`} />
-                {meta.label}
-              </div>
-            ),
-          )}
-        </div>
-
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
-          <p className="mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">Detalle del evento</p>
-          {!selected ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Selecciona un evento en el calendario para ver el detalle.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-base font-semibold text-gray-800 dark:text-white/90">
-                  {selected.credit.creditNumber}
-                </p>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_META[selected.status].chipClass}`}>
-                  {STATUS_META[selected.status].label}
-                </span>
-              </div>
-              {selected.credit.organizationName && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {selected.credit.organizationName}
-                </p>
-              )}
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Cuota #{selected.payment.installmentNumber ?? selected.payment.id}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Fecha límite: {formatDate(selected.payment.limitPayDate)}
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Fecha de pago: {formatDate(selected.payment.paymentDate)}
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Valor: {formatCurrency(selected.payment.paymentAmount, selected.credit.currencyCode)}
-              </p>
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        className="max-w-125 p-6 lg:p-10"
+      >
+        {selected && (
+          <div className="flex flex-col px-2 overflow-y-auto custom-scrollbar">
+            <div>
+              <h5 className="mb-2 font-semibold text-gray-800 modal-title text-theme-xl dark:text-white/90 lg:text-2xl">
+                {selected.credit.creditNumber}
+              </h5>
+              <span
+                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_META[selected.status].chipClass}`}
+              >
+                {STATUS_META[selected.status].label}
+              </span>
             </div>
-          )}
-        </div>
-      </div>
-    </div>
+
+            <div className="mt-6 space-y-4">
+              {selected.credit.organizationName && (
+                <div>
+                  <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Organización</p>
+                  <p className="text-sm text-gray-800 dark:text-white/90">{selected.credit.organizationName}</p>
+                </div>
+              )}
+              <div>
+                <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Cuota</p>
+                <p className="text-sm text-gray-800 dark:text-white/90">
+                  #{selected.payment.installmentNumber ?? selected.payment.id}
+                </p>
+              </div>
+              <div>
+                <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Fecha límite</p>
+                <p className="text-sm text-gray-800 dark:text-white/90">{formatDate(selected.payment.limitPayDate)}</p>
+              </div>
+              <div>
+                <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Fecha de pago</p>
+                <p className="text-sm text-gray-800 dark:text-white/90">{formatDate(selected.payment.paymentDate)}</p>
+              </div>
+              <div>
+                <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Valor</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-white/90">
+                  {formatCurrency(selected.payment.paymentAmount, selected.credit.currencyCode)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleClose}
+                type="button"
+                className="flex justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </>
   );
 };

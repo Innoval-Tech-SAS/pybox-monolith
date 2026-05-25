@@ -14,6 +14,7 @@ export const useCreatePortfolio = () => {
   const [portfolioName, setPortfolioName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCountry, setSelectedCountry] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -26,8 +27,20 @@ export const useCreatePortfolio = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!orgId) { toastError("Error", "No se pudo identificar la organización."); return; }
-    if (!selectedFile) { toastError("Validación", "Debes adjuntar el archivo CSV."); return; }
+    console.log("[portfolio] submit disparado");
+
+    if (!orgId) {
+      console.log("[portfolio] ERROR: orgId vacío — falta ?org= en la URL");
+      toastError("Error", "No se pudo identificar la organización.");
+      return;
+    }
+    if (!selectedFile) {
+      console.log("[portfolio] ERROR: no hay archivo seleccionado");
+      toastError("Validación", "Debes adjuntar el archivo CSV.");
+      return;
+    }
+
+    console.log("[portfolio] orgId:", orgId, "| archivo:", selectedFile.name, "| nombre:", portfolioName);
 
     const data = new FormData();
     data.set("file", selectedFile);
@@ -35,18 +48,25 @@ export const useCreatePortfolio = () => {
     const params = new URLSearchParams({ portfolioName, tenantId: orgId });
     if (selectedCountry) params.set("countryId", selectedCountry);
 
-    // Navigate immediately — user can keep working
-    navigate(`/my-companies/portfolios?org=${orgId}`);
+    console.log("[portfolio] disparando request a /portfolios/upload-csv?" + params.toString());
 
-    // Fire-and-forget: backend creates a bell notification when done via SSE
+    // Fire-and-forget: backend acepta y procesa en background, notifica por SSE al terminar
     apiClient(`/portfolios/upload-csv?${params}`, { method: "POST", body: data })
-      .catch(() => {
-        // apiClient already shows an error toast on failure
-      });
+      .then(() => console.log("[portfolio] backend aceptó la petición"))
+      .catch((err) => console.error("[portfolio] error en la petición:", err));
+
+    console.log("[portfolio] mostrando modal de confirmación");
+    setShowSuccessModal(true);
   };
 
+  const handleSuccessModalClose = useCallback(() => {
+    setShowSuccessModal(false);
+    navigate(`/my-companies/portfolios?org=${orgId}`);
+  }, [navigate, orgId]);
+
   return {
-    isSubmitting: false,
+    showSuccessModal,
+    handleSuccessModalClose,
     orgId,
     portfolioName, setPortfolioName,
     selectedFile, setSelectedFile,

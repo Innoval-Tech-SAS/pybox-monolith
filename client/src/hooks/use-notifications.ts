@@ -37,6 +37,10 @@ export const useNotifications = () => {
       }
     });
 
+    es.onerror = () => {
+      es.close();
+    };
+
     return () => es.close();
   }, []);
 

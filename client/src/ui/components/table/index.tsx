@@ -1,30 +1,4 @@
-import type { ReactNode } from "react";
-
-interface TableProps {
-  children: ReactNode;
-  className?: string;
-}
-
-interface TableHeaderProps {
-  children: ReactNode;
-  className?: string;
-}
-
-interface TableBodyProps {
-  children: ReactNode;
-  className?: string;
-}
-
-interface TableRowProps {
-  children: ReactNode;
-  className?: string;
-}
-
-interface TableCellProps {
-  children: ReactNode;
-  isHeader?: boolean;
-  className?: string;
-}
+import type { TableProps, TableHeaderProps, TableBodyProps, TableRowProps, TableCellProps } from "@/types/props/table-props";
 
 const Table: React.FC<TableProps> = ({ children, className }) => (
   <table className={`min-w-full ${className ?? ""}`}>{children}</table>
@@ -42,9 +16,9 @@ const TableRow: React.FC<TableRowProps> = ({ children, className }) => (
   <tr className={className}>{children}</tr>
 );
 
-const TableCell: React.FC<TableCellProps> = ({ children, isHeader = false, className }) => {
+const TableCell: React.FC<TableCellProps> = ({ children, isHeader = false, className, colSpan }) => {
   const Tag = isHeader ? "th" : "td";
-  return <Tag className={className ?? ""}>{children}</Tag>;
+  return <Tag className={className ?? ""} colSpan={colSpan}>{children}</Tag>;
 };
 
 export { Table, TableHeader, TableBody, TableRow, TableCell };

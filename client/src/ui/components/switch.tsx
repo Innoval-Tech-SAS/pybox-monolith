@@ -1,9 +1,4 @@
-interface SwitchProps {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  label?: string;
-  disabled?: boolean;
-}
+import type { SwitchProps } from "@/types/props/switch-props";
 
 export const Switch: React.FC<SwitchProps> = ({ checked, onChange, label, disabled = false }) => (
   <label

@@ -5,17 +5,7 @@ import { PaginationWithIcon } from "@/ui/components/table/pagination-with-icon";
 import { Badge } from "@/ui/components/badge";
 import { Switch } from "@/ui/components/switch";
 import { Dropdown, DropdownItem } from "@/ui/components/dropdown";
-import type { UserSummary } from "@/types/users/user-types";
-
-type SortKey = "fullName" | "email" | "createdAt";
-type SortOrder = "asc" | "desc";
-
-interface UsersDataTableProps {
-  users: UserSummary[];
-  loading: boolean;
-  onToggleStatus: (userId: number, isActive: boolean) => void;
-  onDelete: (userId: number) => void;
-}
+import type { SortKey, SortOrder, UsersDataTableProps } from "@/types/props/users-data-table-props";
 
 const SortIcon = ({ active, order }: { active: boolean; order: SortOrder }) => (
   <button className="flex flex-col gap-0.5">
