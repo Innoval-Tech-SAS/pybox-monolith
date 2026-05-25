@@ -8,6 +8,15 @@ import { API_URL } from "@/config/api";
 
 export { API_URL };
 
+const extractMessage = (body: Record<string, unknown>, fallback: string): string => {
+  const detail = body?.detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    return (detail as Array<{ msg?: string }>).map((e) => e.msg ?? "").filter(Boolean).join(", ") || fallback;
+  }
+  return (body?.error as string) ?? fallback;
+};
+
 export const useApiClient = () => {
   const { sendRequest } = useSendRequest();
   const { error: toastError } = useToast();
@@ -23,7 +32,7 @@ export const useApiClient = () => {
 
       if (response.status === 401) {
         const body = await response.json().catch(() => ({}));
-        const message: string = body?.error ?? "Error 401";
+        const message = extractMessage(body, "Error 401");
 
         if (message === "El token expiró.") {
           const refreshToken = sessionStorage.getItem("refreshToken");
@@ -68,7 +77,7 @@ export const useApiClient = () => {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        const message = body?.error ?? `Error ${response.status}`;
+        const message = extractMessage(body, `Error ${response.status}`);
         toastError("Error", message);
         throw new ApiError(message, response.status);
       }
