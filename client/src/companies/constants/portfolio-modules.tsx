@@ -16,6 +16,7 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     icon: <Users size={24} className="text-white" />,
     gradient: "from-indigo-500 to-blue-600",
     path: null,
+    requiredPermission: "portfolio.clients",
   },
   {
     key: "portfolio-update-strict",
@@ -24,6 +25,7 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     icon: <ShieldCheck size={24} className="text-white" />,
     gradient: "from-amber-500 to-orange-600",
     path: null,
+    requiredPermission: "portfolio.upload_update",
   },
   {
     key: "portfolio-update-append",
@@ -32,6 +34,7 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     icon: <UserPlus size={24} className="text-white" />,
     gradient: "from-emerald-500 to-teal-600",
     path: null,
+    requiredPermission: "portfolio.upload_new",
   },
   {
     key: "messages",

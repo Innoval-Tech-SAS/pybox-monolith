@@ -9,6 +9,7 @@ import { ModuleCard } from "../components/module-card";
 import { useMyCompanies } from "../hooks/use-my-companies";
 import { useOrgTour } from "../hooks/use-org-tour";
 import { ORG_MODULES } from "../constants/org-modules";
+import { filterModules } from "../utils/module-access";
 
 export const MyCompaniesPage: React.FC = () => {
   const { orgs, loading } = useMyCompanies();
@@ -36,7 +37,7 @@ export const MyCompaniesPage: React.FC = () => {
         ) : isOrgView ? (
           <div className="flex flex-col gap-6">
             <div id="tour-modules-grid" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {ORG_MODULES.map((mod) => (
+              {filterModules(ORG_MODULES, selectedId).map((mod) => (
                 <ModuleCard
                   key={mod.key}
                   module={mod}

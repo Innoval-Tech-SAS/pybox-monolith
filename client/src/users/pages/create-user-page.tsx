@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams, useLocation } from "react-router";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Card, CardTitle } from "@/ui/components/card";
 import { Input } from "@/ui/components/input";
@@ -8,9 +8,10 @@ import { useCreateOrgMember } from "../hooks/use-create-org-member";
 import type { ManagedUserCreate } from "@/types/users/managed-user-types";
 
 const ROLE_LABELS: Record<string, string> = {
-  "ADMINISTRADOR": "Administrador",
+  ADMINISTRADOR: "Administrador",
   "ATENCION AL CLIENTE": "Agente de soporte",
-  "USUARIO ORGANIZACIÓN": "Usuario de organización",
+  "USUARIO ORGANIZACIÓN": "Usuario",
+  USUARIO: "Usuario",
 };
 
 const INITIAL_FORM = {
@@ -24,11 +25,20 @@ const INITIAL_FORM = {
 export const CreateUserPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const role = searchParams.get("role") ?? "";
+  const { state } = useLocation() as { state?: { role?: string } };
+  const role = state?.role ?? "";
   const orgId = searchParams.get("org") ?? "";
 
-  const { createCsUser, loading: loadingGlobal, error: errorGlobal } = useCreateCsUser();
-  const { createOrgMember, loading: loadingOrg, error: errorOrg } = useCreateOrgMember();
+  const {
+    createCsUser,
+    loading: loadingGlobal,
+    error: errorGlobal,
+  } = useCreateCsUser();
+  const {
+    createOrgMember,
+    loading: loadingOrg,
+    error: errorOrg,
+  } = useCreateOrgMember();
 
   const [form, setForm] = useState(INITIAL_FORM);
 
@@ -62,7 +72,9 @@ export const CreateUserPage: React.FC = () => {
               label="Nombre"
               id="firstname"
               value={form.firstname}
-              onChange={(e) => setForm((p) => ({ ...p, firstname: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, firstname: e.target.value }))
+              }
               placeholder="Nombre"
               required
             />
@@ -70,7 +82,9 @@ export const CreateUserPage: React.FC = () => {
               label="Apellido"
               id="lastname"
               value={form.lastname}
-              onChange={(e) => setForm((p) => ({ ...p, lastname: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, lastname: e.target.value }))
+              }
               placeholder="Apellido"
               required
             />
@@ -79,7 +93,9 @@ export const CreateUserPage: React.FC = () => {
               id="email"
               type="email"
               value={form.email}
-              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, email: e.target.value }))
+              }
               placeholder="correo@ejemplo.com"
               required
             />
@@ -87,7 +103,9 @@ export const CreateUserPage: React.FC = () => {
               label="Teléfono"
               id="phoneNumber"
               value={form.phoneNumber}
-              onChange={(e) => setForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, phoneNumber: e.target.value }))
+              }
               placeholder="+57 300 000 0000"
               required
             />
@@ -97,7 +115,9 @@ export const CreateUserPage: React.FC = () => {
                 id="password"
                 type="password"
                 value={form.password}
-                onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, password: e.target.value }))
+                }
                 placeholder="Mínimo 8 caracteres"
                 required
               />

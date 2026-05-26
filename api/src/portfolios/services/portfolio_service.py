@@ -8,7 +8,7 @@ from credits.models.credit_model import CreditModel
 from portfolios.models.portfolio_model import PortfolioModel
 from portfolios.repository.portfolio_repository import PortfolioRepository
 from portfolios.schemas.portfolio_schemas import PortfolioStatsResponse
-from security.permissions import PORTFOLIO_READ
+from security.permissions import ORG_PORTFOLIOS
 from users.enums.user_enums import UserRole
 from users.schemas.user_session_schema import UserSession
 
@@ -40,7 +40,7 @@ class PortfolioService:
                 detail="Sin acceso a esta organización",
             )
 
-        if PORTFOLIO_READ not in org_entry.permissions:
+        if ORG_PORTFOLIOS not in org_entry.permissions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes permisos para consultar portfolios",

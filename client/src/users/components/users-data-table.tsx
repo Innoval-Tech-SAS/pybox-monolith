@@ -160,7 +160,7 @@ export const UsersDataTable: React.FC<UsersDataTableProps> = ({ users, loading, 
                   </div>
                 </TableCell>
               ))}
-              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5">
+              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5 text-center">
                 <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">Rol</p>
               </TableCell>
               <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5">
@@ -196,7 +196,7 @@ export const UsersDataTable: React.FC<UsersDataTableProps> = ({ users, loading, 
                   <TableCell className="px-4 py-3 font-normal text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-white/5 text-theme-sm whitespace-nowrap">
                     {formatDate(user.createdAt)}
                   </TableCell>
-                  <TableCell className="px-4 py-3 border border-gray-100 dark:border-white/5 whitespace-nowrap">
+                  <TableCell className="px-4 py-3 border border-gray-100 dark:border-white/5 whitespace-nowrap text-center">
                     {user.roles.length > 0 ? (
                       <Badge size="sm" color="primary" variant="light">
                         {user.roles[0].role}

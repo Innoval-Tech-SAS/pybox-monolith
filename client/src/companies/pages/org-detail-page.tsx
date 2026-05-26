@@ -6,6 +6,7 @@ import { Loader } from "@/ui/components/loader/loader";
 import { ModuleCard } from "../components/module-card";
 import { useMyCompanies } from "../hooks/use-my-companies";
 import { ORG_MODULES } from "../constants/org-modules";
+import { filterModules } from "../utils/module-access";
 
 export const OrgDetailPage: React.FC = () => {
   const { orgId } = useParams<{ orgId: string }>();
@@ -34,7 +35,7 @@ export const OrgDetailPage: React.FC = () => {
               Volver a Mis Empresas
             </button>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {ORG_MODULES.map((mod) => (
+              {filterModules(ORG_MODULES, orgId!).map((mod) => (
                 <ModuleCard key={mod.key} module={mod} orgId={orgId!} />
               ))}
             </div>

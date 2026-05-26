@@ -17,7 +17,7 @@ const GLOBAL_ADMIN_OPTIONS: RoleOption[] = [
 
 const ORG_ADMIN_OPTIONS: RoleOption[] = [
   { label: "Atención al cliente", role: "ATENCION AL CLIENTE" },
-  { label: "Usuario de organización", role: "USUARIO ORGANIZACIÓN" },
+  { label: "Usuario", role: "USUARIO" },
 ];
 
 const AddUserButton: React.FC<{ orgId: string | undefined }> = ({ orgId }) => {
@@ -30,12 +30,17 @@ const AddUserButton: React.FC<{ orgId: string | undefined }> = ({ orgId }) => {
   const orgs = (session?.orgs ?? {}) as Record<string, { role: string }>;
 
   // Global admin: top-level role is set
-  const isGlobalAdmin = sessionRole === "ADMINISTRADOR" && sessionScope === "GLOBAL";
+  const isGlobalAdmin =
+    sessionRole === "ADMINISTRADOR" && sessionScope === "GLOBAL";
 
   // Org admin: role is null at top level but inside orgs[id].role
   const adminOrgId = orgId
-    ? (orgs[orgId]?.role === "ADMINISTRADOR" ? orgId : null)
-    : (Object.entries(orgs).find(([, entry]) => entry.role === "ADMINISTRADOR")?.[0] ?? null);
+    ? orgs[orgId]?.role === "ADMINISTRADOR"
+      ? orgId
+      : null
+    : (Object.entries(orgs).find(
+        ([, entry]) => entry.role === "ADMINISTRADOR",
+      )?.[0] ?? null);
   const isOrgAdmin = sessionScope === "ORGANIZATION" && !!adminOrgId;
 
   if (!isGlobalAdmin && (!isOrgAdmin || !orgId)) return null;
@@ -45,9 +50,8 @@ const AddUserButton: React.FC<{ orgId: string | undefined }> = ({ orgId }) => {
 
   const handleSelect = (roleValue: string) => {
     setOpen(false);
-    const params = new URLSearchParams({ role: roleValue });
-    if (targetOrgId) params.set("org", targetOrgId);
-    navigate(`/my-users/add?${params.toString()}`);
+    const search = targetOrgId ? `?org=${targetOrgId}` : "";
+    navigate(`/my-users/add${search}`, { state: { role: roleValue } });
   };
 
   return (
@@ -56,12 +60,31 @@ const AddUserButton: React.FC<{ orgId: string | undefined }> = ({ orgId }) => {
         onClick={() => setOpen((v) => !v)}
         className="dropdown-toggle inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
         Nuevo usuario
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M3.8 5.9L8 10.1l4.2-4.2" strokeLinecap="round" strokeLinejoin="round" />
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path
+            d="M3.8 5.9L8 10.1l4.2-4.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </button>
       <Dropdown isOpen={open} onClose={() => setOpen(false)}>
@@ -87,10 +110,14 @@ export const UsersPage: React.FC = () => {
   const { deleteUser } = useDeleteUser();
 
   const handleToggleStatus = async (userId: number, isActive: boolean) => {
-    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, isActive } : u)));
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, isActive } : u)),
+    );
     const result = await updateUser(userId, { isActive });
     if (!result) {
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, isActive: !isActive } : u)));
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, isActive: !isActive } : u)),
+      );
     }
   };
 

@@ -7,6 +7,7 @@ import { PortfolioCard } from "../components/portfolio-card";
 import { CreatePortfolioCard } from "../components/create-portfolio-card";
 import { usePortfolios } from "../hooks/use-portfolios";
 import { PORTFOLIO_MODULES } from "../constants/portfolio-modules";
+import { filterModules } from "../utils/module-access";
 import { usePortfoliosListTour } from "../hooks/use-portfolios-list-tour";
 import { usePortfolioModulesTour } from "../hooks/use-portfolio-modules-tour";
 
@@ -49,7 +50,7 @@ export const MyPortfoliosPage: React.FC = () => {
           </div>
         ) : isPortfolioView ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {PORTFOLIO_MODULES.map((mod) => (
+            {filterModules(PORTFOLIO_MODULES, orgId).map((mod) => (
               <ModuleCard key={mod.key} id={`tour-pf-module-${mod.key}`} module={mod} orgId={orgId} />
             ))}
           </div>

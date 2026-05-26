@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { useToast } from "@/context/toast-context";
-import { useApiClient } from "@/hooks/use-api-client";
+import { useApiClient, API_URL } from "@/hooks/use-api-client";
+import type { AppNotification } from "@/types/notifications/notification";
 import type { CreatePortfolioResult } from "@/types/companies/company-types";
 
 export const useCreatePortfolio = () => {
@@ -62,6 +63,27 @@ export const useCreatePortfolio = () => {
     sessionStorage.setItem(processingKey, "true");
     setShowSuccessModal(true);
   };
+
+  useEffect(() => {
+    if (!showSuccessModal || !orgId) return;
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return;
+
+    const es = new EventSource(`${API_URL}/notifications/stream?token=${encodeURIComponent(token)}`);
+    es.addEventListener("notification", (e) => {
+      try {
+        const notif: AppNotification = JSON.parse(e.data);
+        if (notif.category === "portfolio") {
+          sessionStorage.removeItem(processingKey);
+          navigate(`/my-companies/portfolios?org=${orgId}`);
+        }
+      } catch {
+        // malformed event
+      }
+    });
+    es.onerror = () => es.close();
+    return () => es.close();
+  }, [showSuccessModal, orgId, processingKey, navigate]);
 
   const handleSuccessModalClose = useCallback(() => {
     sessionStorage.removeItem(processingKey);
