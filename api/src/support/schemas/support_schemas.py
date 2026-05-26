@@ -14,11 +14,16 @@ class SupportFilter:
     created_by: int | None = None
     include_resolved: bool = False
     can_resolve: bool = False
+    can_assign: bool = False
 
 
 class ResolveTicketSchema(BaseSchema):
     approved: bool
     notes: str | None = None
+
+
+class AssignTicketSchema(BaseSchema):
+    user_id: int
 
 
 class SupportTicketSchema(BaseModel):

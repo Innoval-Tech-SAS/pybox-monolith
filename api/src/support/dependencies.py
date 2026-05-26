@@ -15,12 +15,14 @@ _STAFF_ROLES = {UserRole.ADMIN, UserRole.CUSTOMER_SERVICE}
 
 
 def get_support_filter(session: CurrentSession) -> SupportFilter:
+    is_admin = session.role == UserRole.ADMIN
+
     if session.role in _STAFF_ROLES:
         if session.scope == UserScope.GLOBAL:
-            return SupportFilter(can_resolve=True)
+            return SupportFilter(can_resolve=True, can_assign=is_admin)
         if session.scope == UserScope.ORGANIZATION:
             org_ids = [uuid.UUID(o) for o in session.orgs]
-            return SupportFilter(org_ids=org_ids, can_resolve=True)
+            return SupportFilter(org_ids=org_ids, can_resolve=True, can_assign=is_admin)
 
     if session.role in {UserRole.USER_ORGANIZATION, UserRole.USER}:
         return SupportFilter(created_by=session.user_id, include_resolved=True)

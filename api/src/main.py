@@ -87,7 +87,7 @@ app.add_middleware(
 
 register_error_handlers(app)
 
-app.mount("/files", StaticFiles(directory=_UPLOADS_DIR), name="uploads")
+app.mount("/files", StaticFiles(directory=UPLOADS_ROOT), name="uploads")
 
 app.include_router(auth_router, prefix=API_PREFIX)
 app.include_router(contacts_router, prefix=API_PREFIX)
