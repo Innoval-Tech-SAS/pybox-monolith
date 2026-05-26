@@ -45,6 +45,7 @@ async def list_portfolios(
 
 async def _process_and_notify(
     file_bytes: bytes,
+    filename: str,
     organization_id: uuid.UUID,
     portfolio_name: str | None,
     country: Nationality | None,
@@ -56,6 +57,7 @@ async def _process_and_notify(
     try:
         result = await service.process_csv(
             file_bytes=file_bytes,
+            filename=filename,
             organization_id=organization_id,
             portfolio_name=portfolio_name,
             country=country,
@@ -134,11 +136,11 @@ async def upload_csv(
         )
 
     extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-    if extension != "csv":
+    if extension not in {"csv", "xlsx"}:
         logger.warning("[portfolio] archivo inválido: %s", filename)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Archivo no permitido. Solo se aceptan archivos .csv",
+            detail="Archivo no permitido. Solo se aceptan archivos .csv o .xlsx",
         )
 
     if selected_org_id in _uploading_orgs:
@@ -157,6 +159,7 @@ async def upload_csv(
     background_tasks.add_task(
         _process_and_notify,
         file_bytes=file_bytes,
+        filename=filename,
         organization_id=selected_org_id,
         portfolio_name=(portfolio_name or "").strip() or None,
         country=country or country_id,

@@ -20,10 +20,10 @@ export const ProtectedRoute: React.FC = () => {
   if (!isValid) return null;
 
   return (
-    <MfaGuard>
-      <OnboardingGuard>
+    <OnboardingGuard>
+      <MfaGuard>
         <AdminLayout />
-      </OnboardingGuard>
-    </MfaGuard>
+      </MfaGuard>
+    </OnboardingGuard>
   );
 };

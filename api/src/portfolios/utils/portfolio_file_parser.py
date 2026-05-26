@@ -191,16 +191,21 @@ class PortfolioFileParser:
         "otros cargos",
     }
 
-    def parse(self, file_bytes: bytes) -> PortfolioFileData:
+    def parse(self, file_bytes: bytes, filename: str = "") -> PortfolioFileData:
         if not file_bytes:
             raise ValueError("El archivo está vacío")
 
-        df = pl.read_csv(
-            BytesIO(file_bytes),
-            infer_schema_length=0,  # all columns as strings to avoid type coercion
-            ignore_errors=True,
-            truncate_ragged_lines=True,
-        )
+        is_xlsx = filename.lower().endswith(".xlsx") or file_bytes[:4] == b"PK\x03\x04"
+        if is_xlsx:
+            df = pl.read_excel(BytesIO(file_bytes))
+            df = df.select([pl.col(c).cast(pl.String, strict=False) for c in df.columns])
+        else:
+            df = pl.read_csv(
+                BytesIO(file_bytes),
+                infer_schema_length=0,  # all columns as strings to avoid type coercion
+                ignore_errors=True,
+                truncate_ragged_lines=True,
+            )
         self._validate_columns(set(df.columns))
 
         rows: list[PortfolioRowData] = []

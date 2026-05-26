@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from config.error_handlers import register_error_handlers
+from config.paths import UPLOADS_ROOT
 from database.database import db
 from database.session_expiry_listener import start_session_expiry_listener
 from security.seed_permissions import seed_permissions
@@ -54,8 +55,7 @@ from users.controllers.global_users_controller import router as global_users_rou
 
 API_PREFIX = "/api/v1"
 
-_UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "..", "uploads")
-os.makedirs(_UPLOADS_DIR, exist_ok=True)
+os.makedirs(UPLOADS_ROOT, exist_ok=True)
 
 
 @asynccontextmanager

@@ -1,6 +1,9 @@
 import logging
+import os
 import uuid
 from dataclasses import dataclass, field
+
+from config.paths import UPLOADS_ROOT
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from countries.enums.country_enums import Nationality
@@ -71,10 +74,11 @@ class PortfolioCsvService:
         organization_id: uuid.UUID,
         portfolio_name: str | None = None,
         country: Nationality | None = None,
+        filename: str = "",
     ) -> CsvProcessResult:
         logger.info("[process_csv] START | org=%s nombre=%s bytes=%d", organization_id, portfolio_name, len(file_bytes))
 
-        file_data = self.parser.parse(file_bytes)
+        file_data = self.parser.parse(file_bytes, filename)
         logger.info("[process_csv] parsed | filas=%d skipped=%d", len(file_data.rows), file_data.total_skipped)
 
         portfolio = await self.portfolio_repo.add(
@@ -85,6 +89,14 @@ class PortfolioCsvService:
             )
         )
         logger.info("[process_csv] portfolio creado | id=%s", portfolio.id)
+
+        ext = "xlsx" if filename.lower().endswith(".xlsx") else "csv"
+        portfolio_dir = os.path.join(UPLOADS_ROOT, "organizations", str(organization_id), "portfolios")
+        os.makedirs(portfolio_dir, exist_ok=True)
+        dest_path = os.path.join(portfolio_dir, f"{portfolio.id}.{ext}")
+        with open(dest_path, "wb") as fh:
+            fh.write(file_bytes)
+        logger.info("[process_csv] archivo guardado | path=%s", dest_path)
 
         total_rows = len(file_data.rows) + file_data.total_skipped
 

@@ -17,19 +17,7 @@ export const CreatePortfolioPage: React.FC = () => {
           ...(orgId ? [{ label: "Empresa", path: `/my-companies?org=${orgId}` }] : []),
         ]}
       >
-        <div className="mx-auto w-full max-w-2xl">
-          <div className="rounded-3xl border border-gray-200 bg-white/80 p-6 shadow-lg backdrop-blur-md dark:border-gray-700 dark:bg-white/3 sm:p-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white/90">
-                Cargar portafolio
-              </h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Sube un archivo CSV con los datos de los clientes del portafolio.
-              </p>
-            </div>
-            <CreatePortfolioForm />
-          </div>
-        </div>
+        <CreatePortfolioForm />
       </ModuleBase>
     </>
   );

@@ -14,7 +14,11 @@ export const useCreatePortfolio = () => {
   const [portfolioName, setPortfolioName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCountry, setSelectedCountry] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const processingKey = `portfolioProcessing_${orgId}`;
+  const [showSuccessModal, setShowSuccessModal] = useState(
+    () => sessionStorage.getItem(processingKey) === "true",
+  );
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -55,14 +59,15 @@ export const useCreatePortfolio = () => {
       .then(() => console.log("[portfolio] backend aceptó la petición"))
       .catch((err) => console.error("[portfolio] error en la petición:", err));
 
-    console.log("[portfolio] mostrando modal de confirmación");
+    sessionStorage.setItem(processingKey, "true");
     setShowSuccessModal(true);
   };
 
   const handleSuccessModalClose = useCallback(() => {
+    sessionStorage.removeItem(processingKey);
     setShowSuccessModal(false);
     navigate(`/my-companies/portfolios?org=${orgId}`);
-  }, [navigate, orgId]);
+  }, [navigate, orgId, processingKey]);
 
   return {
     showSuccessModal,
