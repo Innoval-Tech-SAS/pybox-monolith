@@ -31,6 +31,7 @@ from users.repository.permission_assignment_repository import PermissionAssignme
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.repository.user_preferences_repository import UserPreferencesRepository
 from users.repository.user_repository import UserRepository
+from security.services.encrypt_service import encrypt_service
 from security.services.password_hasher_service import PasswordHasherService
 from users.services.user_service import UserService
 
@@ -143,7 +144,8 @@ class OnboardingService:
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
         user.document_type = data.document_type
-        user.document_number = data.document_number
+        user.document_number = encrypt_service.encrypt_to_str(data.document_number) if data.document_number else None
+        user.document_number_hash = encrypt_service.hash_document(data.document_number) if data.document_number else None
         user.nationality = data.nationality
         await self._user_repo.update(user)
         await self._user_service.get_user_session(user_id)
@@ -165,7 +167,7 @@ class OnboardingService:
 
         org.country = data.country
         org.fiscal_document_type = ORG_FISCAL_DOCUMENT_BY_NATIONALITY[data.country]
-        org.fiscal_document_number = data.fiscal_document_number
+        org.fiscal_document_number = encrypt_service.encrypt_to_str(data.fiscal_document_number) if data.fiscal_document_number else None
         org.fiscal_document_file = fiscal_path
         org.mercantile_document_type = ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY[data.country]
         org.mercantile_document_file = mercantile_path
@@ -195,7 +197,8 @@ class OnboardingService:
                 must_change_password=hashed_pw is not None,
                 auth_provider=AuthProvider.SELF,
                 document_type=data.rep_document_type,
-                document_number=data.rep_document_number,
+                document_number=encrypt_service.encrypt_to_str(data.rep_document_number) if data.rep_document_number else None,
+                document_number_hash=encrypt_service.hash_document(data.rep_document_number) if data.rep_document_number else None,
             ))
             await self._membership_repo.add(OrganizationMembershipModel(
                 user_id=rep_user.id,

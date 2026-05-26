@@ -54,8 +54,10 @@ export const useAuth = () => {
   };
 
   const logout = () => {
-    sessionStorage.clear();
-    navigate("/admin/sign-in");
+    apiClient("/auth/logout", { method: "POST" }).finally(() => {
+      sessionStorage.clear();
+      navigate("/admin/sign-in");
+    });
   };
 
   return { user, getSession, getRoleScope, login, loginWithGoogle, oauthLoading, fetchMe, logout };

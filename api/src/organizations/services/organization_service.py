@@ -253,6 +253,8 @@ class OrganizationService:
         org = await self.get_by_id(org_id)
 
         for field, value in data.model_dump(exclude_unset=True).items():
+            if field == "fiscal_document_number" and value is not None:
+                value = encrypt_service.encrypt_to_str(value)
             setattr(org, field, value)
 
         return await self.org_repo.update(org)

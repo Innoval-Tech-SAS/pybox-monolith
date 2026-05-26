@@ -31,7 +31,7 @@ export const ORG_MODULES: OrgModule[] = [
     description: "Consulta los usuarios vinculados a la organización.",
     icon: <Users size={24} className="text-white" />,
     gradient: "from-blue-500 to-blue-600",
-    path: null,
+    path: "/my-companies/users",
   },
   {
     key: "payment-methods",

@@ -9,6 +9,7 @@ from organizations.repository.organization_membership_repository import Organiza
 from organizations.repository.organization_repository import OrganizationRepository
 from organizations.services.organization_service import OrganizationService
 from security.role_permissions_catalog import get_base_permissions
+from security.services.encrypt_service import encrypt_service
 from users.enums.user_enums import PermissionEffect, UserRole, UserScope
 from users.models.role_assignment_model import RoleAssignmentModel
 from users.models.user_model import UserModel
@@ -59,7 +60,7 @@ class UserService:
         assignments = await self.role_assignment_repo.get_by_user_id(user_id)
 
         doc_type = user.document_type.value if user.document_type else None
-        doc_number = user.document_number
+        doc_number = encrypt_service.decrypt_to_str(user.document_number) if user.document_number else None
         must_change_pw = user.must_change_password
         mfa_enabled = user.mfa_enabled
 
@@ -247,7 +248,7 @@ class UserService:
             phone_number=user.phone_number,
             auth_provider=user.auth_provider.value,
             document_type=user.document_type.value if user.document_type else None,
-            document_number=user.document_number,
+            document_number=encrypt_service.decrypt_to_str(user.document_number) if user.document_number else None,
             is_active=user.is_active,
             is_email_verified=user.is_email_verified,
             is_phone_verified=user.is_phone_verified,

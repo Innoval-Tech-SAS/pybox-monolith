@@ -12,6 +12,7 @@ import { ProfilePage } from "./profile/pages/profile-page";
 import { UsersPage } from "./users/pages/users-page";
 import { UserDetailPage } from "./users/pages/user-detail-page";
 import { UserEditPage } from "./users/pages/user-edit-page";
+import { CreateUserPage } from "./users/pages/create-user-page";
 import { NotFound } from "./ui/pages/not-found";
 
 export const noAuthRouter = [
@@ -61,6 +62,14 @@ export const authRouter = [
   {
     path: "/my-users",
     element: <UsersPage />,
+  },
+  {
+    path: "/my-companies/users",
+    element: <UsersPage />,
+  },
+  {
+    path: "/my-users/add",
+    element: <CreateUserPage />,
   },
   {
     path: "/my-users/:id",

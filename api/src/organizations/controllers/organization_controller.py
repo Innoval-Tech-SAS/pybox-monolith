@@ -15,6 +15,7 @@ from organizations.schemas.organization_schemas import (
     RepresentativeMode,
 )
 from security.dependencies import CurrentSession
+from users.dependencies import UserServiceDep
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
 
@@ -43,8 +44,11 @@ async def create_organization(
     session: CurrentSession,
     admin_scope: AdminScopeDep,
     service: OrgServiceDep,
+    user_service: UserServiceDep,
 ) -> OrganizationResponse:
-    return await service.create_organization(body, session.user_id, admin_scope)
+    org = await service.create_organization(body, session.user_id, admin_scope)
+    await user_service.get_user_session(session.user_id)
+    return org
 
 
 @router.patch("/{org_id}", response_model=OrganizationResponse)
@@ -73,6 +77,7 @@ async def register_organization(
     session: CurrentSession,
     admin_scope: AdminScopeDep,
     service: OrgServiceDep,
+    user_service: UserServiceDep,
     name: str = Form(...),
     country: Nationality = Form(...),
     fiscal_document_number: str | None = Form(None),
@@ -94,7 +99,7 @@ async def register_organization(
     mercantile_ext = Path(mercantile_document_file.filename or "").suffix or ".pdf"
     rep_bytes = await representative_document_file.read()
     rep_ext = Path(representative_document_file.filename or "").suffix or ".pdf"
-    return await service.register_with_representative(
+    org = await service.register_with_representative(
         name=name,
         description=description,
         country=country,
@@ -115,3 +120,5 @@ async def register_organization(
         created_by_user_id=session.user_id,
         scope=admin_scope,
     )
+    await user_service.get_user_session(session.user_id)
+    return org
