@@ -9,6 +9,7 @@ export interface UserSummary {
   id: number;
   fullName: string;
   email: string;
+  phoneNumber: string | null;
   isActive: boolean;
   createdAt: string | null;
   roles: RoleEntry[];

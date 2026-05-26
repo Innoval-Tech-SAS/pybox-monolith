@@ -8,12 +8,25 @@ export interface RegisterOrgRepMode {
 
 export const REP_MODES: RegisterOrgRepMode[] = [
   { value: "self", label: "Yo soy el representante legal", iconName: "user" },
-  { value: "select", label: "Seleccionar usuario existente", iconName: "users" },
-  { value: "create", label: "Crear nuevo usuario", iconName: "user-plus" },
+  {
+    value: "select",
+    label: "Usuario existente",
+    iconName: "users",
+  },
+  { value: "create", label: "Nuevo usuario", iconName: "user-plus" },
 ];
 
 export const WIZARD_STEPS = [
-  { title: "Datos de la organización", description: "Nombre, país y registro fiscal" },
-  { title: "Documentos legales", description: "Documentos de constitución" },
-  { title: "Representante legal", description: "Quién representa a la empresa" },
+  {
+    title: "Datos de la organización",
+    description: "Nombre, país y registro fiscal",
+  },
+  {
+    title: "Documentos legales",
+    description: "Documentos de constitución",
+  },
+  {
+    title: "Representante legal",
+    description: "Quién representa a la empresa",
+  },
 ] as const;

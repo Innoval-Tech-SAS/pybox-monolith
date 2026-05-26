@@ -1,16 +1,17 @@
 import uuid
 from datetime import datetime
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from portfolios.models.portfolio_user_access_model import PortfolioUserAccessModel
+from portfolios.repository.portfolio_repository import PortfolioRepository
 from portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
 
 
 class PortfolioUserAccessService:
     def __init__(self, session: AsyncSession) -> None:
         self._repo = PortfolioUserAccessRepository(session)
+        self._portfolio_repo = PortfolioRepository(session)
 
     async def check_access(self, user_id: int, portfolio_id: uuid.UUID, org_id: str) -> bool:
         try:
@@ -66,3 +67,11 @@ class PortfolioUserAccessService:
             access.is_active = False
             access.revoked_at = now
             await self._repo.update(access)
+
+    async def list_org_portfolios_with_access_status(
+        self, user_id: int, organization_id: uuid.UUID
+    ) -> list[tuple[uuid.UUID, str, bool]]:
+        all_portfolios = await self._portfolio_repo.get_active_by_organization_id(organization_id)
+        active_accesses = await self._repo.get_active_by_user_and_org(user_id, organization_id)
+        granted_ids = {a.portfolio_id for a in active_accesses}
+        return [(p.id, p.name, p.id in granted_ids) for p in all_portfolios]

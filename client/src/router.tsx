@@ -12,6 +12,8 @@ import { ProfilePage } from "./profile/pages/profile-page";
 import { UsersPage } from "./users/pages/users-page";
 import { UserDetailPage } from "./users/pages/user-detail-page";
 import { UserEditPage } from "./users/pages/user-edit-page";
+import { UserSettingsPage } from "./users/pages/user-settings-page";
+import { UserPortfoliosPage } from "./users/pages/user-portfolios-page";
 import { CreateUserPage } from "./users/pages/create-user-page";
 import { NotFound } from "./ui/pages/not-found";
 
@@ -78,6 +80,14 @@ export const authRouter = [
   {
     path: "/my-users/:id/edit",
     element: <UserEditPage />,
+  },
+  {
+    path: "/my-users/:id/settings",
+    element: <UserSettingsPage />,
+  },
+  {
+    path: "/my-users/:id/portfolios",
+    element: <UserPortfoliosPage />,
   },
   {
     path: "/notifications",

@@ -27,6 +27,7 @@ class AdminUserSummarySchema(BaseSchema):
     id: int
     full_name: str
     email: str
+    phone_number: str | None
     is_active: bool
     created_at: datetime | None
     roles: list[RoleEntrySchema] = []

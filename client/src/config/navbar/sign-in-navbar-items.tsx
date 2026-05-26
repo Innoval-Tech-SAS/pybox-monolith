@@ -7,7 +7,7 @@ export const signInNavbarItems = [
     path: "/dashboard",
   },
   {
-    name: "Mis Empresas",
+    name: "Empresas",
     icon: <Building2 size={20} />,
     path: "/my-companies",
   },

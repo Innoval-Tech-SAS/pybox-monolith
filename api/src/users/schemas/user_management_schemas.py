@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import EmailStr
 
 from base.schema_base import BaseSchema
@@ -11,6 +13,12 @@ class ManagedUserCreate(BaseSchema):
     phone_number: str
     password: str
     role: UserRole
+
+
+class PermissionCatalogEntry(BaseSchema):
+    name: str
+    label: str | None = None
+    description: str | None = None
 
 
 class ManagedUserResponse(BaseSchema):
@@ -34,3 +42,9 @@ class PermissionEntry(BaseSchema):
 
 class PermissionListResponse(BaseSchema):
     permissions: list[PermissionEntry]
+
+
+class PortfolioAccessEntry(BaseSchema):
+    portfolio_id: uuid.UUID
+    name: str
+    has_access: bool

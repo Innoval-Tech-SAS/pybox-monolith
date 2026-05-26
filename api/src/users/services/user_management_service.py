@@ -19,6 +19,7 @@ from users.repository.user_repository import UserRepository
 from users.schemas.user_management_schemas import (
     ManagedUserCreate,
     ManagedUserResponse,
+    PermissionCatalogEntry,
     PermissionEntry,
     PermissionListResponse,
 )
@@ -145,6 +146,13 @@ class UserManagementService:
             effect=effect,
         )
         return PermissionEntry(name=permission_name, effect=effect.value)
+
+    async def get_permissions_catalog(self) -> list[PermissionCatalogEntry]:
+        permissions = await self.permission_assignment_repo.get_all_active_permissions()
+        return [
+            PermissionCatalogEntry(name=p.name, label=p.label, description=p.description)
+            for p in permissions
+        ]
 
     async def remove_permission(self, user_id: int, org_id: uuid.UUID, permission_name: str) -> None:
         perm = await self.permission_assignment_repo.get_permission_by_name(permission_name)

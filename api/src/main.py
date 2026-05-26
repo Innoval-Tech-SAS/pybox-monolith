@@ -52,6 +52,7 @@ from organizations.controllers.org_members_controller import router as org_membe
 from portfolios.controllers.portfolio_controller import router as portfolios_router
 from users.controllers.user_controller import router as users_router
 from users.controllers.global_users_controller import router as global_users_router
+from users.controllers.permissions_controller import router as permissions_router
 
 API_PREFIX = "/api/v1"
 
@@ -98,6 +99,7 @@ app.include_router(organizations_router, prefix=API_PREFIX)
 app.include_router(portfolios_router, prefix=API_PREFIX)
 app.include_router(users_router, prefix=API_PREFIX)
 app.include_router(global_users_router, prefix=API_PREFIX)
+app.include_router(permissions_router, prefix=API_PREFIX)
 app.include_router(org_members_router, prefix=API_PREFIX)
 app.include_router(notifications_router, prefix=API_PREFIX)
 app.include_router(support_router, prefix=API_PREFIX)

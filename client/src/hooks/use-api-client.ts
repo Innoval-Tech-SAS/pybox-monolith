@@ -27,7 +27,11 @@ export const useApiClient = () => {
       if (!endpoint.startsWith("/")) throw new Error("endpoint must start with '/'");
 
       const url = `${API_URL}${endpoint}`;
-      const authHeaders = { ...getAuthHeaders(), ...(options.headers as Record<string, string>) };
+      const authHeaders = {
+        ...getAuthHeaders(),
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.headers as Record<string, string>),
+      };
       let response = await sendRequest(url, { ...options, headers: authHeaders });
 
       if (response.status === 401) {

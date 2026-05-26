@@ -4,7 +4,7 @@ export interface ManagedUserCreate {
   email: string;
   phoneNumber: string;
   password: string;
-  role: "ADMINISTRADOR" | "ATENCION AL CLIENTE";
+  role: "ADMINISTRADOR" | "ATENCION AL CLIENTE" | "USUARIO ORGANIZACIÓN";
 }
 
 export interface ManagedUserResponse {

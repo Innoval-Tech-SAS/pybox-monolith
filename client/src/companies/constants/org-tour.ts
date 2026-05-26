@@ -8,12 +8,6 @@ export const ORG_MODULE_TOUR_STEPS = [
       "Visualiza y gestiona todos los portafolios de clientes de la organización. Aquí podrás filtrar, buscar y hacer seguimiento a cada cartera.",
   },
   {
-    id: "tour-module-roles",
-    title: "Roles",
-    description:
-      "Administra los permisos de cada perfil de usuario dentro de la organización. Define qué puede ver y hacer cada rol. (Próximamente)",
-  },
-  {
     id: "tour-module-users",
     title: "Usuarios",
     description:

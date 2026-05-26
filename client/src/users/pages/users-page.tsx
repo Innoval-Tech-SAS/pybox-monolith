@@ -17,7 +17,7 @@ const GLOBAL_ADMIN_OPTIONS: RoleOption[] = [
 
 const ORG_ADMIN_OPTIONS: RoleOption[] = [
   { label: "Atención al cliente", role: "ATENCION AL CLIENTE" },
-  { label: "Usuario", role: "USUARIO" },
+  { label: "Usuario", role: "USUARIO ORGANIZACIÓN" },
 ];
 
 const AddUserButton: React.FC<{ orgId: string | undefined }> = ({ orgId }) => {
@@ -128,7 +128,7 @@ export const UsersPage: React.FC = () => {
 
   return (
     <ModuleBase
-      pageTitle={orgId ? "Usuarios de la organización" : "Usuarios"}
+      pageTitle={"Usuarios"}
       breadcrumbItems={[{ label: "Inicio", path: "/dashboard" }]}
     >
       <div className="flex justify-end mb-4">
@@ -137,6 +137,7 @@ export const UsersPage: React.FC = () => {
       <UsersDataTable
         users={users}
         loading={loading}
+        orgId={orgId}
         onToggleStatus={handleToggleStatus}
         onDelete={handleDelete}
       />

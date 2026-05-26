@@ -199,6 +199,7 @@ class UserService:
                 id=u.id,
                 full_name=u.full_name,
                 email=u.email,
+                phone_number=u.phone_number,
                 is_active=u.is_active,
                 created_at=u.created_at,
                 roles=[

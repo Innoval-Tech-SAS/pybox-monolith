@@ -77,3 +77,9 @@ class PermissionAssignmentRepository(RepositoryBase[PermissionAssignmentModel]):
             return False
         await self.delete(existing)
         return True
+
+    async def get_all_active_permissions(self) -> list[PermissionModel]:
+        result = await self.session.execute(
+            select(PermissionModel).where(PermissionModel.is_active.is_(True)).order_by(PermissionModel.name)
+        )
+        return list(result.scalars().all())

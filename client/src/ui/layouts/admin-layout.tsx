@@ -1,4 +1,5 @@
-import { Outlet } from "react-router";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router";
 import { useSidebar } from "../../hooks/use-sidebar";
 import { AsideMenu } from "../components/menu/aside-menu";
 import { NavbarMenu } from "../components/menu/navbar-menu";
@@ -7,10 +8,22 @@ import { signInNavbarItems, otherSignInItems } from "../../config/navbar/sign-in
 import { Backdrop } from "../components/menu/backdrop";
 import { useAuth } from "../../hooks/use-auth";
 import { Scope } from "../../types/auth/role";
+import { setSessionUser } from "../../auth/utils/auth-session-utils";
 
 const LayoutContent: React.FC = () => {
+  useLocation(); // suscribe al router context → re-render en cada navegación
+  const [, forceUpdate] = useState(0);
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
-  const { getRoleScope } = useAuth();
+  const { getRoleScope, fetchMe } = useAuth();
+
+  useEffect(() => {
+    // Garantiza que la sesión esté actualizada al montar el layout por primera vez
+    fetchMe()
+      .then((me) => { setSessionUser(me); forceUpdate((n) => n + 1); })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { scope } = getRoleScope();
 
   const isOrgOrGlobal = scope === Scope.ORG || scope === Scope.GLOBAL;
