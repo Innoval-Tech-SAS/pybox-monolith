@@ -36,7 +36,7 @@ export const useCreatePortfolio = () => {
 
     if (!orgId) {
       console.log("[portfolio] ERROR: orgId vacío — falta ?org= en la URL");
-      toastError("Error", "No se pudo identificar la organización.");
+      toastError("Error", "No se pudo identificar la empresa.");
       return;
     }
     if (!selectedFile) {

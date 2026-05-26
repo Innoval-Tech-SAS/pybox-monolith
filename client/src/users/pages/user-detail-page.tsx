@@ -19,7 +19,7 @@ const BoolBadge = ({ value, trueLabel = "Sí", falseLabel = "No" }: { value: boo
 
 const SCOPE_LABELS: Record<string, string> = {
   GLOBAL: "Global",
-  ORGANIZATION: "Organización",
+  ORGANIZATION: "Empresa",
   SELF: "Personal",
 };
 

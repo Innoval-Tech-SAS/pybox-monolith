@@ -35,10 +35,10 @@ export const noAuthRouter = [
 export const authRouter = [
   {
     path: "/",
-    element: <Navigate to="/dashboard" replace />,
+    element: <Navigate to="/home" replace />,
   },
   {
-    path: "/dashboard",
+    path: "/home",
     element: <HomePage />,
   },
   {

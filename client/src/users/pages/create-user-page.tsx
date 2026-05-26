@@ -13,7 +13,7 @@ import type { ManagedUserCreate } from "@/types/users/managed-user-types";
 const ROLE_LABELS: Record<string, string> = {
   ADMINISTRADOR: "Administrador",
   "ATENCION AL CLIENTE": "Agente de soporte",
-  "USUARIO ORGANIZACIÓN": "Usuario de organización",
+  "USUARIO ORGANIZACIÓN": "Usuario",
   USUARIO: "Usuario",
 };
 
@@ -156,7 +156,7 @@ const PortfolioCheckboxes: React.FC<{ orgId: string; userId: number }> = ({ orgI
 
   if (loading) return <p className="text-sm text-gray-400">Cargando...</p>;
   if (portfolios.length === 0)
-    return <p className="text-sm text-gray-400">No hay portafolios disponibles en esta organización.</p>;
+    return <p className="text-sm text-gray-400">No hay portafolios disponibles en esta empresa.</p>;
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">

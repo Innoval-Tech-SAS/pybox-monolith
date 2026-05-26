@@ -117,7 +117,7 @@ export const useRegisterOrg = () => {
 
       const result = await apiClient("/organizations/register", { method: "POST", body: data });
       if (result) {
-        success("Organización creada", `${result.name} fue registrada correctamente.`);
+        success("Empresa creada", `${result.name} fue registrada correctamente.`);
         navigate("/my-companies");
       }
     } catch {

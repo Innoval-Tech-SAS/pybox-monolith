@@ -129,7 +129,7 @@ export const UsersPage: React.FC = () => {
   return (
     <ModuleBase
       pageTitle={"Usuarios"}
-      breadcrumbItems={[{ label: "Inicio", path: "/dashboard" }]}
+      breadcrumbItems={[{ label: "Inicio", path: "/home" }]}
     >
       <div className="flex justify-end mb-4">
         <AddUserButton orgId={orgId} />

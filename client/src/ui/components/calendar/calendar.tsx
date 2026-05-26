@@ -196,7 +196,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             <div className="mt-6 space-y-4">
               {selected.credit.organizationName && (
                 <div>
-                  <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Organización</p>
+                  <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">Empresa</p>
                   <p className="text-sm text-gray-800 dark:text-white/90">{selected.credit.organizationName}</p>
                 </div>
               )}

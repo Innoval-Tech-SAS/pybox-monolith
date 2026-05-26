@@ -18,7 +18,7 @@ export const CreateOrgCard: React.FC = () => {
           Crear nueva empresa
         </span>
         <p className="text-sm leading-relaxed text-gray-500 line-clamp-3 dark:text-gray-400">
-          Registra y configura una nueva organización.
+          Registra y configura una nueva empresa.
         </p>
       </div>
 

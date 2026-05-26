@@ -18,7 +18,7 @@ export const REP_MODES: RegisterOrgRepMode[] = [
 
 export const WIZARD_STEPS = [
   {
-    title: "Datos de la organización",
+    title: "Datos de la empresa",
     description: "Nombre, país y registro fiscal",
   },
   {

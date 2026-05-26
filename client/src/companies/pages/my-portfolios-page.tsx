@@ -42,7 +42,7 @@ export const MyPortfoliosPage: React.FC = () => {
 
   return (
     <>
-      <PageMeta title={pageTitle} description="Portafolios de la organización" />
+      <PageMeta title={pageTitle} description="Portafolios de la empresa" />
       <ModuleBase pageTitle={pageTitle} breadcrumbItems={breadcrumbItems}>
         {loading ? (
           <div className="py-20">

@@ -2,9 +2,9 @@ import { Building2, Home, Users } from "lucide-react";
 
 export const signInNavbarItems = [
   {
-    name: "Home",
+    name: "Inicio",
     icon: <Home size={20} />,
-    path: "/dashboard",
+    path: "/home",
   },
   {
     name: "Empresas",

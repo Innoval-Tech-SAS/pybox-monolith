@@ -15,18 +15,22 @@ export const useAuth = () => {
   const { oauthRegister, loading: oauthLoading } = useOAuthRegister();
   const user = getSession();
 
-  const login = async ({ email, password }: LoginCredentials): Promise<void> => {
+  const login = async ({
+    email,
+    password,
+  }: LoginCredentials): Promise<void> => {
     const data: AuthTokenResponse = await apiClient("/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
     sessionStorage.setItem("accessToken", data.accessToken);
-    if (data.refreshToken) sessionStorage.setItem("refreshToken", data.refreshToken);
+    if (data.refreshToken)
+      sessionStorage.setItem("refreshToken", data.refreshToken);
     const me = await apiClient("/users/me", {}).catch(() => null);
     setSessionUser(me ?? { email });
     if (me?.mfa_enabled) sessionStorage.setItem("mfaVerified", "false");
-    navigate("/dashboard", { replace: true });
+    navigate("/home", { replace: true });
   };
 
   const loginWithGoogle = async (token: string): Promise<void> => {
@@ -38,14 +42,20 @@ export const useAuth = () => {
     }
     await oauthRegister({ provider: "GOOGLE", token }, "/auth/oauth/login");
     setSessionUser({ email: payload.email });
-    navigate("/dashboard", { replace: true });
+    navigate("/home", { replace: true });
   };
 
   const getRoleScope = (): RoleScope => {
     const u = getSession();
     const first = getFirstAssignment(u);
-    const role = (u?.userRole ?? u?.role ?? first?.role ?? DEFAULT_ROLE_SCOPE.role) as Role;
-    const scope = (u?.userScope ?? u?.scope ?? first?.scope ?? DEFAULT_ROLE_SCOPE.scope) as Scope;
+    const role = (u?.userRole ??
+      u?.role ??
+      first?.role ??
+      DEFAULT_ROLE_SCOPE.role) as Role;
+    const scope = (u?.userScope ??
+      u?.scope ??
+      first?.scope ??
+      DEFAULT_ROLE_SCOPE.scope) as Scope;
     return { role, scope } as RoleScope;
   };
 
@@ -60,5 +70,14 @@ export const useAuth = () => {
     });
   };
 
-  return { user, getSession, getRoleScope, login, loginWithGoogle, oauthLoading, fetchMe, logout };
+  return {
+    user,
+    getSession,
+    getRoleScope,
+    login,
+    loginWithGoogle,
+    oauthLoading,
+    fetchMe,
+    logout,
+  };
 };

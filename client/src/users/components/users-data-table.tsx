@@ -18,12 +18,22 @@ const SortIcon = ({ active, order }: { active: boolean; order: SortOrder }) => (
 );
 
 // Inline action icon buttons
-const IconBtn = ({ onClick, title, className, children }: { onClick: () => void; title: string; className?: string; children: React.ReactNode }) => (
+type IconBtnVariant = "default" | "warning" | "primary" | "success" | "error";
+
+const ICON_BTN_VARIANTS: Record<IconBtnVariant, string> = {
+  default: "text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-500 dark:hover:bg-white/8 dark:hover:text-gray-300",
+  warning: "text-gray-400 hover:bg-warning-50 hover:text-warning-600 dark:text-gray-500 dark:hover:bg-warning-500/10 dark:hover:text-warning-400",
+  primary: "text-gray-400 hover:bg-brand-50 hover:text-brand-600 dark:text-gray-500 dark:hover:bg-brand-500/10 dark:hover:text-brand-400",
+  success: "text-gray-400 hover:bg-success-50 hover:text-success-600 dark:text-gray-500 dark:hover:bg-success-500/10 dark:hover:text-success-400",
+  error:   "text-gray-400 hover:bg-error-50 hover:text-error-600 dark:text-gray-500 dark:hover:bg-error-500/10 dark:hover:text-error-400",
+};
+
+const IconBtn = ({ onClick, title, variant = "default", children }: { onClick: () => void; title: string; variant?: IconBtnVariant; children: React.ReactNode }) => (
   <button
     type="button"
     title={title}
     onClick={onClick}
-    className={`text-gray-400 transition hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 ${className ?? ""}`}
+    className={`rounded-lg p-1.5 transition-all ${ICON_BTN_VARIANTS[variant]}`}
   >
     {children}
   </button>
@@ -59,12 +69,13 @@ const TrashIcon = () => (
   </svg>
 );
 
-const FoldersIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M2 9V5a2 2 0 0 1 2-2h3.17a2 2 0 0 1 1.42.59L10 5h9a2 2 0 0 1 2 2v2"/>
-    <path d="M2 13v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/>
-  </svg>
-);
+
+const ROLE_DISPLAY: Record<string, string> = {
+  ADMINISTRADOR: "Administrador",
+  "ATENCION AL CLIENTE": "Atención al cliente",
+  "USUARIO ORGANIZACIÓN": "Usuario",
+  USUARIO: "Usuario",
+};
 
 export const UsersDataTable: React.FC<UsersDataTableProps> = ({
   users,
@@ -165,7 +176,7 @@ export const UsersDataTable: React.FC<UsersDataTableProps> = ({
                   <SortIcon active={sortKey === "fullName"} order={sortOrder} />
                 </div>
               </TableCell>
-              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5">
+              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5 text-center">
                 <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">Entidad</p>
               </TableCell>
               <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5">
@@ -177,13 +188,13 @@ export const UsersDataTable: React.FC<UsersDataTableProps> = ({
               <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5">
                 <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">Teléfono</p>
               </TableCell>
-              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5">
+              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5 text-center">
                 <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">Rol</p>
               </TableCell>
-              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5">
+              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5 text-center">
                 <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">Estado</p>
               </TableCell>
-              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5">
+              <TableCell isHeader className="px-4 py-3 border border-gray-100 dark:border-white/5 text-center">
                 <p className="font-medium text-gray-700 text-theme-xs dark:text-gray-400">Acciones</p>
               </TableCell>
             </TableRow>
@@ -214,7 +225,7 @@ export const UsersDataTable: React.FC<UsersDataTableProps> = ({
                       <p className="font-medium text-gray-800 text-theme-sm dark:text-white/90">{user.fullName}</p>
                     </TableCell>
                     {/* Entidad */}
-                    <TableCell className="px-4 py-4 font-normal text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-white/5 text-theme-sm whitespace-nowrap">
+                    <TableCell className="px-4 py-4 font-normal text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-white/5 text-theme-sm whitespace-nowrap text-center">
                       {user.roles[0]?.orgName ?? "—"}
                     </TableCell>
                     {/* Registro */}
@@ -226,47 +237,41 @@ export const UsersDataTable: React.FC<UsersDataTableProps> = ({
                       {user.phoneNumber ?? "—"}
                     </TableCell>
                     {/* Rol */}
-                    <TableCell className="px-4 py-4 border border-gray-100 dark:border-white/5 whitespace-nowrap">
+                    <TableCell className="px-4 py-4 border border-gray-100 dark:border-white/5 whitespace-nowrap text-center">
                       {user.roles.length > 0 ? (
                         <Badge size="sm" color="primary" variant="light">
-                          {user.roles[0].role}
+                          {ROLE_DISPLAY[user.roles[0].role] ?? user.roles[0].role}
                         </Badge>
                       ) : (
                         <Badge size="sm" color="light" variant="light">Sin rol</Badge>
                       )}
                     </TableCell>
                     {/* Estado */}
-                    <TableCell className="px-4 py-4 border border-gray-100 dark:border-white/5">
+                    <TableCell className="px-4 py-4 border border-gray-100 dark:border-white/5 text-center">
+                      <div className="flex justify-center">
                       <Switch
                         checked={user.isActive}
                         onChange={(checked) => onToggleStatus(user.id, checked)}
                       />
+                      </div>
                     </TableCell>
                     {/* Acciones */}
                     <TableCell className="px-4 py-4 border border-gray-100 dark:border-white/5">
-                      <div className="flex items-center gap-2">
-                        <IconBtn title="Ver perfil" onClick={() => navigate(`/my-users/${user.id}`)}>
+                      <div className="flex items-center justify-center gap-0.5">
+                        <IconBtn title="Ver perfil" variant="default" onClick={() => navigate(`/my-users/${user.id}`)}>
                           <EyeIcon />
                         </IconBtn>
-                        <IconBtn title="Editar" onClick={() => navigate(`/my-users/${user.id}/edit`)}>
+                        <IconBtn title="Editar" variant="warning" onClick={() => navigate(`/my-users/${user.id}/edit`)}>
                           <PencilIcon />
                         </IconBtn>
                         {isUserOrg && (
-                          <IconBtn title="Configuración" onClick={() => navigate(settingsPath)}>
+                          <IconBtn title="Configuración" variant="primary" onClick={() => navigate(settingsPath)}>
                             <SettingsIcon />
-                          </IconBtn>
-                        )}
-                        {isUserOrg && orgId && (
-                          <IconBtn
-                            title="Portafolios"
-                            onClick={() => navigate(`/my-users/${user.id}/portfolios?org=${orgId}`)}
-                          >
-                            <FoldersIcon />
                           </IconBtn>
                         )}
                         <IconBtn
                           title="Eliminar"
-                          className="hover:text-error-500 dark:hover:text-error-400"
+                          variant="error"
                           onClick={() => {
                             if (window.confirm("¿Eliminar este usuario?")) onDelete(user.id);
                           }}

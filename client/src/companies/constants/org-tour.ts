@@ -5,19 +5,19 @@ export const ORG_MODULE_TOUR_STEPS = [
     id: "tour-module-portfolios",
     title: "Mis Portafolios",
     description:
-      "Visualiza y gestiona todos los portafolios de clientes de la organización. Aquí podrás filtrar, buscar y hacer seguimiento a cada cartera.",
+      "Visualiza y gestiona todos los portafolios de clientes de la empresa. Aquí podrás filtrar, buscar y hacer seguimiento a cada cartera.",
   },
   {
     id: "tour-module-users",
     title: "Usuarios",
     description:
-      "Consulta el listado de usuarios vinculados a esta organización, su rol y estado de acceso.",
+      "Consulta el listado de usuarios vinculados a esta empresa, su rol y estado de acceso.",
   },
   {
     id: "tour-module-payment-methods",
     title: "Métodos de Pago",
     description:
-      "Configura los canales de pago habilitados para la organización - transferencias, PSE, efectivo u otros según tu operación. (Próximamente)",
+      "Configura los canales de pago habilitados para la empresa - transferencias, PSE, efectivo u otros según tu operación. (Próximamente)",
   },
   {
     id: "tour-module-reports",
@@ -29,6 +29,6 @@ export const ORG_MODULE_TOUR_STEPS = [
     id: "tour-module-settings",
     title: "Configuración",
     description:
-      "Edita el nombre, país, documentos fiscales y mercantiles de la organización. Mantén la información legal siempre actualizada.",
+      "Edita el nombre, país, documentos fiscales y mercantiles de la empresa. Mantén la información legal siempre actualizada.",
   },
 ];

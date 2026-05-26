@@ -63,7 +63,7 @@ export const UserPortfoliosPage: React.FC = () => {
     >
       <div className="max-w-2xl">
         <Card>
-          <CardTitle>Portafolios de la organización</CardTitle>
+          <CardTitle>Portafolios de la empresa</CardTitle>
           <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
             Activa o desactiva el acceso a cada portafolio para este usuario.
           </p>
@@ -71,7 +71,7 @@ export const UserPortfoliosPage: React.FC = () => {
           {loading ? (
             <p className="text-sm text-gray-400">Cargando...</p>
           ) : portfolios.length === 0 ? (
-            <p className="text-sm text-gray-400">No hay portafolios disponibles en esta organización.</p>
+            <p className="text-sm text-gray-400">No hay portafolios disponibles en esta empresa.</p>
           ) : (
             <div className="flex flex-col gap-3">
               {portfolios.map((p) => (

@@ -10,7 +10,10 @@ import { useOAuthRegister } from "../../hooks/use-oauth-register";
 import { useCountries } from "../../hooks/use-countries";
 import { CompleteProfileFormProps } from "../../types/props/complete-profile-form-props";
 
-export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token, email }) => {
+export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({
+  token,
+  email,
+}) => {
   const [nationality, setNationality] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [phonePrefix, setPhonePrefix] = useState("");
@@ -39,7 +42,9 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
       });
       successModal.openModal();
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Error al completar el registro");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Error al completar el registro",
+      );
       errorModal.openModal();
     }
   };
@@ -55,7 +60,11 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
             <CountrySelect
               mode="NAME"
               countries={countries}
-              placeholder={loadingNationalities ? "Cargando..." : "Selecciona tu nacionalidad"}
+              placeholder={
+                loadingNationalities
+                  ? "Cargando..."
+                  : "Selecciona tu nacionalidad"
+              }
               value={nationality}
               onChange={handleNationalityChange}
               disabled={loadingNationalities}
@@ -108,14 +117,16 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({ token,
         title="¡Cuenta creada!"
         description="Tu cuenta fue registrada exitosamente."
         actionLabel="Ir al dashboard"
-        onAction={() => navigate("/dashboard", { replace: true })}
+        onAction={() => navigate("/home", { replace: true })}
       />
 
       <ErrorModal
         isOpen={errorModal.isOpen}
         onClose={errorModal.closeModal}
         title="Error al registrar"
-        message={errorMessage ?? "Ocurrió un error inesperado. Intenta nuevamente."}
+        message={
+          errorMessage ?? "Ocurrió un error inesperado. Intenta nuevamente."
+        }
       />
     </>
   );

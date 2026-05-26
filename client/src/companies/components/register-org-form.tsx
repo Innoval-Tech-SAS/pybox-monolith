@@ -67,15 +67,15 @@ export const RegisterOrgForm: React.FC = () => {
       canSubmit={canSubmit}
       onSubmit={handleSubmit}
       loading={isSubmitting}
-      submitLabel="Crear organización"
-      loadingLabel="Creando organización..."
+      submitLabel="Crear empresa"
+      loadingLabel="Creando empresa..."
     >
       {(step) => (
         <>
           {step === 0 && (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
-                <Label>Nombre de la organización <span className="text-error-500">*</span></Label>
+                <Label>Nombre de la empresa <span className="text-error-500">*</span></Label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
                     <Building2 size={16} />

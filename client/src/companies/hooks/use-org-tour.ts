@@ -15,7 +15,7 @@ const STEPS: TourStep[] = [
   },
   {
     id: "tour-modules-grid",
-    title: "Módulos de la organización",
+    title: "Módulos de la empresa",
     description:
       "Cada tarjeta es un módulo de gestión. Iremos habilitándolos progresivamente. A continuación te explicamos cada uno.",
     align: "center",

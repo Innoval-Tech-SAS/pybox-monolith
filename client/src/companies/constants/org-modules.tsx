@@ -12,7 +12,7 @@ export const ORG_MODULES: OrgModule[] = [
   {
     key: "portfolios",
     title: "Portafolios",
-    description: "Consulta y gestiona los portafolios de la organización.",
+    description: "Consulta y gestiona los portafolios de la empresa.",
     icon: <FolderOpen size={24} className="text-white" />,
     gradient: "from-teal-500 to-teal-600",
     path: "/my-companies/portfolios",
@@ -21,7 +21,7 @@ export const ORG_MODULES: OrgModule[] = [
   {
     key: "users",
     title: "Usuarios",
-    description: "Consulta los usuarios vinculados a la organización.",
+    description: "Consulta los usuarios vinculados a la empresa.",
     icon: <Users size={24} className="text-white" />,
     gradient: "from-blue-500 to-blue-600",
     path: "/my-companies/users",
@@ -57,7 +57,7 @@ export const ORG_MODULES: OrgModule[] = [
   {
     key: "settings",
     title: "Configuración",
-    description: "Edita la información y ajustes de la organización.",
+    description: "Edita la información y ajustes de la empresa.",
     icon: <Settings size={24} className="text-white" />,
     gradient: "from-purple-500 to-purple-600",
     path: "/my-companies/settings",

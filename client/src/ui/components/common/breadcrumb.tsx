@@ -20,8 +20,14 @@ const ChevronRight: React.FC = () => (
   </svg>
 );
 
-export const Breadcrumb: React.FC<BreadcrumbProps> = ({ pageTitle, items = [] }) => {
-  const allItems: BreadcrumbItem[] = [{ label: "Home", path: "/dashboard" }, ...items];
+export const Breadcrumb: React.FC<BreadcrumbProps> = ({
+  pageTitle,
+  items = [],
+}) => {
+  const allItems: BreadcrumbItem[] = [
+    { label: "Home", path: "/home" },
+    ...items,
+  ];
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -47,7 +53,9 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ pageTitle, items = [] })
               )}
             </li>
           ))}
-          <li className="text-sm text-gray-800 dark:text-white/90">{pageTitle}</li>
+          <li className="text-sm text-gray-800 dark:text-white/90">
+            {pageTitle}
+          </li>
         </ol>
       </nav>
     </div>

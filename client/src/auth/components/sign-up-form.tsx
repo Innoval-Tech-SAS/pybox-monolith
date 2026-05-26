@@ -29,10 +29,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
     loading: loadingManual,
     error: errorManual,
   } = useRegister();
-  const {
-    oauthRegister,
-    loading: loadingOAuth,
-  } = useOAuthRegister();
+  const { oauthRegister, loading: loadingOAuth } = useOAuthRegister();
   const { countries, loading: loadingNationalities } = useCountries();
   const navigate = useNavigate();
   const successModal = useModal();
@@ -46,7 +43,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   useEffect(() => {
     if (!successModal.isOpen) return;
     if (countdown === 0) {
-      navigate("/dashboard", { replace: true });
+      navigate("/home", { replace: true });
       return;
     }
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
@@ -55,7 +52,10 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
   const sanitize = (err: unknown, fallback: string) => {
     if (!(err instanceof Error)) return fallback;
-    if (err.message.toLowerCase().includes("network") || err.message.toLowerCase().includes("fetch"))
+    if (
+      err.message.toLowerCase().includes("network") ||
+      err.message.toLowerCase().includes("fetch")
+    )
       return "No se pudo conectar con el servidor. Verifica tu conexión.";
     return err.message || fallback;
   };
@@ -306,7 +306,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           </>
         }
         actionLabel="Ir al dashboard ahora"
-        onAction={() => navigate("/dashboard", { replace: true })}
+        onAction={() => navigate("/home", { replace: true })}
       />
 
       <ErrorModal
