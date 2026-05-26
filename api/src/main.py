@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from config.error_handlers import register_error_handlers
 from database.database import db
 from database.session_expiry_listener import start_session_expiry_listener
+from security.seed_permissions import seed_permissions
 from tools.config_tools import get_or_throw
 
 import campaigns.models.campaign_model  # noqa: F401
@@ -46,8 +47,10 @@ from countries.controllers.countries_controller import router as countries_route
 from credits.controllers.my_credits_controller import router as my_credits_router
 from onboarding.controllers.onboarding_controller import router as onboarding_router
 from organizations.controllers.organization_controller import router as organizations_router
+from organizations.controllers.org_members_controller import router as org_members_router
 from portfolios.controllers.portfolio_controller import router as portfolios_router
 from users.controllers.user_controller import router as users_router
+from users.controllers.global_users_controller import router as global_users_router
 
 API_PREFIX = "/api/v1"
 
@@ -58,6 +61,8 @@ os.makedirs(_UPLOADS_DIR, exist_ok=True)
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await db.create_tables()
+    async with db.get_session() as session:
+        await seed_permissions(session)
     expiry_task = await start_session_expiry_listener()
     yield
     expiry_task.cancel()
@@ -92,6 +97,8 @@ app.include_router(onboarding_router, prefix=API_PREFIX)
 app.include_router(organizations_router, prefix=API_PREFIX)
 app.include_router(portfolios_router, prefix=API_PREFIX)
 app.include_router(users_router, prefix=API_PREFIX)
+app.include_router(global_users_router, prefix=API_PREFIX)
+app.include_router(org_members_router, prefix=API_PREFIX)
 app.include_router(notifications_router, prefix=API_PREFIX)
 app.include_router(support_router, prefix=API_PREFIX)
 
