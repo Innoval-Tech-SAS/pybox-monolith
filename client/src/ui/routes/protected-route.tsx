@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router";
+import { MfaGuard } from "@/auth/components/mfa-guard";
 import { OnboardingGuard } from "@/onboarding/onboarding-guard";
 import { AdminLayout } from "@/ui/layouts/admin-layout";
 
@@ -19,8 +20,10 @@ export const ProtectedRoute: React.FC = () => {
   if (!isValid) return null;
 
   return (
-    <OnboardingGuard>
-      <AdminLayout />
-    </OnboardingGuard>
+    <MfaGuard>
+      <OnboardingGuard>
+        <AdminLayout />
+      </OnboardingGuard>
+    </MfaGuard>
   );
 };

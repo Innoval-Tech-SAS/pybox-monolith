@@ -36,6 +36,7 @@ export interface User {
   scope?: string;
   document_type?: string;
   document_number?: string;
+  mfa_enabled?: boolean;
   orgs?: Record<string, OrgSessionEntry>;
 
   // legacy fields kept for auth session

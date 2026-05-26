@@ -61,6 +61,7 @@ class UserService:
         doc_type = user.document_type.value if user.document_type else None
         doc_number = user.document_number
         must_change_pw = user.must_change_password
+        mfa_enabled = user.mfa_enabled
 
         if not assignments:
             session = UserSession(
@@ -72,6 +73,7 @@ class UserService:
                 document_type=doc_type,
                 document_number=doc_number,
                 must_change_password=must_change_pw,
+                mfa_enabled=mfa_enabled,
             )
         else:
             scopes = {a.scope for a in assignments}
@@ -86,6 +88,7 @@ class UserService:
                     scope=UserScope.GLOBAL,
                     document_type=doc_type,
                     document_number=doc_number,
+                    mfa_enabled=mfa_enabled,
                 )
             elif UserScope.SELF in scopes and UserScope.ORGANIZATION not in scopes:
                 self_assignment = next(a for a in assignments if a.scope == UserScope.SELF)
@@ -97,6 +100,7 @@ class UserService:
                     scope=UserScope.SELF,
                     document_type=doc_type,
                     document_number=doc_number,
+                    mfa_enabled=mfa_enabled,
                 )
             else:
                 memberships = await self.membership_repo.get_by_user_id(user_id)
@@ -133,6 +137,7 @@ class UserService:
                     document_type=doc_type,
                     document_number=doc_number,
                     scope=UserScope.ORGANIZATION,
+                    mfa_enabled=mfa_enabled,
                     orgs=orgs,
                 )
 

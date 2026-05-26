@@ -25,6 +25,7 @@ export const useAuth = () => {
     if (data.refreshToken) sessionStorage.setItem("refreshToken", data.refreshToken);
     const me = await apiClient("/users/me", {}).catch(() => null);
     setSessionUser(me ?? { email });
+    if (me?.mfa_enabled) sessionStorage.setItem("mfaVerified", "false");
     navigate("/dashboard", { replace: true });
   };
 

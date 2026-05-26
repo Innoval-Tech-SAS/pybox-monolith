@@ -32,7 +32,7 @@ class UserModel(AuditModel):
     document_number_hash: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True, index=True, name="numero_documento_hash")
     is_email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="correo_verificado")
     is_phone_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="telefono_verificado")
-    mfa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="mfa_habilitado")
+    mfa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="mfa_habilitado")
     must_change_password: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="debe_cambiar_password")
     is_active_sessions: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="sesion_activa")
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="activo")

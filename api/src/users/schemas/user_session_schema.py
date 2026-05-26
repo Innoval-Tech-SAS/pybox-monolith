@@ -29,6 +29,7 @@ class UserSession(BaseModel):
     document_type: str | None = None   # identidad para usuarios SELF
     document_number: str | None = None
     must_change_password: bool = False
+    mfa_enabled: bool = True
     orgs: dict[str, OrgSessionEntry] = {}
 
     @property
