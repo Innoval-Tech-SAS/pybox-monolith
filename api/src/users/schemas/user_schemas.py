@@ -45,6 +45,7 @@ class AdminUserDetailSchema(AdminUserSummarySchema):
     mfa_enabled: bool
     is_active_sessions: bool
     updated_at: datetime | None
+    profile_photo_url: str | None = None
 
 
 class UpdateUserSchema(BaseSchema):

@@ -27,6 +27,7 @@ export interface UserDetail extends UserSummary {
   mfaEnabled: boolean;
   isActiveSessions: boolean;
   updatedAt: string | null;
+  profilePhotoUrl: string | null;
 }
 
 export interface UpdateUserPayload {

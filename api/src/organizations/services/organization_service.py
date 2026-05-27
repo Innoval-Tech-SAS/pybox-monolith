@@ -4,7 +4,7 @@ from typing import Sequence
 
 from fastapi import HTTPException, status
 
-from base.file_storage import save_file
+from tools.file_tools import save_org_document_bytes
 from countries.enums.country_enums import (
     Nationality,
     UserDocumentType,
@@ -174,16 +174,12 @@ class OrganizationService:
 
         # 2. Pre-generate org id so filenames can reference it
         org_id = uuid.uuid4()
+        org_id_str = str(org_id)
 
         # 3. Save files
-        rep_file_name = f"user_{rep_user_id}{representative_file_ext}"
-        rep_file_path = save_file(representative_file_bytes, rep_file_name)
-
-        fiscal_file_name = f"org_{org_id}_fiscal{fiscal_file_ext}"
-        fiscal_file_path = save_file(fiscal_file_bytes, fiscal_file_name)
-
-        mercantile_file_name = f"org_{org_id}_mercantile{mercantile_file_ext}"
-        mercantile_file_path = save_file(mercantile_file_bytes, mercantile_file_name)
+        fiscal_file_path = save_org_document_bytes(fiscal_file_bytes, org_id_str, "fiscal", fiscal_file_ext)
+        mercantile_file_path = save_org_document_bytes(mercantile_file_bytes, org_id_str, "mercantil", mercantile_file_ext)
+        rep_file_path = save_org_document_bytes(representative_file_bytes, org_id_str, "representante", representative_file_ext)
 
         # 4. Resolve doc types from country
         fiscal_doc_type = ORG_FISCAL_DOCUMENT_BY_NATIONALITY.get(country)

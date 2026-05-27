@@ -1,8 +1,11 @@
+import os
 import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from config.paths import UPLOADS_ROOT
 
 from notifications.services.notification_service import NotificationService
 from organizations.enums.organization_enums import VerificationStatus
@@ -11,7 +14,7 @@ from organizations.repository.organization_repository import OrganizationReposit
 from support.enums.support_enums import SupportCaseType, SupportTicketStatus
 from support.models.support_ticket_model import SupportTicketModel
 from support.repository.support_ticket_repository import SupportTicketRepository
-from support.schemas.support_schemas import AssignTicketSchema, ResolveTicketSchema, SupportFilter, SupportTicketSchema
+from support.schemas.support_schemas import AssignTicketSchema, OrgDocSchema, OrgDocsSchema, ResolveTicketSchema, SupportFilter, SupportTicketSchema
 
 
 class SupportService:
@@ -79,6 +82,41 @@ class SupportService:
 
         updated = await self._ticket_repo.update(ticket)
         return SupportTicketSchema.model_validate(updated)
+
+    async def get_org_docs(self, ticket_id: int, f: SupportFilter) -> OrgDocsSchema:
+        if not f.can_resolve:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+        ticket = await self._ticket_repo.get_by_id(ticket_id)
+        if ticket is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
+        if ticket.case_type != SupportCaseType.ORG_VERIFICATION:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Este ticket no es de verificación.")
+        org = await self._org_repo.get_by_id(ticket.organization_id)
+        if org is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
+
+        def _url(path: str | None) -> str | None:
+            if not path:
+                return None
+            norm = path.replace("\\", "/")
+            abs_root = os.path.abspath(UPLOADS_ROOT)
+            abs_path = os.path.abspath(norm)
+            try:
+                rel = os.path.relpath(abs_path, abs_root)
+                if not rel.startswith(".."):
+                    return "/files/" + rel.replace(os.sep, "/")
+            except ValueError:
+                pass
+            return "/files/" + norm
+
+        return OrgDocsSchema(
+            org_name=org.name,
+            documents=[
+                OrgDocSchema(label="Documento fiscal", url=_url(org.fiscal_document_file)),
+                OrgDocSchema(label="Documento mercantil", url=_url(org.mercantile_document_file)),
+                OrgDocSchema(label="Documento representante", url=_url(org.representative_document_file)),
+            ],
+        )
 
     async def assign_ticket(
         self, ticket_id: int, data: AssignTicketSchema, f: SupportFilter

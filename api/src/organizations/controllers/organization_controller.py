@@ -7,6 +7,7 @@ from config.api_router import APIRouter
 from countries.enums.country_enums import Nationality, UserDocumentType
 from onboarding.dependencies import CurrentScope
 from organizations.dependencies import AdminScopeDep, OrgServiceDep
+from support.dependencies import SupportServiceDep
 from organizations.schemas.organization_schemas import (
     OrgRegisterResponse,
     OrganizationCreate,
@@ -78,6 +79,7 @@ async def register_organization(
     admin_scope: AdminScopeDep,
     service: OrgServiceDep,
     user_service: UserServiceDep,
+    support_service: SupportServiceDep,
     name: str = Form(...),
     country: Nationality = Form(...),
     fiscal_document_number: str | None = Form(None),
@@ -120,5 +122,6 @@ async def register_organization(
         created_by_user_id=session.user_id,
         scope=admin_scope,
     )
+    await support_service.create_org_verification_ticket(org.id, session.user_id)
     await user_service.get_user_session(session.user_id)
     return org

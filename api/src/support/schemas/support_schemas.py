@@ -34,3 +34,13 @@ class SupportTicketSchema(BaseSchema):
     notes: str | None
     resolved_at: datetime | None
     created_at: datetime
+
+
+class OrgDocSchema(BaseSchema):
+    label: str
+    url: str | None
+
+
+class OrgDocsSchema(BaseSchema):
+    org_name: str
+    documents: list[OrgDocSchema]

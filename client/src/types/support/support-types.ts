@@ -25,3 +25,13 @@ export interface ResolveTicketPayload {
   approved: boolean;
   notes?: string;
 }
+
+export interface OrgDoc {
+  label: string;
+  url: string | null;
+}
+
+export interface OrgDocsData {
+  orgName: string;
+  documents: OrgDoc[];
+}

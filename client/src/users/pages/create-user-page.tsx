@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router";
-import { CheckCircle, UserPlus, Settings2, FolderOpen, User, ShieldCheck, PartyPopper } from "lucide-react";
+import { CheckCircle, UserPlus, Settings2, FolderOpen, User, ShieldCheck, PartyPopper, Eye, EyeOff } from "lucide-react";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Label } from "@/ui/components/inputs/label";
 import { useCreateCsUser } from "../hooks/use-create-cs-user";
@@ -15,6 +15,11 @@ const ROLE_LABELS: Record<string, string> = {
   "ATENCION AL CLIENTE": "Agente de soporte",
   "USUARIO ORGANIZACIÓN": "Usuario",
   USUARIO: "Usuario",
+};
+
+const GLOBAL_ROLE_LABELS: Record<string, string> = {
+  ADMINISTRADOR: "Administrador",
+  "ATENCION AL CLIENTE": "Soporte técnico",
 };
 
 const IS_USER_ORG = "USUARIO ORGANIZACIÓN";
@@ -199,6 +204,7 @@ export const CreateUserPage: React.FC = () => {
   const [form, setForm] = useState(INITIAL_FORM);
   const [step, setStep] = useState(1);
   const [createdUserId, setCreatedUserId] = useState<number | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const isUserOrg = role === IS_USER_ORG;
   const hasStep2 = isUserOrg && !!orgId;
@@ -206,6 +212,12 @@ export const CreateUserPage: React.FC = () => {
   const error = orgId ? errorOrg : errorGlobal;
   const roleLabel = ROLE_LABELS[role] ?? role;
   const backPath = orgId ? `/my-companies/users?org=${orgId}` : "/my-users";
+
+  const isGlobalContext = !orgId;
+  const pageTitle = isGlobalContext ? "Nuevo usuario" : `Nuevo ${roleLabel.toLowerCase()}`;
+  const breadcrumbItems = isGlobalContext
+    ? [{ label: "Usuarios", path: backPath }, { label: GLOBAL_ROLE_LABELS[role] ?? roleLabel }]
+    : [{ label: "Usuarios", path: backPath }];
 
   const stepDefs: StepDef[] = [
     { label: "Datos", description: "Información de la cuenta", icon: <User size={14} /> },
@@ -265,9 +277,15 @@ export const CreateUserPage: React.FC = () => {
         </div>
         <div className="sm:col-span-2">
           <Label htmlFor="password">Contraseña temporal <span className="text-error-500">*</span></Label>
-          <input id="password" type="password" placeholder="Mínimo 8 caracteres" value={form.password}
-            onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-            required minLength={8} className={INPUT_BASE} />
+          <div className="relative">
+            <input id="password" type={showPassword ? "text" : "password"} placeholder="Mínimo 8 caracteres" value={form.password}
+              onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+              required minLength={8} className={INPUT_BASE} />
+            <button type="button" onClick={() => setShowPassword((v) => !v)}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -356,8 +374,8 @@ export const CreateUserPage: React.FC = () => {
 
   return (
     <ModuleBase
-      pageTitle={`Nuevo ${roleLabel.toLowerCase()}`}
-      breadcrumbItems={[{ label: "Usuarios", path: backPath }]}
+      pageTitle={pageTitle}
+      breadcrumbItems={breadcrumbItems}
     >
       <div className="flex gap-10">
         {/* Left sidebar — step indicator */}

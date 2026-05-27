@@ -28,6 +28,19 @@ export const TICKET_CASE_TYPE_LABELS: Record<SupportCaseType, string> = {
   error_report: "Reporte de error",
 };
 
+export const TICKET_TYPE_LABELS: Record<SupportCaseType, string> = {
+  org_verification: "Requerimiento",
+  error_report: "Incidente",
+};
+
+const TICKET_PREFIX: Record<SupportCaseType, string> = {
+  org_verification: "RT",
+  error_report: "IT",
+};
+
+export const getTicketDisplayId = (id: number, caseType: SupportCaseType): string =>
+  `${TICKET_PREFIX[caseType]}-${String(id).padStart(6, "0")}`;
+
 export const isTicketFromToday = (ticket: SupportTicket): boolean => {
   const date = new Date(ticket.createdAt);
   const today = new Date();
@@ -123,26 +136,26 @@ export const getCategoryStyles = (color: string): string => {
 export const getColumnCountStyles = (status: SupportTicketStatus): string => {
   switch (status) {
     case "open":
-      return "bg-gray-100 text-gray-700 dark:bg-white/[0.03] dark:text-white/80";
+      return "bg-gray-100 text-gray-700 dark:bg-white/3 dark:text-white/80";
     case "in_progress":
       return "bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-orange-400";
     case "resolved":
       return "bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500";
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-white/[0.03] dark:text-white/80";
+      return "bg-gray-100 text-gray-700 dark:bg-white/3 dark:text-white/80";
   }
 };
 
 export const getStatusBadgeStyles = (status: SupportTicketStatus): string => {
   switch (status) {
     case "open":
-      return "bg-gray-100 text-gray-700 dark:bg-white/[0.03] dark:text-white/80";
+      return "bg-gray-100 text-gray-700 dark:bg-white/3 dark:text-white/80";
     case "in_progress":
       return "bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-orange-400";
     case "resolved":
       return "bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500";
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-white/[0.03] dark:text-white/80";
+      return "bg-gray-100 text-gray-700 dark:bg-white/3 dark:text-white/80";
   }
 };
 

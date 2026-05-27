@@ -261,6 +261,7 @@ class UserService:
             is_active_sessions=user.is_active_sessions,
             created_at=user.created_at,
             updated_at=user.updated_at,
+            profile_photo_url=user.profile_photo_url,
             roles=roles,
         )
 

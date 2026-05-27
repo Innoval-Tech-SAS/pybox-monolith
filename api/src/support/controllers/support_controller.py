@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from security.dependencies import CurrentSession
 from support.dependencies import SupportAccessFilter, SupportServiceDep
-from support.schemas.support_schemas import AssignTicketSchema, ResolveTicketSchema, SupportTicketSchema
+from support.schemas.support_schemas import AssignTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema
 
 router = APIRouter(prefix="/cs/tickets", tags=["Support"])
 
@@ -15,6 +15,11 @@ async def list_tickets(f: SupportAccessFilter, service: SupportServiceDep):
 @router.get("/{ticket_id}", response_model=SupportTicketSchema)
 async def get_ticket(ticket_id: int, f: SupportAccessFilter, service: SupportServiceDep):
     return await service.get_ticket(ticket_id, f)
+
+
+@router.get("/{ticket_id}/org-docs", response_model=OrgDocsSchema)
+async def get_org_docs(ticket_id: int, f: SupportAccessFilter, service: SupportServiceDep):
+    return await service.get_org_docs(ticket_id, f)
 
 
 @router.post("/{ticket_id}/assign", response_model=SupportTicketSchema)

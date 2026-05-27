@@ -105,6 +105,16 @@ async def save_profile_photo_file(file: UploadFile, user_id: int) -> str:
     return public_url
 
 
+def save_org_document_bytes(file_bytes: bytes, org_id: str, label: str, ext: str) -> str:
+    dest_dir = os.path.join(UPLOADS_ROOT, "organizations", org_id)
+    os.makedirs(dest_dir, exist_ok=True)
+    filename = f"documento_{label}{ext}"
+    dest_path = os.path.join(dest_dir, filename)
+    with open(dest_path, "wb") as f:
+        f.write(file_bytes)
+    return f"organizations/{org_id}/{filename}"
+
+
 def delete_public_upload(public_url: str | None) -> None:
     if not public_url or not public_url.startswith("/files/"):
         logger.debug("[profile-photo] delete skipped public_url=%s", public_url)
