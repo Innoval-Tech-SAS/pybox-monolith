@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Identity, Integer, String
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -12,7 +12,8 @@ from support.enums.support_enums import SupportCaseType, SupportTicketStatus
 class SupportTicketModel(AuditModel):
     __tablename__ = "soporte_tickets"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
+    ticket_number: Mapped[int] = mapped_column(Integer, Identity(start=1), unique=True, nullable=False, name="numero_ticket")
     case_type: Mapped[SupportCaseType] = mapped_column(
         ENUM(SupportCaseType), nullable=False, name="tipo_caso"
     )

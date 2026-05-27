@@ -20,6 +20,12 @@ class SupportTicketRepository(RepositoryBase[SupportTicketModel]):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
+    async def get_by_ticket_number(self, ticket_number: int) -> SupportTicketModel | None:
+        result = await self.session.execute(
+            select(SupportTicketModel).where(SupportTicketModel.ticket_number == ticket_number)
+        )
+        return result.scalar_one_or_none()
+
     async def get_filtered(self, f: "SupportFilter") -> Sequence[SupportTicketModel]:
         conditions = []
         if not f.include_resolved:

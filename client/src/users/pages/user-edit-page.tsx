@@ -1,11 +1,29 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Card, CardTitle } from "@/ui/components/card";
 import { Input } from "@/ui/components/input";
+import { Select } from "@/ui/components/inputs/select";
 import { Switch } from "@/ui/components/switch";
 import { useUser } from "../hooks/use-user";
 import { useUpdateUser } from "../hooks/use-update-user";
+
+const DOCUMENT_TYPE_OPTIONS = [
+  { value: "CC", label: "CC – Cédula de Ciudadanía" },
+  { value: "CE", label: "CE – Cédula de Extranjería" },
+  { value: "NIT", label: "NIT" },
+  { value: "PEP", label: "PEP" },
+  { value: "CURP", label: "CURP" },
+  { value: "INE", label: "INE" },
+  { value: "RFC", label: "RFC" },
+  { value: "DNI", label: "DNI" },
+  { value: "CUIL", label: "CUIL" },
+  { value: "CUIT", label: "CUIT" },
+  { value: "RUC", label: "RUC" },
+  { value: "CI", label: "CI – Cédula de Identidad" },
+  { value: "RIF", label: "RIF" },
+  { value: "PASAPORTE", label: "Pasaporte" },
+];
 
 export const UserEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,7 +36,10 @@ export const UserEditPage: React.FC = () => {
     lastname: "",
     email: "",
     phoneNumber: "",
+    documentType: "",
+    documentNumber: "",
     isActive: true,
+    mfaEnabled: false,
   });
 
   useEffect(() => {
@@ -28,14 +49,18 @@ export const UserEditPage: React.FC = () => {
         lastname: user.lastname,
         email: user.email,
         phoneNumber: user.phoneNumber ?? "",
+        documentType: user.documentType ?? "",
+        documentNumber: user.documentNumber ?? "",
         isActive: user.isActive,
+        mfaEnabled: user.mfaEnabled,
       });
     }
   }, [user]);
 
-  const handleChange = (field: string, value: string) => {
+  const isUserRole = user?.roles.some((r) => r.role === "USUARIO") ?? false;
+
+  const handleField = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +71,9 @@ export const UserEditPage: React.FC = () => {
       email: form.email || undefined,
       phoneNumber: form.phoneNumber || undefined,
       isActive: form.isActive,
+      documentType: form.documentType || undefined,
+      documentNumber: form.documentNumber !== (user.documentNumber ?? "") ? form.documentNumber : undefined,
+      ...(!isUserRole && { mfaEnabled: form.mfaEnabled }),
     });
     if (result) navigate(`/my-users/${user.id}`);
   };
@@ -63,7 +91,6 @@ export const UserEditPage: React.FC = () => {
       <ModuleBase pageTitle="Usuario no encontrado" breadcrumbItems={[{ label: "Usuarios", path: "/my-users" }]}>
         <div className="flex flex-col items-center justify-center h-48 gap-4">
           <p className="text-gray-500">Usuario no encontrado.</p>
-          <Link to="/my-users" className="text-brand-500 hover:underline text-sm">← Volver</Link>
         </div>
       </ModuleBase>
     );
@@ -77,68 +104,106 @@ export const UserEditPage: React.FC = () => {
         { label: user.fullName, path: `/my-users/${user.id}` },
       ]}
     >
-      <form onSubmit={handleSubmit} className="max-w-2xl">
-        <Card>
-          <CardTitle>Información personal</CardTitle>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <Input
-              label="Nombre"
-              id="firstname"
-              value={form.firstname}
-              onChange={(e) => handleChange("firstname", e.target.value)}
-              placeholder="Nombre"
-            />
-            <Input
-              label="Apellido"
-              id="lastname"
-              value={form.lastname}
-              onChange={(e) => handleChange("lastname", e.target.value)}
-              placeholder="Apellido"
-            />
-            <Input
-              label="Email"
-              id="email"
-              type="email"
-              value={form.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              placeholder="correo@ejemplo.com"
-            />
-            <Input
-              label="Teléfono"
-              id="phoneNumber"
-              value={form.phoneNumber}
-              onChange={(e) => handleChange("phoneNumber", e.target.value)}
-              placeholder="+57 300 000 0000"
-            />
-            <div className="sm:col-span-2">
-              <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-400">Cuenta activa</p>
-              <Switch
-                checked={form.isActive}
-                onChange={(v) => setForm((prev) => ({ ...prev, isActive: v }))}
-                label={form.isActive ? "Activa" : "Inactiva"}
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {/* Información personal */}
+          <Card>
+            <CardTitle>Información personal</CardTitle>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <Input
+                label="Nombre"
+                id="firstname"
+                value={form.firstname}
+                onChange={(e) => handleField("firstname", e.target.value)}
+                placeholder="Nombre"
+              />
+              <Input
+                label="Apellido"
+                id="lastname"
+                value={form.lastname}
+                onChange={(e) => handleField("lastname", e.target.value)}
+                placeholder="Apellido"
+              />
+              <Input
+                label="Email"
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={(e) => handleField("email", e.target.value)}
+                placeholder="correo@ejemplo.com"
+              />
+              <Input
+                label="Teléfono"
+                id="phoneNumber"
+                value={form.phoneNumber}
+                onChange={(e) => handleField("phoneNumber", e.target.value)}
+                placeholder="+57 300 000 0000"
+              />
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  Tipo documento
+                </label>
+                <Select
+                  options={DOCUMENT_TYPE_OPTIONS}
+                  value={form.documentType}
+                  placeholder="Seleccionar tipo"
+                  onChange={(v) => handleField("documentType", v)}
+                />
+              </div>
+              <Input
+                label="N° documento"
+                id="documentNumber"
+                value={form.documentNumber}
+                onChange={(e) => handleField("documentNumber", e.target.value)}
+                placeholder="Número de documento"
               />
             </div>
-          </div>
+          </Card>
 
-          {error && <p className="mt-4 text-sm text-error-500">{error}</p>}
+          {/* Estado y seguridad */}
+          <Card>
+            <CardTitle>Estado y seguridad</CardTitle>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div>
+                <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-400">Cuenta activa</p>
+                <Switch
+                  checked={form.isActive}
+                  onChange={(v) => setForm((prev) => ({ ...prev, isActive: v }))}
+                  label={form.isActive ? "Activa" : "Inactiva"}
+                />
+              </div>
+              {!isUserRole && (
+                <div>
+                  <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-400">MFA habilitado</p>
+                  <Switch
+                    checked={form.mfaEnabled}
+                    onChange={(v) => setForm((prev) => ({ ...prev, mfaEnabled: v }))}
+                    label={form.mfaEnabled ? "Habilitado" : "Deshabilitado"}
+                  />
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
 
-          <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
-            >
-              {saving ? "Guardando..." : "Guardar cambios"}
-            </button>
-          </div>
-        </Card>
+        {error && <p className="mt-4 text-sm text-error-500">{error}</p>}
+
+        <div className="flex items-center justify-end gap-3 mt-5">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
+          >
+            {saving ? "Guardando..." : "Guardar cambios"}
+          </button>
+        </div>
       </form>
     </ModuleBase>
   );

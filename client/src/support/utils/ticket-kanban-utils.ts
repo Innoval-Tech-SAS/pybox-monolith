@@ -38,8 +38,8 @@ const TICKET_PREFIX: Record<SupportCaseType, string> = {
   error_report: "IT",
 };
 
-export const getTicketDisplayId = (id: number, caseType: SupportCaseType): string =>
-  `${TICKET_PREFIX[caseType]}-${String(id).padStart(6, "0")}`;
+export const getTicketDisplayId = (ticketNumber: number, caseType: SupportCaseType): string =>
+  `${TICKET_PREFIX[caseType]}-${String(ticketNumber).padStart(6, "0")}`;
 
 export const isTicketFromToday = (ticket: SupportTicket): boolean => {
   const date = new Date(ticket.createdAt);
@@ -97,9 +97,9 @@ export const mapTicketToKanban = (ticket: SupportTicket): TicketKanban => {
   const assignedUserId = ticket.assignedTo ?? ticket.createdBy;
 
   return {
-    id: String(ticket.id),
-    ticketId: ticket.id,
-    title: `${TICKET_CASE_TYPE_LABELS[ticket.caseType]} #${ticket.id}`,
+    id: ticket.id,
+    ticketId: ticket.ticketNumber,
+    title: `${TICKET_CASE_TYPE_LABELS[ticket.caseType]} #${ticket.ticketNumber}`,
     dueDate: formatTicketShortDate(ticket.createdAt),
     comments: ticket.notes ? 1 : 0,
     links: 1,

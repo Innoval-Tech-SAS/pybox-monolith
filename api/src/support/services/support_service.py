@@ -42,8 +42,8 @@ class SupportService:
         tickets = await self._ticket_repo.get_filtered(f)
         return [SupportTicketSchema.model_validate(t) for t in tickets]
 
-    async def get_ticket(self, ticket_id: int, f: SupportFilter) -> SupportTicketSchema:
-        ticket = await self._ticket_repo.get_by_id(ticket_id)
+    async def get_ticket(self, ticket_number: int, f: SupportFilter) -> SupportTicketSchema:
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
         if ticket is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
         if f.org_ids is not None and ticket.organization_id not in f.org_ids:
@@ -53,11 +53,11 @@ class SupportService:
         return SupportTicketSchema.model_validate(ticket)
 
     async def resolve_ticket(
-        self, ticket_id: int, agent_user_id: int, data: ResolveTicketSchema, f: SupportFilter
+        self, ticket_number: int, agent_user_id: int, data: ResolveTicketSchema, f: SupportFilter
     ) -> SupportTicketSchema:
         if not f.can_resolve:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para resolver tickets.")
-        ticket = await self._ticket_repo.get_by_id(ticket_id)
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
         if ticket is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
         if f.org_ids is not None and ticket.organization_id not in f.org_ids:
@@ -83,10 +83,10 @@ class SupportService:
         updated = await self._ticket_repo.update(ticket)
         return SupportTicketSchema.model_validate(updated)
 
-    async def get_org_docs(self, ticket_id: int, f: SupportFilter) -> OrgDocsSchema:
+    async def get_org_docs(self, ticket_number: int, f: SupportFilter) -> OrgDocsSchema:
         if not f.can_resolve:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
-        ticket = await self._ticket_repo.get_by_id(ticket_id)
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
         if ticket is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
         if ticket.case_type != SupportCaseType.ORG_VERIFICATION:
@@ -119,11 +119,11 @@ class SupportService:
         )
 
     async def assign_ticket(
-        self, ticket_id: int, data: AssignTicketSchema, f: SupportFilter
+        self, ticket_number: int, data: AssignTicketSchema, f: SupportFilter
     ) -> SupportTicketSchema:
         if not f.can_assign:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para asignar tickets.")
-        ticket = await self._ticket_repo.get_by_id(ticket_id)
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
         if ticket is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
         if f.org_ids is not None and ticket.organization_id not in f.org_ids:
@@ -138,10 +138,10 @@ class SupportService:
         await self._notification_service.create_notification(
             user_id=data.user_id,
             title="Ticket asignado",
-            body=f"Se te asignó el ticket de soporte #{ticket.id}.",
+            body=f"Se te asignó el ticket de soporte #{ticket.ticket_number}.",
             category="support",
             notif_type="info",
-            link=f"/cs/tickets/{ticket.id}",
+            link=f"/cs/tickets/{ticket.ticket_number}",
         )
         return SupportTicketSchema.model_validate(updated)
 
@@ -163,10 +163,10 @@ class SupportService:
         await self._notification_service.create_notification(
             user_id=agent_id,
             title="Nuevo ticket asignado",
-            body=f"Se te asignó un ticket de soporte #{ticket.id}.",
+            body=f"Se te asignó un ticket de soporte #{ticket.ticket_number}.",
             category="support",
             notif_type="info",
-            link=f"/cs/tickets/{ticket.id}",
+            link=f"/cs/tickets/{ticket.ticket_number}",
         )
 
     async def _notify_org_verification(

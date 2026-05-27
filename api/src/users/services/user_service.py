@@ -279,6 +279,17 @@ class UserService:
             user.phone_number = data.phone_number
         if data.is_active is not None:
             user.is_active = data.is_active
+        if data.document_type is not None:
+            user.document_type = data.document_type
+        if data.document_number is not None:
+            if data.document_number == "":
+                user.document_number = None
+                user.document_number_hash = None
+            else:
+                user.document_number = encrypt_service.encrypt_to_str(data.document_number)
+                user.document_number_hash = encrypt_service.hash_document(data.document_number)
+        if data.mfa_enabled is not None:
+            user.mfa_enabled = data.mfa_enabled
         await self.user_repo.update(user)
         return await self.get_user_detail(user_id)
 

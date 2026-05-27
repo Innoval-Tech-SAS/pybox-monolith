@@ -54,6 +54,9 @@ class UpdateUserSchema(BaseSchema):
     email: str | None = None
     phone_number: str | None = None
     is_active: bool | None = None
+    document_type: UserDocumentType | None = None
+    document_number: str | None = None
+    mfa_enabled: bool | None = None
 
 
 class ProfilePhotoSchema(BaseSchema):

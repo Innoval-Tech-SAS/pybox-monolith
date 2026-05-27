@@ -2,7 +2,8 @@ export type SupportCaseType = "org_verification" | "error_report";
 export type SupportTicketStatus = "open" | "in_progress" | "resolved";
 
 export interface SupportTicket {
-  id: number;
+  id: string;
+  ticketNumber: number;
   caseType: SupportCaseType;
   status: SupportTicketStatus;
   organizationId: string;

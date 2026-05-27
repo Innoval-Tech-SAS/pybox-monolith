@@ -12,32 +12,32 @@ async def list_tickets(f: SupportAccessFilter, service: SupportServiceDep):
     return await service.get_all_tickets(f)
 
 
-@router.get("/{ticket_id}", response_model=SupportTicketSchema)
-async def get_ticket(ticket_id: int, f: SupportAccessFilter, service: SupportServiceDep):
-    return await service.get_ticket(ticket_id, f)
+@router.get("/{ticket_number}", response_model=SupportTicketSchema)
+async def get_ticket(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+    return await service.get_ticket(ticket_number, f)
 
 
-@router.get("/{ticket_id}/org-docs", response_model=OrgDocsSchema)
-async def get_org_docs(ticket_id: int, f: SupportAccessFilter, service: SupportServiceDep):
-    return await service.get_org_docs(ticket_id, f)
+@router.get("/{ticket_number}/org-docs", response_model=OrgDocsSchema)
+async def get_org_docs(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+    return await service.get_org_docs(ticket_number, f)
 
 
-@router.post("/{ticket_id}/assign", response_model=SupportTicketSchema)
+@router.post("/{ticket_number}/assign", response_model=SupportTicketSchema)
 async def assign_ticket(
-    ticket_id: int,
+    ticket_number: int,
     body: AssignTicketSchema,
     f: SupportAccessFilter,
     service: SupportServiceDep,
 ):
-    return await service.assign_ticket(ticket_id, body, f)
+    return await service.assign_ticket(ticket_number, body, f)
 
 
-@router.post("/{ticket_id}/resolve", response_model=SupportTicketSchema)
+@router.post("/{ticket_number}/resolve", response_model=SupportTicketSchema)
 async def resolve_ticket(
-    ticket_id: int,
+    ticket_number: int,
     body: ResolveTicketSchema,
     f: SupportAccessFilter,
     service: SupportServiceDep,
     session: CurrentSession,
 ):
-    return await service.resolve_ticket(ticket_id, session.user_id, body, f)
+    return await service.resolve_ticket(ticket_number, session.user_id, body, f)

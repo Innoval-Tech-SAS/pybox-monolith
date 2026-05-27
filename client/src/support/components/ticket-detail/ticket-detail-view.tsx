@@ -1,6 +1,7 @@
 import { Card, CardTitle } from "@/ui/components/card";
 import { resolveProfilePhotoUrl } from "@/profile/utils/profile-photo-url";
 import { useTicketCreator } from "@/support/hooks/use-ticket-creator";
+import { useTicketAssignee } from "@/support/hooks/use-ticket-assignee";
 import { TicketOrgDocsViewer } from "./ticket-org-docs-viewer";
 import {
   formatTicketDetailDate,
@@ -48,8 +49,9 @@ const DetailRow: React.FC<{ label: string; children: React.ReactNode }> = ({ lab
 
 export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTicketResolved }) => {
   const { creator } = useTicketCreator(ticket.createdBy);
+  const { assignee } = useTicketAssignee(ticket.assignedTo ?? undefined);
   const isOrgVerification = ticket.caseType === "org_verification";
-  const displayId = getTicketDisplayId(ticket.id, ticket.caseType);
+  const displayId = getTicketDisplayId(ticket.ticketNumber, ticket.caseType);
 
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -114,9 +116,18 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
 
           {/* Assigned to */}
           <DetailRow label="Asignado a">
-            <span className={ticket.assignedTo ? "" : "text-gray-400 dark:text-gray-500"}>
-              {ticket.assignedTo ? `Usuario #${ticket.assignedTo}` : "Sin asignar"}
-            </span>
+            {ticket.assignedTo ? (
+              assignee ? (
+                <div className="flex items-center gap-2.5">
+                  <UserAvatar name={assignee.fullName} photoUrl={assignee.profilePhotoUrl} size="sm" />
+                  <span>{assignee.fullName}</span>
+                </div>
+              ) : (
+                <span className="text-gray-500">Usuario #{ticket.assignedTo}</span>
+              )
+            ) : (
+              <span className="text-gray-400 dark:text-gray-500">Sin asignar</span>
+            )}
           </DetailRow>
 
           {/* Entity */}

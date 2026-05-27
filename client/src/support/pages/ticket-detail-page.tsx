@@ -32,7 +32,7 @@ export const TicketDetailPage: React.FC = () => {
 
   return (
     <ModuleBase
-      pageTitle={getTicketDisplayId(ticket.id, ticket.caseType)}
+      pageTitle={getTicketDisplayId(ticket.ticketNumber, ticket.caseType)}
       breadcrumbItems={breadcrumbItems}
     >
       <TicketDetailView ticket={ticket} onTicketResolved={(updated) => setTicket(updated)} />

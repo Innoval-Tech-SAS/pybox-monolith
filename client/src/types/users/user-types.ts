@@ -36,4 +36,7 @@ export interface UpdateUserPayload {
   email?: string;
   phoneNumber?: string;
   isActive?: boolean;
+  documentType?: string;
+  documentNumber?: string;
+  mfaEnabled?: boolean;
 }

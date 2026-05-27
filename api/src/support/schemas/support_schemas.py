@@ -25,7 +25,8 @@ class AssignTicketSchema(BaseSchema):
 
 
 class SupportTicketSchema(BaseSchema):
-    id: int
+    id: uuid.UUID
+    ticket_number: int
     case_type: SupportCaseType
     status: SupportTicketStatus
     organization_id: uuid.UUID
