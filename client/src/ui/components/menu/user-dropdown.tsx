@@ -1,7 +1,7 @@
-import { Link } from "react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { setSessionUser } from "@/auth/utils/auth-session-utils";
+import { resolveProfilePhotoUrl } from "@/profile/utils/profile-photo-url";
 import {
   USER_DROPDOWN_ICON_CLASS,
   USER_DROPDOWN_ITEM_CLASS,
@@ -15,18 +15,43 @@ export const UserDropdown: React.FC = () => {
   const [fullName, setFullName] = useState<string | null>(
     user?.full_name ?? user?.fullname ?? null
   );
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(
+    resolveProfilePhotoUrl(user?.profile_photo_url ?? user?.profilePhotoUrl ?? user?.profilePhoto)
+  );
+  console.log("[profile-photo] dropdown render", {
+    rawProfilePhotoUrl: user?.profile_photo_url ?? user?.profilePhotoUrl ?? user?.profilePhoto,
+    profilePhotoUrl,
+  });
 
   useEffect(() => {
-    if (fullName) return;
+    console.log("[profile-photo] dropdown session sync", {
+      rawProfilePhotoUrl: user?.profile_photo_url ?? user?.profilePhotoUrl ?? user?.profilePhoto,
+    });
+    setFullName(user?.full_name ?? user?.fullname ?? null);
+    setProfilePhotoUrl(resolveProfilePhotoUrl(user?.profile_photo_url ?? user?.profilePhotoUrl ?? user?.profilePhoto));
+  }, [user?.full_name, user?.fullname, user?.profile_photo_url, user?.profilePhotoUrl, user?.profilePhoto]);
+
+  useEffect(() => {
+    if (fullName && profilePhotoUrl) return;
     fetchMe()
       .then((data) => {
         const name = data.full_name ?? data.fullname ?? null;
+        const photoUrl = resolveProfilePhotoUrl(data.profile_photo_url ?? data.profilePhotoUrl ?? data.profilePhoto);
+        console.log("[profile-photo] dropdown fetchMe response", {
+          profile_photo_url: data.profile_photo_url,
+          profilePhotoUrl: data.profilePhotoUrl,
+          profilePhoto: data.profilePhoto,
+          resolved: photoUrl,
+        });
         if (name) {
           setFullName(name);
-          setSessionUser({ ...user, full_name: name });
         }
+        setProfilePhotoUrl(photoUrl);
+        setSessionUser({ ...(user ?? {}), ...data, ...(name ? { full_name: name } : {}) });
       })
-      .catch(() => {});
+      .catch((error) => {
+        console.log("[profile-photo] dropdown fetchMe error", error);
+      });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const initials = fullName
@@ -40,8 +65,17 @@ export const UserDropdown: React.FC = () => {
         className="flex items-center gap-2 text-gray-700 dropdown-toggle dark:text-gray-400"
       >
         <span className="overflow-hidden rounded-full h-9 w-9 shrink-0">
-          {user?.profilePhoto ? (
-            <img src={user.profilePhoto} alt="avatar" className="w-full h-full object-cover" />
+          {profilePhotoUrl ? (
+            <img
+              src={profilePhotoUrl}
+              alt="avatar"
+              className="w-full h-full object-cover"
+              onLoad={() => console.log("[profile-photo] dropdown avatar image loaded", { profilePhotoUrl })}
+              onError={(event) => console.log("[profile-photo] dropdown avatar image error", {
+                profilePhotoUrl,
+                currentSrc: event.currentTarget.currentSrc,
+              })}
+            />
           ) : (
             <span className="flex h-full w-full items-center justify-center bg-brand-500 text-white text-sm font-semibold">
               {initials}

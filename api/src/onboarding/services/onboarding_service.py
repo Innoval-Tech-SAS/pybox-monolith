@@ -94,7 +94,7 @@ class OnboardingService:
                 missing.append("organization_data")
 
         base_complete = email_verified and phone_set and phone_verified and document_complete and not must_change_pw
-        is_complete = base_complete if scope == UserScope.SELF else base_complete and bool(org_complete)
+        is_complete = base_complete if scope in (UserScope.SELF, UserScope.GLOBAL) else base_complete and bool(org_complete)
 
         return OnboardingStatusSchema(
             email_verified=email_verified,

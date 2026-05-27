@@ -55,6 +55,10 @@ class UpdateUserSchema(BaseSchema):
     is_active: bool | None = None
 
 
+class ProfilePhotoSchema(BaseSchema):
+    profile_photo_url: str
+
+
 class UserProfile(BaseSchema):
     id: int
     firstname: str

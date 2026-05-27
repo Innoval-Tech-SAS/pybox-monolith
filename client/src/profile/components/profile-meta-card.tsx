@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import React from "react";
+import { Link } from "react-router";
 import { useModal } from "@/hooks/use-modal";
 import { Modal } from "@/ui/components/modal/modal";
 import { Button } from "@/ui/components/button/button";
@@ -20,15 +21,9 @@ const CameraIcon: React.FC = () => (
 
 export const ProfileMetaCard: React.FC<ProfileMetaCardProps> = ({ fullName, role, scope, avatarUrl }) => {
   const { isOpen, openModal, closeModal } = useModal();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | null>(avatarUrl ?? null);
+  console.log("[profile-photo] meta render", { fullName, avatarUrl });
 
   const hierarchy = getRoleHierarchy(role, scope);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setPreview(URL.createObjectURL(file));
-  };
 
   const initials = fullName
     .split(" ")
@@ -44,28 +39,30 @@ export const ProfileMetaCard: React.FC<ProfileMetaCardProps> = ({ fullName, role
           <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
             <div className="relative shrink-0">
               <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
-                {preview ? (
-                  <img src={preview} alt="avatar" className="w-full h-full object-cover" />
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="avatar"
+                    className="w-full h-full object-cover"
+                    onLoad={() => console.log("[profile-photo] avatar image loaded", { avatarUrl })}
+                    onError={(event) => console.log("[profile-photo] avatar image error", {
+                      avatarUrl,
+                      currentSrc: event.currentTarget.currentSrc,
+                    })}
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-brand-500 text-white text-xl font-semibold">
                     {initials}
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
+              <Link
+                to="/profile/photo"
+                title="Cambiar foto"
                 className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-brand-500 text-white shadow-sm hover:bg-brand-600"
               >
                 <CameraIcon />
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileChange}
-              />
+              </Link>
             </div>
 
             <div className="order-3 xl:order-2 text-center xl:text-left">

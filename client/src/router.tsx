@@ -8,6 +8,7 @@ import { MyPortfoliosPage } from "./companies/pages/my-portfolios-page";
 import { HomePage } from "./home/pages/home-page";
 import { NotificationDetailPage } from "./notifications/pages/notification-detail-page";
 import { NotificationsPage } from "./notifications/pages/notifications-page";
+import { ProfilePhotoPage } from "./profile/pages/profile-photo-page";
 import { ProfilePage } from "./profile/pages/profile-page";
 import { TicketDetailPage } from "./support/pages/ticket-detail-page";
 import { UsersPage } from "./users/pages/users-page";
@@ -45,6 +46,10 @@ export const authRouter = [
   {
     path: "/profile",
     element: <ProfilePage />,
+  },
+  {
+    path: "/profile/photo",
+    element: <ProfilePhotoPage />,
   },
   {
     path: "/my-companies",

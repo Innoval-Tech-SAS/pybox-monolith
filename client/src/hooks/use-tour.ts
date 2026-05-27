@@ -13,7 +13,9 @@ type TourOptions = Partial<
   Pick<Config, "nextBtnText" | "prevBtnText" | "doneBtnText" | "popoverClass" | "showProgress">
 > & {
   dismissed?: boolean;
+  dismissBtnText?: string;
   onPermanentDismiss?: () => void;
+  showPermanentDismissOnEveryStep?: boolean;
 };
 
 const DEFAULTS = {
@@ -30,7 +32,13 @@ export const useTour = (
   steps: TourStep[],
   options?: TourOptions,
 ) => {
-  const { dismissed, onPermanentDismiss, ...driverOptions } = options ?? {};
+  const {
+    dismissed,
+    dismissBtnText = "No volver a mostrar",
+    onPermanentDismiss,
+    showPermanentDismissOnEveryStep = false,
+    ...driverOptions
+  } = options ?? {};
 
   useEffect(() => {
     if (!ready || dismissed || sessionStorage.getItem(storageKey)) return;
@@ -53,9 +61,9 @@ export const useTour = (
         ? (popover: PopoverDOM, { state, config }: { state: { activeIndex?: number }; config: { steps?: unknown[] } }) => {
             popover.wrapper.querySelector(".tour-dismiss-btn")?.remove();
             const isLastStep = (state.activeIndex ?? 0) === (config.steps?.length ?? 1) - 1;
-            if (!isLastStep) return;
+            if (!showPermanentDismissOnEveryStep && !isLastStep) return;
             const btn = document.createElement("button");
-            btn.textContent = "No volver a mostrar";
+            btn.textContent = dismissBtnText;
             btn.className = "tour-dismiss-btn";
             btn.onclick = () => {
               onPermanentDismiss();

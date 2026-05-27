@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, UploadFile, status
 
 from database.redis import RedisClient
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
@@ -10,6 +10,8 @@ from organizations.repository.organization_repository import OrganizationReposit
 from organizations.services.organization_service import OrganizationService
 from security.role_permissions_catalog import get_base_permissions
 from security.services.encrypt_service import encrypt_service
+from config.logger import logger
+from tools.file_tools import delete_public_upload, save_profile_photo_file
 from users.enums.user_enums import PermissionEffect, UserRole, UserScope
 from users.models.role_assignment_model import RoleAssignmentModel
 from users.models.user_model import UserModel
@@ -20,6 +22,7 @@ from users.repository.user_repository import UserRepository
 from users.schemas.user_schemas import (
     AdminUserDetailSchema,
     AdminUserSummarySchema,
+    ProfilePhotoSchema,
     RoleEntrySchema,
     UpdateUserSchema,
 )
@@ -142,6 +145,7 @@ class UserService:
                     orgs=orgs,
                 )
 
+        session.profile_photo_url = user.profile_photo_url
         await self.redis.set_json(session_key(user_id), session)
         return session
 
@@ -276,6 +280,23 @@ class UserService:
             user.is_active = data.is_active
         await self.user_repo.update(user)
         return await self.get_user_detail(user_id)
+
+    async def update_profile_photo(self, user_id: int, file: UploadFile) -> ProfilePhotoSchema:
+        logger.debug("[profile-photo] service update start user_id=%s filename=%s", user_id, file.filename)
+        user = await self.user_repo.get_by_id(user_id)
+        if user is None:
+            logger.debug("[profile-photo] service update user missing user_id=%s", user_id)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+
+        previous_url = user.profile_photo_url
+        logger.debug("[profile-photo] service previous url user_id=%s previous_url=%s", user_id, previous_url)
+        profile_photo_url = await save_profile_photo_file(file, user_id)
+        user.profile_photo_url = profile_photo_url
+        await self.user_repo.update(user)
+        delete_public_upload(previous_url)
+        await self.get_user_session(user_id)
+        logger.debug("[profile-photo] service update done user_id=%s profile_photo_url=%s", user_id, profile_photo_url)
+        return ProfilePhotoSchema(profile_photo_url=profile_photo_url)
 
     async def get_dismissed_tours(self, user_id: int) -> list[str]:
         prefs = await self.preferences_repo.get_by_user_id(user_id)

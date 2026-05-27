@@ -1,11 +1,11 @@
 from config.api_router import APIRouter
-from fastapi import HTTPException, Query, status
+from fastapi import File, HTTPException, Query, UploadFile, status
 
 from auth.dependencies import TokenPayload
 from security.dependencies import CurrentSession
 from users.dependencies import UserServiceDep
 from users.schemas.user_preferences_schema import UserToursSchema
-from users.schemas.user_schemas import AdminUserDetailSchema, AdminUserSummarySchema, UpdateUserSchema
+from users.schemas.user_schemas import AdminUserDetailSchema, AdminUserSummarySchema, ProfilePhotoSchema, UpdateUserSchema
 from users.schemas.user_session_schema import UserSession, session_key
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -32,6 +32,16 @@ async def dismiss_tour(tour_key: str, payload: TokenPayload, service: UserServic
     user_id = int(payload["sub"])
     dismissed = await service.dismiss_tour(user_id, tour_key)
     return UserToursSchema(dismissed_tours=dismissed)
+
+
+@router.put("/me/profile-photo", response_model=ProfilePhotoSchema)
+async def update_profile_photo(
+    payload: TokenPayload,
+    service: UserServiceDep,
+    file: UploadFile = File(...),
+) -> ProfilePhotoSchema:
+    user_id = int(payload["sub"])
+    return await service.update_profile_photo(user_id, file)
 
 
 @router.get("", response_model=list[AdminUserSummarySchema])

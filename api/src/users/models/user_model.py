@@ -30,6 +30,7 @@ class UserModel(AuditModel):
     document_type: Mapped[UserDocumentType | None] = mapped_column(ENUM(UserDocumentType), nullable=True, name="tipo_documento")
     document_number: Mapped[str | None] = mapped_column(String(255), nullable=True, name="numero_documento")
     document_number_hash: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True, index=True, name="numero_documento_hash")
+    profile_photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True, name="foto_perfil_url")
     is_email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="correo_verificado")
     is_phone_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="telefono_verificado")
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="mfa_habilitado")

@@ -25,7 +25,8 @@ export const AuthForm: React.FC = () => {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       setError(
-        msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")
+        msg.toLowerCase().includes("network") ||
+          msg.toLowerCase().includes("fetch")
           ? "No se pudo conectar con el servidor. Verifica tu conexión."
           : msg || "No se pudo conectar con el servidor.",
       );
@@ -41,7 +42,8 @@ export const AuthForm: React.FC = () => {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       setError(
-        msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")
+        msg.toLowerCase().includes("network") ||
+          msg.toLowerCase().includes("fetch")
           ? "No se pudo conectar con el servidor. Verifica tu conexión."
           : msg || "Error al iniciar sesión con Google.",
       );
@@ -73,11 +75,11 @@ export const AuthForm: React.FC = () => {
               <div className="space-y-6">
                 <div>
                   <Label className="text-gray-500">
-                    Usuario <span className="text-error-500">*</span>
+                    Correo electrónico <span className="text-error-500">*</span>
                   </Label>
                   <Input
                     type="email"
-                    placeholder="Usuario"
+                    placeholder="Correo electrónico"
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}

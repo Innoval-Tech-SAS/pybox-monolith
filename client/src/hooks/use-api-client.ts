@@ -27,9 +27,10 @@ export const useApiClient = () => {
       if (!endpoint.startsWith("/")) throw new Error("endpoint must start with '/'");
 
       const url = `${API_URL}${endpoint}`;
+      const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
       const authHeaders = {
         ...getAuthHeaders(),
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.body && !isFormData ? { "Content-Type": "application/json" } : {}),
         ...(options.headers as Record<string, string>),
       };
       let response = await sendRequest(url, { ...options, headers: authHeaders });

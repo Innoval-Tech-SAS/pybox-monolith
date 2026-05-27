@@ -36,6 +36,7 @@ export interface User {
   scope?: string;
   document_type?: string;
   document_number?: string;
+  profile_photo_url?: string;
   mfa_enabled?: boolean;
   orgs?: Record<string, OrgSessionEntry>;
 
@@ -51,6 +52,7 @@ export interface User {
   documentNumber?: string;
   isActive?: boolean;
   profilePhoto?: string;
+  profilePhotoUrl?: string;
   userRole?: string;
   userScope?: string;
   roles?: RoleAssignment[];
