@@ -17,6 +17,35 @@ const extractMessage = (body: Record<string, unknown>, fallback: string): string
   return (body?.error as string) ?? fallback;
 };
 
+// Module-level singleton: only one refresh request at a time per tab.
+// Concurrent 401s all await the same promise instead of each sending their own refresh.
+let _refreshPromise: Promise<string | null> | null = null;
+
+const refreshAccessToken = async (): Promise<string | null> => {
+  if (_refreshPromise) return _refreshPromise;
+  _refreshPromise = (async () => {
+    const refreshToken = sessionStorage.getItem("refreshToken");
+    if (!refreshToken) return null;
+    try {
+      const res = await fetch(`${API_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      sessionStorage.setItem("accessToken", data.accessToken);
+      sessionStorage.setItem("refreshToken", data.refreshToken);
+      return data.accessToken as string;
+    } catch {
+      return null;
+    }
+  })().finally(() => {
+    _refreshPromise = null;
+  });
+  return _refreshPromise;
+};
+
 export const useApiClient = () => {
   const { sendRequest } = useSendRequest();
   const { error: toastError } = useToast();
@@ -40,27 +69,13 @@ export const useApiClient = () => {
         const message = extractMessage(body, "Error 401");
 
         if (message === "El token expiró.") {
-          const refreshToken = sessionStorage.getItem("refreshToken");
-          if (refreshToken) {
-            const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ refresh_token: refreshToken }),
-            });
-            if (refreshRes.ok) {
-              const data = await refreshRes.json();
-              sessionStorage.setItem("accessToken", data.accessToken);
-              sessionStorage.setItem("refreshToken", data.refreshToken);
-              const retryHeaders = {
-                ...(options.headers as Record<string, string>),
-                Authorization: `Bearer ${data.accessToken}`,
-              };
-              response = await sendRequest(url, { ...options, headers: retryHeaders });
-            } else {
-              sessionStorage.clear();
-              navigate("/admin/sign-in", { replace: true });
-              return null;
-            }
+          const newAccessToken = await refreshAccessToken();
+          if (newAccessToken) {
+            const retryHeaders = {
+              ...(options.headers as Record<string, string>),
+              Authorization: `Bearer ${newAccessToken}`,
+            };
+            response = await sendRequest(url, { ...options, headers: retryHeaders });
           } else {
             sessionStorage.clear();
             navigate("/admin/sign-in", { replace: true });

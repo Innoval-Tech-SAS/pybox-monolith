@@ -1,35 +1,7 @@
 import React from "react";
-import {
-  AlertHexaIcon,
-  CheckCircleIcon,
-  CloseIcon,
-  ErrorHexaIcon,
-  InfoIcon,
-} from "@/ui/icons";
+import { CloseIcon } from "@/ui/icons";
 import { NotificationProps } from "@/types/props/notification-props";
-
-const variantStyles = {
-  success: {
-    borderColor: "border-success-500",
-    iconBg: "bg-success-50 text-success-500",
-    icon: <CheckCircleIcon />,
-  },
-  info: {
-    borderColor: "border-blue-light-500",
-    iconBg: "bg-blue-light-50 text-blue-light-500",
-    icon: <InfoIcon />,
-  },
-  warning: {
-    borderColor: "border-warning-500",
-    iconBg: "bg-warning-50 text-warning-500",
-    icon: <AlertHexaIcon />,
-  },
-  error: {
-    borderColor: "border-error-500",
-    iconBg: "bg-error-50 text-error-500",
-    icon: <ErrorHexaIcon className="size-5" />,
-  },
-};
+import { notificationVariantStyles } from "@/constants/notifications/notification-variants";
 
 export const Notification: React.FC<NotificationProps> = ({
   id,
@@ -37,29 +9,28 @@ export const Notification: React.FC<NotificationProps> = ({
   title,
   description,
   onClose,
+  style,
+  className = "",
 }) => {
-  const { borderColor, iconBg, icon } = variantStyles[variant];
+  const { borderColor, iconBg, icon } = notificationVariantStyles[variant];
 
   return (
     <div
-      className={`flex items-center justify-between gap-3 w-full sm:max-w-[340px] rounded-md border-b-4 p-3 shadow-theme-sm dark:bg-[#1E2634] ${borderColor}`}
+      style={style}
+      className={`flex items-start gap-3 w-full rounded-lg border-l-4 bg-white p-3.5 shadow-lg dark:bg-gray-800 ${borderColor} ${className}`}
     >
-      <div className="flex items-center gap-4">
-        <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${iconBg}`}>
-          {icon}
-        </div>
-        <div>
-          <h4 className="text-sm text-gray-800 sm:text-base dark:text-white/90">{title}</h4>
-          {description && (
-            <p className="mt-1 text-xs text-gray-600 sm:text-sm dark:text-white/70">
-              {description}
-            </p>
-          )}
-        </div>
+      <div className={`mt-0.5 flex shrink-0 items-center justify-center w-8 h-8 rounded-md ${iconBg}`}>
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <h4 className="text-sm font-medium text-gray-800 dark:text-white/90">{title}</h4>
+        {description && (
+          <p className="mt-0.5 text-xs text-gray-500 dark:text-white/70">{description}</p>
+        )}
       </div>
       <button
         onClick={() => onClose(id)}
-        className="text-gray-400 hover:text-gray-800 dark:hover:text-white/90"
+        className="shrink-0 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-white/70"
       >
         <CloseIcon />
       </button>

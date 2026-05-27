@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FileText, ExternalLink, CheckCircle, XCircle } from "lucide-react";
+import { Link } from "react-router";
+import { FileText, Eye, CheckCircle, XCircle } from "lucide-react";
 import { resolveProfilePhotoUrl } from "@/profile/utils/profile-photo-url";
 import { useTicketOrgDocs } from "@/support/hooks/use-ticket-org-docs";
 import { useResolveTicket } from "@/support/hooks/use-resolve-ticket";
@@ -92,15 +93,13 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
                     </td>
                     <td className="px-4 py-3 text-center">
                       {url ? (
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-brand-50 hover:text-brand-600 dark:bg-white/[0.05] dark:text-gray-400 dark:hover:bg-brand-500/10 dark:hover:text-brand-400"
+                        <Link
+                          to={`/files/viewer?url=${encodeURIComponent(url)}&label=${encodeURIComponent(doc.label)}&ticket=${ticket.id}`}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-brand-50 hover:text-brand-600 dark:bg-white/5 dark:text-gray-400 dark:hover:bg-brand-500/10 dark:hover:text-brand-400"
                         >
-                          <ExternalLink size={12} />
+                          <Eye size={12} />
                           Ver
-                        </a>
+                        </Link>
                       ) : (
                         <span className="text-xs text-gray-400 dark:text-gray-500">
                           Sin archivo

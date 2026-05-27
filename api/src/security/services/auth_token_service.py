@@ -10,7 +10,7 @@ from users.models.user_model import UserModel
 
 
 class AuthTokenService:
-    ACCESS_TOKEN_EXPIRE_MINUTES = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES = 60
     REFRESH_TOKEN_EXPIRE_DAYS = 7
     ALGORITHM = "HS256"
 

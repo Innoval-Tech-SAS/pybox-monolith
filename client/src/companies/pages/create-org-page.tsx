@@ -195,7 +195,7 @@ export const CreateOrgPage: React.FC = () => {
           />
         </div>
         <div>
-          <Label>Número de documento fiscal</Label>
+          <Label>{fiscalLabel}</Label>
           <div className="relative">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
               <Hash size={16} />

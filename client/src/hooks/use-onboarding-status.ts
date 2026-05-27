@@ -17,7 +17,13 @@ export const useOnboardingStatus = () => {
     }
   }, [apiClient]);
 
-  useEffect(() => { fetchStatus(); }, [fetchStatus]);
+  useEffect(() => {
+    if (!sessionStorage.getItem("accessToken")) {
+      setLoading(false);
+      return;
+    }
+    fetchStatus();
+  }, [fetchStatus]);
 
   return { status, loading, refetch: fetchStatus };
 };

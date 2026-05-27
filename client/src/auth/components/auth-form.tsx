@@ -53,17 +53,6 @@ export const AuthForm: React.FC = () => {
   return (
     <div className="flex flex-col flex-1">
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
-        <div className="mb-5 sm:mb-8 flex items-center justify-end gap-4">
-          <p className="shrink-0 pt-1 text-sm text-gray-500 dark:text-gray-400">
-            <Link
-              to="/admin/sign-up"
-              className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400"
-            >
-              ¿No tienes una cuenta? Regístrate
-            </Link>
-          </p>
-        </div>
-
         <div>
           <div className="mb-5 sm:mb-8 flex items-center justify-start gap-4">
             <h1 className="mb-2 font-semibold text-brand-500 text-title-sm dark:text-white/90 sm:text-title-md">
@@ -146,6 +135,15 @@ export const AuthForm: React.FC = () => {
               }
               disabled={isLoading}
             />
+
+            <div className="mt-6 text-center">
+              <Link
+                to="/admin/sign-up"
+                className="inline-flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-brand-600 border border-brand-300 rounded-lg hover:bg-brand-50 dark:text-brand-400 dark:border-brand-700 dark:hover:bg-brand-950 transition-colors"
+              >
+                {"¿No tienes una cuenta? Regístrate"}
+              </Link>
+            </div>
           </div>
         </div>
       </div>
