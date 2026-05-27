@@ -1,56 +1,55 @@
-import { ChatIcon, CheckCircleIcon, ListIcon, TimeIcon } from "@/ui/icons";
-import { HomeShell } from "./home-shell";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
+import { Breadcrumb } from "@/ui/components/common/breadcrumb";
+import { Loader } from "@/ui/components/loader/loader";
+import { useTickets } from "@/support/hooks/use-tickets";
+import { TicketKanbanBoard } from "@/support/components/ticket-kanban/ticket-kanban-board";
+import { TicketKanbanHeader } from "@/support/components/ticket-kanban/ticket-kanban-header";
+import type { TicketKanbanGroupKey } from "@/types/support/ticket-kanban-types";
+import {
+  getTicketKanbanGroups,
+  isTicketFromToday,
+  mapTicketToKanban,
+} from "@/support/utils/ticket-kanban-utils";
 
-export const CustomerServiceHome: React.FC = () => (
-  <HomeShell
-    eyebrow="Home de soporte"
-    title="Atención y seguimiento"
-    description="Vista enfocada en solicitudes, verificación de casos y continuidad de servicio para usuarios y entidades."
-    metrics={[
-      {
-        label: "Casos",
-        value: "Abiertos",
-        helper: "Prioriza solicitudes recientes y bloqueos.",
-        tone: "warning",
-      },
-      {
-        label: "Respuesta",
-        value: "En curso",
-        helper: "Mantén trazabilidad de conversaciones activas.",
-        tone: "info",
-      },
-      {
-        label: "Resolución",
-        value: "Validación",
-        helper: "Confirma cierres antes de finalizar cada caso.",
-        tone: "success",
-      },
-    ]}
-    actions={[
-      {
-        title: "Bandeja de solicitudes",
-        description: "Consulta tickets asignados y próximos vencimientos.",
-        icon: <ListIcon className="size-5" />,
-        tone: "warning",
-      },
-      {
-        title: "Conversaciones",
-        description: "Continúa el seguimiento con usuarios y entidades.",
-        icon: <ChatIcon className="size-5" />,
-        tone: "info",
-      },
-      {
-        title: "Verificaciones",
-        description: "Valida datos o documentos relacionados con el caso.",
-        icon: <CheckCircleIcon className="size-5" />,
-        tone: "success",
-      },
-      {
-        title: "Tiempos de atención",
-        description: "Revisa prioridades y acuerdos de servicio pendientes.",
-        icon: <TimeIcon className="size-5" />,
-        tone: "primary",
-      },
-    ]}
-  />
-);
+export const CustomerServiceHome: React.FC = () => {
+  const navigate = useNavigate();
+  const { tickets, loading, refetch } = useTickets({ includeResolved: true });
+  const [selectedGroup, setSelectedGroup] =
+    useState<TicketKanbanGroupKey>("all");
+
+  const todayTickets = useMemo(
+    () => tickets.filter(isTicketFromToday).map(mapTicketToKanban),
+    [tickets],
+  );
+  const groups = useMemo(
+    () => getTicketKanbanGroups(todayTickets),
+    [todayTickets],
+  );
+
+  return (
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <Breadcrumb pageTitle="Customer Service" />
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        <TicketKanbanHeader
+          groups={groups}
+          selectedGroup={selectedGroup}
+          loading={loading}
+          onSelectGroup={setSelectedGroup}
+          onRefresh={refetch}
+        />
+        {loading ? (
+          <div className="flex min-h-[420px] items-center justify-center border-t border-gray-200 dark:border-white/[0.05]">
+            <Loader loaderText="Cargando tickets del día..." />
+          </div>
+        ) : (
+          <TicketKanbanBoard
+            tickets={todayTickets}
+            selectedGroup={selectedGroup}
+            onOpenTicket={(ticketId) => navigate(`/cs/tickets/${ticketId}`)}
+          />
+        )}
+      </div>
+    </div>
+  );
+};

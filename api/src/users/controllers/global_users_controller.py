@@ -4,7 +4,7 @@ from config.api_router import APIRouter
 from security.dependencies import CurrentSession
 from users.dependencies import UserManagementServiceDep
 from users.enums.user_enums import UserRole, UserScope
-from users.schemas.user_management_schemas import ManagedUserCreate, ManagedUserResponse
+from users.schemas.user_management_schemas import GlobalAdminCreate, ManagedUserCreate, ManagedUserResponse
 
 router = APIRouter(prefix="/users/global", tags=["users-global"])
 
@@ -27,3 +27,12 @@ async def create_global_user(
             detail=f"Rol inválido. Permitidos para usuarios globales: {UserRole.ADMIN.value}, {UserRole.CUSTOMER_SERVICE.value}",
         )
     return await service.create_global_user(body)
+
+
+@router.post("/admin", response_model=ManagedUserResponse, status_code=status.HTTP_201_CREATED)
+async def create_global_admin(
+    body: GlobalAdminCreate,
+    service: UserManagementServiceDep,
+) -> ManagedUserResponse:
+    data = ManagedUserCreate(**body.model_dump(), role=UserRole.ADMIN)
+    return await service.create_global_user(data)

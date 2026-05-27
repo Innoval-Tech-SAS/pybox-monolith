@@ -2,8 +2,6 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
-from pydantic import BaseModel
-
 from base.schema_base import BaseSchema
 from support.enums.support_enums import SupportCaseType, SupportTicketStatus
 
@@ -26,7 +24,7 @@ class AssignTicketSchema(BaseSchema):
     user_id: int
 
 
-class SupportTicketSchema(BaseModel):
+class SupportTicketSchema(BaseSchema):
     id: int
     case_type: SupportCaseType
     status: SupportTicketStatus
@@ -36,5 +34,3 @@ class SupportTicketSchema(BaseModel):
     notes: str | None
     resolved_at: datetime | None
     created_at: datetime
-
-    model_config = {"from_attributes": True}

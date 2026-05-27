@@ -15,7 +15,7 @@ export const useTicket = (ticketId: string | undefined) => {
       .then((data: SupportTicket) => setTicket(data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
-  }, [ticketId]);
+  }, [apiClient, ticketId]);
 
   useEffect(() => {
     fetchTicket();

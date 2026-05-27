@@ -9,6 +9,7 @@ import { HomePage } from "./home/pages/home-page";
 import { NotificationDetailPage } from "./notifications/pages/notification-detail-page";
 import { NotificationsPage } from "./notifications/pages/notifications-page";
 import { ProfilePage } from "./profile/pages/profile-page";
+import { TicketDetailPage } from "./support/pages/ticket-detail-page";
 import { UsersPage } from "./users/pages/users-page";
 import { UserDetailPage } from "./users/pages/user-detail-page";
 import { UserEditPage } from "./users/pages/user-edit-page";
@@ -96,5 +97,9 @@ export const authRouter = [
   {
     path: "/notifications/:id",
     element: <NotificationDetailPage />,
+  },
+  {
+    path: "/cs/tickets/:id",
+    element: <TicketDetailPage />,
   },
 ];

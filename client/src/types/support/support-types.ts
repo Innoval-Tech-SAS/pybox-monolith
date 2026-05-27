@@ -13,6 +13,10 @@ export interface SupportTicket {
   createdAt: string;
 }
 
+export interface UseTicketsOptions {
+  includeResolved?: boolean;
+}
+
 export interface AssignTicketPayload {
   userId: number;
 }

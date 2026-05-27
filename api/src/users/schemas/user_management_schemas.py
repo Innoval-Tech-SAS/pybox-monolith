@@ -15,6 +15,14 @@ class ManagedUserCreate(BaseSchema):
     role: UserRole
 
 
+class GlobalAdminCreate(BaseSchema):
+    firstname: str
+    lastname: str
+    email: EmailStr
+    phone_number: str
+    password: str
+
+
 class PermissionCatalogEntry(BaseSchema):
     name: str
     label: str | None = None

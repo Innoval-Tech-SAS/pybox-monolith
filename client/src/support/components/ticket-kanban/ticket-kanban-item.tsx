@@ -1,25 +1,24 @@
 import { useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
-import { TicketKanban, KanbanDropResult } from "@/types/support/ticket-kanban-types";
-
-interface TicketKanbanItemProps {
-  ticket: TicketKanban;
-  index: number;
-  moveTicket: (dragIndex: number, hoverIndex: number) => void;
-  changeTicketStatus: (ticketId: string, newStatus: string) => void;
-}
+import type { TicketKanbanItemProps } from "@/types/props/ticket-kanban-item-props";
+import type {
+  TicketKanbanDragItem,
+  TicketKanbanDropResult,
+} from "@/types/support/ticket-kanban-types";
+import { getCategoryStyles } from "@/support/utils/ticket-kanban-utils";
 
 const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
   ticket,
   index,
   moveTicket,
   changeTicketStatus,
+  onOpenTicket,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
   const [{ handlerId }, drop] = useDrop<
-    TicketKanban,
-    KanbanDropResult,
+    TicketKanbanDragItem,
+    TicketKanbanDropResult,
     { handlerId: string | symbol | null }
   >({
     accept: "ticket",
@@ -27,7 +26,7 @@ const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
       return { handlerId: monitor.getHandlerId() };
     },
     drop: () => ({ name: ticket.status }),
-    hover(item: any, monitor) {
+    hover(item, monitor) {
       if (!ref.current) return;
       const dragIndex = item.index;
       const hoverIndex = index;
@@ -47,8 +46,8 @@ const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
   });
 
   const [{ isDragging }, drag] = useDrag<
-    TicketKanban,
-    KanbanDropResult,
+    TicketKanbanDragItem,
+    TicketKanbanDropResult,
     { isDragging: boolean }
   >({
     type: "ticket",
@@ -67,8 +66,9 @@ const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
     <div
       ref={ref}
       style={{ opacity }}
-      className="relative p-5 bg-white border border-gray-200 rounded-xl shadow-theme-sm dark:border-gray-800 dark:bg-white/5"
-      data-handler-id={handlerId}
+      onClick={() => onOpenTicket(ticket.ticketId)}
+      className="task relative cursor-pointer rounded-xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-white/5"
+      data-handler-id={String(handlerId ?? "")}
     >
       <div className="space-y-4">
         <div>
@@ -87,14 +87,12 @@ const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
               </svg>
               {ticket.dueDate}
             </span>
-            {ticket.comments !== undefined && (
-              <span className="flex items-center gap-1 text-sm text-gray-500 cursor-pointer dark:text-gray-400">
-                <svg className="stroke-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 15.6343C12.6244 15.6343 15.5625 12.6961 15.5625 9.07178C15.5625 5.44741 12.6244 2.50928 9 2.50928C5.37563 2.50928 2.4375 5.44741 2.4375 9.07178C2.4375 10.884 3.17203 12.5246 4.35961 13.7122L2.4375 15.6343H9Z" stroke="" strokeWidth="1.5" strokeLinejoin="round" />
-                </svg>
-                {ticket.comments}
-              </span>
-            )}
+            <span className="flex items-center gap-1 text-sm text-gray-500 cursor-pointer dark:text-gray-400">
+              <svg className="stroke-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 15.6343C12.6244 15.6343 15.5625 12.6961 15.5625 9.07178C15.5625 5.44741 12.6244 2.50928 9 2.50928C5.37563 2.50928 2.4375 5.44741 2.4375 9.07178C2.4375 10.884 3.17203 12.5246 4.35961 13.7122L2.4375 15.6343H9Z" stroke="" strokeWidth="1.5" strokeLinejoin="round" />
+              </svg>
+              {ticket.comments}
+            </span>
             {ticket.links !== undefined && (
               <span className="flex items-center gap-1 text-sm text-gray-500 cursor-pointer dark:text-gray-400">
                 <svg className="fill-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -104,31 +102,18 @@ const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
               </span>
             )}
           </div>
-          <span className={`mt-3 inline-flex rounded-full px-2 py-0.5 text-theme-xs font-medium ${getPriorityStyles(ticket.priority.color)}`}>
-            {ticket.priority.name}
+          <span className={`mt-3 inline-flex rounded-full px-2 py-0.5 text-theme-xs font-medium ${getCategoryStyles(ticket.category.color)}`}>
+            {ticket.category.name}
           </span>
         </div>
       </div>
       <div className="h-6 absolute top-5 right-5 w-full max-w-6 overflow-hidden rounded-full border-[0.5px] border-gray-200 dark:border-gray-800">
-        <img src={ticket.assignee} alt="agente" />
+        <span className="flex h-full w-full items-center justify-center bg-brand-50 text-[10px] font-semibold text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
+          {ticket.assigneeInitials}
+        </span>
       </div>
     </div>
   );
-};
-
-const getPriorityStyles = (color: string) => {
-  switch (color) {
-    case "error":
-      return "bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-400";
-    case "warning":
-      return "bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-400";
-    case "success":
-      return "bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-400";
-    case "brand":
-      return "bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-400";
-    default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-500/15 dark:text-gray-400";
-  }
 };
 
 export default TicketKanbanItem;

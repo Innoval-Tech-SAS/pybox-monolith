@@ -29,7 +29,9 @@ class SupportTicketRepository(RepositoryBase[SupportTicketModel]):
         if f.created_by is not None:
             conditions.append(SupportTicketModel.created_by == f.created_by)
         result = await self.session.execute(
-            select(SupportTicketModel).where(*conditions)
+            select(SupportTicketModel)
+            .where(*conditions)
+            .order_by(SupportTicketModel.created_at.desc())
         )
         return result.scalars().all()
 
