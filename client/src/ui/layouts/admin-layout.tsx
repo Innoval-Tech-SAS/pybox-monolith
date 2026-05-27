@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
+import { ChatBubblesContainer } from "../../chat/components/chat-bubbles-container";
 import { useSidebar } from "../../hooks/use-sidebar";
 import { AsideMenu } from "../components/menu/aside-menu";
 import { NavbarMenu } from "../components/menu/navbar-menu";
 import { SidebarProvider } from "../contexts/providers/sidebar-provider";
-import { signInNavbarItems, otherSignInItems } from "../../config/navbar/sign-in-navbar-items";
+import { signInNavbarItems, otherSignInItems, supportNavItems } from "../../config/navbar/sign-in-navbar-items";
 import { Backdrop } from "../components/menu/backdrop";
 import { useAuth } from "../../hooks/use-auth";
 import { Scope } from "../../types/auth/role";
 import { setSessionUser } from "../../auth/utils/auth-session-utils";
+import { useHasAnyPermission } from "../../auth/hooks/use-has-any-permission";
 
 const LayoutContent: React.FC = () => {
   useLocation(); // suscribe al router context → re-render en cada navegación
@@ -25,15 +27,18 @@ const LayoutContent: React.FC = () => {
   }, []);
 
   const { scope } = getRoleScope();
+  const hasAnyPermission = useHasAnyPermission;
 
   const isOrgOrGlobal = scope === Scope.ORG || scope === Scope.GLOBAL;
   const navItems = isOrgOrGlobal ? signInNavbarItems : signInNavbarItems.slice(0, 1);
-  const othersItems = isOrgOrGlobal ? otherSignInItems : [];
+  const othersItems = isOrgOrGlobal
+    ? otherSignInItems.filter((item) => !item.permission || hasAnyPermission(item.permission))
+    : [];
 
   return (
     <div className="h-screen overflow-hidden flex flex-col xl:flex-row">
       <div>
-        <AsideMenu navItems={navItems} othersItems={othersItems} othersLabel="Administración" />
+        <AsideMenu navItems={navItems} othersItems={othersItems} othersLabel="Administración" supportItems={supportNavItems} supportLabel="Soporte" />
         <Backdrop />
       </div>
       <div
@@ -46,6 +51,7 @@ const LayoutContent: React.FC = () => {
           <Outlet />
         </div>
       </div>
+      <ChatBubblesContainer />
     </div>
   );
 };

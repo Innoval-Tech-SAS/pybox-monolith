@@ -8,6 +8,7 @@ from database.redis import RedisClient
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from organizations.repository.organization_repository import OrganizationRepository
 from organizations.services.organization_service import OrganizationService
+from security.permissions import ORG_USERS
 from security.role_permissions_catalog import get_base_permissions
 from security.services.encrypt_service import encrypt_service
 from config.logger import logger
@@ -231,9 +232,18 @@ class UserService:
                 target = uuid.UUID(org_id)
                 if target not in accessible_org_ids:
                     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+                org_entry = session.orgs.get(org_id)
+                if not org_entry or ORG_USERS not in org_entry.permissions:
+                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
                 users = list(await self.user_repo.get_accessible(org_ids=[target]))
             else:
-                users = list(await self.user_repo.get_accessible(org_ids=accessible_org_ids))
+                allowed_org_ids = [
+                    uuid.UUID(oid) for oid, entry in session.orgs.items()
+                    if ORG_USERS in entry.permissions
+                ]
+                if not allowed_org_ids:
+                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+                users = list(await self.user_repo.get_accessible(org_ids=allowed_org_ids))
         else:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
         return await self._enrich_users(users)
@@ -331,6 +341,19 @@ class UserService:
             if membership.organization_id not in admin_org_ids and membership.deleted_at is not None:
                 await self.membership_repo.restore(membership)
         return user
+
+    async def get_available_for_chat(self, current_user_id: int) -> list:
+        from users.schemas.user_schemas import ChatAvailableUserSchema
+
+        users = await self.user_repo.get_available_for_chat(current_user_id)
+        return [
+            ChatAvailableUserSchema(
+                id=u.id,
+                full_name=u.full_name,
+                profile_photo_url=u.profile_photo_url,
+            )
+            for u in users
+        ]
 
     @property
     def _org_service(self) -> OrganizationService:

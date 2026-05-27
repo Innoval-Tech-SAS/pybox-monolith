@@ -2,11 +2,11 @@ from enum import Enum
 
 
 class SupportCaseType(str, Enum):
-    INCIDENT = "incident"
-    REQUIREMENT = "requirement"
+    INCIDENT = "Incidente"
+    REQUIREMENT = "Requerimiento"
 
 
 class SupportTicketStatus(str, Enum):
-    OPEN = "open"
-    IN_PROGRESS = "in_progress"
-    RESOLVED = "resolved"
+    OPEN = "Abierto"
+    IN_PROGRESS = "En Proceso"
+    RESOLVED = "Resuelto"

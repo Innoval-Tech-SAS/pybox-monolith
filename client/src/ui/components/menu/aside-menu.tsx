@@ -7,12 +7,12 @@ import type { AsideMenuProps } from "@/types/props/aside-menu-props";
 
 import { ChevronDownIcon, HorizontaLDots } from "../../icons";
 
-export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems = [], othersLabel = "Others" }) => {
+export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems = [], othersLabel = "Others", supportItems = [], supportLabel = "Soporte" }) => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others";
+    type: "main" | "others" | "support";
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -27,8 +27,8 @@ export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems
 
   useEffect(() => {
     let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+    ["main", "others", "support"].forEach((menuType) => {
+      const items = menuType === "main" ? navItems : menuType === "others" ? othersItems : supportItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -61,7 +61,7 @@ export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
+  const handleSubmenuToggle = (index: number, menuType: "main" | "others" | "support") => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
         prevOpenSubmenu &&
@@ -74,7 +74,7 @@ export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems
     });
   };
 
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
+  const renderMenuItems = (items: NavItem[], menuType: "main" | "others" | "support") => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
         <li key={nav.name}>
@@ -265,6 +265,26 @@ export const AsideMenu: React.FC<AsideMenuProps> = ({ navItems = [], othersItems
                     )}
                   </h2>
                   {renderMenuItems(othersItems, "others")}
+                </>
+              </div>
+            )}
+            {supportItems && supportItems.length > 0 && (
+              <div className="">
+                <>
+                  <h2
+                    className={`mb-4 text-xs uppercase flex leading-5 text-gray-400 ${
+                      !isExpanded && !isHovered
+                        ? "lg:justify-center"
+                        : "justify-start"
+                    }`}
+                  >
+                    {isExpanded || isHovered || isMobileOpen ? (
+                      supportLabel
+                    ) : (
+                      <HorizontaLDots />
+                    )}
+                  </h2>
+                  {renderMenuItems(supportItems, "support")}
                 </>
               </div>
             )}

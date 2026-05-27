@@ -4,4 +4,6 @@ export interface AsideMenuProps {
   navItems?: NavItem[];
   othersItems?: NavItem[];
   othersLabel?: string;
+  supportItems?: NavItem[];
+  supportLabel?: string;
 }

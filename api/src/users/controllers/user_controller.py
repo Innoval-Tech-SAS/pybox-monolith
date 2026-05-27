@@ -5,7 +5,7 @@ from auth.dependencies import TokenPayload
 from security.dependencies import CurrentSession
 from users.dependencies import UserServiceDep
 from users.schemas.user_preferences_schema import UserToursSchema
-from users.schemas.user_schemas import AdminUserDetailSchema, AdminUserSummarySchema, ProfilePhotoSchema, UpdateUserSchema
+from users.schemas.user_schemas import AdminUserDetailSchema, AdminUserSummarySchema, ChatAvailableUserSchema, ProfilePhotoSchema, UpdateUserSchema
 from users.schemas.user_session_schema import UserSession, session_key
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -42,6 +42,11 @@ async def update_profile_photo(
 ) -> ProfilePhotoSchema:
     user_id = int(payload["sub"])
     return await service.update_profile_photo(user_id, file)
+
+
+@router.get("/available-for-chat", response_model=list[ChatAvailableUserSchema])
+async def get_available_for_chat(session: CurrentSession, service: UserServiceDep):
+    return await service.get_available_for_chat(session.user_id)
 
 
 @router.get("", response_model=list[AdminUserSummarySchema])

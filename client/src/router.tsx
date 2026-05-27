@@ -11,6 +11,7 @@ import { NotificationsPage } from "./notifications/pages/notifications-page";
 import { ProfilePhotoPage } from "./profile/pages/profile-photo-page";
 import { ProfilePage } from "./profile/pages/profile-page";
 import { TicketDetailPage } from "./support/pages/ticket-detail-page";
+import { TicketsPage } from "./support/pages/tickets-page";
 import { FileViewerPage } from "./support/pages/file-viewer-page";
 import { UsersPage } from "./users/pages/users-page";
 import { UserDetailPage } from "./users/pages/user-detail-page";
@@ -103,6 +104,10 @@ export const authRouter = [
   {
     path: "/notifications/:id",
     element: <NotificationDetailPage />,
+  },
+  {
+    path: "/cs/tickets",
+    element: <TicketsPage />,
   },
   {
     path: "/cs/tickets/:id",

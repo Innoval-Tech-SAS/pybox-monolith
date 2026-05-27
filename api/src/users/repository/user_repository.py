@@ -62,6 +62,18 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
         )
         return result.scalars().first()
 
+    async def get_available_for_chat(self, current_user_id: int) -> Sequence[UserModel]:
+        result = await self.session.execute(
+            select(UserModel)
+            .where(
+                UserModel.id != current_user_id,
+                UserModel.is_active.is_(True),
+                UserModel.deleted_at.is_(None),
+            )
+            .order_by(UserModel.firstname)
+        )
+        return result.scalars().all()
+
     async def get_accessible(self, org_ids: list[uuid.UUID] | None) -> Sequence[UserModel]:
         if org_ids is None:
             result = await self.session.execute(

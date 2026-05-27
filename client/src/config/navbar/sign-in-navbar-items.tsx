@@ -1,4 +1,4 @@
-import { Building2, Home, Users } from "lucide-react";
+import { Building2, Home, TicketCheck, Users } from "lucide-react";
 
 export const signInNavbarItems = [
   {
@@ -18,5 +18,14 @@ export const otherSignInItems = [
     name: "Usuarios",
     icon: <Users size={20} />,
     path: "/my-users",
+    permission: "org.users",
+  },
+];
+
+export const supportNavItems = [
+  {
+    name: "Tickets",
+    icon: <TicketCheck size={20} />,
+    path: "/cs/tickets",
   },
 ];

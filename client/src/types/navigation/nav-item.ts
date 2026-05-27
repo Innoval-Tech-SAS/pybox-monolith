@@ -12,4 +12,5 @@ export interface NavItem {
   path?: string;
   new?: boolean;
   subItems?: NavSubItem[];
+  permission?: string;
 }

@@ -10,6 +10,7 @@ from organizations.controllers.organization_controller import router as organiza
 from organizations.controllers.org_members_controller import router as org_members_router
 from portfolios.controllers.portfolio_controller import router as portfolios_router
 from support.controllers.support_controller import router as support_router
+from chats.controllers.chat_controller import router as chats_router
 from users.controllers.global_users_controller import router as global_users_router
 from users.controllers.permissions_controller import router as permissions_router
 from users.controllers.user_controller import router as users_router
@@ -27,6 +28,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(organizations_router, prefix=_API_PREFIX)
     app.include_router(org_members_router, prefix=_API_PREFIX)
     app.include_router(portfolios_router, prefix=_API_PREFIX)
+    app.include_router(chats_router, prefix=_API_PREFIX)
     app.include_router(support_router, prefix=_API_PREFIX)
     app.include_router(users_router, prefix=_API_PREFIX)
     app.include_router(global_users_router, prefix=_API_PREFIX)

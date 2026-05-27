@@ -16,6 +16,12 @@ class UserSummarySchema(BaseSchema):
     email: str
 
 
+class ChatAvailableUserSchema(BaseSchema):
+    id: int
+    full_name: str
+    profile_photo_url: str | None = None
+
+
 class RoleEntrySchema(BaseSchema):
     role: str
     scope: str

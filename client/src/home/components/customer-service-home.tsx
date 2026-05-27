@@ -44,9 +44,7 @@ export const CustomerServiceHome: React.FC = () => {
         <TicketKanbanHeader
           groups={groups}
           selectedGroup={selectedGroup}
-          loading={loading}
           onSelectGroup={setSelectedGroup}
-          onRefresh={refetch}
         />
         {loading ? (
           <div className="flex min-h-105 items-center justify-center border-t border-gray-200 dark:border-white/5">
