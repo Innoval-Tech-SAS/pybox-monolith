@@ -32,6 +32,7 @@ class SupportTicketModel(AuditModel):
     assigned_to: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("usuarios.id"), nullable=True, name="asignado_a"
     )
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True, name="titulo")
     notes: Mapped[str | None] = mapped_column(String(2000), nullable=True, name="notas")
     resolved_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, name="resuelto_en"

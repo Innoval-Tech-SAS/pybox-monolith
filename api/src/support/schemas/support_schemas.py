@@ -17,7 +17,11 @@ class SupportFilter:
 
 class ResolveTicketSchema(BaseSchema):
     approved: bool
-    notes: str | None = None
+    notes: str
+
+
+class UpdateTicketStatusSchema(BaseSchema):
+    status: SupportTicketStatus
 
 
 class AssignTicketSchema(BaseSchema):
@@ -32,6 +36,7 @@ class SupportTicketSchema(BaseSchema):
     organization_id: uuid.UUID
     created_by: int
     assigned_to: int | None
+    title: str | None
     notes: str | None
     resolved_at: datetime | None
     created_at: datetime

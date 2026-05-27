@@ -55,7 +55,9 @@ const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     end: (item, monitor) => {
       const dropResult = monitor.getDropResult();
-      if (dropResult) changeTicketStatus(item.id, dropResult.name);
+      if (dropResult && dropResult.name !== item.status) {
+        changeTicketStatus(item.id, item.ticketId, dropResult.name);
+      }
     },
   });
 

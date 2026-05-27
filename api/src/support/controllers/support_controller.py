@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from security.dependencies import CurrentSession
 from support.dependencies import SupportAccessFilter, SupportServiceDep
-from support.schemas.support_schemas import AssignTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema
+from support.schemas.support_schemas import AssignTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema, UpdateTicketStatusSchema
 
 router = APIRouter(prefix="/cs/tickets", tags=["Support"])
 
@@ -20,6 +20,16 @@ async def get_ticket(ticket_number: int, f: SupportAccessFilter, service: Suppor
 @router.get("/{ticket_number}/org-docs", response_model=OrgDocsSchema)
 async def get_org_docs(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
     return await service.get_org_docs(ticket_number, f)
+
+
+@router.patch("/{ticket_number}/status", response_model=SupportTicketSchema)
+async def update_ticket_status(
+    ticket_number: int,
+    body: UpdateTicketStatusSchema,
+    f: SupportAccessFilter,
+    service: SupportServiceDep,
+):
+    return await service.update_ticket_status(ticket_number, body, f)
 
 
 @router.post("/{ticket_number}/assign", response_model=SupportTicketSchema)

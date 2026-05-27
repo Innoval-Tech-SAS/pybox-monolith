@@ -24,18 +24,18 @@ export const TICKET_STATUS_LABELS: Record<SupportTicketStatus, string> = {
 };
 
 export const TICKET_CASE_TYPE_LABELS: Record<SupportCaseType, string> = {
-  org_verification: "Verificación de entidad",
-  error_report: "Reporte de error",
+  requirement: "Requerimiento",
+  incident: "Incidente",
 };
 
 export const TICKET_TYPE_LABELS: Record<SupportCaseType, string> = {
-  org_verification: "Requerimiento",
-  error_report: "Incidente",
+  requirement: "Requerimiento",
+  incident: "Incidente",
 };
 
 const TICKET_PREFIX: Record<SupportCaseType, string> = {
-  org_verification: "RT",
-  error_report: "IT",
+  requirement: "RT",
+  incident: "IT",
 };
 
 export const getTicketDisplayId = (ticketNumber: number, caseType: SupportCaseType): string =>
@@ -99,7 +99,7 @@ export const mapTicketToKanban = (ticket: SupportTicket): TicketKanban => {
   return {
     id: ticket.id,
     ticketId: ticket.ticketNumber,
-    title: `${TICKET_CASE_TYPE_LABELS[ticket.caseType]} #${ticket.ticketNumber}`,
+    title: ticket.title ?? `${TICKET_CASE_TYPE_LABELS[ticket.caseType]} #${ticket.ticketNumber}`,
     dueDate: formatTicketShortDate(ticket.createdAt),
     comments: ticket.notes ? 1 : 0,
     links: 1,
@@ -192,10 +192,10 @@ const formatTicketShortDate = (iso: string): string => {
 
 const getTicketCategory = (caseType: SupportCaseType): TicketKanbanCategory => {
   switch (caseType) {
-    case "org_verification":
-      return { name: "Verificación", color: "brand" };
-    case "error_report":
-      return { name: "Incidencia", color: "error" };
+    case "requirement":
+      return { name: "Requerimiento", color: "brand" };
+    case "incident":
+      return { name: "Incidente", color: "error" };
     default:
       return { name: "Soporte", color: "default" };
   }
@@ -204,7 +204,7 @@ const getTicketCategory = (caseType: SupportCaseType): TicketKanbanCategory => {
 const getTicketDescription = (ticket: SupportTicket): string => {
   if (ticket.notes) return ticket.notes;
 
-  if (ticket.caseType === "org_verification") {
+  if (ticket.caseType === "requirement") {
     return `Solicitud de revisión documental para la entidad ${ticket.organizationId}.`;
   }
 

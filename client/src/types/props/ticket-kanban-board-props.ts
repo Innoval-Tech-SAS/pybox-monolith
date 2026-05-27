@@ -1,3 +1,4 @@
+import type { SupportTicketStatus } from "@/types/support/support-types";
 import type {
   TicketKanban,
   TicketKanbanGroupKey,
@@ -7,4 +8,5 @@ export interface TicketKanbanBoardProps {
   tickets: TicketKanban[];
   selectedGroup: TicketKanbanGroupKey;
   onOpenTicket: (ticketId: number) => void;
+  onStatusChange?: (ticketNumber: number, newStatus: SupportTicketStatus) => void;
 }

@@ -14,7 +14,7 @@ from organizations.repository.organization_repository import OrganizationReposit
 from support.enums.support_enums import SupportCaseType, SupportTicketStatus
 from support.models.support_ticket_model import SupportTicketModel
 from support.repository.support_ticket_repository import SupportTicketRepository
-from support.schemas.support_schemas import AssignTicketSchema, OrgDocSchema, OrgDocsSchema, ResolveTicketSchema, SupportFilter, SupportTicketSchema
+from support.schemas.support_schemas import AssignTicketSchema, OrgDocSchema, OrgDocsSchema, ResolveTicketSchema, SupportFilter, SupportTicketSchema, UpdateTicketStatusSchema
 
 
 class SupportService:
@@ -27,12 +27,16 @@ class SupportService:
     async def create_org_verification_ticket(
         self, org_id: uuid.UUID, created_by: int
     ) -> SupportTicketModel:
+        org = await self._org_repo.get_by_id(org_id)
+        org_name = org.name if org else "empresa"
         ticket = await self._ticket_repo.add(
             SupportTicketModel(
-                case_type=SupportCaseType.ORG_VERIFICATION,
+                case_type=SupportCaseType.REQUIREMENT,
                 status=SupportTicketStatus.OPEN,
                 organization_id=org_id,
                 created_by=created_by,
+                title=f"Validación de Documentos {org_name}",
+                notes=f"Ticket creado automáticamente al registrar empresa: {org_name}. Se debe realizar la verificación documental.",
             )
         )
         await self._auto_assign(ticket)
@@ -70,7 +74,7 @@ class SupportService:
         ticket.notes = data.notes
         ticket.resolved_at = datetime.now(timezone.utc)
 
-        if ticket.case_type == SupportCaseType.ORG_VERIFICATION:
+        if ticket.case_type == SupportCaseType.REQUIREMENT:
             org = await self._org_repo.get_by_id(ticket.organization_id)
             if org is not None:
                 org.verification_status = (
@@ -89,7 +93,7 @@ class SupportService:
         ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
         if ticket is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
-        if ticket.case_type != SupportCaseType.ORG_VERIFICATION:
+        if ticket.case_type != SupportCaseType.REQUIREMENT:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Este ticket no es de verificación.")
         org = await self._org_repo.get_by_id(ticket.organization_id)
         if org is None:
@@ -117,6 +121,22 @@ class SupportService:
                 OrgDocSchema(label="Documento representante", url=_url(org.representative_document_file)),
             ],
         )
+
+    async def update_ticket_status(
+        self, ticket_number: int, data: UpdateTicketStatusSchema, f: SupportFilter
+    ) -> SupportTicketSchema:
+        if not f.can_assign:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para mover tickets.")
+        if data.status == SupportTicketStatus.RESOLVED:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Usa el endpoint de cierre para resolver tickets.")
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
+        if ticket is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
+        if ticket.status == SupportTicketStatus.RESOLVED:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No se puede mover un ticket resuelto.")
+        ticket.status = data.status
+        updated = await self._ticket_repo.update(ticket)
+        return SupportTicketSchema.model_validate(updated)
 
     async def assign_ticket(
         self, ticket_number: int, data: AssignTicketSchema, f: SupportFilter

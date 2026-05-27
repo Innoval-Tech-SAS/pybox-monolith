@@ -15,7 +15,7 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
   ticket,
   onResolved,
 }) => {
-  const { orgDocs, loading } = useTicketOrgDocs(ticket.id, true);
+  const { orgDocs, loading } = useTicketOrgDocs(ticket.ticketNumber, true);
   const { resolveTicket, loading: resolving } = useResolveTicket();
   const [notes, setNotes] = useState("");
   const [showNotesInput, setShowNotesInput] = useState(false);
@@ -29,8 +29,8 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
   };
 
   const handleConfirm = async () => {
-    if (pendingApproval === null) return;
-    const updated = await resolveTicket(ticket.id, { approved: pendingApproval, notes: notes || undefined });
+    if (pendingApproval === null || !notes.trim()) return;
+    const updated = await resolveTicket(ticket.ticketNumber, { approved: pendingApproval, notes });
     if (updated) {
       onResolved(updated);
       setShowNotesInput(false);
@@ -156,14 +156,17 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Notas opcionales para el equipo o la empresa..."
+                placeholder="Nota de cierre obligatoria..."
                 rows={3}
                 className="w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-300 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:placeholder-gray-600 dark:focus:border-brand-500"
               />
+              {!notes.trim() && (
+                <p className="mt-1 text-xs text-error-500">La nota de cierre es obligatoria.</p>
+              )}
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={handleConfirm}
-                  disabled={resolving}
+                  disabled={resolving || !notes.trim()}
                   className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60 ${
                     pendingApproval
                       ? "bg-success-500 hover:bg-success-600"

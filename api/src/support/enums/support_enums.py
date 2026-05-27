@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class SupportCaseType(str, Enum):
-    ORG_VERIFICATION = "org_verification"
-    ERROR_REPORT = "error_report"
+    INCIDENT = "incident"
+    REQUIREMENT = "requirement"
 
 
 class SupportTicketStatus(str, Enum):

@@ -1,4 +1,4 @@
-export type SupportCaseType = "org_verification" | "error_report";
+export type SupportCaseType = "requirement" | "incident";
 export type SupportTicketStatus = "open" | "in_progress" | "resolved";
 
 export interface SupportTicket {
@@ -9,6 +9,7 @@ export interface SupportTicket {
   organizationId: string;
   createdBy: number;
   assignedTo: number | null;
+  title: string | null;
   notes: string | null;
   resolvedAt: string | null;
   createdAt: string;
@@ -24,7 +25,7 @@ export interface AssignTicketPayload {
 
 export interface ResolveTicketPayload {
   approved: boolean;
-  notes?: string;
+  notes: string;
 }
 
 export interface OrgDoc {

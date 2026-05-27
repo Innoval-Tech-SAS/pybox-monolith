@@ -14,6 +14,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   tickets,
   selectedGroup,
   onOpenTicket,
+  onStatusChange,
 }) => {
   const [kanbanTickets, setKanbanTickets] = useState<TicketKanban[]>(tickets);
 
@@ -35,14 +36,15 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   }, []);
 
   const changeTicketStatus = useCallback(
-    (ticketId: string, newStatus: SupportTicketStatus) => {
+    (ticketId: string, ticketNumber: number, newStatus: SupportTicketStatus) => {
       setKanbanTickets((previousTickets) =>
         previousTickets.map((ticket) =>
           ticket.id === ticketId ? { ...ticket, status: newStatus } : ticket,
         ),
       );
+      onStatusChange?.(ticketNumber, newStatus);
     },
-    [],
+    [onStatusChange],
   );
 
   const filteredTickets = getFilteredKanbanTickets(kanbanTickets, selectedGroup);
@@ -55,7 +57,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   return (
     <DndProvider backend={HTML5Backend}>
       <div
-        className={`mt-7 grid grid-cols-1 divide-x divide-gray-200 border-t border-gray-200 dark:divide-white/[0.05] dark:border-white/[0.05] sm:mt-0 ${gridColumns}`}
+        className={`mt-7 grid grid-cols-1 divide-x divide-gray-200 border-t border-gray-200 dark:divide-white/5 dark:border-white/5 sm:mt-0 ${gridColumns}`}
       >
         {visibleColumns.map((column) => (
           <TicketKanbanColumn

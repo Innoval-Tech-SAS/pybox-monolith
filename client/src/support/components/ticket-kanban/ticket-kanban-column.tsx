@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useDrop } from "react-dnd";
 import { Dropdown } from "@/ui/components/dropdown/dropdown";
 import { DropdownItem } from "@/ui/components/dropdown/dropdown-item";
 import { HorizontaLDots } from "@/ui/icons";
 import type { TicketKanbanColumnProps } from "@/types/props/ticket-kanban-column-props";
+import type { TicketKanbanDragItem, TicketKanbanDropResult } from "@/types/support/ticket-kanban-types";
 import { getColumnCountStyles } from "@/support/utils/ticket-kanban-utils";
 import TicketKanbanItem from "./ticket-kanban-item";
 
@@ -15,13 +17,22 @@ export const TicketKanbanColumn: React.FC<TicketKanbanColumnProps> = ({
   changeTicketStatus,
   onOpenTicket,
 }) => {
+  const columnRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  const [, dropColumn] = useDrop<TicketKanbanDragItem, TicketKanbanDropResult, {}>({
+    accept: "ticket",
+    drop: () => ({ name: status }),
+    collect: () => ({}),
+  });
+
+  dropColumn(columnRef);
 
   const toggleDropdown = () => setIsOpen((current) => !current);
   const closeDropdown = () => setIsOpen(false);
 
   return (
-    <div className="flex flex-col gap-5 p-4 swim-lane xl:p-6">
+    <div ref={columnRef} className="flex flex-col gap-5 p-4 swim-lane xl:p-6">
       <div className="mb-1 flex items-center justify-between">
         <h3 className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-white/90">
           {title}
@@ -42,7 +53,7 @@ export const TicketKanbanColumn: React.FC<TicketKanbanColumnProps> = ({
           <Dropdown
             isOpen={isOpen}
             onClose={closeDropdown}
-            className="w-[150px] space-y-1 rounded-2xl border border-gray-200 bg-white p-2 shadow-theme-md dark:border-gray-800 dark:bg-gray-dark"
+            className="w-37.5 space-y-1 rounded-2xl border border-gray-200 bg-white p-2 shadow-theme-md dark:border-gray-800 dark:bg-gray-dark"
           >
             <DropdownItem
               onItemClick={closeDropdown}

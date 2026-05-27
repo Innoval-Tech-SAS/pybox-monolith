@@ -50,7 +50,7 @@ const DetailRow: React.FC<{ label: string; children: React.ReactNode }> = ({ lab
 export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTicketResolved }) => {
   const { creator } = useTicketCreator(ticket.createdBy);
   const { assignee } = useTicketAssignee(ticket.assignedTo ?? undefined);
-  const isOrgVerification = ticket.caseType === "org_verification";
+  const isOrgVerification = ticket.caseType === "requirement";
   const displayId = getTicketDisplayId(ticket.ticketNumber, ticket.caseType);
 
   return (
@@ -69,7 +69,7 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
               </span>
             </div>
             <h2 className="text-title-sm font-semibold text-gray-800 dark:text-white/90">
-              {TICKET_CASE_TYPE_LABELS[ticket.caseType]}
+              {ticket.title ?? TICKET_CASE_TYPE_LABELS[ticket.caseType]}
             </h2>
           </div>
           <span
