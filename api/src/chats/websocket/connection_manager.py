@@ -16,6 +16,14 @@ class ChatConnectionManager:
         if ws in conns:
             conns.remove(ws)
 
+    def online_user_ids(self) -> set[int]:
+        return {uid for uid, conns in self._connections.items() if conns}
+
+    async def broadcast_to_others(self, exclude_user_id: int, event: str, data: dict) -> None:
+        for uid in self.online_user_ids():
+            if uid != exclude_user_id:
+                await self.send_to_user(uid, event, data)
+
     async def send_to_user(self, user_id: int, event: str, data: dict) -> None:
         dead: list[WebSocket] = []
         for ws in list(self._connections.get(user_id, [])):

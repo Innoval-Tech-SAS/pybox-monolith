@@ -4,6 +4,7 @@ export interface ChatAvailableUser {
   id: number;
   fullName: string;
   profilePhotoUrl: string | null;
+  isOnline: boolean;
 }
 
 export interface ChatMessage {

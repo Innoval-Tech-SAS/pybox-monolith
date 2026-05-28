@@ -56,9 +56,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-72 h-[420px] rounded-t-xl bg-white dark:bg-boxdark shadow-xl border border-stroke dark:border-strokedark">
+    <div className="flex flex-col w-72 h-[420px] rounded-t-xl bg-white dark:bg-gray-dark shadow-xl border border-gray-200 dark:border-gray-800">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-stroke dark:border-strokedark rounded-t-xl bg-white dark:bg-boxdark">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-800 rounded-t-xl">
         <div className="relative flex-shrink-0">
           {win.peerAvatar ? (
             <img
@@ -72,19 +72,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             </span>
           )}
         </div>
-        <span className="flex-1 text-sm font-medium text-black dark:text-white truncate">
+        <span className="flex-1 text-sm font-medium text-gray-800 dark:text-white/90 truncate">
           {win.title}
         </span>
         <button
           onClick={onMinimize}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-1 text-base leading-none"
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-white/70 px-1 text-base leading-none"
           title="Minimizar"
         >
           –
         </button>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-1 text-base leading-none"
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-white/70 px-1 text-base leading-none"
           title="Cerrar"
         >
           ✕
@@ -95,7 +95,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
+        className="flex-1 overflow-y-auto custom-scrollbar px-3 py-2 flex flex-col gap-2"
       >
         {win.loading && (
           <p className="text-center text-xs text-gray-400 mt-4">Cargando...</p>
@@ -124,7 +124,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 className={`max-w-[85%] px-3 py-1.5 text-sm break-words ${
                   isOwn
                     ? "bg-brand-500 text-white rounded-t-xl rounded-bl-xl"
-                    : "bg-gray-2 dark:bg-meta-4 text-black dark:text-white rounded-t-xl rounded-br-xl"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white/90 rounded-t-xl rounded-br-xl"
                 }`}
               >
                 {msg.body}
@@ -145,14 +145,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* Input */}
-      <div className="flex items-end gap-2 px-3 py-2 border-t border-stroke dark:border-strokedark">
+      <div className="flex items-end gap-2 px-3 py-2 border-t border-gray-200 dark:border-gray-800">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Escribe un mensaje..."
           rows={1}
-          className="flex-1 resize-none bg-transparent text-sm text-black dark:text-white placeholder:text-gray-400 focus:outline-none py-1 max-h-20 overflow-y-auto"
+          className="flex-1 resize-none bg-transparent text-sm text-gray-800 dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none py-1 max-h-20 overflow-y-auto custom-scrollbar"
         />
         <button
           onClick={submit}

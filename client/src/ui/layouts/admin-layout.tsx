@@ -13,7 +13,7 @@ import { setSessionUser } from "../../auth/utils/auth-session-utils";
 import { useHasAnyPermission } from "../../auth/hooks/use-has-any-permission";
 
 const LayoutContent: React.FC = () => {
-  useLocation(); // suscribe al router context → re-render en cada navegación
+  const location = useLocation();
   const [, forceUpdate] = useState(0);
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
   const { getRoleScope, fetchMe } = useAuth();
@@ -51,7 +51,7 @@ const LayoutContent: React.FC = () => {
           <Outlet />
         </div>
       </div>
-      <ChatBubblesContainer />
+      {location.pathname !== "/chats" && <ChatBubblesContainer />}
     </div>
   );
 };

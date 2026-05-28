@@ -132,7 +132,8 @@ class ChatService:
             created_at=msg.created_at,
             status="sent",
         )
-        return msg_schema, member_ids
+        other_ids = [uid for uid in member_ids if uid != sender_id]
+        return msg_schema, other_ids
 
     async def list_messages(
         self,

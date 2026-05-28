@@ -20,6 +20,7 @@ class ChatAvailableUserSchema(BaseSchema):
     id: int
     full_name: str
     profile_photo_url: str | None = None
+    is_online: bool = False
 
 
 class RoleEntrySchema(BaseSchema):

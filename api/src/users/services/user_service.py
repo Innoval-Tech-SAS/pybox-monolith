@@ -342,15 +342,45 @@ class UserService:
                 await self.membership_repo.restore(membership)
         return user
 
-    async def get_available_for_chat(self, current_user_id: int) -> list:
+    async def get_available_for_chat(self, session: UserSession) -> list:
+        from chats.websocket.connection_manager import ws_manager
         from users.schemas.user_schemas import ChatAvailableUserSchema
 
-        users = await self.user_repo.get_available_for_chat(current_user_id)
+        role = session.role
+        scope = session.scope
+        self_id = session.user_id
+
+        if scope == UserScope.GLOBAL:
+            users = await self.user_repo.get_all_active_except(self_id)
+
+        elif scope == UserScope.ORGANIZATION:
+            org_ids = [uuid.UUID(oid) for oid in session.orgs.keys()]
+            if role == UserRole.CUSTOMER_SERVICE:
+                users = await self.user_repo.get_cs_org_members_and_global_cs(self_id, org_ids)
+            else:
+                users = await self.user_repo.get_active_org_members(self_id, org_ids)
+
+        elif scope == UserScope.SELF:
+            users = list(await self.user_repo.get_cs_agents_for_self_user(self_id))
+            extra = await self.user_repo.get_global_admins_chatted_recently(self_id)
+            seen = {u.id for u in users}
+            users += [u for u in extra if u.id not in seen]
+
+        else:
+            users = []
+
+        if scope != UserScope.SELF:
+            extra = await self.user_repo.get_global_admins_chatted_recently(self_id)
+            seen = {u.id for u in users}
+            users = list(users) + [u for u in extra if u.id not in seen]
+
+        online_ids = ws_manager.online_user_ids()
         return [
             ChatAvailableUserSchema(
                 id=u.id,
                 full_name=u.full_name,
                 profile_photo_url=u.profile_photo_url,
+                is_online=u.id in online_ids,
             )
             for u in users
         ]

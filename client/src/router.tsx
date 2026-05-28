@@ -19,6 +19,7 @@ import { UserEditPage } from "./users/pages/user-edit-page";
 import { UserSettingsPage } from "./users/pages/user-settings-page";
 import { UserPortfoliosPage } from "./users/pages/user-portfolios-page";
 import { CreateUserPage } from "./users/pages/create-user-page";
+import { ChatPage } from "./chat/pages/chat-page";
 import { NotFound } from "./ui/pages/not-found";
 
 export const noAuthRouter = [
@@ -104,6 +105,10 @@ export const authRouter = [
   {
     path: "/notifications/:id",
     element: <NotificationDetailPage />,
+  },
+  {
+    path: "/chats",
+    element: <ChatPage />,
   },
   {
     path: "/cs/tickets",

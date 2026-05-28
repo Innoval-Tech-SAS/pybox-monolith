@@ -10,6 +10,7 @@ export const useChatWebSocket = (
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onEventRef = useRef(onEvent);
+  const stoppedRef = useRef(false);
   onEventRef.current = onEvent;
 
   const connect = useCallback(() => {
@@ -29,7 +30,9 @@ export const useChatWebSocket = (
 
     ws.onclose = () => {
       wsRef.current = null;
-      reconnectRef.current = setTimeout(connect, 3000);
+      if (!stoppedRef.current) {
+        reconnectRef.current = setTimeout(connect, 3000);
+      }
     };
 
     ws.onerror = () => ws.close();
@@ -38,8 +41,10 @@ export const useChatWebSocket = (
   }, []);
 
   useEffect(() => {
+    stoppedRef.current = false;
     connect();
     return () => {
+      stoppedRef.current = true;
       if (reconnectRef.current) clearTimeout(reconnectRef.current);
       wsRef.current?.close();
     };

@@ -15,7 +15,7 @@ export const ModuleBase: React.FC<ModuleBaseProps> = ({
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <Breadcrumb pageTitle={pageTitle} items={breadcrumbItems} />
-      <div className="flex flex-col flex-1 min-h-0 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/3 lg:p-6">
+      <div className="flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/3 lg:p-6">
         {hasBack && (
           <button
             id="tour-back-btn"

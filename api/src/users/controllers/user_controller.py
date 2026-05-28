@@ -46,7 +46,7 @@ async def update_profile_photo(
 
 @router.get("/available-for-chat", response_model=list[ChatAvailableUserSchema])
 async def get_available_for_chat(session: CurrentSession, service: UserServiceDep):
-    return await service.get_available_for_chat(session.user_id)
+    return await service.get_available_for_chat(session)
 
 
 @router.get("", response_model=list[AdminUserSummarySchema])

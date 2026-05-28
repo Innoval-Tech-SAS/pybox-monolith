@@ -26,7 +26,6 @@ export const ChatBubblesContainer: React.FC = () => {
   const { getSession } = useAuth();
   const session = getSession();
   const currentUserId = session?.user_id ?? 0;
-
   useEffect(() => {
     loadChats();
   }, [loadChats]);
@@ -90,29 +89,29 @@ export const ChatBubblesContainer: React.FC = () => {
           )}
 
           <button
-            onClick={handleLauncherClick}
-            className="relative w-14 h-14 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-all focus:outline-none"
-            title="Chats"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-6 h-6"
+              onClick={handleLauncherClick}
+              className="relative w-14 h-14 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-all focus:outline-none"
+              title="Chats"
             >
-              <path
-                fillRule="evenodd"
-                d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z"
-                clipRule="evenodd"
-              />
-            </svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z"
+                  clipRule="evenodd"
+                />
+              </svg>
 
-            {totalUnread > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[20px] h-5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center px-1 leading-none">
-                {totalUnread > 99 ? "99+" : totalUnread}
-              </span>
-            )}
-          </button>
+              {totalUnread > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full bg-red-500 text-white text-[11px] font-bold flex items-center justify-center px-1 leading-none">
+                  {totalUnread > 99 ? "99+" : totalUnread}
+                </span>
+              )}
+            </button>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { useApiClient } from "../../hooks/use-api-client";
+import { playMessageSound } from "../utils/chat-sound";
 import type {
   ChatAvailableUser,
   ChatMessage,
@@ -154,7 +155,7 @@ export const useChat = () => {
 
       setWindows((prev) =>
         prev.map((w) =>
-          w.chatId === chatId
+          w.chatId === chatId && !w.messages.some((m) => m.id === msg.id)
             ? { ...w, messages: [...w.messages, msg] }
             : w,
         ),
@@ -198,9 +199,10 @@ export const useChat = () => {
     (event: WsChatEvent) => {
       if (event.event === "message") {
         const msg = event.data;
+        playMessageSound();
         setWindows((prev) =>
           prev.map((w) =>
-            w.chatId === msg.chatId
+            w.chatId === msg.chatId && !w.messages.some((m) => m.id === msg.id)
               ? { ...w, messages: [...w.messages, msg] }
               : w,
           ),
