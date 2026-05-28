@@ -1,7 +1,9 @@
 import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
+import { MessageSquare } from "lucide-react";
 import { useChatPage } from "../hooks/use-chat-page";
 import { useAuth } from "../../hooks/use-auth";
 import type { ChatMessage } from "../../types/chat/chat-types";
+import EmptyState from "@/ui/components/common/empty-state";
 
 const StatusIcon: React.FC<{ status: ChatMessage["status"] }> = ({ status }) => {
   if (status === "read") return <span className="text-brand-500 text-[10px]">✓✓</span>;
@@ -166,7 +168,7 @@ export const ChatPage: React.FC = () => {
       <div className="flex flex-col flex-1 min-w-0 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-dark overflow-hidden">
         {!selected ? (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-gray-400 text-sm">Selecciona una conversación</p>
+            <EmptyState icon={MessageSquare} title="Selecciona una conversación" />
           </div>
         ) : (
           <>

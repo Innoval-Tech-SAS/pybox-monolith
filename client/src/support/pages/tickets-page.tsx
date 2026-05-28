@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Breadcrumb } from "@/ui/components/common/breadcrumb";
 import { Loader } from "@/ui/components/loader/loader";
+import EmptyState from "@/ui/components/common/empty-state";
 import { useTickets } from "@/support/hooks/use-tickets";
 import { TicketKanbanHeader } from "@/support/components/ticket-kanban/ticket-kanban-header";
 import { TicketListItem } from "@/support/components/ticket-list/ticket-list-item";
@@ -80,9 +81,7 @@ export const TicketsPage: React.FC = () => {
           </div>
         ) : dateGroups.length === 0 ? (
           <div className="flex min-h-60 items-center justify-center border-t border-gray-200 dark:border-white/5">
-            <p className="text-sm text-gray-400 dark:text-gray-500">
-              No hay tickets
-            </p>
+            <EmptyState title="No hay tickets" />
           </div>
         ) : (
           <div className="border-t border-gray-200 dark:border-white/5">

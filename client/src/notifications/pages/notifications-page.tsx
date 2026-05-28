@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { Bell } from "lucide-react";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { useNotifications } from "@/hooks/use-notifications";
 import type { NotifType } from "@/types/notifications/notification";
 import { FILTERS, FilterKey, TYPE_LABELS } from "@/constants/notifications/notification-filters";
 import { NotificationRow } from "@/notifications/components/notification-row";
 import { NotificationDetailView } from "@/notifications/components/notification-detail-view";
+import EmptyState from "@/ui/components/common/empty-state";
 
 export const NotificationsPage: React.FC = () => {
   const { notifications, loading, unreadCount, markAllRead } = useNotifications();
@@ -68,13 +70,10 @@ export const NotificationsPage: React.FC = () => {
               Cargando...
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-2">
-              <p className="text-sm text-gray-400 dark:text-gray-500">
-                {filter === "all"
-                  ? "No hay notificaciones"
-                  : `No hay notificaciones de tipo "${TYPE_LABELS[filter as NotifType] ?? filter}"`}
-              </p>
-            </div>
+            <EmptyState
+              title={filter === "all" ? "No hay notificaciones" : `No hay notificaciones de tipo "${TYPE_LABELS[filter as NotifType] ?? filter}"`}
+              className="py-20"
+            />
           ) : (
             <div className="flex flex-col gap-2">
               {filtered.map((n) => (
@@ -112,13 +111,7 @@ export const NotificationsPage: React.FC = () => {
               <NotificationDetailView notification={selected} />
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-3 text-gray-400 dark:text-gray-600">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-              <p className="text-sm">Selecciona una notificación</p>
-            </div>
+            <EmptyState icon={Bell} title="Selecciona una notificación" />
           )}
         </div>
       </div>

@@ -10,6 +10,7 @@ import { NotificationDetailPage } from "./notifications/pages/notification-detai
 import { NotificationsPage } from "./notifications/pages/notifications-page";
 import { ProfilePhotoPage } from "./profile/pages/profile-photo-page";
 import { ProfilePage } from "./profile/pages/profile-page";
+import { ProfileEditPage } from "./profile/pages/profile-edit-page";
 import { TicketDetailPage } from "./support/pages/ticket-detail-page";
 import { TicketsPage } from "./support/pages/tickets-page";
 import { FileViewerPage } from "./support/pages/file-viewer-page";
@@ -49,6 +50,10 @@ export const authRouter = [
   {
     path: "/profile",
     element: <ProfilePage />,
+  },
+  {
+    path: "/profile/edit",
+    element: <ProfileEditPage />,
   },
   {
     path: "/profile/photo",

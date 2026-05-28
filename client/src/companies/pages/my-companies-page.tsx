@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
+import EmptyState from "@/ui/components/common/empty-state";
 import { OrgCard } from "../components/org-card";
 import { CreateOrgCard } from "../components/create-org-card";
 import { ModuleCard } from "../components/module-card";
@@ -48,10 +49,7 @@ export const MyCompaniesPage: React.FC = () => {
             </div>
           </div>
         ) : orgs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-20 text-gray-400">
-            <Building2 size={48} strokeWidth={1.5} />
-            <p className="text-sm">No tienes empresas registradas</p>
-          </div>
+          <EmptyState icon={Building2} title="No tienes empresas registradas" className="py-20" />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <CreateOrgCard />
