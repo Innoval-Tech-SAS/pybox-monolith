@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 
 from base.schema_base import BaseSchema
 from countries.enums.country_enums import (
@@ -27,33 +27,33 @@ class RepresentativeMode(str, Enum):
 
 
 class OrganizationCreate(BaseSchema):
-    name: str
-    description: str | None = None
-    country: Nationality | None = None
-    fiscal_document_type: OrgFiscalDocumentType | None = None
-    fiscal_document_number: str | None = None
-    mercantile_document_type: OrgMercantileDocumentType | None = None
+    name: str = Field(description="Nombre de la organización")
+    description: str | None = Field(default=None, description="Descripción opcional")
+    country: Nationality | None = Field(default=None, description="País de la organización")
+    fiscal_document_type: OrgFiscalDocumentType | None = Field(default=None, description="Tipo de documento fiscal")
+    fiscal_document_number: str | None = Field(default=None, description="Número de documento fiscal")
+    mercantile_document_type: OrgMercantileDocumentType | None = Field(default=None, description="Tipo de documento mercantil")
 
 
 class OrganizationUpdate(BaseSchema):
-    name: str | None = None
-    description: str | None = None
-    country: Nationality | None = None
-    fiscal_document_type: OrgFiscalDocumentType | None = None
-    fiscal_document_number: str | None = None
-    mercantile_document_type: OrgMercantileDocumentType | None = None
+    name: str | None = Field(default=None, description="Nombre de la organización")
+    description: str | None = Field(default=None, description="Descripción")
+    country: Nationality | None = Field(default=None, description="País")
+    fiscal_document_type: OrgFiscalDocumentType | None = Field(default=None, description="Tipo de documento fiscal")
+    fiscal_document_number: str | None = Field(default=None, description="Número de documento fiscal")
+    mercantile_document_type: OrgMercantileDocumentType | None = Field(default=None, description="Tipo de documento mercantil")
 
 
 class OrganizationResponse(BaseSchema):
-    id: uuid.UUID
-    name: str
-    description: str | None = None
-    country: Nationality | None = None
-    fiscal_document_type: OrgFiscalDocumentType | None = None
-    fiscal_document_number: str | None = None
-    mercantile_document_type: OrgMercantileDocumentType | None = None
-    created_at: datetime
-    updated_at: datetime | None = None
+    id: uuid.UUID = Field(description="ID único de la organización")
+    name: str = Field(description="Nombre")
+    description: str | None = Field(default=None, description="Descripción")
+    country: Nationality | None = Field(default=None, description="País")
+    fiscal_document_type: OrgFiscalDocumentType | None = Field(default=None, description="Tipo de documento fiscal")
+    fiscal_document_number: str | None = Field(default=None, description="Número de documento fiscal")
+    mercantile_document_type: OrgMercantileDocumentType | None = Field(default=None, description="Tipo de documento mercantil")
+    created_at: datetime = Field(description="Fecha de creación")
+    updated_at: datetime | None = Field(default=None, description="Fecha de última actualización")
 
     @field_validator("fiscal_document_number", mode="before")
     @classmethod
@@ -62,15 +62,15 @@ class OrganizationResponse(BaseSchema):
 
 
 class OrgRegisterResponse(BaseSchema):
-    id: uuid.UUID
-    name: str
-    description: str | None = None
-    country: Nationality | None = None
-    fiscal_document_type: OrgFiscalDocumentType | None = None
-    fiscal_document_number: str | None = None
-    mercantile_document_type: OrgMercantileDocumentType | None = None
-    representative_document_file: str | None = None
-    created_at: datetime
+    id: uuid.UUID = Field(description="ID de la organización creada")
+    name: str = Field(description="Nombre")
+    description: str | None = Field(default=None, description="Descripción")
+    country: Nationality | None = Field(default=None, description="País")
+    fiscal_document_type: OrgFiscalDocumentType | None = Field(default=None, description="Tipo de documento fiscal")
+    fiscal_document_number: str | None = Field(default=None, description="Número de documento fiscal")
+    mercantile_document_type: OrgMercantileDocumentType | None = Field(default=None, description="Tipo de documento mercantil")
+    representative_document_file: str | None = Field(default=None, description="URL del documento del representante")
+    created_at: datetime = Field(description="Fecha de creación")
 
     @field_validator("fiscal_document_number", mode="before")
     @classmethod

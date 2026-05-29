@@ -3,10 +3,15 @@ from config.api_router import APIRouter
 from countries.schemas.countries_schemas import NationalityOption
 from countries.enums.country_enums import DOCUMENTS_BY_NATIONALITY, NATIONALITY_NAMES, NATIONALITY_PHONE_PREFIX, Nationality
 
-router = APIRouter(prefix="/countries", tags=["countries"])
+router = APIRouter(prefix="/countries", tags=["Países"])
 
 
-@router.get("", response_model=list[NationalityOption])
+@router.get(
+    "",
+    response_model=list[NationalityOption],
+    summary="Listar países disponibles",
+    description="Retorna los países soportados con sus tipos de documento, prefijo telefónico y bandera.",
+)
 async def get_countries() -> list[NationalityOption]:
     return [
         NationalityOption(

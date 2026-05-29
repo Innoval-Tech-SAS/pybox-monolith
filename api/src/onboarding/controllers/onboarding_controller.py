@@ -28,7 +28,12 @@ from users.enums.user_enums import UserScope
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
 
-@router.get("/status", response_model=OnboardingStatusSchema)
+@router.get(
+    "/status",
+    response_model=OnboardingStatusSchema,
+    summary="Consultar estado del onboarding",
+    description="Indica qué pasos del onboarding ha completado el usuario y cuáles faltan.",
+)
 async def get_status(
     session: CurrentSession,
     scope: CurrentScope,
@@ -38,7 +43,11 @@ async def get_status(
     return await service.get_status(session.user_id, scope, org)
 
 
-@router.post("/request-otp", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/request-otp",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Solicitar código OTP de verificación",
+)
 async def request_otp(
     body: RequestOtpSchema,
     session: CurrentSession,
@@ -47,7 +56,11 @@ async def request_otp(
     await service.request_otp(session.user_id, body.channel)
 
 
-@router.post("/verify-otp", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/verify-otp",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Verificar código OTP",
+)
 async def verify_otp(
     body: VerifyOtpSchema,
     session: CurrentSession,
@@ -63,7 +76,11 @@ async def verify_otp(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código ya fue utilizado")
 
 
-@router.patch("/set-password", status_code=status.HTTP_204_NO_CONTENT)
+@router.patch(
+    "/set-password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Establecer contraseña inicial",
+)
 async def set_onboarding_password(
     body: SetOnboardingPasswordSchema,
     session: CurrentSession,
@@ -72,7 +89,11 @@ async def set_onboarding_password(
     await service.set_onboarding_password(session.user_id, body)
 
 
-@router.patch("/phone", status_code=status.HTTP_204_NO_CONTENT)
+@router.patch(
+    "/phone",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Registrar número de teléfono",
+)
 async def set_phone(
     body: SetPhoneSchema,
     session: CurrentSession,
@@ -81,7 +102,11 @@ async def set_phone(
     await service.set_phone(session.user_id, body)
 
 
-@router.patch("/profile", status_code=status.HTTP_204_NO_CONTENT)
+@router.patch(
+    "/profile",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Completar perfil con documento de identidad",
+)
 async def update_profile(
     body: UpdateProfileSchema,
     session: CurrentSession,
@@ -90,7 +115,12 @@ async def update_profile(
     await service.update_profile(session.user_id, body)
 
 
-@router.post("/organization", status_code=status.HTTP_204_NO_CONTENT)
+@router.post(
+    "/organization",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Crear primera organización",
+    description="Paso de onboarding para administradores: registra la organización con sus documentos.",
+)
 async def create_first_org(
     session: CurrentSession,
     scope: CurrentScope,

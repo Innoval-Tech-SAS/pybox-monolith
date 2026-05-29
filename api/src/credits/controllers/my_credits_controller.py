@@ -4,10 +4,15 @@ from credits.schemas.my_credits_schemas import CreditWithPayments
 from security.dependencies import CurrentSession
 from security.policies import get_self_identity
 
-router = APIRouter(prefix="/credits", tags=["my-credits"])
+router = APIRouter(prefix="/credits", tags=["Mis Créditos"])
 
 
-@router.get("/my-credits", response_model=list[CreditWithPayments])
+@router.get(
+    "/my-credits",
+    response_model=list[CreditWithPayments],
+    summary="Consultar mis créditos",
+    description="Retorna los créditos del deudor autenticado, incluyendo pagos y saldo por crédito.",
+)
 async def my_credits(
     session: CurrentSession,
     service: MyCreditsServiceDep,

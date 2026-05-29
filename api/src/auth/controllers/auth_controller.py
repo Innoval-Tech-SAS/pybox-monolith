@@ -12,45 +12,55 @@ from auth.schemas.auth_schemas import (
 )
 from users.enums.user_enums import UserRole, UserScope
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
 
-@router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=AuthResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar administrador de organización",
+)
 async def register_admin(body: UserCreate, service: AuthServiceDep) -> AuthResponse:
     return await service.register_and_authenticate(body, UserRole.ADMIN, UserScope.ORGANIZATION)
 
 
-@router.post("/register/user", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register/user",
+    response_model=AuthResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar usuario deudor",
+)
 async def register_user(body: UserCreate, service: AuthServiceDep) -> AuthResponse:
     return await service.register_and_authenticate(body, UserRole.USER, UserScope.SELF)
 
 
-@router.post("/login", response_model=AuthResponse)
+@router.post("/login", response_model=AuthResponse, summary="Iniciar sesión con correo y contraseña")
 async def login(body: UserLogin, service: AuthServiceDep) -> AuthResponse:
     return await service.authenticate_user(body)
 
 
-@router.post("/oauth", response_model=AuthResponse)
+@router.post("/oauth", response_model=AuthResponse, summary="Registrar administrador con proveedor OAuth")
 async def oauth_register_admin(body: ProviderLogin, service: AuthServiceDep) -> AuthResponse:
     return await service.authenticate_provider_user(body, UserRole.ADMIN, UserScope.ORGANIZATION)
 
 
-@router.post("/oauth/user", response_model=AuthResponse)
+@router.post("/oauth/user", response_model=AuthResponse, summary="Registrar usuario deudor con proveedor OAuth")
 async def oauth_register_user(body: ProviderLogin, service: AuthServiceDep) -> AuthResponse:
     return await service.authenticate_provider_user(body, UserRole.USER, UserScope.SELF)
 
 
-@router.post("/oauth/login", response_model=AuthResponse)
+@router.post("/oauth/login", response_model=AuthResponse, summary="Iniciar sesión con proveedor OAuth existente")
 async def oauth_existing_login(body: ProviderAuth, service: AuthServiceDep) -> AuthResponse:
     return await service.authenticate_existing_provider_user(body)
 
 
-@router.post("/refresh", response_model=AuthResponse)
+@router.post("/refresh", response_model=AuthResponse, summary="Renovar tokens de acceso")
 async def refresh(body: RefreshRequest, service: AuthServiceDep) -> AuthResponse:
     return await service.refresh_tokens(body.refresh_token)
 
 
-@router.post("/logout", status_code=status.HTTP_200_OK)
+@router.post("/logout", status_code=status.HTTP_200_OK, summary="Cerrar sesión")
 async def logout(payload: TokenPayload, service: AuthServiceDep) -> dict:
     await service.logout(int(payload["sub"]))
     return {"message": "Sesión cerrada."}

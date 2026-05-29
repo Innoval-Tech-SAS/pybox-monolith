@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
-from pydantic import field_serializer, field_validator
+from pydantic import Field, field_serializer, field_validator
 
 from base.schema_base import BaseSchema
 from support.enums.support_enums import SupportCaseType, SupportTicketStatus
@@ -41,10 +41,10 @@ _STATUS_IN = {
 
 
 class TicketCategorySchema(BaseSchema):
-    label: str
-    case_type: SupportCaseType
-    description: str
-    icon: str
+    label: str = Field(description="Nombre de la categoría")
+    case_type: SupportCaseType = Field(description="Tipo de caso: incident o requirement")
+    description: str = Field(description="Descripción de la categoría")
+    icon: str = Field(description="Nombre del icono")
 
     @field_serializer("case_type")
     def serialize_case_type(self, v: SupportCaseType) -> str:
@@ -59,10 +59,10 @@ _CASE_TYPE_IN = {
 
 
 class CreateTicketSchema(BaseSchema):
-    organization_id: uuid.UUID
-    title: str
-    case_type: SupportCaseType
-    notes: str
+    organization_id: uuid.UUID = Field(description="ID de la organización a la que pertenece el ticket")
+    title: str = Field(description="Título del ticket")
+    case_type: SupportCaseType = Field(description="Tipo de caso: incident o requirement")
+    notes: str = Field(description="Descripción detallada del caso")
 
     @field_validator("case_type", mode="before")
     @classmethod
@@ -76,17 +76,17 @@ class CreateTicketSchema(BaseSchema):
 
 
 class TicketOrgSchema(BaseSchema):
-    id: uuid.UUID
-    name: str
+    id: uuid.UUID = Field(description="ID de la organización")
+    name: str = Field(description="Nombre de la organización")
 
 
 class ResolveTicketSchema(BaseSchema):
-    approved: bool
-    notes: str
+    approved: bool = Field(description="True si la resolución fue aprobada por el cliente")
+    notes: str = Field(description="Notas de cierre")
 
 
 class UpdateTicketStatusSchema(BaseSchema):
-    status: SupportTicketStatus
+    status: SupportTicketStatus = Field(description="Nuevo estado del ticket")
 
     @field_validator("status", mode="before")
     @classmethod
@@ -100,22 +100,22 @@ class UpdateTicketStatusSchema(BaseSchema):
 
 
 class AssignTicketSchema(BaseSchema):
-    user_id: int
+    user_id: int = Field(description="ID del agente al que se asigna el ticket")
 
 
 class SupportTicketSchema(BaseSchema):
-    id: uuid.UUID
-    ticket_number: int
-    case_type: SupportCaseType
-    status: SupportTicketStatus
-    organization_id: uuid.UUID
-    organization_name: str = ""
-    created_by: int
-    assigned_to: int | None
-    title: str | None
-    notes: str | None
-    resolved_at: datetime | None
-    created_at: datetime
+    id: uuid.UUID = Field(description="ID único del ticket")
+    ticket_number: int = Field(description="Número secuencial del ticket")
+    case_type: SupportCaseType = Field(description="Tipo de caso")
+    status: SupportTicketStatus = Field(description="Estado actual del ticket")
+    organization_id: uuid.UUID = Field(description="ID de la organización")
+    organization_name: str = Field(default="", description="Nombre de la organización")
+    created_by: int = Field(description="ID del usuario que creó el ticket")
+    assigned_to: int | None = Field(description="ID del agente asignado")
+    title: str | None = Field(description="Título del ticket")
+    notes: str | None = Field(description="Notas o descripción")
+    resolved_at: datetime | None = Field(description="Fecha de resolución")
+    created_at: datetime = Field(description="Fecha de creación")
 
     @field_serializer("case_type")
     def serialize_case_type(self, v: SupportCaseType) -> str:
@@ -127,16 +127,16 @@ class SupportTicketSchema(BaseSchema):
 
 
 class TicketAttachmentSchema(BaseSchema):
-    name: str
-    url: str
-    size: int
+    name: str = Field(description="Nombre del archivo")
+    url: str = Field(description="URL de descarga")
+    size: int = Field(description="Tamaño en bytes")
 
 
 class OrgDocSchema(BaseSchema):
-    label: str
-    url: str | None
+    label: str = Field(description="Etiqueta del documento")
+    url: str | None = Field(description="URL del documento")
 
 
 class OrgDocsSchema(BaseSchema):
-    org_name: str
-    documents: list[OrgDocSchema]
+    org_name: str = Field(description="Nombre de la organización")
+    documents: list[OrgDocSchema] = Field(description="Lista de documentos de verificación")

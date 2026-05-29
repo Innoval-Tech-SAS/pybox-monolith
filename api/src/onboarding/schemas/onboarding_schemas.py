@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 
 from base.schema_base import BaseSchema
 from countries.enums.country_enums import (
@@ -14,18 +14,18 @@ from messaging.enums.notification_enums import VerificationChannel
 
 
 class RequestOtpSchema(BaseSchema):
-    channel: VerificationChannel
+    channel: VerificationChannel = Field(description="Canal de envío del OTP: EMAIL o PHONE")
 
 
 class VerifyOtpSchema(BaseSchema):
-    channel: VerificationChannel
-    code: str
+    channel: VerificationChannel = Field(description="Canal usado para el OTP")
+    code: str = Field(description="Código OTP recibido")
 
 
 class UpdateProfileSchema(BaseSchema):
-    document_type: UserDocumentType
-    document_number: str
-    nationality: Nationality
+    document_type: UserDocumentType = Field(description="Tipo de documento de identidad")
+    document_number: str = Field(description="Número de documento")
+    nationality: Nationality = Field(description="Nacionalidad")
 
     @field_validator("document_type")
     @classmethod
@@ -46,32 +46,32 @@ class OnboardingRepMode(str, Enum):
 
 
 class OrganizationOnboardingSchema(BaseSchema):
-    name: str
-    country: Nationality
-    fiscal_document_number: str
-    representative_mode: OnboardingRepMode
-    rep_firstname: str | None = None
-    rep_lastname: str | None = None
-    rep_email: str | None = None
-    rep_document_type: UserDocumentType | None = None
-    rep_document_number: str | None = None
-    rep_password: str | None = None
+    name: str = Field(description="Nombre de la organización")
+    country: Nationality = Field(description="País de la organización")
+    fiscal_document_number: str = Field(description="Número de documento fiscal")
+    representative_mode: OnboardingRepMode = Field(description="Modo del representante: self (el mismo usuario) o create (nuevo usuario)")
+    rep_firstname: str | None = Field(default=None, description="Nombre del representante (si mode=create)")
+    rep_lastname: str | None = Field(default=None, description="Apellido del representante")
+    rep_email: str | None = Field(default=None, description="Correo del representante")
+    rep_document_type: UserDocumentType | None = Field(default=None, description="Tipo de documento del representante")
+    rep_document_number: str | None = Field(default=None, description="Número de documento del representante")
+    rep_password: str | None = Field(default=None, description="Contraseña del representante (si mode=create)")
 
 
 class SetOnboardingPasswordSchema(BaseSchema):
-    new_password: str
+    new_password: str = Field(description="Nueva contraseña")
 
 
 class SetPhoneSchema(BaseSchema):
-    phone_number: str
+    phone_number: str = Field(description="Número de teléfono con prefijo internacional")
 
 
 class OnboardingStatusSchema(BaseSchema):
-    email_verified: bool
-    phone_set: bool
-    phone_verified: bool
-    document_complete: bool
-    org_complete: bool | None
-    must_change_password: bool
-    is_complete: bool
-    missing_steps: list[str]
+    email_verified: bool = Field(description="Correo verificado")
+    phone_set: bool = Field(description="Teléfono registrado")
+    phone_verified: bool = Field(description="Teléfono verificado")
+    document_complete: bool = Field(description="Documento de identidad completado")
+    org_complete: bool | None = Field(description="Organización creada (solo para administradores)")
+    must_change_password: bool = Field(description="El usuario debe cambiar su contraseña")
+    is_complete: bool = Field(description="Indica si el onboarding está completamente terminado")
+    missing_steps: list[str] = Field(description="Lista de pasos pendientes")

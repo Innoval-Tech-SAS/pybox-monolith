@@ -4,12 +4,17 @@ from config.api_router import APIRouter
 from auth.dependencies import TokenPayload
 from contacts.dependencies import ContactServiceDep
 
-router = APIRouter(prefix="/contacts", tags=["contacts"])
+router = APIRouter(prefix="/contacts", tags=["Contactos"])
 
 _ALLOWED_EXTENSIONS = {"csv", "xlsx"}
 
 
-@router.post("/upload-file", status_code=status.HTTP_200_OK)
+@router.post(
+    "/upload-file",
+    status_code=status.HTTP_200_OK,
+    summary="Cargar archivo de contactos",
+    description="Procesa un archivo CSV o XLSX con contactos y retorna un resumen del resultado.",
+)
 async def upload_file(
     file: UploadFile,
     _: TokenPayload,

@@ -18,10 +18,14 @@ from organizations.schemas.organization_schemas import (
 from security.dependencies import CurrentSession
 from users.dependencies import UserServiceDep
 
-router = APIRouter(prefix="/organizations", tags=["organizations"])
+router = APIRouter(prefix="/organizations", tags=["Organizaciones"])
 
 
-@router.get("/", response_model=list[OrganizationResponse])
+@router.get(
+    "/",
+    response_model=list[OrganizationResponse],
+    summary="Listar organizaciones del usuario",
+)
 async def list_organizations(
     session: CurrentSession,
     scope: CurrentScope,
@@ -30,7 +34,11 @@ async def list_organizations(
     return await service.get_for_user(session.user_id, scope)
 
 
-@router.get("/{org_id}", response_model=OrganizationResponse)
+@router.get(
+    "/{org_id}",
+    response_model=OrganizationResponse,
+    summary="Obtener organización por ID",
+)
 async def get_organization(
     org_id: uuid.UUID,
     _: CurrentSession,
@@ -39,7 +47,12 @@ async def get_organization(
     return await service.get_by_id(org_id)
 
 
-@router.post("/", response_model=OrganizationResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=OrganizationResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear organización",
+)
 async def create_organization(
     body: OrganizationCreate,
     session: CurrentSession,
@@ -52,7 +65,11 @@ async def create_organization(
     return org
 
 
-@router.patch("/{org_id}", response_model=OrganizationResponse)
+@router.patch(
+    "/{org_id}",
+    response_model=OrganizationResponse,
+    summary="Actualizar datos de la organización",
+)
 async def update_organization(
     org_id: uuid.UUID,
     body: OrganizationUpdate,
@@ -63,7 +80,11 @@ async def update_organization(
     return await service.update_organization(org_id, body, session.user_id, admin_scope)
 
 
-@router.delete("/{org_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{org_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar organización",
+)
 async def delete_organization(
     org_id: uuid.UUID,
     session: CurrentSession,
@@ -73,7 +94,13 @@ async def delete_organization(
     await service.delete_organization(org_id, session.user_id, admin_scope)
 
 
-@router.post("/register", response_model=OrgRegisterResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=OrgRegisterResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar organización con documentos",
+    description="Crea una organización con sus documentos fiscales, mercantiles y del representante legal. Genera automáticamente un ticket de verificación.",
+)
 async def register_organization(
     session: CurrentSession,
     admin_scope: AdminScopeDep,

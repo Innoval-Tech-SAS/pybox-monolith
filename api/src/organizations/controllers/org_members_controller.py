@@ -16,7 +16,7 @@ from users.schemas.user_management_schemas import (
     PortfolioAccessEntry,
 )
 
-router = APIRouter(prefix="/organizations/{org_id}/members", tags=["org-members"])
+router = APIRouter(prefix="/organizations/{org_id}/members", tags=["Miembros de Organización"])
 
 
 def _require_org_admin(session: CurrentSession, org_id: uuid.UUID) -> int:
@@ -29,7 +29,12 @@ def _require_org_admin(session: CurrentSession, org_id: uuid.UUID) -> int:
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso restringido a administradores.")
 
 
-@router.post("", response_model=ManagedUserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ManagedUserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear miembro de organización",
+)
 async def create_org_member(
     org_id: uuid.UUID,
     body: ManagedUserCreate,
@@ -45,7 +50,11 @@ async def create_org_member(
     return await service.create_org_member(actor_id, org_id, body)
 
 
-@router.get("/{user_id}/permissions", response_model=PermissionListResponse)
+@router.get(
+    "/{user_id}/permissions",
+    response_model=PermissionListResponse,
+    summary="Listar permisos del miembro",
+)
 async def list_permissions(
     org_id: uuid.UUID,
     user_id: int,
@@ -56,7 +65,12 @@ async def list_permissions(
     return await service.list_permissions(user_id, org_id)
 
 
-@router.put("/{user_id}/permissions", response_model=PermissionEntry, status_code=status.HTTP_200_OK)
+@router.put(
+    "/{user_id}/permissions",
+    response_model=PermissionEntry,
+    status_code=status.HTTP_200_OK,
+    summary="Asignar permiso al miembro",
+)
 async def assign_permission(
     org_id: uuid.UUID,
     user_id: int,
@@ -68,7 +82,11 @@ async def assign_permission(
     return await service.assign_permission(user_id, org_id, body.name, body.effect)
 
 
-@router.delete("/{user_id}/permissions/{permission_name}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{user_id}/permissions/{permission_name}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Revocar permiso del miembro",
+)
 async def remove_permission(
     org_id: uuid.UUID,
     user_id: int,
@@ -80,7 +98,11 @@ async def remove_permission(
     await service.remove_permission(user_id, org_id, permission_name)
 
 
-@router.get("/{user_id}/portfolios", response_model=list[PortfolioAccessEntry])
+@router.get(
+    "/{user_id}/portfolios",
+    response_model=list[PortfolioAccessEntry],
+    summary="Listar portafolios con acceso del miembro",
+)
 async def list_portfolio_access(
     org_id: uuid.UUID,
     user_id: int,
@@ -92,7 +114,11 @@ async def list_portfolio_access(
     return [PortfolioAccessEntry(portfolio_id=pid, name=name, has_access=has) for pid, name, has in items]
 
 
-@router.put("/{user_id}/portfolios/{portfolio_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    "/{user_id}/portfolios/{portfolio_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Conceder acceso a portafolio",
+)
 async def grant_portfolio_access(
     org_id: uuid.UUID,
     user_id: int,
@@ -104,7 +130,11 @@ async def grant_portfolio_access(
     await access_service.grant_access(user_id, portfolio_id, org_id, granted_by=session.user_id)
 
 
-@router.delete("/{user_id}/portfolios/{portfolio_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{user_id}/portfolios/{portfolio_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Revocar acceso a portafolio",
+)
 async def revoke_portfolio_access(
     org_id: uuid.UUID,
     user_id: int,

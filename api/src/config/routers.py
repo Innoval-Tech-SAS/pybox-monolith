@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from auth.controllers.auth_controller import router as auth_router
 from contacts.controllers.contact_controller import router as contacts_router
+from debtors.controllers.debtor_controller import router as debtors_router
 from countries.controllers.countries_controller import router as countries_router
 from credits.controllers.my_credits_controller import router as my_credits_router
 from notifications.controllers.notification_controller import router as notifications_router
@@ -21,6 +22,7 @@ _API_PREFIX = "/api/v1"
 def register_routers(app: FastAPI) -> None:
     app.include_router(auth_router, prefix=_API_PREFIX)
     app.include_router(contacts_router, prefix=_API_PREFIX)
+    app.include_router(debtors_router, prefix=_API_PREFIX)
     app.include_router(countries_router, prefix=_API_PREFIX)
     app.include_router(my_credits_router, prefix=_API_PREFIX)
     app.include_router(notifications_router, prefix=_API_PREFIX)

@@ -36,7 +36,8 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="API",
+    title="API de Gestión de Cartera",
+    description="Plataforma de administración de portafolios, deudores, créditos y soporte.",
     version="1.0.0",
     lifespan=lifespan,
 )

@@ -9,7 +9,7 @@ from database.redis import redis_client
 from security.services.auth_token_service import AuthTokenService
 from users.schemas.user_session_schema import UserSession, session_key
 
-router = APIRouter(prefix="/chats", tags=["chats"])
+router = APIRouter(prefix="/chats", tags=["Chats"])
 
 _ws_auth = AuthTokenService()
 

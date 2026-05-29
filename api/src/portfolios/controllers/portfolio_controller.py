@@ -28,7 +28,7 @@ from users.schemas.user_session_schema import UserSession
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/portfolios", tags=["portfolios"])
+router = APIRouter(prefix="/portfolios", tags=["Portafolios"])
 
 _uploading_orgs: set[uuid.UUID] = set()
 
@@ -188,7 +188,7 @@ async def _update_and_notify(
 # Endpoints
 # ------------------------------------------------------------------
 
-@router.get("/", response_model=list[PortfolioResponse])
+@router.get("/", response_model=list[PortfolioResponse], summary="Listar portafolios accesibles")
 async def list_portfolios(
     session: CurrentSession,
     service: PortfolioServiceDep,
@@ -209,7 +209,7 @@ async def list_portfolios(
     return await service.list_accessible_portfolios(session, selected_org_id, is_active)
 
 
-@router.post("/upload-csv", status_code=status.HTTP_202_ACCEPTED, response_model=None)
+@router.post("/upload-csv", status_code=status.HTTP_202_ACCEPTED, response_model=None, summary="Crear portafolio desde CSV/XLSX")
 async def upload_csv(
     background_tasks: BackgroundTasks,
     file: UploadFile,
@@ -253,7 +253,7 @@ async def upload_csv(
     return None
 
 
-@router.post("/upload-csv/append", status_code=status.HTTP_202_ACCEPTED, response_model=None)
+@router.post("/upload-csv/append", status_code=status.HTTP_202_ACCEPTED, response_model=None, summary="Agregar registros al portafolio desde CSV/XLSX")
 async def upload_csv_append(
     background_tasks: BackgroundTasks,
     file: UploadFile,
@@ -294,7 +294,7 @@ async def upload_csv_append(
     return None
 
 
-@router.post("/upload-csv/update", status_code=status.HTTP_202_ACCEPTED, response_model=None)
+@router.post("/upload-csv/update", status_code=status.HTTP_202_ACCEPTED, response_model=None, summary="Actualizar portafolio existente desde CSV/XLSX")
 async def upload_csv_update(
     background_tasks: BackgroundTasks,
     file: UploadFile,
@@ -335,7 +335,7 @@ async def upload_csv_update(
     return None
 
 
-@router.get("/{portfolio_id}", response_model=PortfolioResponse)
+@router.get("/{portfolio_id}", response_model=PortfolioResponse, summary="Obtener portafolio por ID")
 async def get_portfolio(
     portfolio_id: uuid.UUID,
     session: CurrentSession,
@@ -352,7 +352,7 @@ async def get_portfolio(
     return portfolio
 
 
-@router.patch("/{portfolio_id}", response_model=PortfolioResponse)
+@router.patch("/{portfolio_id}", response_model=PortfolioResponse, summary="Actualizar portafolio")
 async def update_portfolio(
     portfolio_id: uuid.UUID,
     data: PortfolioUpdateRequest,
@@ -364,7 +364,7 @@ async def update_portfolio(
     return await service.update_portfolio(portfolio_id, data)
 
 
-@router.delete("/{portfolio_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{portfolio_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar portafolio")
 async def delete_portfolio(
     portfolio_id: uuid.UUID,
     session: CurrentSession,
@@ -375,7 +375,7 @@ async def delete_portfolio(
     await service.delete_portfolio(portfolio_id)
 
 
-@router.get("/{portfolio_id}/stats", response_model=PortfolioStatsResponse)
+@router.get("/{portfolio_id}/stats", response_model=PortfolioStatsResponse, summary="Obtener estadísticas del portafolio")
 async def get_portfolio_stats(
     portfolio_id: uuid.UUID,
     session: CurrentSession,
@@ -384,7 +384,7 @@ async def get_portfolio_stats(
     return await service.get_stats(portfolio_id)
 
 
-@router.get("/{portfolio_id}/access", response_model=list[PortfolioAccessEntry])
+@router.get("/{portfolio_id}/access", response_model=list[PortfolioAccessEntry], summary="Listar usuarios con acceso al portafolio")
 async def list_portfolio_access(
     portfolio_id: uuid.UUID,
     session: CurrentSession,
@@ -396,7 +396,7 @@ async def list_portfolio_access(
     return await access_service.list_portfolio_access(portfolio_id)
 
 
-@router.put("/{portfolio_id}/access", response_model=list[PortfolioAccessEntry])
+@router.put("/{portfolio_id}/access", response_model=list[PortfolioAccessEntry], summary="Reemplazar lista de acceso al portafolio")
 async def replace_portfolio_access(
     portfolio_id: uuid.UUID,
     body: PortfolioAccessReplaceRequest,
@@ -414,7 +414,7 @@ async def replace_portfolio_access(
     )
 
 
-@router.get("/{portfolio_id}/daily-counter-config", response_model=PortfolioDailyCounterConfigResponse | None)
+@router.get("/{portfolio_id}/daily-counter-config", response_model=PortfolioDailyCounterConfigResponse | None, summary="Obtener configuración del contador diario")
 async def get_daily_counter_config(
     portfolio_id: uuid.UUID,
     session: CurrentSession,
@@ -431,7 +431,7 @@ async def get_daily_counter_config(
     return await service.get_daily_counter_config(portfolio_id)
 
 
-@router.patch("/{portfolio_id}/daily-counter-config", response_model=PortfolioDailyCounterConfigResponse)
+@router.patch("/{portfolio_id}/daily-counter-config", response_model=PortfolioDailyCounterConfigResponse, summary="Actualizar configuración del contador diario")
 async def update_daily_counter_config(
     portfolio_id: uuid.UUID,
     data: PortfolioDailyCounterConfigUpdateRequest,
