@@ -40,7 +40,7 @@ export const useNotifications = () => {
     });
 
     es.onerror = () => {
-      es.close();
+      // Let the browser auto-reconnect; closing here would kill reconnection
     };
 
     return () => es.close();

@@ -204,3 +204,14 @@ class ChatService:
             await self.msg_repo.mark_read(msg_id, user_id, now)
         members = await self.chat_repo.get_active_members(chat_id)
         return [m.user_id for m in members if m.user_id != user_id]
+
+    async def mark_all_read(
+        self, chat_id: str, user_id: int
+    ) -> tuple[list[int], list[str]]:
+        await self.assert_member(chat_id, user_id)
+        now = datetime.now(timezone.utc)
+        unread_ids = await self.msg_repo.get_unread_message_ids(chat_id, user_id)
+        await self.msg_repo.mark_all_read(chat_id, user_id, now)
+        members = await self.chat_repo.get_active_members(chat_id)
+        other_ids = [m.user_id for m in members if m.user_id != user_id]
+        return other_ids, unread_ids

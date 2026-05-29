@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { Card, CardTitle } from "@/ui/components/card";
-import { ArrowUpCircle } from "lucide-react";
+import { ArrowUpCircle, CheckCircle, FileText, Paperclip, X } from "lucide-react";
 import { resolveProfilePhotoUrl } from "@/profile/utils/profile-photo-url";
 import { useTicketCreator } from "@/support/hooks/use-ticket-creator";
 import { useTicketAssignee } from "@/support/hooks/use-ticket-assignee";
 import { useEscalateTicket } from "@/support/hooks/use-escalate-ticket";
+import { useResolveTicket } from "@/support/hooks/use-resolve-ticket";
+import { useUploadClosureAttachments } from "@/support/hooks/use-upload-closure-attachments";
 import { TicketOrgDocsViewer } from "./ticket-org-docs-viewer";
 import { TicketAttachments } from "./ticket-attachments";
+import { TicketClosureAttachments } from "./ticket-closure-attachments";
 import {
   formatTicketDetailDate,
   getStatusBadgeStyles,
@@ -57,11 +61,20 @@ const _orgRoles = Object.values(_session?.orgs ?? {}).map((o) => o.role);
 const canEscalate =
   _session?.scope === Scope.GLOBAL ||
   (_session?.scope === Scope.ORG && _orgRoles.includes(Role.CS));
+const canResolve =
+  (_session?.scope === Scope.GLOBAL && (_session?.role === Role.CS || _session?.role === Role.ADMIN)) ||
+  (_session?.scope === Scope.ORG && _orgRoles.includes(Role.CS));
 
 export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTicketResolved, onTicketEscalated }) => {
   const { creator } = useTicketCreator(ticket.createdBy);
   const { assignee } = useTicketAssignee(ticket.assignedTo ?? undefined);
   const { escalateTicket, loading: escalating } = useEscalateTicket();
+  const { resolveTicket, loading: resolving } = useResolveTicket();
+  const { uploadClosureAttachments, loading: uploading } = useUploadClosureAttachments();
+  const [showResolveForm, setShowResolveForm] = useState(false);
+  const [resolveNotes, setResolveNotes] = useState("");
+  const [closureFiles, setClosureFiles] = useState<File[]>([]);
+  const [closureKey, setClosureKey] = useState(0);
   const isOrgVerification = ticket.caseType === "requirement";
   const displayId = getTicketDisplayId(ticket.ticketNumber, ticket.caseType);
   const isResolved = ticket.status === "resolved";
@@ -70,6 +83,32 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
     const updated = await escalateTicket(ticket.ticketNumber);
     if (updated) onTicketEscalated?.(updated);
   };
+
+  const handleResolve = async () => {
+    if (!resolveNotes.trim()) return;
+    if (closureFiles.length) {
+      await uploadClosureAttachments(ticket.ticketNumber, closureFiles);
+    }
+    const updated = await resolveTicket(ticket.ticketNumber, { approved: true, notes: resolveNotes });
+    if (updated) {
+      onTicketResolved?.(updated);
+      setShowResolveForm(false);
+      setResolveNotes("");
+      setClosureFiles([]);
+      setClosureKey((k) => k + 1);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? []);
+    setClosureFiles((prev) => {
+      const existing = new Set(prev.map((f) => f.name));
+      return [...prev, ...selected.filter((f) => !existing.has(f.name))];
+    });
+    e.target.value = "";
+  };
+
+  const removeFile = (name: string) => setClosureFiles((prev) => prev.filter((f) => f.name !== name));
 
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -100,12 +139,17 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
         {/* Notes */}
         <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
-            Notas
+            {isResolved ? "Nota de cierre" : "Notas"}
           </p>
           <p className="whitespace-pre-line text-sm text-gray-700 dark:text-gray-300">
             {ticket.notes ?? "Este ticket todavía no tiene notas registradas."}
           </p>
         </div>
+
+        {/* Closure attachments — only when resolved */}
+        {isResolved && !isOrgVerification && (
+          <TicketClosureAttachments ticketNumber={ticket.ticketNumber} refreshTrigger={closureKey} />
+        )}
 
         {/* Org verification documents + resolve actions */}
         {isOrgVerification && (
@@ -113,6 +157,85 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
             ticket={ticket}
             onResolved={onTicketResolved ?? (() => {})}
           />
+        )}
+
+        {/* Resolve action for INCIDENT tickets */}
+        {!isOrgVerification && canResolve && !isResolved && (
+          <div className="mt-6">
+            {!showResolveForm ? (
+              <button
+                onClick={() => setShowResolveForm(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-success-50 px-4 py-2 text-sm font-medium text-success-700 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20"
+              >
+                <CheckCircle size={15} />
+                Resolver ticket
+              </button>
+            ) : (
+              <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/3">
+                <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Cerrando ticket</p>
+                <textarea
+                  value={resolveNotes}
+                  onChange={(e) => setResolveNotes(e.target.value)}
+                  placeholder="Nota de cierre obligatoria..."
+                  rows={3}
+                  className="w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-300 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:placeholder-gray-600 dark:focus:border-brand-500"
+                />
+                {!resolveNotes.trim() && (
+                  <p className="mt-1 text-xs text-error-500">La nota de cierre es obligatoria.</p>
+                )}
+
+                <div className="mt-3">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-gray-200 px-3 py-2 text-xs font-medium text-gray-500 hover:border-brand-300 hover:text-brand-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-brand-500 dark:hover:text-brand-400">
+                    <Paperclip size={13} />
+                    Adjuntar archivos de cierre
+                    <input
+                      type="file"
+                      className="sr-only"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.doc"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                  {closureFiles.length > 0 && (
+                    <ul className="mt-2 flex flex-col gap-1">
+                      {closureFiles.map((f) => (
+                        <li key={f.name} className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                          <FileText size={12} className="shrink-0" />
+                          <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                          <button type="button" onClick={() => removeFile(f.name)} className="shrink-0 text-gray-400 hover:text-error-500">
+                            <X size={12} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={handleResolve}
+                    disabled={resolving || uploading || !resolveNotes.trim()}
+                    className="inline-flex items-center gap-2 rounded-lg bg-success-500 px-4 py-2 text-sm font-medium text-white hover:bg-success-600 disabled:opacity-60"
+                  >
+                    {resolving || uploading ? "Procesando..." : "Confirmar"}
+                  </button>
+                  <button
+                    onClick={() => { setShowResolveForm(false); setResolveNotes(""); setClosureFiles([]); }}
+                    className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/5"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isOrgVerification && isResolved && (
+          <p className="mt-6 flex items-center gap-1.5 text-sm text-success-600 dark:text-success-400">
+            <CheckCircle size={14} />
+            Ticket resuelto
+          </p>
         )}
 
         <TicketAttachments ticketNumber={ticket.ticketNumber} />

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import type { TicketAttachment } from "@/types/support/support-types";
 
-export const useTicketAttachments = (ticketNumber: number) => {
+export const useTicketAttachments = (ticketNumber: number, refreshTrigger?: number) => {
   const { apiClient } = useApiClient();
   const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,7 @@ export const useTicketAttachments = (ticketNumber: number) => {
 
   useEffect(() => {
     fetchAttachments();
-  }, [fetchAttachments]);
+  }, [fetchAttachments, refreshTrigger]);
 
   return { attachments, loading, refetch: fetchAttachments };
 };

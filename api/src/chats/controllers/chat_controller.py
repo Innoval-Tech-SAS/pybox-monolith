@@ -1,22 +1,13 @@
 import json
 
-from fastapi import HTTPException, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import HTTPException, Query, WebSocket, WebSocketDisconnect
 
 from chats.dependencies import ChatServiceDep
-from chats.schemas.chat_schemas import (
-    DirectChatRequest,
-    MarkReadRequest,
-    MessagesPageSchema,
-    MessageSchema,
-    ChatSummarySchema,
-    SendMessageRequest,
-)
 from chats.websocket.connection_manager import ws_manager
 from config.api_router import APIRouter
 from database.redis import redis_client
 from security.services.auth_token_service import AuthTokenService
 from users.schemas.user_session_schema import UserSession, session_key
-from security.dependencies import CurrentSession
 
 router = APIRouter(prefix="/chats", tags=["chats"])
 
@@ -27,74 +18,16 @@ async def _authenticate_ws(token: str) -> UserSession:
     try:
         payload = _ws_auth.verify_token(token)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status_code=401)
     user_id = int(payload["sub"])
     session = await redis_client.get_json(session_key(user_id), UserSession)
     if session is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status_code=401)
     return session
 
 
-@router.get("", response_model=list[ChatSummarySchema])
-async def list_chats(session: CurrentSession, service: ChatServiceDep):
-    return await service.get_user_chats(session.user_id)
-
-
-@router.post("/direct", response_model=ChatSummarySchema)
-async def create_direct_chat(
-    body: DirectChatRequest, session: CurrentSession, service: ChatServiceDep
-):
-    return await service.find_or_create_direct_chat(session.user_id, body.peer_id)
-
-
-@router.get("/{chat_id}/messages", response_model=MessagesPageSchema)
-async def list_messages(
-    chat_id: str,
-    session: CurrentSession,
-    service: ChatServiceDep,
-    before: str | None = Query(None),
-    limit: int = Query(50, ge=1, le=100),
-):
-    return await service.list_messages(chat_id, session.user_id, before, limit)
-
-
-@router.post("/{chat_id}/messages", response_model=MessageSchema)
-async def send_message(
-    chat_id: str,
-    body: SendMessageRequest,
-    session: CurrentSession,
-    service: ChatServiceDep,
-):
-    msg_schema, recipient_ids = await service.send_message(
-        chat_id, session.user_id, body.body
-    )
-    msg_data = json.loads(msg_schema.model_dump_json(by_alias=True))
-    for uid in recipient_ids:
-        await ws_manager.send_to_user(uid, "message", msg_data)
-    return msg_schema
-
-
-@router.post("/{chat_id}/read", status_code=status.HTTP_204_NO_CONTENT)
-async def mark_read(
-    chat_id: str,
-    body: MarkReadRequest,
-    session: CurrentSession,
-    service: ChatServiceDep,
-):
-    other_member_ids = await service.mark_read(
-        chat_id, session.user_id, body.message_ids
-    )
-    read_data = {
-        "chatId": chat_id,
-        "messageIds": body.message_ids,
-        "readerId": session.user_id,
-    }
-    for uid in other_member_ids:
-        await ws_manager.send_to_user(uid, "read", read_data)
-
-
 @router.websocket("/ws")
-async def chat_ws(ws: WebSocket, token: str = Query(...)):
+async def chat_ws(ws: WebSocket, service: ChatServiceDep, token: str = Query(...)):
     try:
         session = await _authenticate_ws(token)
     except HTTPException:
@@ -104,6 +37,79 @@ async def chat_ws(ws: WebSocket, token: str = Query(...)):
     await ws_manager.connect(session.user_id, ws)
     try:
         while True:
-            await ws.receive_text()
+            raw = await ws.receive_text()
+            try:
+                msg = json.loads(raw)
+                event = msg.get("event")
+                data = msg.get("data", {})
+            except (json.JSONDecodeError, AttributeError):
+                continue
+
+            try:
+                req_id = data.get("requestId") if isinstance(data, dict) else None
+
+                async def reply(out_event: str, out_data) -> None:
+                    payload = {"event": out_event, "data": out_data}
+                    if req_id:
+                        payload["requestId"] = req_id
+                    await ws.send_json(payload)
+
+                if event == "list_chats":
+                    chats = await service.get_user_chats(session.user_id)
+                    await reply("chats", [json.loads(c.model_dump_json(by_alias=True)) for c in chats])
+
+                elif event == "create_direct_chat":
+                    peer_id: int | None = data.get("peerId")
+                    if peer_id:
+                        chat = await service.find_or_create_direct_chat(session.user_id, peer_id)
+                        await reply("chat", json.loads(chat.model_dump_json(by_alias=True)))
+
+                elif event == "list_messages":
+                    chat_id: str | None = data.get("chatId")
+                    if chat_id:
+                        before = data.get("before")
+                        limit = data.get("limit", 50)
+                        page = await service.list_messages(chat_id, session.user_id, before, limit)
+                        await reply("messages", json.loads(page.model_dump_json(by_alias=True)))
+
+                elif event == "send_message":
+                    chat_id = data.get("chatId")
+                    body = data.get("body", "")
+                    if chat_id:
+                        msg_schema, recipient_ids = await service.send_message(chat_id, session.user_id, body)
+                        msg_data = json.loads(msg_schema.model_dump_json(by_alias=True))
+                        for uid in recipient_ids:
+                            await ws_manager.send_to_user(uid, "message", msg_data)
+                        await reply("message", msg_data)
+
+                elif event == "read":
+                    chat_id = data.get("chatId")
+                    message_ids = data.get("messageIds", [])
+                    if chat_id and message_ids:
+                        other_ids = await service.mark_read(chat_id, session.user_id, message_ids)
+                        read_data = {
+                            "chatId": chat_id,
+                            "messageIds": message_ids,
+                            "readerId": session.user_id,
+                        }
+                        for uid in other_ids:
+                            await ws_manager.send_to_user(uid, "read", read_data)
+
+                elif event == "read_all":
+                    chat_id = data.get("chatId")
+                    if chat_id:
+                        other_ids, msg_ids = await service.mark_all_read(chat_id, session.user_id)
+                        if msg_ids:
+                            read_data = {
+                                "chatId": chat_id,
+                                "messageIds": msg_ids,
+                                "readerId": session.user_id,
+                            }
+                            for uid in other_ids:
+                                await ws_manager.send_to_user(uid, "read", read_data)
+
+            except HTTPException as e:
+                await ws.send_json({"event": "error", "data": {"detail": e.detail}})
+
     except WebSocketDisconnect:
         ws_manager.disconnect(session.user_id, ws)

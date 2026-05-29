@@ -78,6 +78,21 @@ async def upload_attachments(
     return await service.upload_attachments(ticket_number, files, f)
 
 
+@router.get("/{ticket_number}/closure-attachments", response_model=list[TicketAttachmentSchema])
+async def list_closure_attachments(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+    return await service.list_closure_attachments(ticket_number, f)
+
+
+@router.post("/{ticket_number}/closure-attachments", response_model=list[TicketAttachmentSchema])
+async def upload_closure_attachments(
+    ticket_number: int,
+    files: Annotated[list[UploadFile], File()],
+    f: SupportAccessFilter,
+    service: SupportServiceDep,
+):
+    return await service.upload_closure_attachments(ticket_number, files, f)
+
+
 @router.post("/{ticket_number}/escalate", response_model=SupportTicketSchema)
 async def escalate_ticket(
     ticket_number: int,

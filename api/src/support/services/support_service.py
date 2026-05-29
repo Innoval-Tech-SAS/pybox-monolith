@@ -256,10 +256,16 @@ class SupportService:
         return safe[:120]
 
     def _attachment_folder(self, ticket_number: int) -> str:
-        return os.path.join(UPLOADS_ROOT, "tickets", str(ticket_number))
+        return os.path.join(UPLOADS_ROOT, "tickets", str(ticket_number), "attachments")
 
     def _attachment_url(self, ticket_number: int, name: str) -> str:
-        return f"/files/tickets/{ticket_number}/{name}"
+        return f"/files/tickets/{ticket_number}/attachments/{name}"
+
+    def _closure_folder(self, ticket_number: int) -> str:
+        return os.path.join(UPLOADS_ROOT, "tickets", str(ticket_number), "closure")
+
+    def _closure_url(self, ticket_number: int, name: str) -> str:
+        return f"/files/tickets/{ticket_number}/closure/{name}"
 
     async def upload_attachments(
         self, ticket_number: int, files: list[UploadFile], f: SupportFilter
@@ -288,6 +294,54 @@ class SupportService:
             with open(dest, "wb") as fh:
                 fh.write(content)
             result.append(TicketAttachmentSchema(name=safe_name, url=self._attachment_url(ticket_number, safe_name), size=len(content)))
+        return result
+
+    async def upload_closure_attachments(
+        self, ticket_number: int, files: list[UploadFile], f: SupportFilter
+    ) -> list[TicketAttachmentSchema]:
+        if not f.can_resolve:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para adjuntar evidencias de cierre.")
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
+        if ticket is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
+        if f.org_ids is not None and ticket.organization_id not in f.org_ids:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+
+        folder = self._closure_folder(ticket_number)
+        os.makedirs(folder, exist_ok=True)
+
+        result = []
+        for upload in files:
+            ext = os.path.splitext(upload.filename or "")[1].lower()
+            if ext not in self._ALLOWED_EXTENSIONS:
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Tipo de archivo no permitido: {ext}")
+            content = await upload.read()
+            if len(content) > self._MAX_FILE_SIZE:
+                raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="El archivo excede el tamaño máximo de 10 MB.")
+            safe_name = self._safe_filename(upload.filename)
+            dest = os.path.join(folder, safe_name)
+            with open(dest, "wb") as fh:
+                fh.write(content)
+            result.append(TicketAttachmentSchema(name=safe_name, url=self._closure_url(ticket_number, safe_name), size=len(content)))
+        return result
+
+    async def list_closure_attachments(self, ticket_number: int, f: SupportFilter) -> list[TicketAttachmentSchema]:
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
+        if ticket is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
+        if f.org_ids is not None and ticket.organization_id not in f.org_ids:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+        if f.created_by is not None and ticket.created_by != f.created_by:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+
+        folder = self._closure_folder(ticket_number)
+        if not os.path.isdir(folder):
+            return []
+        result = []
+        for name in sorted(os.listdir(folder)):
+            path = os.path.join(folder, name)
+            if os.path.isfile(path):
+                result.append(TicketAttachmentSchema(name=name, url=self._closure_url(ticket_number, name), size=os.path.getsize(path)))
         return result
 
     async def list_attachments(self, ticket_number: int, f: SupportFilter) -> list[TicketAttachmentSchema]:

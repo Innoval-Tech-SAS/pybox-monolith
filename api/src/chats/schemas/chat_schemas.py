@@ -3,17 +3,6 @@ from datetime import datetime
 from base.schema_base import BaseSchema
 
 
-class DirectChatRequest(BaseSchema):
-    peer_id: int
-
-
-class SendMessageRequest(BaseSchema):
-    body: str
-
-
-class MarkReadRequest(BaseSchema):
-    message_ids: list[str]
-
 
 class MessageSchema(BaseSchema):
     id: str

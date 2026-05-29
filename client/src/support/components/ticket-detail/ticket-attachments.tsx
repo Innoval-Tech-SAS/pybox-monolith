@@ -21,10 +21,11 @@ const FileIcon: React.FC<{ name: string }> = ({ name }) => {
 
 interface TicketAttachmentsProps {
   ticketNumber: number;
+  refreshTrigger?: number;
 }
 
-export const TicketAttachments: React.FC<TicketAttachmentsProps> = ({ ticketNumber }) => {
-  const { attachments, loading } = useTicketAttachments(ticketNumber);
+export const TicketAttachments: React.FC<TicketAttachmentsProps> = ({ ticketNumber, refreshTrigger }) => {
+  const { attachments, loading } = useTicketAttachments(ticketNumber, refreshTrigger);
 
   if (loading) {
     return (
@@ -37,7 +38,16 @@ export const TicketAttachments: React.FC<TicketAttachmentsProps> = ({ ticketNumb
     );
   }
 
-  if (!attachments.length) return null;
+  if (!attachments.length) {
+    return (
+      <div className="mt-6">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+          Adjuntos
+        </p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Sin adjuntos.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-6">

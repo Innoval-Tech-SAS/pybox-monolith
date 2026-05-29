@@ -65,6 +65,36 @@ class MessageRepository(RepositoryBase[MessageModel]):
         )
         return result.scalar() or 0
 
+    async def get_unread_message_ids(self, chat_id: str, user_id: int) -> list[str]:
+        result = await self.session.execute(
+            select(MessageStatusModel.message_id)
+            .join(MessageModel, MessageModel.id == MessageStatusModel.message_id)
+            .where(
+                MessageModel.chat_id == chat_id,
+                MessageStatusModel.user_id == user_id,
+                MessageStatusModel.read_at.is_(None),
+                MessageModel.sender_id != user_id,
+            )
+        )
+        return list(result.scalars().all())
+
+    async def mark_all_read(self, chat_id: str, user_id: int, now: datetime) -> None:
+        await self.session.execute(
+            update(MessageStatusModel)
+            .where(
+                MessageStatusModel.user_id == user_id,
+                MessageStatusModel.read_at.is_(None),
+                MessageStatusModel.message_id.in_(
+                    select(MessageModel.id).where(
+                        MessageModel.chat_id == chat_id,
+                        MessageModel.sender_id != user_id,
+                    )
+                ),
+            )
+            .values(read_at=now)
+        )
+        await self.session.flush()
+
     async def get_statuses_for_messages(
         self, message_ids: list[str]
     ) -> dict[str, list[MessageStatusModel]]:

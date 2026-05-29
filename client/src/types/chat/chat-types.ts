@@ -46,4 +46,8 @@ export interface ChatWindow {
 
 export type WsChatEvent =
   | { event: "message"; data: ChatMessage }
-  | { event: "read"; data: { chatId: string; messageIds: string[]; readerId: number } };
+  | { event: "read"; data: { chatId: string; messageIds: string[]; readerId: number } }
+  | { event: "chats"; data: ChatSummary[] }
+  | { event: "chat"; data: ChatSummary }
+  | { event: "messages"; data: MessagesPage }
+  | { event: "error"; data: { detail: string } };
