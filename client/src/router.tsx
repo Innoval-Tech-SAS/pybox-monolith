@@ -10,6 +10,7 @@ import { PortfolioDebtorsPage } from "./companies/pages/portfolio-debtors-page";
 import { DebtorDetailPage } from "./companies/pages/debtor-detail-page";
 import { PortfolioSettingsPage } from "./companies/pages/portfolio-settings-page";
 import { OrgSettingsPage } from "./companies/pages/org-settings-page";
+import { PaymentMethodsPage } from "./companies/pages/payment-methods-page";
 import { HomePage } from "./home/pages/home-page";
 import { NotificationDetailPage } from "./notifications/pages/notification-detail-page";
 import { NotificationsPage } from "./notifications/pages/notifications-page";
@@ -104,6 +105,10 @@ export const authRouter = [
   {
     path: "/my-companies/settings",
     element: <OrgSettingsPage />,
+  },
+  {
+    path: "/my-companies/payment-methods",
+    element: <PaymentMethodsPage />,
   },
   {
     path: "/my-users",

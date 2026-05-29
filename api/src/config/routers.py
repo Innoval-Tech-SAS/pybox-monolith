@@ -9,6 +9,7 @@ from notifications.controllers.notification_controller import router as notifica
 from onboarding.controllers.onboarding_controller import router as onboarding_router
 from organizations.controllers.organization_controller import router as organizations_router
 from organizations.controllers.org_members_controller import router as org_members_router
+from payment_methods.controllers.payment_method_controller import router as payment_methods_router
 from portfolios.controllers.portfolio_controller import router as portfolios_router
 from support.controllers.support_controller import router as support_router
 from chats.controllers.chat_controller import router as chats_router
@@ -29,6 +30,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(onboarding_router, prefix=_API_PREFIX)
     app.include_router(organizations_router, prefix=_API_PREFIX)
     app.include_router(org_members_router, prefix=_API_PREFIX)
+    app.include_router(payment_methods_router, prefix=_API_PREFIX)
     app.include_router(portfolios_router, prefix=_API_PREFIX)
     app.include_router(chats_router, prefix=_API_PREFIX)
     app.include_router(support_router, prefix=_API_PREFIX)
