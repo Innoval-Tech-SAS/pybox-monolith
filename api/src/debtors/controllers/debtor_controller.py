@@ -12,6 +12,7 @@ from debtors.schemas.debtor_schemas import (
     CreateAddressRequest,
     CreateContactMethodRequest,
     CreateDebtorRequest,
+    DebtorCreditResponse,
     DebtorDetailResponse,
     DebtorListResponse,
     DebtorResponse,
@@ -75,6 +76,21 @@ async def get_related_contacts(
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
 ) -> RelatedContactsResponse:
     return await service.get_related_contacts(debtor_id, portfolio_id, session)
+
+
+@router.get(
+    "/{debtor_id}/credits",
+    response_model=list[DebtorCreditResponse],
+    summary="Créditos del deudor en un portafolio",
+    description="Lista de créditos del deudor (como titular) en el portafolio dado.",
+)
+async def get_debtor_credits(
+    debtor_id: int,
+    session: CurrentSession,
+    service: DebtorServiceDep,
+    portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
+) -> list[DebtorCreditResponse]:
+    return await service.get_debtor_credits(debtor_id, portfolio_id, session)
 
 
 @router.post(

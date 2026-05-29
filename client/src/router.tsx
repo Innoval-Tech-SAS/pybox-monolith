@@ -7,6 +7,7 @@ import { CreatePortfolioPage } from "./companies/pages/create-portfolio-page";
 import { EditPortfolioPage } from "./companies/pages/edit-portfolio-page";
 import { MyPortfoliosPage } from "./companies/pages/my-portfolios-page";
 import { PortfolioDebtorsPage } from "./companies/pages/portfolio-debtors-page";
+import { DebtorDetailPage } from "./companies/pages/debtor-detail-page";
 import { PortfolioSettingsPage } from "./companies/pages/portfolio-settings-page";
 import { HomePage } from "./home/pages/home-page";
 import { NotificationDetailPage } from "./notifications/pages/notification-detail-page";
@@ -90,6 +91,10 @@ export const authRouter = [
   {
     path: "/my-companies/portfolios/debtors",
     element: <PortfolioDebtorsPage />,
+  },
+  {
+    path: "/my-companies/portfolios/debtors/:debtorId",
+    element: <DebtorDetailPage />,
   },
   {
     path: "/my-companies/portfolios/settings",

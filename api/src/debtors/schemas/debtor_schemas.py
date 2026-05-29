@@ -1,8 +1,11 @@
+from datetime import datetime
+
 from pydantic import Field
 
 from base.schema_base import BaseSchema
 from contact_methods.enums.contact_method_enums import ContactMethodType
 from countries.enums.country_enums import UserDocumentType
+from credits.enums.credit_enums import CreditTypes
 from debtors.enums.debtor_enums import DebtorType
 
 
@@ -69,3 +72,15 @@ class CreateAddressRequest(BaseSchema):
 class CreateContactMethodRequest(BaseSchema):
     contact_type: ContactMethodType = Field(description="Tipo: EMAIL o PHONE")
     contact_value: str = Field(description="Valor del contacto")
+
+
+class DebtorCreditResponse(BaseSchema):
+    id: int = Field(description="ID del crédito")
+    credit_number: str = Field(description="Número de crédito")
+    credit_type: CreditTypes = Field(description="Tipo de crédito")
+    disbursed_date: datetime = Field(description="Fecha de desembolso")
+    total_credit_balance: float = Field(description="Saldo total del crédito")
+    overdue_principal_balance: float = Field(description="Saldo capital en mora")
+    days_overdue_at_cutoff: int = Field(description="Días de mora al corte")
+    overdue_installments: int = Field(description="Cuotas en mora")
+    pending_installments: int = Field(description="Cuotas pendientes")

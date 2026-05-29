@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from contact_methods.models.contact_method_model import ContactMethodModel
 from contact_methods.repository.contact_method_repository import ContactMethodRepository
 from credits.models.credit_model import CreditModel
+from credits.repository.credit_repository import CreditRepository
 from debtors.models.address_model import AddressModel
 from debtors.models.debtor_model import DebtorModel
 from debtors.repository.address_repository import AddressRepository
@@ -18,6 +19,7 @@ from debtors.schemas.debtor_schemas import (
     CreateAddressRequest,
     CreateContactMethodRequest,
     CreateDebtorRequest,
+    DebtorCreditResponse,
     DebtorDetailResponse,
     DebtorListResponse,
     DebtorResponse,
@@ -40,12 +42,14 @@ class DebtorService:
         address_repo: AddressRepository,
         contact_repo: ContactMethodRepository,
         portfolio_repo: PortfolioRepository,
+        credit_repo: CreditRepository,
     ) -> None:
         self._session = session
         self.debtor_repo = debtor_repo
         self.address_repo = address_repo
         self.contact_repo = contact_repo
         self.portfolio_repo = portfolio_repo
+        self.credit_repo = credit_repo
 
     async def get_debtor(self, debtor_id: int, user_session: UserSession, portfolio_id: uuid.UUID | None) -> DebtorDetailResponse:
         if portfolio_id is not None:
@@ -115,6 +119,14 @@ class DebtorService:
             debtor=self._to_detail(debtor, primary_addresses, primary_contacts),
             codebtors=codebtors,
         )
+
+    async def get_debtor_credits(
+        self, debtor_id: int, portfolio_id: uuid.UUID, user_session: UserSession
+    ) -> list[DebtorCreditResponse]:
+        await self._check_portfolio_access(user_session, portfolio_id)
+        await self._require_debtor(debtor_id)
+        credits = await self.credit_repo.get_by_debtor_and_portfolio(debtor_id, portfolio_id)
+        return [DebtorCreditResponse.model_validate(c) for c in credits]
 
     async def create_debtor(self, data: CreateDebtorRequest) -> DebtorModel:
         doc_hash = encrypt_service.hash_document(data.document_number)

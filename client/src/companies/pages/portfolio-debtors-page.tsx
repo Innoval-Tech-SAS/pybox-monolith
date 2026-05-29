@@ -33,6 +33,8 @@ export const PortfolioDebtorsPage: React.FC = () => {
         ]}
       >
         <DebtorsTable
+          orgId={orgId}
+          portfolioId={portfolioId}
           debtors={debtors}
           total={total}
           page={page}

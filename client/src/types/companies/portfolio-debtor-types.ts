@@ -21,24 +21,36 @@ export interface DebtorContactMethod {
   contactValue: string;
 }
 
-export interface DebtorCreditSummary {
+export interface DebtorDetail {
+  id: number;
+  fullName: string;
+  debtorType: string;
+  documentType: string;
+  documentNumber: string;
+  addresses: DebtorAddress[];
+  contactMethods: DebtorContactMethod[];
+}
+
+export interface RelatedContactsResponse {
+  debtor: DebtorDetail;
+  codebtors: DebtorDetail[];
+}
+
+export interface DebtorCredit {
   id: number;
   creditNumber: string;
   creditType: string;
+  disbursedDate: string;
   totalCreditBalance: number;
+  overduePrincipalBalance: number;
   daysOverdueAtCutoff: number;
-}
-
-export interface DebtorProfile {
-  debtor: PortfolioDebtor;
-  addresses: DebtorAddress[];
-  contactMethods: DebtorContactMethod[];
-  credits: DebtorCreditSummary[];
+  overdueInstallments: number;
+  pendingInstallments: number;
 }
 
 export interface PortfolioDebtorsResponse {
   items: PortfolioDebtor[];
   total: number;
   page: number;
-  pages: number;
+  pageSize: number;
 }

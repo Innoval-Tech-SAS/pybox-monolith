@@ -1,22 +1,14 @@
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Search } from "lucide-react";
+import { useNavigate } from "react-router";
 import { Loader } from "@/ui/components/loader/loader";
+import { Badge } from "@/ui/components/badge";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/ui/components/table/table";
-import { DebtorDetailsModal } from "./debtor-details-modal";
-import type { PortfolioDebtor } from "@/types/companies/portfolio-debtor-types";
-
-interface DebtorsTableProps {
-  debtors: PortfolioDebtor[];
-  total: number;
-  page: number;
-  pages: number;
-  search: string;
-  loading: boolean;
-  onSearch: (value: string) => void;
-  onPageChange: (page: number) => void;
-}
+import { DEBTOR_TYPE_COLOR } from "@/constants/companies/debtors-table";
+import type { DebtorsTableProps } from "@/types/props/debtors-table-props";
 
 export const DebtorsTable: React.FC<DebtorsTableProps> = ({
+  orgId,
+  portfolioId,
   debtors,
   total,
   page,
@@ -26,7 +18,11 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
   onSearch,
   onPageChange,
 }) => {
-  const [selectedDebtor, setSelectedDebtor] = useState<PortfolioDebtor | null>(null);
+  const navigate = useNavigate();
+
+  const goToDebtor = (debtorId: number) => {
+    navigate(`/my-companies/portfolios/debtors/${debtorId}?org=${orgId}&portfolio=${portfolioId}`);
+  };
 
   return (
     <>
@@ -49,7 +45,6 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
         </span>
       </div>
 
-      {/* Table */}
       {loading ? (
         <div className="py-20">
           <Loader />
@@ -68,10 +63,10 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03]">
-                    {["ID", "Nombre", "Tipo doc.", "Documento"].map((h) => (
+                  <TableRow className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/3">
+                    {["ID", "Nombre", "Tipo", "Tipo doc.", "Documento", ""].map((h, i) => (
                       <TableCell
-                        key={h}
+                        key={i}
                         isHeader
                         className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400"
                       >
@@ -82,22 +77,33 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
                 </TableHeader>
                 <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {debtors.map((d) => (
-                    <TableRow
-                      key={d.id}
-                      className="cursor-pointer transition hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                      onClick={() => setSelectedDebtor(d)}
-                    >
-                      <TableCell className="px-5 py-4 text-sm text-gray-400 font-mono">
+                    <TableRow key={d.id} className="transition hover:bg-gray-50 dark:hover:bg-white/3">
+                      <TableCell className="px-5 py-4 text-sm font-mono text-gray-400">
                         {d.id}
                       </TableCell>
                       <TableCell className="px-5 py-4 text-sm font-medium text-gray-800 dark:text-white/90">
                         {d.fullName}
+                      </TableCell>
+                      <TableCell className="px-5 py-4">
+                        <Badge variant="light" color={DEBTOR_TYPE_COLOR[d.debtorType] ?? "light"} size="sm">
+                          {d.debtorType}
+                        </Badge>
                       </TableCell>
                       <TableCell className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                         {d.documentType}
                       </TableCell>
                       <TableCell className="px-5 py-4 text-sm font-mono text-gray-600 dark:text-gray-400">
                         {d.documentNumber}
+                      </TableCell>
+                      <TableCell className="px-5 py-4">
+                        <button
+                          type="button"
+                          title="Ver detalle"
+                          onClick={() => goToDebtor(d.id)}
+                          className="rounded-lg p-1.5 text-gray-400 transition-all hover:bg-brand-50 hover:text-brand-600 dark:text-gray-500 dark:hover:bg-brand-500/10 dark:hover:text-brand-400"
+                        >
+                          <Eye size={18} />
+                        </button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -111,11 +117,16 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
             {debtors.map((d) => (
               <button
                 key={d.id}
-                onClick={() => setSelectedDebtor(d)}
+                onClick={() => goToDebtor(d.id)}
                 className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left transition hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-white/5"
               >
-                <p className="font-medium text-gray-800 dark:text-white/90">{d.fullName}</p>
-                <p className="mt-1 text-xs text-gray-500">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium text-gray-800 dark:text-white/90">{d.fullName}</p>
+                  <Badge variant="light" color={DEBTOR_TYPE_COLOR[d.debtorType] ?? "light"} size="sm">
+                    {d.debtorType}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-xs text-gray-400">
                   {d.documentType} · {d.documentNumber}
                 </p>
               </button>
@@ -148,11 +159,6 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
           )}
         </>
       )}
-
-      <DebtorDetailsModal
-        debtor={selectedDebtor}
-        onClose={() => setSelectedDebtor(null)}
-      />
     </>
   );
 };
