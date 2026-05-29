@@ -81,6 +81,14 @@ NATIONALITY_PHONE_PREFIX: dict["Nationality", str] = {
     Nationality.VE: "+58",
 }
 
+NATIONALITY_TIMEZONE: dict["Nationality", str] = {
+    Nationality.CO: "America/Bogota",
+    Nationality.MX: "America/Mexico_City",
+    Nationality.AR: "America/Argentina/Buenos_Aires",
+    Nationality.PE: "America/Lima",
+    Nationality.VE: "America/Caracas",
+}
+
 NATIONALITY_CURRENCY_CODE: dict["Nationality", str] = {
     Nationality.CO: "COP",
     Nationality.MX: "MXN",

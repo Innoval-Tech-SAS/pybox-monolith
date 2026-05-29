@@ -14,6 +14,8 @@ from config.paths import UPLOADS_ROOT
 from config.routers import register_routers
 from database.database import db
 from database.session_expiry_listener import start_session_expiry_listener
+from portfolios.scheduler import create_daily_counters_scheduler
+from portfolios.services.daily_counters_service import run_all_nationalities
 from security.seed_admin import seed_admin
 from security.seed_permissions import seed_permissions
 from tools.config_tools import get_or_throw
@@ -29,7 +31,15 @@ async def lifespan(_app: FastAPI):
     async with db.get_session() as session:
         await seed_admin(session)
     expiry_task = await start_session_expiry_listener()
+
+    scheduler = create_daily_counters_scheduler()
+    scheduler.start()
+    async with db.get_session() as session:
+        await run_all_nationalities(session)
+
     yield
+
+    scheduler.shutdown(wait=False)
     expiry_task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
         await expiry_task

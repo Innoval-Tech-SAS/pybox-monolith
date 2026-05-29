@@ -11,6 +11,8 @@ import { DebtorDetailPage } from "./companies/pages/debtor-detail-page";
 import { PortfolioSettingsPage } from "./companies/pages/portfolio-settings-page";
 import { OrgSettingsPage } from "./companies/pages/org-settings-page";
 import { PaymentMethodsPage } from "./companies/pages/payment-methods-page";
+import { CreatePaymentMethodPage } from "./companies/pages/create-payment-method-page";
+import { EditPaymentMethodPage } from "./companies/pages/edit-payment-method-page";
 import { HomePage } from "./home/pages/home-page";
 import { NotificationDetailPage } from "./notifications/pages/notification-detail-page";
 import { NotificationsPage } from "./notifications/pages/notifications-page";
@@ -109,6 +111,14 @@ export const authRouter = [
   {
     path: "/my-companies/payment-methods",
     element: <PaymentMethodsPage />,
+  },
+  {
+    path: "/my-companies/payment-methods/new",
+    element: <CreatePaymentMethodPage />,
+  },
+  {
+    path: "/my-companies/payment-methods/:id/edit",
+    element: <EditPaymentMethodPage />,
   },
   {
     path: "/my-users",
