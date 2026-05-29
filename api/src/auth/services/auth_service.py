@@ -324,6 +324,25 @@ class AuthService:
             "masked_phone": mask_phone(cast(str, user.phone_number)) if user.phone_number else None,
         }
 
+    async def verify_reset_code(self, document_type: str, document_number: str, code: str, channel: VerificationChannel) -> None:
+        if self._session is None:
+            raise RuntimeError("Session requerida para verificar OTP.")
+        dt = resolve_document_type(document_type)
+        doc_hash = encrypt_service.hash_document(document_number)
+        user = await self.user_repository.get_by_document(dt, doc_hash)
+        if user is None:
+            raise ValueError("Credenciales inválidas.")
+        svc = get_verification_service(channel, self._session)
+        try:
+            await svc.peek_code(cast(int, user.id), code)
+        except CodeNotFoundException:
+            raise ValueError("Código incorrecto.")
+        except CodeExpiredException:
+            raise ValueError("El código ha expirado.")
+        except CodeAlreadyUsedException:
+            raise ValueError("El código ya fue utilizado.")
+        logger.info("[auth] verify_reset_code | user_id=%d", user.id)
+
     async def send_reset_code(self, document_type: str, document_number: str, channel: VerificationChannel) -> None:
         if self._session is None:
             raise RuntimeError("Session requerida para enviar OTP.")

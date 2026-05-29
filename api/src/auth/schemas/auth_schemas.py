@@ -81,6 +81,13 @@ class ForgotPasswordSendCodeSchema(BaseModel):
     channel: VerificationChannel = Field(description="Canal de envío del código (EMAIL o SMS)")
 
 
+class ForgotPasswordVerifyCodeSchema(BaseModel):
+    document_type: UserDocumentType = Field(description="Tipo de documento de identidad")
+    document_number: str = Field(description="Número de documento de identidad")
+    code: str = Field(description="Código de verificación recibido")
+    channel: VerificationChannel = Field(description="Canal por el que se recibió el código")
+
+
 class ResetPasswordSchema(BaseModel):
     document_type: UserDocumentType = Field(description="Tipo de documento de identidad")
     document_number: str = Field(description="Número de documento de identidad")

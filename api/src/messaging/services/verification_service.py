@@ -67,6 +67,21 @@ class VerificationService(ABC):
             )
             raise
 
+    async def peek_code(self, user_id: int, code: str) -> None:
+        """Valida el código sin consumirlo."""
+        try:
+            await self._repo.verify_with_exceptions(user_id, code, self.channel)
+        except (
+            CodeNotFoundException,
+            CodeExpiredException,
+            CodeAlreadyUsedException,
+        ) as exc:
+            logger.warning(
+                "[verification] peek_failed | user_id=%d channel=%s error=%s",
+                user_id, self.channel.value, type(exc).__name__,
+            )
+            raise
+
     @abstractmethod
     async def _dispatch(self, user, code: str) -> bool:
         """Envía el código al destino según el canal."""

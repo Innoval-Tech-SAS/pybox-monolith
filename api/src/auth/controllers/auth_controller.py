@@ -8,6 +8,7 @@ from auth.schemas.auth_schemas import (
     ForgotPasswordLookupResponse,
     ForgotPasswordLookupSchema,
     ForgotPasswordSendCodeSchema,
+    ForgotPasswordVerifyCodeSchema,
     ProviderAuth,
     ProviderLogin,
     RefreshRequest,
@@ -108,7 +109,15 @@ async def forgot_password_send_code(body: ForgotPasswordSendCodeSchema, service:
         raise HTTPException(status.HTTP_404_NOT_FOUND, str(e))
 
 
-@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT, summary="Paso 3 — Confirmar código y nueva contraseña")
+@router.post("/forgot-password/verify-code", status_code=status.HTTP_204_NO_CONTENT, summary="Paso 3 — Validar código sin consumirlo")
+async def forgot_password_verify_code(body: ForgotPasswordVerifyCodeSchema, service: AuthServiceDep) -> None:
+    try:
+        await service.verify_reset_code(body.document_type.value, body.document_number, body.code, body.channel)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+
+
+@router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT, summary="Paso 4 — Nueva contraseña (consume el código)")
 async def reset_password(body: ResetPasswordSchema, service: AuthServiceDep) -> None:
     try:
         await service.reset_password(body.document_type.value, body.document_number, body.code, body.channel, body.new_password)

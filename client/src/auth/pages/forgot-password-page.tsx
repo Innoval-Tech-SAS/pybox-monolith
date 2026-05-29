@@ -151,19 +151,63 @@ const Step2: React.FC<{
   );
 };
 
-// ── Paso 3: Confirmar código y nueva contraseña ───────────────────────────────
+// ── Paso 3: Validar código ────────────────────────────────────────────────────
 
 const Step3: React.FC<{
   docType: string;
   docNumber: string;
   channel: Channel;
+  onNext: (code: string) => void;
+  loading: boolean;
+  error: string | null;
+  clearError: () => void;
+}> = ({ docType, docNumber, channel, onNext, loading, error, clearError }) => {
+  const { verifyCode } = useForgotPassword();
+  const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    clearError();
+    const code = digits.join("");
+    const ok = await verifyCode(docType, docNumber, code, channel);
+    if (ok) onNext(code);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-5">
+        <div>
+          <Label className="text-gray-500 mb-2 block">
+            Código enviado por {channel === "EMAIL" ? "correo electrónico" : "SMS"}
+          </Label>
+          <OtpInput value={digits} onChange={setDigits} disabled={loading} error={!!error} />
+        </div>
+        {error && <p className="text-sm text-error-500">{error}</p>}
+        <button
+          type="submit"
+          disabled={loading || digits.join("").length < 6}
+          className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? "Verificando..." : "Verificar código"}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+// ── Paso 4: Nueva contraseña ──────────────────────────────────────────────────
+
+const Step4: React.FC<{
+  docType: string;
+  docNumber: string;
+  code: string;
+  channel: Channel;
   onSuccess: () => void;
   loading: boolean;
   error: string | null;
   clearError: () => void;
-}> = ({ docType, docNumber, channel, onSuccess, loading, error, clearError }) => {
+}> = ({ docType, docNumber, code, channel, onSuccess, loading, error, clearError }) => {
   const { resetPassword } = useForgotPassword();
-  const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNew, setShowNew] = useState(false);
@@ -178,7 +222,7 @@ const Step3: React.FC<{
       setLocalError("Las contraseñas no coinciden.");
       return;
     }
-    const ok = await resetPassword(docType, docNumber, digits.join(""), channel, newPassword);
+    const ok = await resetPassword(docType, docNumber, code, channel, newPassword);
     if (ok) onSuccess();
   };
 
@@ -187,12 +231,6 @@ const Step3: React.FC<{
   return (
     <form onSubmit={handleSubmit}>
       <div className="space-y-5">
-        <div>
-          <Label className="text-gray-500 mb-2 block">
-            Código enviado por {channel === "EMAIL" ? "correo electrónico" : "SMS"}
-          </Label>
-          <OtpInput value={digits} onChange={setDigits} disabled={loading} error={!!displayError} />
-        </div>
         <div>
           <Label className="text-gray-500">
             Nueva contraseña <span className="text-error-500">*</span>
@@ -205,10 +243,7 @@ const Step3: React.FC<{
               onChange={(e) => setNewPassword(e.target.value)}
               required
             />
-            <span
-              onClick={() => setShowNew(!showNew)}
-              className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-            >
+            <span onClick={() => setShowNew(!showNew)} className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2">
               {showNew ? <EyeIcon className="fill-gray-500 size-5" /> : <EyeCloseIcon className="fill-gray-500 size-5" />}
             </span>
           </div>
@@ -225,10 +260,7 @@ const Step3: React.FC<{
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
-            <span
-              onClick={() => setShowConfirm(!showConfirm)}
-              className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-            >
+            <span onClick={() => setShowConfirm(!showConfirm)} className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2">
               {showConfirm ? <EyeIcon className="fill-gray-500 size-5" /> : <EyeCloseIcon className="fill-gray-500 size-5" />}
             </span>
           </div>
@@ -236,7 +268,7 @@ const Step3: React.FC<{
         {displayError && <p className="text-sm text-error-500">{displayError}</p>}
         <button
           type="submit"
-          disabled={loading || digits.join("").length < 6 || !newPassword}
+          disabled={loading || !newPassword}
           className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Guardando..." : "Restablecer contraseña"}
@@ -248,18 +280,20 @@ const Step3: React.FC<{
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 const STEP_TITLES: Record<Step, string> = {
   1: "Recuperar contraseña",
   2: "Elige cómo recibir el código",
-  3: "Ingresa el código",
+  3: "Verifica el código",
+  4: "Nueva contraseña",
 };
 
 const STEP_SUBTITLES: Record<Step, string> = {
   1: "Ingresa tu tipo y número de documento para encontrar tu cuenta.",
   2: "Encontramos tu cuenta. Elige dónde enviamos el código.",
-  3: "Ingresa el código que recibiste y tu nueva contraseña.",
+  3: "Ingresa el código que recibiste para verificar tu identidad.",
+  4: "Código verificado. Ahora elige tu nueva contraseña.",
 };
 
 export const ForgotPasswordPage: React.FC = () => {
@@ -270,6 +304,7 @@ export const ForgotPasswordPage: React.FC = () => {
   const [docNumber, setDocNumber] = useState("");
   const [lookupResult, setLookupResult] = useState<LookupResult | null>(null);
   const [channel, setChannel] = useState<Channel>("EMAIL");
+  const [verifiedCode, setVerifiedCode] = useState("");
 
   const handleLookup = (dt: string, dn: string, result: LookupResult) => {
     setDocType(dt);
@@ -283,6 +318,11 @@ export const ForgotPasswordPage: React.FC = () => {
     setStep(3);
   };
 
+  const handleCodeVerified = (code: string) => {
+    setVerifiedCode(code);
+    setStep(4);
+  };
+
   return (
     <>
       <PageMeta title="Recuperar contraseña" description="Restablece tu contraseña" />
@@ -292,7 +332,7 @@ export const ForgotPasswordPage: React.FC = () => {
             <div>
               <div className="mb-5 sm:mb-8">
                 <div className="mb-3 flex items-center gap-2">
-                  {step > 1 && (
+                  {step > 1 && step < 4 && (
                     <button
                       type="button"
                       onClick={() => { clearError(); setStep((s) => (s - 1) as Step); }}
@@ -301,7 +341,7 @@ export const ForgotPasswordPage: React.FC = () => {
                       ← Atrás
                     </button>
                   )}
-                  <span className="ml-auto text-xs text-gray-400">Paso {step} de 3</span>
+                  <span className="ml-auto text-xs text-gray-400">Paso {step} de 4</span>
                 </div>
                 <h1 className="mb-1 font-semibold text-brand-500 text-title-sm dark:text-white/90 sm:text-title-md">
                   {STEP_TITLES[step]}
@@ -326,6 +366,18 @@ export const ForgotPasswordPage: React.FC = () => {
                 <Step3
                   docType={docType}
                   docNumber={docNumber}
+                  channel={channel}
+                  onNext={handleCodeVerified}
+                  loading={loading}
+                  error={error}
+                  clearError={clearError}
+                />
+              )}
+              {step === 4 && (
+                <Step4
+                  docType={docType}
+                  docNumber={docNumber}
+                  code={verifiedCode}
                   channel={channel}
                   onSuccess={() => navigate("/admin/sign-in")}
                   loading={loading}

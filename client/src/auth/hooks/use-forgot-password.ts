@@ -49,6 +49,28 @@ export const useForgotPassword = () => {
     }
   };
 
+  const verifyCode = async (
+    documentType: string,
+    documentNumber: string,
+    code: string,
+    channel: Channel,
+  ): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      await apiClient("/auth/forgot-password/verify-code", {
+        method: "POST",
+        body: JSON.stringify({ document_type: documentType, document_number: documentNumber, code, channel }),
+      });
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Código incorrecto");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetPassword = async (
     documentType: string,
     documentNumber: string,
@@ -72,5 +94,5 @@ export const useForgotPassword = () => {
     }
   };
 
-  return { lookup, sendCode, resetPassword, loading, error, clearError };
+  return { lookup, sendCode, verifyCode, resetPassword, loading, error, clearError };
 };
