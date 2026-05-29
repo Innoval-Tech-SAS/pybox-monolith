@@ -36,6 +36,7 @@ interface UserCardProps {
   data: UserCardData;
   isOwnProfile?: boolean;
   editPath?: string;
+  onForceLogout?: () => void;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -148,7 +149,7 @@ const RoleBadge: React.FC<{ role: string; scope: string }> = ({ role, scope }) =
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export const UserCard: React.FC<UserCardProps> = ({ data, isOwnProfile = false, editPath }) => {
+export const UserCard: React.FC<UserCardProps> = ({ data, isOwnProfile = false, editPath, onForceLogout }) => {
   const {
     fullName, firstname, lastname, email, phoneNumber, authProvider,
     documentType, documentNumber, profilePhotoUrl,
@@ -213,24 +214,47 @@ export const UserCard: React.FC<UserCardProps> = ({ data, isOwnProfile = false, 
             </div>
           </div>
 
-          {/* Edit action */}
-          {isOwnProfile ? (
-            <Link
-              to="/profile/edit"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
-            >
-              <EditIcon />
-              Editar
-            </Link>
-          ) : editPath ? (
-            <Link
-              to={editPath}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
-            >
-              <EditIcon />
-              Editar
-            </Link>
-          ) : null}
+          {/* Actions */}
+          <div className="flex flex-wrap items-center gap-2">
+            {isOwnProfile ? (
+              <>
+                <Link
+                  to="/profile/edit"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
+                >
+                  <EditIcon />
+                  Editar
+                </Link>
+                <Link
+                  to="/profile/change-password"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
+                >
+                  Cambiar contraseña
+                </Link>
+              </>
+            ) : (
+              <>
+                {editPath && (
+                  <Link
+                    to={editPath}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
+                  >
+                    <EditIcon />
+                    Editar
+                  </Link>
+                )}
+                {onForceLogout && (
+                  <button
+                    type="button"
+                    onClick={onForceLogout}
+                    className="inline-flex items-center justify-center rounded-lg border border-error-300 bg-white px-4 py-2 text-sm font-medium text-error-600 shadow-theme-xs hover:bg-error-50 dark:border-error-700 dark:bg-gray-800 dark:text-error-400 dark:hover:bg-error-950"
+                  >
+                    Cerrar sesión forzosa
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,8 @@
 import { Navigate } from "react-router";
 import { AuthPage } from "./auth/pages/auth-page";
 import { SignUpPage } from "./auth/pages/sign-up-page";
+import { ForgotPasswordPage } from "./auth/pages/forgot-password-page";
+import { ChangePasswordPage } from "./profile/pages/change-password-page";
 import { MyCompaniesPage } from "./companies/pages/my-companies-page";
 import { CreateOrgPage } from "./companies/pages/create-org-page";
 import { CreatePortfolioPage } from "./companies/pages/create-portfolio-page";
@@ -42,6 +44,10 @@ export const noAuthRouter = [
     element: <SignUpPage />,
   },
   {
+    path: "/admin/forgot-password",
+    element: <ForgotPasswordPage />,
+  },
+  {
     path: "*",
     element: <NotFound />,
   },
@@ -67,6 +73,10 @@ export const authRouter = [
   {
     path: "/profile/photo",
     element: <ProfilePhotoPage />,
+  },
+  {
+    path: "/profile/change-password",
+    element: <ChangePasswordPage />,
   },
   {
     path: "/my-companies",

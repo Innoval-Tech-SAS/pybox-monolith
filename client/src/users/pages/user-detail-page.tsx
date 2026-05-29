@@ -2,10 +2,27 @@ import { useParams } from "react-router";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { UserCard } from "@/profile/components/user-card";
 import { useUser } from "../hooks/use-user";
+import { useAuth } from "@/hooks/use-auth";
+import { useApiClient } from "@/hooks/use-api-client";
+import { useToast } from "@/context/toast-context";
 
 export const UserDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user, loading, notFound } = useUser(id);
+  const { getSession } = useAuth();
+  const { apiClient } = useApiClient();
+  const { success: toastSuccess } = useToast();
+
+  const session = getSession();
+  const isGlobal = session?.scope === "GLOBAL";
+  const isOrgAdmin = Object.values(session?.orgs ?? {}).some((e) => e.role === "ADMINISTRADOR");
+  const canForceLogout = (isGlobal || isOrgAdmin) && !!user && user.id !== (session?.user_id ?? session?.id);
+
+  const handleForceLogout = async () => {
+    if (!user) return;
+    await apiClient(`/auth/logout/${user.id}`, { method: "POST" });
+    toastSuccess("Sesión cerrada", `Se cerró la sesión de ${user.fullName}.`);
+  };
 
   if (loading) {
     return (
@@ -52,6 +69,7 @@ export const UserDetailPage: React.FC = () => {
           roles: user.roles,
         }}
         editPath={`/my-users/${user.id}/edit`}
+        onForceLogout={canForceLogout ? handleForceLogout : undefined}
       />
     </ModuleBase>
   );

@@ -54,6 +54,7 @@ def get_auth_service(
         user_repository=user_repo,
         role_assignment_repository=role_assignment_repo,
         user_service=user_service,
+        session=session,
     )
 
 

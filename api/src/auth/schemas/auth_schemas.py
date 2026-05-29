@@ -5,6 +5,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator, model_validato
 from auth.enums.auth_enums import AuthProvider
 from base.schema_base import BaseSchema
 from countries.enums.country_enums import DOCUMENTS_BY_NATIONALITY, Nationality, UserDocumentType
+from messaging.enums.notification_enums import VerificationChannel
 
 
 class UserCreate(BaseModel):
@@ -57,6 +58,35 @@ class ProviderLogin(BaseModel):
     document_number: str | None = Field(default=None, description="Número de documento")
     firstname: str | None = Field(default=None, description="Nombre")
     lastname: str | None = Field(default=None, description="Apellido")
+
+
+class ChangePasswordSchema(BaseModel):
+    current_password: str = Field(description="Contraseña actual")
+    new_password: str = Field(description="Nueva contraseña")
+
+
+class ForgotPasswordLookupSchema(BaseModel):
+    document_type: UserDocumentType = Field(description="Tipo de documento de identidad")
+    document_number: str = Field(description="Número de documento de identidad")
+
+
+class ForgotPasswordLookupResponse(BaseSchema):
+    masked_email: str | None = Field(description="Email enmascarado (ej: j***@g***.com)")
+    masked_phone: str | None = Field(description="Teléfono enmascarado (ej: +57 3** ***67)")
+
+
+class ForgotPasswordSendCodeSchema(BaseModel):
+    document_type: UserDocumentType = Field(description="Tipo de documento de identidad")
+    document_number: str = Field(description="Número de documento de identidad")
+    channel: VerificationChannel = Field(description="Canal de envío del código (EMAIL o SMS)")
+
+
+class ResetPasswordSchema(BaseModel):
+    document_type: UserDocumentType = Field(description="Tipo de documento de identidad")
+    document_number: str = Field(description="Número de documento de identidad")
+    code: str = Field(description="Código de verificación recibido")
+    channel: VerificationChannel = Field(description="Canal por el que se recibió el código")
+    new_password: str = Field(description="Nueva contraseña")
 
 
 class RefreshRequest(BaseModel):

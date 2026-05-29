@@ -46,6 +46,21 @@ def resolve_auth_provider(provider: AuthProvider | str) -> AuthProvider:
         raise ValueError("El proveedor de autenticación no es válido.") from error
 
 
+def mask_email(email: str) -> str:
+    local, _, domain = email.partition("@")
+    masked_local = local[0] + "*" * max(len(local) - 1, 3)
+    domain_parts = domain.split(".")
+    masked_domain = domain_parts[0][0] + "*" * max(len(domain_parts[0]) - 1, 2) if domain_parts[0] else "***"
+    return f"{masked_local}@{masked_domain}.{'.'.join(domain_parts[1:])}"
+
+
+def mask_phone(phone: str) -> str:
+    digits = phone.replace(" ", "")
+    if len(digits) <= 6:
+        return "*" * len(digits)
+    return digits[:4] + "*" * (len(digits) - 6) + digits[-2:]
+
+
 def resolve_nationality(nationality: Nationality | str) -> Nationality:
     if isinstance(nationality, Nationality):
         return nationality

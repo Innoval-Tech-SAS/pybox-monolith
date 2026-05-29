@@ -1,10 +1,14 @@
 from typing import cast
 
 import jwt
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.enums.auth_enums import AuthProvider
 
 from config.logger import logger
+from messaging.dependencies import get_verification_service
+from messaging.enums.notification_enums import VerificationChannel
+from messaging.exceptions import CodeAlreadyUsedException, CodeExpiredException, CodeNotFoundException
 from users.repository.user_repository import UserRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.models.user_model import UserModel
@@ -23,6 +27,8 @@ from ..schemas.auth_schemas import (
 )
 from .oauth_provider_service import OAuthProviderService, ProviderProfile
 from ..utils.auth_utils import (
+    mask_email,
+    mask_phone,
     normalize_email,
     normalize_optional,
     require_value,
@@ -42,6 +48,7 @@ class AuthService:
         token_service: AuthTokenService | None = None,
         oauth_provider_service: OAuthProviderService | None = None,
         user_service: UserService | None = None,
+        session: AsyncSession | None = None,
     ):
         self.user_repository = user_repository
         self.role_assignment_repository = role_assignment_repository
@@ -49,6 +56,7 @@ class AuthService:
         self.token_service = token_service or AuthTokenService()
         self.oauth_provider_service = oauth_provider_service or OAuthProviderService()
         self._user_service = user_service
+        self._session = session
 
     async def register_and_authenticate(
         self, user_data: UserCreate, role: UserRole, scope: UserScope
@@ -290,6 +298,64 @@ class AuthService:
             token_type="Bearer",
             auth_provider=auth_provider,
         )
+
+    async def change_password(self, user_id: int, current_password: str, new_password: str) -> None:
+        user = await self.user_repository.get_by_id(user_id)
+        if user is None:
+            raise ValueError("Usuario no encontrado.")
+        stored_hash = cast(str | None, user.hashed_password)
+        if not stored_hash:
+            raise ValueError("Este usuario no tiene contraseña configurada. Usa tu proveedor OAuth.")
+        is_valid, _ = self.password_hasher.verify_and_maybe_rehash(stored_hash, current_password)
+        if not is_valid:
+            raise ValueError("La contraseña actual es incorrecta.")
+        user.hashed_password = self.password_hasher.hash_password(new_password)
+        await self.user_repository.update(user)
+        logger.info("[auth] change_password | user_id=%d", user_id)
+
+    async def lookup_user_for_reset(self, document_type: str, document_number: str) -> dict:
+        dt = resolve_document_type(document_type)
+        doc_hash = encrypt_service.hash_document(document_number)
+        user = await self.user_repository.get_by_document(dt, doc_hash)
+        if user is None:
+            raise ValueError("No encontramos una cuenta con ese documento.")
+        return {
+            "masked_email": mask_email(cast(str, user.email)) if user.email else None,
+            "masked_phone": mask_phone(cast(str, user.phone_number)) if user.phone_number else None,
+        }
+
+    async def send_reset_code(self, document_type: str, document_number: str, channel: VerificationChannel) -> None:
+        if self._session is None:
+            raise RuntimeError("Session requerida para enviar OTP.")
+        dt = resolve_document_type(document_type)
+        doc_hash = encrypt_service.hash_document(document_number)
+        user = await self.user_repository.get_by_document(dt, doc_hash)
+        if user is None:
+            raise ValueError("No encontramos una cuenta con ese documento.")
+        svc = get_verification_service(channel, self._session)
+        await svc.send_code(user)
+        logger.info("[auth] send_reset_code | user_id=%d channel=%s", user.id, channel.value)
+
+    async def reset_password(self, document_type: str, document_number: str, code: str, channel: VerificationChannel, new_password: str) -> None:
+        if self._session is None:
+            raise RuntimeError("Session requerida para verificar OTP.")
+        dt = resolve_document_type(document_type)
+        doc_hash = encrypt_service.hash_document(document_number)
+        user = await self.user_repository.get_by_document(dt, doc_hash)
+        if user is None:
+            raise ValueError("Credenciales inválidas.")
+        svc = get_verification_service(channel, self._session)
+        try:
+            await svc.verify_code(cast(int, user.id), code)
+        except CodeNotFoundException:
+            raise ValueError("Código no encontrado.")
+        except CodeExpiredException:
+            raise ValueError("El código ha expirado.")
+        except CodeAlreadyUsedException:
+            raise ValueError("El código ya fue utilizado.")
+        user.hashed_password = self.password_hasher.hash_password(new_password)
+        await self.user_repository.update(user)
+        logger.info("[auth] reset_password | user_id=%d", user.id)
 
     def _provider_value(
         self,

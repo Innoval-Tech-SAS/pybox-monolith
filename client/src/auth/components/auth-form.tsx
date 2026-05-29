@@ -136,7 +136,16 @@ export const AuthForm: React.FC = () => {
               disabled={isLoading}
             />
 
-            <div className="mt-6 text-center">
+            <div className="mt-4 text-center">
+              <Link
+                to="/admin/forgot-password"
+                className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
+
+            <div className="mt-4 text-center">
               <Link
                 to="/admin/sign-up"
                 className="inline-flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-brand-600 border border-brand-300 rounded-lg hover:bg-brand-50 dark:text-brand-400 dark:border-brand-700 dark:hover:bg-brand-950 transition-colors"
