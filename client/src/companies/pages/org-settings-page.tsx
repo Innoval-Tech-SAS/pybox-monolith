@@ -126,6 +126,22 @@ const DocFileRow: React.FC<DocFileRowProps> = ({ label, fileUrl, docType, saving
   );
 };
 
+const VERIFICATION_STYLES: Record<string, { label: string; classes: string }> = {
+  pending:  { label: "Verificación pendiente", classes: "bg-warning-50 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400" },
+  approved: { label: "Verificada",             classes: "bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400" },
+  denied:   { label: "Verificación denegada",  classes: "bg-error-50 text-error-700 dark:bg-error-500/10 dark:text-error-400" },
+};
+
+const VerificationBadge: React.FC<{ status?: string | null }> = ({ status }) => {
+  if (!status) return null;
+  const cfg = VERIFICATION_STYLES[status] ?? { label: status, classes: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" };
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${cfg.classes}`}>
+      {cfg.label}
+    </span>
+  );
+};
+
 const EditIcon = () => (
   <svg className="fill-current" width="16" height="16" viewBox="0 0 18 18" fill="none">
     <path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="" />
@@ -136,7 +152,7 @@ export const OrgSettingsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const orgId = searchParams.get("org") ?? "";
 
-  const { org, loading, saving, updateInfo, uploadDocument } = useOrgSettings(orgId);
+  const { org, loading, saving, updateInfo, uploadDocument, requestVerification } = useOrgSettings(orgId);
 
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
@@ -292,9 +308,12 @@ export const OrgSettingsPage: React.FC = () => {
               ) : (
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                   <div>
-                    <h4 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white/90">
-                      {org?.name}
-                    </h4>
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                        {org?.name}
+                      </h4>
+                      <VerificationBadge status={org?.verificationStatus} />
+                    </div>
                     {org?.description && (
                       <p className="text-sm text-gray-500 dark:text-gray-400">{org.description}</p>
                     )}
@@ -303,13 +322,24 @@ export const OrgSettingsPage: React.FC = () => {
                       {org?.updatedAt && ` · Actualizado: ${fmt(org.updatedAt)}`}
                     </p>
                   </div>
-                  <button
-                    onClick={startEdit}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
-                  >
-                    <EditIcon />
-                    Editar
-                  </button>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    {org?.verificationStatus === "denied" && (
+                      <button
+                        onClick={requestVerification}
+                        disabled={saving}
+                        className="inline-flex items-center justify-center gap-2 rounded-full border border-error-300 bg-error-50 px-4 py-2.5 text-sm font-medium text-error-700 hover:bg-error-100 disabled:opacity-50 dark:border-error-700 dark:bg-error-500/10 dark:text-error-400"
+                      >
+                        Volver a solicitar verificación
+                      </button>
+                    )}
+                    <button
+                      onClick={startEdit}
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
+                    >
+                      <EditIcon />
+                      Editar
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

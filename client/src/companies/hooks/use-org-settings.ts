@@ -57,5 +57,17 @@ export const useOrgSettings = (orgId: string) => {
     }
   };
 
-  return { org, loading, saving, updateInfo, uploadDocument };
+  const requestVerification = async () => {
+    setSaving(true);
+    try {
+      const updated = await apiClient(`/organizations/${orgId}/request-verification`, {
+        method: "POST",
+      });
+      setOrg(updated as OrganizationDetail);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return { org, loading, saving, updateInfo, uploadDocument, requestVerification };
 };

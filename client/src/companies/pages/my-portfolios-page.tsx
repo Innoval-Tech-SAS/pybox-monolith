@@ -27,7 +27,9 @@ export const MyPortfoliosPage: React.FC = () => {
   const portfolioId = searchParams.get("portfolio") ?? "";
   const { portfolios, loading } = usePortfolios(orgId);
   const { orgs } = useMyCompanies();
-  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
+  const org = orgs.find((o) => o.id === orgId);
+  const orgName = org?.name ?? "Empresa";
+  const isOrgVerified = org?.verificationStatus === "approved";
 
   const selectedPortfolio = portfolios.find((p) => p.id === portfolioId);
   const isPortfolioView = !!portfolioId && !!selectedPortfolio;
@@ -53,7 +55,7 @@ export const MyPortfoliosPage: React.FC = () => {
           </div>
         ) : isPortfolioView ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {filterModules(PORTFOLIO_MODULES, orgId).map((mod) => (
+            {filterModules(PORTFOLIO_MODULES, orgId, isOrgVerified).map((mod) => (
               <ModuleCard key={mod.key} id={`tour-pf-module-${mod.key}`} module={mod} orgId={orgId} portfolioId={portfolioId} />
             ))}
           </div>

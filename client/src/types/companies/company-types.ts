@@ -9,6 +9,7 @@ export interface OrgSummary {
   country?: string;
   fiscalDocumentType?: string;
   fiscalDocumentNumber?: string;
+  verificationStatus?: string;
 }
 
 export interface OrganizationDetail {
@@ -36,6 +37,7 @@ export interface OrgModule {
   path: string | null;
   requiredPermission?: string;
   adminOnly?: boolean;
+  requiresVerification?: boolean;
 }
 
 export interface CreatePortfolioResult {

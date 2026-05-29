@@ -82,6 +82,26 @@ async def update_organization(
     return await service.update_organization(org_id, body, session.user_id, admin_scope)
 
 
+@router.post(
+    "/{org_id}/request-verification",
+    response_model=OrganizationResponse,
+    summary="Volver a solicitar verificación de la organización",
+)
+async def request_verification(
+    org_id: uuid.UUID,
+    session: CurrentSession,
+    admin_scope: AdminScopeDep,
+    service: OrgServiceDep,
+    support_service: SupportServiceDep,
+) -> OrganizationResponse:
+    org = await service.get_by_id(org_id)
+    from organizations.enums.organization_enums import VerificationStatus
+    org.verification_status = VerificationStatus.PENDING
+    await service.org_repo.update(org)
+    await support_service.create_org_verification_ticket(org_id, session.user_id)
+    return org
+
+
 @router.patch(
     "/{org_id}/documents/{doc_type}",
     response_model=OrganizationResponse,

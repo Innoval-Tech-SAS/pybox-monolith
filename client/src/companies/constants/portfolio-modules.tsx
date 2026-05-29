@@ -44,6 +44,7 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     icon: <Send size={24} className="text-white" />,
     gradient: "from-indigo-500 to-blue-600",
     path: null,
+    requiresVerification: true,
   },
   {
     key: "messages-calendar",
@@ -52,6 +53,7 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     icon: <CalendarDays size={24} className="text-white" />,
     gradient: "from-emerald-500 to-teal-600",
     path: null,
+    requiresVerification: true,
   },
   {
     key: "settings",
