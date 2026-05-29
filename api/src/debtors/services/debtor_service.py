@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from contact_methods.models.contact_method_model import ContactMethodModel
 from contact_methods.repository.contact_method_repository import ContactMethodRepository
+from countries.enums.country_enums import NATIONALITY_CURRENCY_CODE
 from credits.models.credit_model import CreditModel
 from credits.repository.credit_repository import CreditRepository
 from debtors.models.address_model import AddressModel
@@ -125,8 +126,26 @@ class DebtorService:
     ) -> list[DebtorCreditResponse]:
         await self._check_portfolio_access(user_session, portfolio_id)
         await self._require_debtor(debtor_id)
+        portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
+        if portfolio is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Portafolio no encontrado")
+        currency_code = NATIONALITY_CURRENCY_CODE.get(portfolio.country, "COP")  # type: ignore[arg-type]
         credits = await self.credit_repo.get_by_debtor_and_portfolio(debtor_id, portfolio_id)
-        return [DebtorCreditResponse.model_validate(c) for c in credits]
+        return [
+            DebtorCreditResponse(
+                id=c.id,
+                credit_number=c.credit_number,
+                credit_type=c.credit_type,
+                disbursed_date=c.disbursed_date,
+                total_credit_balance=float(c.total_credit_balance),
+                overdue_principal_balance=float(c.overdue_principal_balance),
+                days_overdue_at_cutoff=c.days_overdue_at_cutoff,
+                overdue_installments=c.overdue_installments,
+                pending_installments=c.pending_installments,
+                currency_code=currency_code,
+            )
+            for c in credits
+        ]
 
     async def create_debtor(self, data: CreateDebtorRequest) -> DebtorModel:
         doc_hash = encrypt_service.hash_document(data.document_number)

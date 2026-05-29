@@ -46,6 +46,7 @@ export interface DebtorCredit {
   daysOverdueAtCutoff: number;
   overdueInstallments: number;
   pendingInstallments: number;
+  currencyCode: string;
 }
 
 export interface PortfolioDebtorsResponse {

@@ -7,6 +7,7 @@ import { useMyCompanies } from "../hooks/use-my-companies";
 import { usePortfolios } from "../hooks/use-portfolios";
 import { useDebtorRelatedContacts, useDebtorCredits } from "../hooks/use-debtor-detail";
 import { DEBTOR_TYPE_COLOR } from "@/constants/companies/debtors-table";
+import { CURRENCY_LOCALE } from "@/constants/companies/currency-locale";
 import type { DebtorContactMethod, DebtorAddress, DebtorDetail, DebtorCredit } from "@/types/companies/portfolio-debtor-types";
 
 const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -76,13 +77,13 @@ const CreditList: React.FC<{ credits: DebtorCredit[] }> = ({ credits }) =>
             <div>
               <p className="text-xs text-gray-400">Saldo total</p>
               <p className="mt-0.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-                {c.totalCreditBalance.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 })}
+                {c.totalCreditBalance.toLocaleString(CURRENCY_LOCALE[c.currencyCode] ?? "es-CO", { style: "currency", currency: c.currencyCode, maximumFractionDigits: 0 })}
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-400">Capital mora</p>
               <p className={`mt-0.5 text-sm font-medium ${c.overduePrincipalBalance > 0 ? "text-error-600 dark:text-error-400" : "text-gray-700 dark:text-gray-300"}`}>
-                {c.overduePrincipalBalance.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 })}
+                {c.overduePrincipalBalance.toLocaleString(CURRENCY_LOCALE[c.currencyCode] ?? "es-CO", { style: "currency", currency: c.currencyCode, maximumFractionDigits: 0 })}
               </p>
             </div>
             <div>

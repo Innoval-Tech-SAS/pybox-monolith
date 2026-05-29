@@ -84,3 +84,4 @@ class DebtorCreditResponse(BaseSchema):
     days_overdue_at_cutoff: int = Field(description="Días de mora al corte")
     overdue_installments: int = Field(description="Cuotas en mora")
     pending_installments: int = Field(description="Cuotas pendientes")
+    currency_code: str = Field(description="Código de moneda del portafolio (COP, MXN, etc.)")
