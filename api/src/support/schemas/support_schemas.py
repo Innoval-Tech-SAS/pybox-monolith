@@ -40,10 +40,39 @@ _STATUS_IN = {
 }
 
 
+class TicketCategorySchema(BaseSchema):
+    label: str
+    case_type: SupportCaseType
+    description: str
+    icon: str
+
+    @field_serializer("case_type")
+    def serialize_case_type(self, v: SupportCaseType) -> str:
+        return _CASE_TYPE_OUT.get(v, v.value)
+
+
+_CASE_TYPE_IN = {
+    "incident": SupportCaseType.INCIDENT,
+    "requirement": SupportCaseType.REQUIREMENT,
+    **{ct.value: ct for ct in SupportCaseType},
+}
+
+
 class CreateTicketSchema(BaseSchema):
     organization_id: uuid.UUID
     title: str
-    notes: str | None = None
+    case_type: SupportCaseType
+    notes: str
+
+    @field_validator("case_type", mode="before")
+    @classmethod
+    def coerce_case_type(cls, v: object) -> SupportCaseType:
+        if isinstance(v, SupportCaseType):
+            return v
+        mapped = _CASE_TYPE_IN.get(str(v))
+        if mapped is None:
+            raise ValueError(f"Tipo de caso inválido: {v!r}")
+        return mapped
 
 
 class TicketOrgSchema(BaseSchema):
@@ -95,6 +124,12 @@ class SupportTicketSchema(BaseSchema):
     @field_serializer("status")
     def serialize_status(self, v: SupportTicketStatus) -> str:
         return _STATUS_OUT.get(v, v.value)
+
+
+class TicketAttachmentSchema(BaseSchema):
+    name: str
+    url: str
+    size: int
 
 
 class OrgDocSchema(BaseSchema):

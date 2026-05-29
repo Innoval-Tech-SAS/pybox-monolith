@@ -7,10 +7,8 @@ import EmptyState from "@/ui/components/common/empty-state";
 import { useTickets } from "@/support/hooks/use-tickets";
 import { TicketKanbanHeader } from "@/support/components/ticket-kanban/ticket-kanban-header";
 import { TicketListItem } from "@/support/components/ticket-list/ticket-list-item";
-import { CreateTicketModal } from "@/support/components/create-ticket/create-ticket-modal";
 import { getTicketKanbanGroups, mapTicketToKanban } from "@/support/utils/ticket-kanban-utils";
 import { getSession } from "@/auth/utils/auth-session-utils";
-import { Scope } from "@/types/auth/role";
 import type { SupportTicket } from "@/types/support/support-types";
 import type { TicketKanbanGroupKey } from "@/types/support/ticket-kanban-types";
 
@@ -53,13 +51,12 @@ function groupByDate(tickets: SupportTicket[]): DateGroup[] {
 }
 
 const session = getSession();
-const canCreate = session?.scope !== Scope.GLOBAL || session?.role !== "ADMINISTRADOR";
+const canCreate = true;
 
 export const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { tickets, loading, refetch } = useTickets({ includeResolved: true });
+  const { tickets, loading } = useTickets({ includeResolved: true });
   const [selectedGroup, setSelectedGroup] = useState<TicketKanbanGroupKey>("all");
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const filtered = useMemo(() => {
     if (selectedGroup === "all") return tickets;
@@ -79,7 +76,7 @@ export const TicketsPage: React.FC = () => {
         <Breadcrumb pageTitle="Tickets" />
         {canCreate && (
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => navigate("/cs/tickets/new")}
             className="mb-4 inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
           >
             <Plus size={15} />
@@ -126,11 +123,6 @@ export const TicketsPage: React.FC = () => {
           </div>
         )}
       </div>
-      <CreateTicketModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onCreated={() => { setShowCreateModal(false); refetch(); }}
-      />
     </div>
   );
 };

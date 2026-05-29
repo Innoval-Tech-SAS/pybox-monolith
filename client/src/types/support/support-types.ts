@@ -16,10 +16,24 @@ export interface SupportTicket {
   createdAt: string;
 }
 
+export interface TicketCategory {
+  label: string;
+  caseType: SupportCaseType;
+  description: string;
+  icon: string;
+}
+
 export interface CreateTicketPayload {
   organizationId: string;
   title: string;
-  notes?: string;
+  caseType: SupportCaseType;
+  notes: string;
+}
+
+export interface TicketAttachment {
+  name: string;
+  url: string;
+  size: number;
 }
 
 export interface TicketOrg {

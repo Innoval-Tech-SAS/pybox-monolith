@@ -1,10 +1,16 @@
-from fastapi import APIRouter
+from typing import Annotated
+from fastapi import APIRouter, File, UploadFile
 
 from security.dependencies import CurrentSession
 from support.dependencies import SupportAccessFilter, SupportServiceDep
-from support.schemas.support_schemas import AssignTicketSchema, CreateTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema, TicketOrgSchema, UpdateTicketStatusSchema
+from support.schemas.support_schemas import AssignTicketSchema, CreateTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema, TicketAttachmentSchema, TicketCategorySchema, TicketOrgSchema, UpdateTicketStatusSchema
 
 router = APIRouter(prefix="/cs/tickets", tags=["Support"])
+
+
+@router.get("/categories", response_model=list[TicketCategorySchema])
+async def get_ticket_categories(service: SupportServiceDep):
+    return service.get_categories()
 
 
 @router.get("/orgs", response_model=list[TicketOrgSchema])
@@ -55,6 +61,21 @@ async def assign_ticket(
     service: SupportServiceDep,
 ):
     return await service.assign_ticket(ticket_number, body, f)
+
+
+@router.get("/{ticket_number}/attachments", response_model=list[TicketAttachmentSchema])
+async def list_attachments(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+    return await service.list_attachments(ticket_number, f)
+
+
+@router.post("/{ticket_number}/attachments", response_model=list[TicketAttachmentSchema])
+async def upload_attachments(
+    ticket_number: int,
+    files: Annotated[list[UploadFile], File()],
+    f: SupportAccessFilter,
+    service: SupportServiceDep,
+):
+    return await service.upload_attachments(ticket_number, files, f)
 
 
 @router.post("/{ticket_number}/escalate", response_model=SupportTicketSchema)

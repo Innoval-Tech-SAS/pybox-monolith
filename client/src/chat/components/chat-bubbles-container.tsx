@@ -16,6 +16,7 @@ export const ChatBubblesContainer: React.FC = () => {
     loadAvailableUsers,
     loadChats,
     openChat,
+    openExistingChat,
     closeWindow,
     minimizeWindow,
     expandWindow,
@@ -81,9 +82,9 @@ export const ChatBubblesContainer: React.FC = () => {
           {showPanel && (
             <AvailableUsersPanel
               users={availableUsers}
-              onSelect={(user) =>
-                openChat(user.id, user.fullName, user.profilePhotoUrl)
-              }
+              chats={chats}
+              onSelect={(user) => openChat(user.id, user.fullName, user.profilePhotoUrl)}
+              onOpenChat={openExistingChat}
               onClose={() => setShowPanel(false)}
             />
           )}

@@ -145,6 +145,7 @@ export const useChatPage = () => {
       if (event.event === "message") {
         const msg = event.data;
         playMessageSound();
+        const isSelected = selected?.chatId === msg.chatId;
         setSelected((prev) =>
           prev?.chatId === msg.chatId && !prev.messages.some((m) => m.id === msg.id)
             ? { ...prev, messages: [...prev.messages, msg] }
@@ -157,12 +158,17 @@ export const useChatPage = () => {
                   ...c,
                   lastMessage: msg.body,
                   lastMessageAt: msg.createdAt,
-                  unreadCount:
-                    selected?.chatId === c.id ? 0 : c.unreadCount + 1,
+                  unreadCount: isSelected ? 0 : c.unreadCount + 1,
                 }
               : c,
           ),
         );
+        if (isSelected) {
+          apiClient(`/chats/${msg.chatId}/read`, {
+            method: "POST",
+            body: JSON.stringify({ messageIds: [msg.id] }),
+          }).catch(() => {});
+        }
       } else if (event.event === "read") {
         const { chatId, messageIds } = event.data;
         setSelected((prev) =>

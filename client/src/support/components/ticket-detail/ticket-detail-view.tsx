@@ -5,6 +5,7 @@ import { useTicketCreator } from "@/support/hooks/use-ticket-creator";
 import { useTicketAssignee } from "@/support/hooks/use-ticket-assignee";
 import { useEscalateTicket } from "@/support/hooks/use-escalate-ticket";
 import { TicketOrgDocsViewer } from "./ticket-org-docs-viewer";
+import { TicketAttachments } from "./ticket-attachments";
 import {
   formatTicketDetailDate,
   getStatusBadgeStyles,
@@ -113,6 +114,8 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
             onResolved={onTicketResolved ?? (() => {})}
           />
         )}
+
+        <TicketAttachments ticketNumber={ticket.ticketNumber} />
       </Card>
 
       {/* ── Sidebar ── */}

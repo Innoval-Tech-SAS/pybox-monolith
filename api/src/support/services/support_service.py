@@ -1,8 +1,9 @@
 import os
+import re
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.paths import UPLOADS_ROOT
@@ -15,7 +16,7 @@ from portfolios.repository.portfolio_user_access_repository import PortfolioUser
 from support.enums.support_enums import SupportCaseType, SupportTicketStatus
 from support.models.support_ticket_model import SupportTicketModel
 from support.repository.support_ticket_repository import SupportTicketRepository
-from support.schemas.support_schemas import AssignTicketSchema, CreateTicketSchema, OrgDocSchema, OrgDocsSchema, ResolveTicketSchema, SupportFilter, SupportTicketSchema, TicketOrgSchema, UpdateTicketStatusSchema
+from support.schemas.support_schemas import AssignTicketSchema, CreateTicketSchema, OrgDocSchema, OrgDocsSchema, ResolveTicketSchema, SupportFilter, SupportTicketSchema, TicketAttachmentSchema, TicketCategorySchema, TicketOrgSchema, UpdateTicketStatusSchema
 from users.schemas.user_session_schema import UserSession
 
 
@@ -93,6 +94,16 @@ class SupportService:
         updated = await self._ticket_repo.update(ticket)
         return await self._ticket_to_schema(updated)
 
+    def get_categories(self) -> list[TicketCategorySchema]:
+        return [
+            TicketCategorySchema(label="Reportar un error", case_type=SupportCaseType.INCIDENT, description="Algo no funciona como se espera", icon="bug"),
+            TicketCategorySchema(label="Nueva funcionalidad", case_type=SupportCaseType.INCIDENT, description="Propón una mejora o característica nueva", icon="sparkles"),
+            TicketCategorySchema(label="Problema de acceso", case_type=SupportCaseType.INCIDENT, description="No puedo acceder a mi cuenta o a un módulo", icon="lock-keyhole"),
+            TicketCategorySchema(label="Consulta general", case_type=SupportCaseType.INCIDENT, description="Tengo una pregunta sobre el sistema", icon="help-circle"),
+            TicketCategorySchema(label="Validación de documentos", case_type=SupportCaseType.REQUIREMENT, description="Verificación documental de empresa", icon="file-check"),
+            TicketCategorySchema(label="Otro", case_type=SupportCaseType.INCIDENT, description="Mi situación no encaja en las categorías anteriores", icon="more-horizontal"),
+        ]
+
     async def get_ticket_orgs(self, session: UserSession) -> list[TicketOrgSchema]:
         if session.is_self:
             org_ids = await self._portfolio_access_repo.get_distinct_org_ids_by_user(session.user_id)
@@ -102,10 +113,14 @@ class SupportService:
                 if org:
                     result.append(TicketOrgSchema(id=org.id, name=org.name))
             return result
-        return [
-            TicketOrgSchema(id=uuid.UUID(org_id), name=entry.org_name)
-            for org_id, entry in session.orgs.items()
-        ]
+        if session.orgs:
+            return [
+                TicketOrgSchema(id=uuid.UUID(org_id), name=entry.org_name)
+                for org_id, entry in session.orgs.items()
+            ]
+        # Global scope (ADMIN GLOBAL / CS GLOBAL): return all orgs
+        orgs = await self._org_repo.get_all()
+        return [TicketOrgSchema(id=org.id, name=org.name) for org in orgs]
 
     async def create_ticket(self, user_id: int, data: CreateTicketSchema, f: SupportFilter) -> SupportTicketSchema:
         if not f.can_create:
@@ -119,7 +134,7 @@ class SupportService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta entidad.")
 
         ticket = SupportTicketModel(
-            case_type=SupportCaseType.INCIDENT,
+            case_type=data.case_type,
             status=SupportTicketStatus.OPEN,
             organization_id=data.organization_id,
             created_by=user_id,
@@ -149,7 +164,7 @@ class SupportService:
         return await self._ticket_to_schema(ticket)
 
     async def get_org_docs(self, ticket_number: int, f: SupportFilter) -> OrgDocsSchema:
-        if not f.can_resolve:
+        if not (f.can_resolve or f.can_assign):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
         ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
         if ticket is None:
@@ -229,6 +244,70 @@ class SupportService:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    _ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".doc"}
+    _MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+    @staticmethod
+    def _safe_filename(name: str | None) -> str:
+        if not name:
+            return "attachment"
+        safe = re.sub(r"[^\w.\-]", "_", name)
+        return safe[:120]
+
+    def _attachment_folder(self, ticket_number: int) -> str:
+        return os.path.join(UPLOADS_ROOT, "tickets", str(ticket_number))
+
+    def _attachment_url(self, ticket_number: int, name: str) -> str:
+        return f"/files/tickets/{ticket_number}/{name}"
+
+    async def upload_attachments(
+        self, ticket_number: int, files: list[UploadFile], f: SupportFilter
+    ) -> list[TicketAttachmentSchema]:
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
+        if ticket is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
+        if f.org_ids is not None and ticket.organization_id not in f.org_ids:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+        if f.created_by is not None and ticket.created_by != f.created_by:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+
+        folder = self._attachment_folder(ticket_number)
+        os.makedirs(folder, exist_ok=True)
+
+        result = []
+        for upload in files:
+            ext = os.path.splitext(upload.filename or "")[1].lower()
+            if ext not in self._ALLOWED_EXTENSIONS:
+                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Tipo de archivo no permitido: {ext}")
+            content = await upload.read()
+            if len(content) > self._MAX_FILE_SIZE:
+                raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="El archivo excede el tamaño máximo de 10 MB.")
+            safe_name = self._safe_filename(upload.filename)
+            dest = os.path.join(folder, safe_name)
+            with open(dest, "wb") as fh:
+                fh.write(content)
+            result.append(TicketAttachmentSchema(name=safe_name, url=self._attachment_url(ticket_number, safe_name), size=len(content)))
+        return result
+
+    async def list_attachments(self, ticket_number: int, f: SupportFilter) -> list[TicketAttachmentSchema]:
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
+        if ticket is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
+        if f.org_ids is not None and ticket.organization_id not in f.org_ids:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+        if f.created_by is not None and ticket.created_by != f.created_by:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+
+        folder = self._attachment_folder(ticket_number)
+        if not os.path.isdir(folder):
+            return []
+        result = []
+        for name in sorted(os.listdir(folder)):
+            path = os.path.join(folder, name)
+            if os.path.isfile(path):
+                result.append(TicketAttachmentSchema(name=name, url=self._attachment_url(ticket_number, name), size=os.path.getsize(path)))
+        return result
 
     async def _auto_assign_org(self, ticket: SupportTicketModel) -> None:
         agent_id = await self._ticket_repo.find_least_loaded_cs_org(ticket.organization_id)
