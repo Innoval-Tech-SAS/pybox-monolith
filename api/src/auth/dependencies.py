@@ -23,13 +23,13 @@ def _get_token_payload(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer)],
 ) -> dict[str, Any]:
     from config.logger import logger
-    logger.debug(f"[_get_token_payload] START — scheme={credentials.scheme!r} token_prefix={credentials.credentials[:30]!r}")
+    logger.debug("[auth] token_check | scheme=%s", credentials.scheme)
     try:
         payload = _token_service.verify_token(credentials.credentials)
-        logger.debug(f"[_get_token_payload] END   — OK payload_keys={list(payload.keys())}")
+        logger.debug("[auth] token_check | result=ok user_id=%s", payload.get("sub"))
         return payload
     except ValueError as error:
-        logger.debug(f"[_get_token_payload] END   — REJECTED: {error}")
+        logger.debug("[auth] token_check | result=rejected error=%s", type(error).__name__)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(error),

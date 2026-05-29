@@ -97,7 +97,7 @@ export const ChatPage: React.FC = () => {
 
         {/* New chat panel */}
         {showNewChat && (
-          <div className="border-b border-gray-200 dark:border-gray-800 px-4 py-2 max-h-48 overflow-y-auto">
+          <div className="border-b border-gray-200 dark:border-gray-800 px-4 py-2 max-h-48 overflow-y-auto custom-scrollbar">
             {availableUsers.length === 0 ? (
               <p className="text-xs text-gray-400 py-2">Sin usuarios disponibles</p>
             ) : (
@@ -122,7 +122,7 @@ export const ChatPage: React.FC = () => {
         )}
 
         {/* Chat list */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {chatsLoading ? (
             <p className="text-center text-xs text-gray-400 mt-6">Cargando...</p>
           ) : filteredChats.length === 0 ? (
@@ -190,7 +190,7 @@ export const ChatPage: React.FC = () => {
             <div
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3"
+              className="flex-1 overflow-y-auto custom-scrollbar px-5 py-4 flex flex-col gap-3"
             >
               {selected.loading && (
                 <p className="text-center text-xs text-gray-400">Cargando...</p>
@@ -239,7 +239,7 @@ export const ChatPage: React.FC = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="Escribe un mensaje..."
                 rows={1}
-                className="flex-1 resize-none bg-gray-50 dark:bg-gray-900 rounded-xl px-4 py-2 text-sm text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:outline-none max-h-28 overflow-y-auto"
+                className="flex-1 resize-none bg-gray-50 dark:bg-gray-900 rounded-xl px-4 py-2 text-sm text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:outline-none max-h-28 overflow-y-auto custom-scrollbar"
               />
               <button
                 onClick={submit}

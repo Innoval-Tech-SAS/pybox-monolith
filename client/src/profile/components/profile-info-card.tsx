@@ -87,7 +87,7 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
           <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
             Mis Empresas
           </h4>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-gray-800">

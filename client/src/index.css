@@ -265,6 +265,9 @@ layer(base);
   scrollbar-width: none; /* Firefox */
 }
 @utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 transparent;
+
   &::-webkit-scrollbar {
     @apply size-1.5;
   }
@@ -274,11 +277,14 @@ layer(base);
   }
 
   &::-webkit-scrollbar-thumb {
-    @apply bg-gray-200 rounded-full dark:bg-gray-700;
+    @apply bg-gray-300 rounded-full;
   }
 }
+.dark .custom-scrollbar {
+  scrollbar-color: #475569 transparent;
+}
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #344054;
+  background-color: #475569;
 }
 
 @layer utilities {

@@ -1,4 +1,3 @@
-import logging
 import uuid
 
 from fastapi import HTTPException, status
@@ -32,7 +31,7 @@ from security.policies import require_permission
 from security.services.encrypt_service import encrypt_service
 from users.schemas.user_session_schema import UserSession
 
-logger = logging.getLogger(__name__)
+from config.logger import logger
 
 
 class DebtorService:

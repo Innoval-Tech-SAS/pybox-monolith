@@ -31,7 +31,7 @@ export const UserPicker: React.FC<UserPickerProps> = ({ value, onChange }) => {
           className="h-10 w-full rounded-lg border border-gray-300 bg-transparent pl-9 pr-4 text-sm text-gray-800 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90"
         />
       </div>
-      <div className="max-h-52 overflow-y-auto space-y-1 rounded-xl border border-gray-200 p-2 dark:border-gray-700">
+      <div className="max-h-52 overflow-y-auto custom-scrollbar space-y-1 rounded-xl border border-gray-200 p-2 dark:border-gray-700">
         {filtered.length === 0 && (
           <p className="py-4 text-center text-sm text-gray-400">Sin resultados</p>
         )}

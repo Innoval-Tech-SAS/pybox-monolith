@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 import config.models  # noqa: F401
 from config.error_handlers import register_error_handlers
+from config.logging_middleware import LoggingMiddleware
 from config.paths import UPLOADS_ROOT
 from config.routers import register_routers
 from database.database import db
@@ -56,6 +57,7 @@ app.add_middleware(
     ],
 )
 
+app.add_middleware(LoggingMiddleware)
 register_error_handlers(app)
 
 app.mount("/files", StaticFiles(directory=UPLOADS_ROOT), name="uploads")

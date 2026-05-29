@@ -311,7 +311,7 @@ export const UserCard: React.FC<UserCardProps> = ({ data, isOwnProfile = false, 
         {orgEntries.length > 0 && (
           <Card className="lg:col-span-2">
             <CardTitle>Mis Empresas</CardTitle>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-gray-800">

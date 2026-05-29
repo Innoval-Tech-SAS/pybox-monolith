@@ -84,7 +84,7 @@ export const TicketsPage: React.FC = () => {
           </button>
         )}
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/3">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto custom-scrollbar rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/3">
         <TicketKanbanHeader
           groups={groups}
           selectedGroup={selectedGroup}

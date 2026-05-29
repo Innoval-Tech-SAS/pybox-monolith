@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
-import type {
-  PortfolioDebtor,
-  PortfolioDebtorsResponse,
-  RelatedContactsResponse,
-} from "@/types/companies/portfolio-debtor-types";
+import type { PortfolioDebtor, PortfolioDebtorsResponse } from "@/types/companies/portfolio-debtor-types";
 
 const PAGE_SIZE = 20;
 
@@ -50,24 +46,4 @@ export const usePortfolioDebtors = (portfolioId: string) => {
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return { debtors, total, page, pages, search, setSearch, loading, goToPage };
-};
-
-export const useDebtorRelatedContacts = (debtorId: number | null, portfolioId: string) => {
-  const { apiClient } = useApiClient();
-  const [data, setData] = useState<RelatedContactsResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!debtorId || !portfolioId) {
-      setData(null);
-      return;
-    }
-    setLoading(true);
-    apiClient(`/debtors/${debtorId}/related-contacts?portfolioId=${portfolioId}`)
-      .then((d: RelatedContactsResponse) => setData(d))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
-  }, [debtorId, portfolioId]);
-
-  return { data, loading };
 };

@@ -40,7 +40,7 @@ export const CustomerServiceHome: React.FC = () => {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <Breadcrumb pageTitle="Customer Service" />
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/3">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto custom-scrollbar rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/3">
         <TicketKanbanHeader
           groups={groups}
           selectedGroup={selectedGroup}

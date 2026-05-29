@@ -1,12 +1,11 @@
 import asyncio
-import logging
 
+from config.logger import logger
 from database.database import db
 from database.redis import redis_client, redis_factory
 from users.repository.user_repository import UserRepository
 from users.schemas.user_session_schema import SESSION_KEY_PREFIX
 
-logger = logging.getLogger(__name__)
 
 _KEYEVENT_CHANNEL = "__keyevent@0__:expired"
 

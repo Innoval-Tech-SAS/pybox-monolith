@@ -2,6 +2,8 @@ import uuid
 from pathlib import Path
 from typing import Sequence
 
+from config.logger import logger
+
 from fastapi import HTTPException, status
 
 from tools.file_tools import save_org_document_bytes
@@ -103,6 +105,7 @@ class OrganizationService:
                 )
                 await self.role_assignment_repo.add(assignment)
 
+        logger.info("[org] create | org_id=%s user_id=%d scope=%s", org.id, created_by_user_id, scope.value)
         return org
 
     async def register_with_representative(
@@ -199,6 +202,7 @@ class OrganizationService:
             representative_document_file=rep_file_path,
         )
         org = await self.org_repo.add(org)
+        logger.info("[org] register_with_rep | org_id=%s mode=%s user_id=%d", org.id, representative_mode.value, created_by_user_id)
 
         # 6. Membership for legal representative (always with flag)
         rep_membership = OrganizationMembershipModel(
@@ -253,7 +257,9 @@ class OrganizationService:
                 value = encrypt_service.encrypt_to_str(value)
             setattr(org, field, value)
 
-        return await self.org_repo.update(org)
+        updated = await self.org_repo.update(org)
+        logger.info("[org] update | org_id=%s user_id=%d", org_id, requesting_user_id)
+        return updated
 
     async def delete_organization(
         self,

@@ -3,6 +3,8 @@ from typing import cast
 import jwt
 
 from auth.enums.auth_enums import AuthProvider
+
+from config.logger import logger
 from users.repository.user_repository import UserRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.models.user_model import UserModel
@@ -94,7 +96,9 @@ class AuthService:
             document_number_hash=document_number_hash,
         )
 
-        return await self.user_repository.add(user)
+        user = await self.user_repository.add(user)
+        logger.info("[auth] register | user_id=%d", user.id)
+        return user
 
     async def authenticate_user(self, user_data: UserLogin) -> AuthResponse:
         email = normalize_email(user_data.email)
@@ -112,12 +116,14 @@ class AuthService:
             stored_hash, password
         )
         if not is_valid:
+            logger.warning("[auth] login_failed | user_id=%d reason=invalid_password", user.id)
             raise ValueError("Credenciales inválidas.")
 
         if new_hash:
             setattr(user, "hashed_password", new_hash)
             user = await self.user_repository.update(user)
 
+        logger.info("[auth] login | user_id=%d provider=SELF", user.id)
         return await self._build_response(user, AuthProvider.SELF)
 
     async def authenticate_provider_user(
@@ -137,10 +143,12 @@ class AuthService:
         )
         user, is_new = await self._get_or_create_provider_user(provider_profile, provider_data)
         if not is_new:
+            logger.warning("[auth] oauth_register_failed | provider=%s reason=already_exists user_id=%d", provider.value, user.id)
             raise ValueError("Ya tienes una cuenta registrada con este proveedor. Inicia sesión.")
         await self.role_assignment_repository.add(
             RoleAssignmentModel(user_id=cast(int, user.id), role=role, scope=scope)
         )
+        logger.info("[auth] oauth_register | user_id=%d provider=%s", user.id, provider.value)
         return await self._build_response(user, provider)
 
     async def authenticate_existing_provider_user(
@@ -157,10 +165,11 @@ class AuthService:
         )
         user = await self._get_provider_user_or_link_email(provider_profile)
         if not user:
+            logger.warning("[auth] oauth_login_failed | provider=%s reason=user_not_found", provider.value)
             raise ValueError(
                 "No encontramos una cuenta asociada a Google. Regístrate primero para completar tu perfil."
             )
-
+        logger.info("[auth] oauth_login | user_id=%d provider=%s", user.id, provider.value)
         return await self._build_response(user, provider)
 
     async def refresh_tokens(self, refresh_token: str) -> AuthResponse:
@@ -185,10 +194,12 @@ class AuthService:
         if not user:
             raise ValueError("Usuario no encontrado.")
 
+        logger.info("[auth] token_refresh | user_id=%d", user_id)
         await self.token_service.revoke_refresh_token(user_id)
         return await self._build_response(user, cast(AuthProvider, user.auth_provider))
 
     async def logout(self, user_id: int) -> None:
+        logger.info("[auth] logout | user_id=%d", user_id)
         await self.token_service.revoke_refresh_token(user_id)
         user = await self.user_repository.get_by_id(user_id)
         if user:

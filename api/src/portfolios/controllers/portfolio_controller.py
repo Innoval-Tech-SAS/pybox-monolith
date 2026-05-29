@@ -1,4 +1,3 @@
-import logging
 import uuid
 from typing import Annotated
 
@@ -26,7 +25,7 @@ from security.policies import require_portfolio_access
 from users.enums.user_enums import UserRole
 from users.schemas.user_session_schema import UserSession
 
-logger = logging.getLogger(__name__)
+from config.logger import logger
 
 router = APIRouter(prefix="/portfolios", tags=["Portafolios"])
 

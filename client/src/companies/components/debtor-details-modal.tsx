@@ -1,6 +1,6 @@
 import { Modal } from "@/ui/components/modal/modal";
 import { Loader } from "@/ui/components/loader/loader";
-import { useDebtorRelatedContacts } from "../hooks/use-portfolio-debtors";
+import { useDebtorRelatedContacts } from "../hooks/use-debtor-detail";
 import type { DebtorDetailsModalProps } from "@/types/props/debtor-details-modal-props";
 import type { DebtorContactMethod, DebtorAddress, DebtorDetail } from "@/types/companies/portfolio-debtor-types";
 
@@ -87,7 +87,7 @@ export const DebtorDetailsModal: React.FC<DebtorDetailsModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1 p-6 space-y-5">
+        <div className="overflow-y-auto custom-scrollbar flex-1 p-6 space-y-5">
           {loading ? (
             <div className="flex flex-col items-center gap-3 py-10">
               <Loader />

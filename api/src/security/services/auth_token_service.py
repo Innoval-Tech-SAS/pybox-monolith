@@ -27,7 +27,7 @@ class AuthTokenService:
 
     def generate_access_token(self, user: UserModel, auth_provider: AuthProvider) -> str:
         from config.logger import logger
-        logger.debug(f"[generate_access_token] START — user_id={user.id} provider={auth_provider.value} secret_prefix={self.secret_key[:6]!r}")
+        logger.debug("[token] generate_access | user_id=%d provider=%s", user.id, auth_provider.value)
         now = datetime.now(timezone.utc)
         token = jwt.encode(
             {
@@ -40,7 +40,6 @@ class AuthTokenService:
             self.secret_key,
             algorithm=self.ALGORITHM,
         )
-        logger.debug(f"[generate_access_token] END   — token_prefix={token[:30]!r}")
         return token
 
     async def generate_refresh_token(self, user_id: int) -> str:
@@ -59,16 +58,15 @@ class AuthTokenService:
 
     def verify_access_token(self, token: str) -> dict[str, Any]:
         from config.logger import logger
-        logger.debug(f"[verify_access_token] START — token_prefix={token[:30]!r} secret_prefix={self.secret_key[:6]!r}")
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.ALGORITHM])
-            logger.debug(f"[verify_access_token] END   — OK sub={payload.get('sub')}")
+            logger.debug("[token] verify_access | result=ok user_id=%s", payload.get("sub"))
             return payload
         except jwt.ExpiredSignatureError as e:
-            logger.debug(f"[verify_access_token] END   — EXPIRED")
+            logger.debug("[token] verify_access | result=expired")
             raise ValueError("El token expiró.") from e
         except jwt.InvalidTokenError as e:
-            logger.debug(f"[verify_access_token] END   — INVALID: {type(e).__name__}: {e}")
+            logger.debug("[token] verify_access | result=invalid error=%s", type(e).__name__)
             raise ValueError("El token no es válido.") from e
 
     async def verify_refresh_token(self, user_id: int, jti: str) -> bool:

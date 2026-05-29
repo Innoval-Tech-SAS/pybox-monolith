@@ -1,4 +1,3 @@
-import logging
 import uuid
 from typing import Annotated
 
@@ -20,7 +19,7 @@ from debtors.schemas.debtor_schemas import (
 )
 from security.dependencies import CurrentSession
 
-logger = logging.getLogger(__name__)
+from config.logger import logger
 
 router = APIRouter(prefix="/debtors", tags=["Deudores"])
 

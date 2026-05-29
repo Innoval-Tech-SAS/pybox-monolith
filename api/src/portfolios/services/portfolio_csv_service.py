@@ -1,4 +1,3 @@
-import logging
 import os
 import uuid
 from dataclasses import dataclass, field
@@ -9,7 +8,7 @@ from config.paths import UPLOADS_ROOT
 from sqlalchemy.ext.asyncio import AsyncSession
 from countries.enums.country_enums import Nationality
 
-logger = logging.getLogger(__name__)
+from config.logger import logger
 
 from contact_methods.models.contact_method_model import ContactMethodModel
 from contact_methods.repository.contact_method_repository import ContactMethodRepository
@@ -144,7 +143,7 @@ class PortfolioCsvService:
     async def _process_row(
         self, row: PortfolioRowData, portfolio_id: uuid.UUID, row_number: int
     ) -> str | None:
-        logger.debug("[_process_row] START | fila=%d doc=%s", row_number, row.debtor.document_number)
+        logger.debug("[_process_row] START | fila=%d", row_number)
         try:
             async with self.session.begin_nested():
                 debtor = await self._upsert_debtor(row.debtor)
@@ -170,7 +169,7 @@ class PortfolioCsvService:
                 if row.credit_adjustment:
                     await self._insert_credit_adjustment(credit.id, row.credit_adjustment)
         except Exception as exc:
-            logger.warning("[_process_row] ERROR | fila=%d doc=%s error=%s", row_number, row.debtor.document_number, exc)
+            logger.warning("[_process_row] ERROR | fila=%d error=%s", row_number, exc)
             return f"Fila {row_number} (doc: {row.debtor.document_number}): {exc}"
         logger.debug("[_process_row] END OK | fila=%d", row_number)
         return None
@@ -180,7 +179,7 @@ class PortfolioCsvService:
     # ------------------------------------------------------------------
 
     async def _upsert_debtor(self, data: DebtorRowData) -> DebtorModel:
-        logger.debug("[_upsert_debtor] START | doc=%s", data.document_number)
+        logger.debug("[_upsert_debtor] START")
         doc_hash = encrypt_service.hash_document(data.document_number)
         existing = await self.debtor_repo.get_by_document_number(doc_hash)
         if existing:

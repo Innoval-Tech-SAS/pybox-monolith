@@ -41,7 +41,7 @@ class VerificationService(ABC):
         await self._repo.add(record)
 
         if get_or_throw("ENV") == "development":
-            logger.info(f"[DEV] Código de verificación — canal={self.channel.value} user_id={user.id} code={code}")
+            logger.info("[verification] code_sent_dev | user_id=%d channel=%s code=%s", user.id, self.channel.value, code)
             return
 
         sent = await self._dispatch(user, code)
@@ -62,7 +62,8 @@ class VerificationService(ABC):
             CodeAlreadyUsedException,
         ) as exc:
             logger.warning(
-                f"Verificación fallida — user_id={user_id} canal={self.channel.value}: {exc}"
+                "[verification] verify_failed | user_id=%d channel=%s error=%s",
+                user_id, self.channel.value, type(exc).__name__,
             )
             raise
 

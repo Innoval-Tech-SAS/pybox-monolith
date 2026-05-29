@@ -31,10 +31,10 @@ class NRS360Provider:
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.post(self._SMS_URL, json=payload, headers=headers)
             response.raise_for_status()
-            logger.info(f"SMS enviado a {to} vía 360NRS")
+            logger.info("[nrs360] sms_sent | recipients=%d", len(to))
             return True
         except Exception as exc:
-            logger.error(f"Error al enviar SMS por 360NRS: {exc}")
+            logger.error("[nrs360] sms_error | error=%s", type(exc).__name__)
             return False
 
     async def send_email(
@@ -59,8 +59,8 @@ class NRS360Provider:
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.post(self._EMAIL_URL, json=payload, headers=headers)
             response.raise_for_status()
-            logger.info(f"Email enviado a {to} vía 360NRS")
+            logger.info("[nrs360] email_sent | recipients=%d", len(to))
             return True
         except Exception as exc:
-            logger.error(f"Error al enviar email por 360NRS: {exc}")
+            logger.error("[nrs360] email_error | error=%s", type(exc).__name__)
             return False

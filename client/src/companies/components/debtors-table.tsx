@@ -1,5 +1,6 @@
-import { ChevronLeft, ChevronRight, Eye, Search } from "lucide-react";
+import { Eye, Search } from "lucide-react";
 import { useNavigate } from "react-router";
+import { PaginationWithIcon } from "@/ui/components/table/pagination-with-icon";
 import { Loader } from "@/ui/components/loader/loader";
 import { Badge } from "@/ui/components/badge";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/ui/components/table/table";
@@ -60,7 +61,7 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
         <>
           {/* Desktop table */}
           <div className="hidden overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 sm:block">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/3">
@@ -135,26 +136,16 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
 
           {/* Pagination */}
           {pages > 1 && (
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Página {page} de {pages}
+                Página {page} de {pages} · {total} cliente{total !== 1 ? "s" : ""}
               </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onPageChange(page - 1)}
-                  disabled={page <= 1}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-400"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  onClick={() => onPageChange(page + 1)}
-                  disabled={page >= pages}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 disabled:opacity-40 dark:border-gray-700 dark:text-gray-400"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+              <PaginationWithIcon
+                key={search}
+                totalPages={pages}
+                initialPage={page}
+                onPageChange={onPageChange}
+              />
             </div>
           )}
         </>

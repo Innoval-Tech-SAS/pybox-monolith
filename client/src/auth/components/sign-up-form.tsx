@@ -103,7 +103,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
   };
 
   return (
-    <div className="flex flex-col flex-1 overflow-y-auto">
+    <div className="flex flex-col flex-1 overflow-y-auto custom-scrollbar">
       <div className="flex flex-col justify-center flex-1 w-full max-w-lg mx-auto py-8">
         <div className="mb-5 sm:mb-8">
           <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">

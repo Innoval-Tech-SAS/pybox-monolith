@@ -116,20 +116,17 @@ class Logger:
             )
 
             if self._ENVIROMENT == "development":
-
                 handler = logging.StreamHandler()
                 handler.setLevel(logging.DEBUG)
                 handler.setFormatter(self.formatter)
-
+                self.logger.setLevel(logging.DEBUG)
             else:
-
                 handler = MonthlyDailyRotatingFileHandler("./logs")
-                handler.setLevel(logging.DEBUG)
+                handler.setLevel(logging.INFO)
                 handler.setFormatter(self.formatter)
+                self.logger.setLevel(logging.INFO)
 
-            self.logger.setLevel(logging.DEBUG)
             self.logger.propagate = False
-            self.logger.addHandler(handler)
             self.logger.addHandler(handler)
 
 
