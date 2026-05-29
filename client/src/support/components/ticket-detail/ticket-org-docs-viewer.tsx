@@ -4,6 +4,8 @@ import { FileText, Eye, CheckCircle, XCircle } from "lucide-react";
 import { resolveProfilePhotoUrl } from "@/profile/utils/profile-photo-url";
 import { useTicketOrgDocs } from "@/support/hooks/use-ticket-org-docs";
 import { useResolveTicket } from "@/support/hooks/use-resolve-ticket";
+import { getSession } from "@/auth/utils/auth-session-utils";
+import { Role } from "@/types/auth/role";
 import type { SupportTicket } from "@/types/support/support-types";
 
 interface TicketOrgDocsViewerProps {
@@ -22,6 +24,7 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
   const [pendingApproval, setPendingApproval] = useState<boolean | null>(null);
 
   const isResolved = ticket.status === "resolved";
+  const isCS = getSession()?.role === Role.CS;
 
   const handleDecision = (approved: boolean) => {
     setPendingApproval(approved);
@@ -40,7 +43,7 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
 
   if (loading) {
     return (
-      <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/3">
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
           Documentos de verificación
         </p>
@@ -63,7 +66,7 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
       <div className="overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800">
         <table className="w-full border-collapse table-auto">
           <thead>
-            <tr className="bg-gray-50 dark:bg-white/[0.02]">
+            <tr className="bg-gray-50 dark:bg-white/2">
               <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
                 Documento
               </th>
@@ -120,7 +123,7 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
         </table>
       </div>
 
-      {!isResolved && orgDocs && (
+      {!isResolved && orgDocs && isCS && (
         <div className="mt-4">
           {!showNotesInput ? (
             <div className="flex gap-3">
@@ -140,7 +143,7 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
               </button>
             </div>
           ) : (
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/3">
               <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 {pendingApproval ? "Aprobando verificación" : "Rechazando verificación"}
                 <span

@@ -7,6 +7,7 @@ export interface SupportTicket {
   caseType: SupportCaseType;
   status: SupportTicketStatus;
   organizationId: string;
+  organizationName: string;
   createdBy: number;
   assignedTo: number | null;
   title: string | null;

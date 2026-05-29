@@ -2,6 +2,8 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
+from pydantic import field_serializer, field_validator
+
 from base.schema_base import BaseSchema
 from support.enums.support_enums import SupportCaseType, SupportTicketStatus
 
@@ -15,6 +17,25 @@ class SupportFilter:
     can_assign: bool = False
 
 
+_CASE_TYPE_OUT = {
+    SupportCaseType.INCIDENT: "incident",
+    SupportCaseType.REQUIREMENT: "requirement",
+}
+
+_STATUS_OUT = {
+    SupportTicketStatus.OPEN: "open",
+    SupportTicketStatus.IN_PROGRESS: "in_progress",
+    SupportTicketStatus.RESOLVED: "resolved",
+}
+
+_STATUS_IN = {
+    "open": SupportTicketStatus.OPEN,
+    "in_progress": SupportTicketStatus.IN_PROGRESS,
+    "resolved": SupportTicketStatus.RESOLVED,
+    **{s.value: s for s in SupportTicketStatus},
+}
+
+
 class ResolveTicketSchema(BaseSchema):
     approved: bool
     notes: str
@@ -22,6 +43,16 @@ class ResolveTicketSchema(BaseSchema):
 
 class UpdateTicketStatusSchema(BaseSchema):
     status: SupportTicketStatus
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def coerce_status(cls, v: object) -> SupportTicketStatus:
+        if isinstance(v, SupportTicketStatus):
+            return v
+        mapped = _STATUS_IN.get(str(v))
+        if mapped is None:
+            raise ValueError(f"Estado inválido: {v!r}")
+        return mapped
 
 
 class AssignTicketSchema(BaseSchema):
@@ -34,12 +65,21 @@ class SupportTicketSchema(BaseSchema):
     case_type: SupportCaseType
     status: SupportTicketStatus
     organization_id: uuid.UUID
+    organization_name: str = ""
     created_by: int
     assigned_to: int | None
     title: str | None
     notes: str | None
     resolved_at: datetime | None
     created_at: datetime
+
+    @field_serializer("case_type")
+    def serialize_case_type(self, v: SupportCaseType) -> str:
+        return _CASE_TYPE_OUT.get(v, v.value)
+
+    @field_serializer("status")
+    def serialize_status(self, v: SupportTicketStatus) -> str:
+        return _STATUS_OUT.get(v, v.value)
 
 
 class OrgDocSchema(BaseSchema):

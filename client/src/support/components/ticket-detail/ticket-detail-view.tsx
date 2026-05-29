@@ -132,7 +132,7 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
 
           {/* Entity */}
           <DetailRow label="Entidad">
-            <span className="break-all font-mono text-xs">{ticket.organizationId}</span>
+            <span>{ticket.organizationName || ticket.organizationId}</span>
           </DetailRow>
 
           {/* Dates */}

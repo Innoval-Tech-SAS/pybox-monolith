@@ -44,7 +44,10 @@ class SupportService:
 
     async def get_all_tickets(self, f: SupportFilter) -> list[SupportTicketSchema]:
         tickets = await self._ticket_repo.get_filtered(f)
-        return [SupportTicketSchema.model_validate(t) for t in tickets]
+        result = []
+        for t in tickets:
+            result.append(await self._ticket_to_schema(t))
+        return result
 
     async def get_ticket(self, ticket_number: int, f: SupportFilter) -> SupportTicketSchema:
         ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
@@ -54,7 +57,7 @@ class SupportService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
         if f.created_by is not None and ticket.created_by != f.created_by:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
-        return SupportTicketSchema.model_validate(ticket)
+        return await self._ticket_to_schema(ticket)
 
     async def resolve_ticket(
         self, ticket_number: int, agent_user_id: int, data: ResolveTicketSchema, f: SupportFilter
@@ -85,7 +88,7 @@ class SupportService:
             await self._notify_org_verification(ticket.organization_id, ticket.created_by, data.approved)
 
         updated = await self._ticket_repo.update(ticket)
-        return SupportTicketSchema.model_validate(updated)
+        return await self._ticket_to_schema(updated)
 
     async def get_org_docs(self, ticket_number: int, f: SupportFilter) -> OrgDocsSchema:
         if not f.can_resolve:
@@ -136,7 +139,7 @@ class SupportService:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No se puede mover un ticket resuelto.")
         ticket.status = data.status
         updated = await self._ticket_repo.update(ticket)
-        return SupportTicketSchema.model_validate(updated)
+        return await self._ticket_to_schema(updated)
 
     async def assign_ticket(
         self, ticket_number: int, data: AssignTicketSchema, f: SupportFilter
@@ -168,6 +171,11 @@ class SupportService:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    async def _ticket_to_schema(self, ticket: SupportTicketModel) -> SupportTicketSchema:
+        org = await self._org_repo.get_by_id(ticket.organization_id)
+        schema = SupportTicketSchema.model_validate(ticket)
+        return schema.model_copy(update={"organization_name": org.name if org else ""})
 
     async def _auto_assign(self, ticket: SupportTicketModel) -> None:
         agent_id = await self._ticket_repo.find_least_loaded_cs_org(ticket.organization_id)

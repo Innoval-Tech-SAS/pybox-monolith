@@ -36,7 +36,7 @@ def get_support_filter(
             return SupportFilter(
                 org_ids=org_ids,
                 include_resolved=include_resolved,
-                can_resolve=True,
+                can_resolve=UserRole.CUSTOMER_SERVICE in org_roles,
                 can_assign=is_admin,
             )
         return SupportFilter(created_by=session.user_id, include_resolved=True)

@@ -99,7 +99,7 @@ export const TicketsPage: React.FC = () => {
                   <TicketListItem
                     key={ticket.id}
                     ticket={ticket}
-                    onClick={() => navigate(`/cs/tickets/${ticket.id}`)}
+                    onClick={() => navigate(`/cs/tickets/${ticket.ticketNumber}`)}
                   />
                 ))}
               </div>
