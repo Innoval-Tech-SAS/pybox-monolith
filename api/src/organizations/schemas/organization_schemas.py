@@ -51,7 +51,11 @@ class OrganizationResponse(BaseSchema):
     country: Nationality | None = Field(default=None, description="País")
     fiscal_document_type: OrgFiscalDocumentType | None = Field(default=None, description="Tipo de documento fiscal")
     fiscal_document_number: str | None = Field(default=None, description="Número de documento fiscal")
+    fiscal_document_file: str | None = Field(default=None, description="URL del documento fiscal")
     mercantile_document_type: OrgMercantileDocumentType | None = Field(default=None, description="Tipo de documento mercantil")
+    mercantile_document_file: str | None = Field(default=None, description="URL del documento mercantil")
+    representative_document_file: str | None = Field(default=None, description="URL del documento del representante")
+    verification_status: str | None = Field(default=None, description="Estado de verificación")
     created_at: datetime = Field(description="Fecha de creación")
     updated_at: datetime | None = Field(default=None, description="Fecha de última actualización")
 
@@ -59,6 +63,15 @@ class OrganizationResponse(BaseSchema):
     @classmethod
     def decrypt_fiscal(cls, v: str | None) -> str | None:
         return _safe_decrypt(v)
+
+    @field_validator("fiscal_document_file", "mercantile_document_file", "representative_document_file", mode="before")
+    @classmethod
+    def to_public_url(cls, v: str | None) -> str | None:
+        if not v:
+            return None
+        if v.startswith("/files/"):
+            return v
+        return "/files/" + v.replace("\\", "/")
 
 
 class OrgRegisterResponse(BaseSchema):

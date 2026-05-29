@@ -11,6 +11,22 @@ export interface OrgSummary {
   fiscalDocumentNumber?: string;
 }
 
+export interface OrganizationDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  country: string | null;
+  fiscalDocumentType: string | null;
+  fiscalDocumentNumber: string | null;
+  fiscalDocumentFile: string | null;
+  mercantileDocumentType: string | null;
+  mercantileDocumentFile: string | null;
+  representativeDocumentFile: string | null;
+  verificationStatus: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 export interface OrgModule {
   key: string;
   title: string;

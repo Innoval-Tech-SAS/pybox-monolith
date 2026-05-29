@@ -11,6 +11,12 @@ export interface DailyCounterConfig {
   lastSyncedCutoffDate: string | null;
 }
 
+export interface PortfolioInfoUpdate {
+  name?: string;
+  description?: string;
+  country?: string;
+}
+
 export const usePortfolioSettings = (portfolioId: string) => {
   const { apiClient } = useApiClient();
   const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
@@ -49,6 +55,20 @@ export const usePortfolioSettings = (portfolioId: string) => {
     }
   };
 
+  const updateInfo = async (data: PortfolioInfoUpdate) => {
+    setSaving(true);
+    try {
+      const updated: Portfolio = await apiClient(`/portfolios/${portfolioId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      setPortfolio(updated);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const saveCounterConfig = async (enabled: boolean, reactivationMode: string) => {
     setSaving(true);
     try {
@@ -66,5 +86,22 @@ export const usePortfolioSettings = (portfolioId: string) => {
     }
   };
 
-  return { portfolio, config, loading, saving, toggleActive, saveCounterConfig };
+  const syncCounterConfig = async (targetDate?: string) => {
+    setSaving(true);
+    try {
+      const updated: DailyCounterConfig = await apiClient(
+        `/portfolios/${portfolioId}/daily-counter-config/sync`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ targetDate: targetDate || null }),
+        },
+      );
+      setConfig(updated);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return { portfolio, config, loading, saving, toggleActive, updateInfo, saveCounterConfig, syncCounterConfig };
 };

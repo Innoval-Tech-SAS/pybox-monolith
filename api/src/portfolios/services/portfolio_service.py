@@ -1,4 +1,5 @@
 import uuid
+from datetime import date, datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select, union
@@ -10,6 +11,7 @@ from portfolios.models.portfolio_model import PortfolioModel
 from portfolios.repository.portfolio_daily_counter_config_repository import PortfolioDailyCounterConfigRepository
 from portfolios.repository.portfolio_repository import PortfolioRepository
 from portfolios.schemas.portfolio_schemas import (
+    PortfolioDailyCounterConfigSyncRequest,
     PortfolioDailyCounterConfigUpdateRequest,
     PortfolioStatsResponse,
     PortfolioUpdateRequest,
@@ -141,6 +143,23 @@ class PortfolioService:
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(config, key, value)
+        config.updated_by = updated_by
+        return await self.daily_counter_repo.update(config)
+
+    async def sync_daily_counter_config(
+        self,
+        portfolio_id: uuid.UUID,
+        data: PortfolioDailyCounterConfigSyncRequest,
+        updated_by: int,
+    ) -> PortfolioDailyCounterConfigModel:
+        config = await self.daily_counter_repo.get_by_portfolio_id(portfolio_id)
+        if config is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No existe configuración de contador diario para este portafolio",
+            )
+        config.last_synced_at = datetime.now(timezone.utc)
+        config.last_synced_cutoff_date = data.target_date or date.today()
         config.updated_by = updated_by
         return await self.daily_counter_repo.update(config)
 

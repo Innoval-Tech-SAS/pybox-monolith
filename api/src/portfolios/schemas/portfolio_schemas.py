@@ -57,3 +57,7 @@ class PortfolioDailyCounterConfigResponse(BaseSchema):
 class PortfolioDailyCounterConfigUpdateRequest(BaseSchema):
     enabled: bool | None = Field(default=None, description="Habilitar o deshabilitar el contador diario")
     reactivation_mode: str | None = Field(default=None, description="Modo de reactivación")
+
+
+class PortfolioDailyCounterConfigSyncRequest(BaseSchema):
+    target_date: date | None = Field(default=None, description="Fecha de corte a registrar; si se omite usa la fecha de hoy")

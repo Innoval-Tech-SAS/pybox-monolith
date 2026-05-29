@@ -1,7 +1,8 @@
 import uuid
 from pathlib import Path
+from typing import Literal
 
-from fastapi import File, Form, UploadFile, status
+from fastapi import File, Form, HTTPException, UploadFile, status
 
 from config.api_router import APIRouter
 from countries.enums.country_enums import Nationality, UserDocumentType
@@ -16,6 +17,7 @@ from organizations.schemas.organization_schemas import (
     RepresentativeMode,
 )
 from security.dependencies import CurrentSession
+from tools.file_tools import save_org_document_bytes
 from users.dependencies import UserServiceDep
 
 router = APIRouter(prefix="/organizations", tags=["Organizaciones"])
@@ -78,6 +80,33 @@ async def update_organization(
     service: OrgServiceDep,
 ) -> OrganizationResponse:
     return await service.update_organization(org_id, body, session.user_id, admin_scope)
+
+
+@router.patch(
+    "/{org_id}/documents/{doc_type}",
+    response_model=OrganizationResponse,
+    summary="Actualizar documento de la organización",
+)
+async def update_org_document(
+    org_id: uuid.UUID,
+    doc_type: Literal["fiscal", "mercantil", "representante"],
+    session: CurrentSession,
+    admin_scope: AdminScopeDep,
+    service: OrgServiceDep,
+    file: UploadFile = File(...),
+) -> OrganizationResponse:
+    org = await service.get_by_id(org_id)
+    file_bytes = await file.read()
+    ext = Path(file.filename or "").suffix or ".pdf"
+    file_path = save_org_document_bytes(file_bytes, str(org_id), doc_type, ext)
+    field_map = {
+        "fiscal": "fiscal_document_file",
+        "mercantil": "mercantile_document_file",
+        "representante": "representative_document_file",
+    }
+    setattr(org, field_map[doc_type], file_path)
+    updated = await service.org_repo.update(org)
+    return updated
 
 
 @router.delete(

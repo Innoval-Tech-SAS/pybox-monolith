@@ -14,6 +14,7 @@ from portfolios.schemas.portfolio_schemas import (
     PortfolioAccessEntry,
     PortfolioAccessReplaceRequest,
     PortfolioDailyCounterConfigResponse,
+    PortfolioDailyCounterConfigSyncRequest,
     PortfolioDailyCounterConfigUpdateRequest,
     PortfolioResponse,
     PortfolioStatsResponse,
@@ -440,3 +441,15 @@ async def update_daily_counter_config(
     portfolio = await service.get_by_id(portfolio_id)
     _require_admin(session, str(portfolio.organization_id))
     return await service.update_daily_counter_config(portfolio_id, data, session.user_id)
+
+
+@router.post("/{portfolio_id}/daily-counter-config/sync", response_model=PortfolioDailyCounterConfigResponse, summary="Sincronizar manualmente el contador diario")
+async def sync_daily_counter_config(
+    portfolio_id: uuid.UUID,
+    data: PortfolioDailyCounterConfigSyncRequest,
+    session: CurrentSession,
+    service: PortfolioServiceDep,
+) -> PortfolioDailyCounterConfigModel:
+    portfolio = await service.get_by_id(portfolio_id)
+    _require_admin(session, str(portfolio.organization_id))
+    return await service.sync_daily_counter_config(portfolio_id, data, session.user_id)
