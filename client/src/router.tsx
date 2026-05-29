@@ -4,7 +4,10 @@ import { SignUpPage } from "./auth/pages/sign-up-page";
 import { MyCompaniesPage } from "./companies/pages/my-companies-page";
 import { CreateOrgPage } from "./companies/pages/create-org-page";
 import { CreatePortfolioPage } from "./companies/pages/create-portfolio-page";
+import { EditPortfolioPage } from "./companies/pages/edit-portfolio-page";
 import { MyPortfoliosPage } from "./companies/pages/my-portfolios-page";
+import { PortfolioDebtorsPage } from "./companies/pages/portfolio-debtors-page";
+import { PortfolioSettingsPage } from "./companies/pages/portfolio-settings-page";
 import { HomePage } from "./home/pages/home-page";
 import { NotificationDetailPage } from "./notifications/pages/notification-detail-page";
 import { NotificationsPage } from "./notifications/pages/notifications-page";
@@ -74,6 +77,22 @@ export const authRouter = [
   {
     path: "/my-companies/add-portfolio",
     element: <CreatePortfolioPage />,
+  },
+  {
+    path: "/my-companies/portfolios/upload/append",
+    element: <EditPortfolioPage />,
+  },
+  {
+    path: "/my-companies/portfolios/upload/update",
+    element: <EditPortfolioPage />,
+  },
+  {
+    path: "/my-companies/portfolios/debtors",
+    element: <PortfolioDebtorsPage />,
+  },
+  {
+    path: "/my-companies/portfolios/settings",
+    element: <PortfolioSettingsPage />,
   },
   {
     path: "/my-users",

@@ -1,0 +1,105 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
+import { useToast } from "@/context/toast-context";
+import { useApiClient, API_URL } from "@/hooks/use-api-client";
+import type { AppNotification } from "@/types/notifications/notification";
+import type { CreatePortfolioResult } from "@/types/companies/company-types";
+
+export type CsvUploadMode = "append" | "update";
+
+export const useUploadPortfolioCsv = (mode: CsvUploadMode) => {
+  const { error: toastError } = useToast();
+  const navigate = useNavigate();
+  const { apiClient } = useApiClient();
+  const [searchParams] = useSearchParams();
+  const orgId = searchParams.get("org") ?? "";
+  const portfolioId = searchParams.get("portfolio") ?? "";
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [result, setResult] = useState<CreatePortfolioResult | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const processingKey = `portfolioCsvProcessing_${portfolioId}_${mode}`;
+  const [processing, setProcessing] = useState(
+    () => sessionStorage.getItem(processingKey) === "true",
+  );
+
+  const handleReset = useCallback(() => {
+    setSelectedFile(null);
+    setResult(null);
+    formRef.current?.reset();
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!portfolioId) {
+      toastError("Error", "No se pudo identificar el portafolio.");
+      return;
+    }
+    if (!selectedFile) {
+      toastError("Validación", "Debes adjuntar el archivo CSV.");
+      return;
+    }
+
+    const endpoint = mode === "append"
+      ? `/portfolios/upload-csv/append?portfolioId=${portfolioId}`
+      : `/portfolios/upload-csv/update?portfolioId=${portfolioId}`;
+
+    const data = new FormData();
+    data.set("file", selectedFile);
+
+    setSubmitting(true);
+    apiClient(endpoint, { method: "POST", body: data })
+      .then(() => {
+        sessionStorage.setItem(processingKey, "true");
+        setProcessing(true);
+      })
+      .catch(() => {
+        toastError("Error", "No se pudo iniciar la carga. Intenta de nuevo.");
+      })
+      .finally(() => setSubmitting(false));
+  };
+
+  useEffect(() => {
+    if (!processing || !portfolioId) return;
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return;
+
+    const es = new EventSource(`${API_URL}/notifications/stream?token=${encodeURIComponent(token)}`);
+    es.addEventListener("notification", (e) => {
+      try {
+        const notif: AppNotification = JSON.parse(e.data);
+        if (notif.category === "portfolio") {
+          sessionStorage.removeItem(processingKey);
+          setProcessing(false);
+          navigate(`/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}`);
+        }
+      } catch {
+        // malformed event
+      }
+    });
+    es.onerror = () => es.close();
+    return () => es.close();
+  }, [processing, portfolioId, orgId, processingKey, navigate]);
+
+  const handleDismiss = useCallback(() => {
+    sessionStorage.removeItem(processingKey);
+    setProcessing(false);
+    navigate(`/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}`);
+  }, [navigate, orgId, portfolioId, processingKey]);
+
+  return {
+    orgId,
+    portfolioId,
+    selectedFile, setSelectedFile,
+    submitting,
+    processing,
+    result,
+    formRef,
+    handleReset,
+    handleSubmit,
+    handleDismiss,
+  };
+};

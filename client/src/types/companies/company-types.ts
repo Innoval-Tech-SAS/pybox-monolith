@@ -18,6 +18,8 @@ export interface OrgModule {
   icon: ReactNode;
   gradient: string;
   path: string | null;
+  requiredPermission?: string;
+  adminOnly?: boolean;
 }
 
 export interface CreatePortfolioResult {

@@ -2,6 +2,7 @@ import {
   CalendarDays,
   Plus,
   Send,
+  Settings,
   ShieldCheck,
   UserPlus,
   Users,
@@ -15,7 +16,7 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     description: "Gestión de clientes, segmentación y análisis de cartera.",
     icon: <Users size={24} className="text-white" />,
     gradient: "from-indigo-500 to-blue-600",
-    path: null,
+    path: "/my-companies/portfolios/debtors",
     requiredPermission: "portfolio.clients",
   },
   {
@@ -24,7 +25,7 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     description: "Actualiza información de clientes que ya existen en esta cartera.",
     icon: <ShieldCheck size={24} className="text-white" />,
     gradient: "from-amber-500 to-orange-600",
-    path: null,
+    path: "/my-companies/portfolios/upload/update",
     requiredPermission: "portfolio.upload_update",
   },
   {
@@ -33,7 +34,7 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     description: "Sube un CSV para registrar nuevos clientes y actualizar los existentes.",
     icon: <UserPlus size={24} className="text-white" />,
     gradient: "from-emerald-500 to-teal-600",
-    path: null,
+    path: "/my-companies/portfolios/upload/append",
     requiredPermission: "portfolio.upload_new",
   },
   {
@@ -51,6 +52,15 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     icon: <CalendarDays size={24} className="text-white" />,
     gradient: "from-emerald-500 to-teal-600",
     path: null,
+  },
+  {
+    key: "settings",
+    title: "Configuración",
+    description: "Activa o desactiva el portafolio y configura la actualización diaria.",
+    icon: <Settings size={24} className="text-white" />,
+    gradient: "from-slate-500 to-slate-600",
+    path: "/my-companies/portfolios/settings",
+    adminOnly: true,
   },
   {
     key: "upcoming",

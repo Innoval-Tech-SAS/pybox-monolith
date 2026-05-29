@@ -18,25 +18,31 @@ def get_support_filter(
     session: CurrentSession,
     include_resolved: bool = Query(False, alias="includeResolved"),
 ) -> SupportFilter:
-    is_admin = session.role == UserRole.ADMIN
+    # Global scope: role is set at session level
+    if session.scope == UserScope.GLOBAL:
+        is_admin = session.role == UserRole.ADMIN
+        return SupportFilter(
+            include_resolved=include_resolved,
+            can_resolve=session.role in _STAFF_ROLES,
+            can_assign=is_admin,
+        )
 
-    if session.role in _STAFF_ROLES:
-        if session.scope == UserScope.GLOBAL:
-            return SupportFilter(
-                include_resolved=include_resolved,
-                can_resolve=True,
-                can_assign=is_admin,
-            )
-        if session.scope == UserScope.ORGANIZATION:
-            org_ids = [uuid.UUID(o) for o in session.orgs]
+    # Org scope: role is per-org (session.role is None for org users)
+    if session.scope == UserScope.ORGANIZATION:
+        org_roles = {entry.role for entry in session.orgs.values()}
+        org_ids = [uuid.UUID(o) for o in session.orgs]
+        if org_roles & _STAFF_ROLES:
+            is_admin = UserRole.ADMIN in org_roles
             return SupportFilter(
                 org_ids=org_ids,
                 include_resolved=include_resolved,
                 can_resolve=True,
                 can_assign=is_admin,
             )
+        return SupportFilter(created_by=session.user_id, include_resolved=True)
 
-    if session.role in {UserRole.USER_ORGANIZATION, UserRole.USER}:
+    # Self scope (end users / debtors)
+    if session.scope == UserScope.SELF or session.role in {UserRole.USER_ORGANIZATION, UserRole.USER}:
         return SupportFilter(created_by=session.user_id, include_resolved=True)
 
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")

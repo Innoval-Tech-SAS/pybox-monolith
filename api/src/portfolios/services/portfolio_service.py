@@ -5,18 +5,30 @@ from sqlalchemy import func, select, union
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from credits.models.credit_model import CreditModel
+from portfolios.models.portfolio_daily_counter_config_model import PortfolioDailyCounterConfigModel
 from portfolios.models.portfolio_model import PortfolioModel
+from portfolios.repository.portfolio_daily_counter_config_repository import PortfolioDailyCounterConfigRepository
 from portfolios.repository.portfolio_repository import PortfolioRepository
-from portfolios.schemas.portfolio_schemas import PortfolioStatsResponse
+from portfolios.schemas.portfolio_schemas import (
+    PortfolioDailyCounterConfigUpdateRequest,
+    PortfolioStatsResponse,
+    PortfolioUpdateRequest,
+)
 from security.permissions import ORG_PORTFOLIOS
 from users.enums.user_enums import UserRole
 from users.schemas.user_session_schema import UserSession
 
 
 class PortfolioService:
-    def __init__(self, session: AsyncSession, portfolio_repo: PortfolioRepository) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        portfolio_repo: PortfolioRepository,
+        daily_counter_repo: PortfolioDailyCounterConfigRepository,
+    ) -> None:
         self._session = session
         self.portfolio_repo = portfolio_repo
+        self.daily_counter_repo = daily_counter_repo
 
     async def list_accessible_portfolios(
         self,
@@ -86,6 +98,51 @@ class PortfolioService:
             codeudores=row.codeudores,
             clientes_unicos=clientes_unicos,
         )
+
+    async def get_by_id(self, portfolio_id: uuid.UUID) -> PortfolioModel:
+        portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
+        if portfolio is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Portafolio no encontrado")
+        return portfolio
+
+    async def update_portfolio(
+        self, portfolio_id: uuid.UUID, data: PortfolioUpdateRequest
+    ) -> PortfolioModel:
+        portfolio = await self.get_by_id(portfolio_id)
+        update_data = data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(portfolio, key, value)
+        return await self.portfolio_repo.update(portfolio)
+
+    async def delete_portfolio(self, portfolio_id: uuid.UUID) -> None:
+        portfolio = await self.get_by_id(portfolio_id)
+        await self.portfolio_repo.delete(portfolio)
+
+    async def get_daily_counter_config(
+        self, portfolio_id: uuid.UUID
+    ) -> PortfolioDailyCounterConfigModel | None:
+        return await self.daily_counter_repo.get_by_portfolio_id(portfolio_id)
+
+    async def update_daily_counter_config(
+        self,
+        portfolio_id: uuid.UUID,
+        data: PortfolioDailyCounterConfigUpdateRequest,
+        updated_by: int,
+    ) -> PortfolioDailyCounterConfigModel:
+        config = await self.daily_counter_repo.get_by_portfolio_id(portfolio_id)
+        if config is None:
+            config = PortfolioDailyCounterConfigModel(
+                portfolio_id=portfolio_id,
+                enabled=data.enabled if data.enabled is not None else False,
+                reactivation_mode=data.reactivation_mode or "FROM_TODAY",
+                updated_by=updated_by,
+            )
+            return await self.daily_counter_repo.add(config)
+        update_data = data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(config, key, value)
+        config.updated_by = updated_by
+        return await self.daily_counter_repo.update(config)
 
     def _first_session_org_id(self, session: UserSession) -> uuid.UUID:
         if not session.orgs:

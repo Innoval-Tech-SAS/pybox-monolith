@@ -51,7 +51,7 @@ export const MyPortfoliosPage: React.FC = () => {
         ) : isPortfolioView ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {filterModules(PORTFOLIO_MODULES, orgId).map((mod) => (
-              <ModuleCard key={mod.key} id={`tour-pf-module-${mod.key}`} module={mod} orgId={orgId} />
+              <ModuleCard key={mod.key} id={`tour-pf-module-${mod.key}`} module={mod} orgId={orgId} portfolioId={portfolioId} />
             ))}
           </div>
         ) : (

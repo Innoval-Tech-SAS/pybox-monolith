@@ -2,6 +2,7 @@ import logging
 import os
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from config.paths import UPLOADS_ROOT
 
@@ -347,3 +348,132 @@ class PortfolioCsvService:
             )
         )
         logger.debug("[_insert_credit_adjustment] END | credit_id=%d", credit_id)
+
+    # ------------------------------------------------------------------
+    # Append mode — agrega datos a portafolio existente (upsert)
+    # ------------------------------------------------------------------
+
+    async def append_csv(
+        self,
+        portfolio_id: uuid.UUID,
+        file_bytes: bytes,
+        filename: str = "",
+    ) -> CsvProcessResult:
+        logger.info("[append_csv] START | portfolio=%s bytes=%d", portfolio_id, len(file_bytes))
+        portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
+        if portfolio is None:
+            raise ValueError(f"Portafolio {portfolio_id} no encontrado")
+
+        file_data = self.parser.parse(file_bytes, filename)
+        logger.info("[append_csv] parsed | filas=%d skipped=%d", len(file_data.rows), file_data.total_skipped)
+
+        ext = "xlsx" if filename.lower().endswith(".xlsx") else "csv"
+        portfolio_dir = os.path.join(UPLOADS_ROOT, "organizations", str(portfolio.organization_id), "portfolios")
+        os.makedirs(portfolio_dir, exist_ok=True)
+        ts = int(datetime.utcnow().timestamp())
+        with open(os.path.join(portfolio_dir, f"{portfolio.id}_append_{ts}.{ext}"), "wb") as fh:
+            fh.write(file_bytes)
+
+        titulares_docs = {
+            (r.debtor.document_type, encrypt_service.hash_document(r.debtor.document_number))
+            for r in file_data.rows
+        }
+        codeudores_docs = {
+            (r.codebtor.document_type, encrypt_service.hash_document(r.codebtor.document_number))
+            for r in file_data.rows
+            if r.codebtor
+        }
+
+        total_rows = len(file_data.rows) + file_data.total_skipped
+        processed = 0
+        errors: list[str] = []
+
+        for idx, row in enumerate(file_data.rows, start=1):
+            error = await self._process_row(row, portfolio.id, idx)
+            if error:
+                if len(errors) < _MAX_ERRORS:
+                    errors.append(error)
+            else:
+                processed += 1
+
+        failed = len(file_data.rows) - processed
+        result = CsvProcessResult(
+            total_rows=total_rows,
+            processed_rows=processed,
+            failed_rows=failed,
+            portfolio_id=portfolio.id,
+            titulares=len(titulares_docs),
+            codeudores=len(codeudores_docs),
+            creditos=len(file_data.rows),
+            clientes_unicos=len(titulares_docs),
+            errors=errors,
+        )
+        logger.info("[append_csv] END | procesados=%d fallidos=%d", processed, failed)
+        return result
+
+    # ------------------------------------------------------------------
+    # Update mode — reemplaza todos los créditos del portafolio
+    # ------------------------------------------------------------------
+
+    async def update_csv(
+        self,
+        portfolio_id: uuid.UUID,
+        file_bytes: bytes,
+        filename: str = "",
+    ) -> CsvProcessResult:
+        logger.info("[update_csv] START | portfolio=%s bytes=%d", portfolio_id, len(file_bytes))
+        portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
+        if portfolio is None:
+            raise ValueError(f"Portafolio {portfolio_id} no encontrado")
+
+        existing_credits = await self.credit_repo.get_by_portfolio_id(portfolio_id)
+        logger.info("[update_csv] eliminando %d créditos existentes", len(existing_credits))
+        for credit in existing_credits:
+            await self.credit_repo.delete(credit)
+
+        file_data = self.parser.parse(file_bytes, filename)
+        logger.info("[update_csv] parsed | filas=%d skipped=%d", len(file_data.rows), file_data.total_skipped)
+
+        ext = "xlsx" if filename.lower().endswith(".xlsx") else "csv"
+        portfolio_dir = os.path.join(UPLOADS_ROOT, "organizations", str(portfolio.organization_id), "portfolios")
+        os.makedirs(portfolio_dir, exist_ok=True)
+        ts = int(datetime.utcnow().timestamp())
+        with open(os.path.join(portfolio_dir, f"{portfolio.id}_update_{ts}.{ext}"), "wb") as fh:
+            fh.write(file_bytes)
+
+        titulares_docs = {
+            (r.debtor.document_type, encrypt_service.hash_document(r.debtor.document_number))
+            for r in file_data.rows
+        }
+        codeudores_docs = {
+            (r.codebtor.document_type, encrypt_service.hash_document(r.codebtor.document_number))
+            for r in file_data.rows
+            if r.codebtor
+        }
+
+        total_rows = len(file_data.rows) + file_data.total_skipped
+        processed = 0
+        errors: list[str] = []
+
+        for idx, row in enumerate(file_data.rows, start=1):
+            error = await self._process_row(row, portfolio.id, idx)
+            if error:
+                if len(errors) < _MAX_ERRORS:
+                    errors.append(error)
+            else:
+                processed += 1
+
+        failed = len(file_data.rows) - processed
+        result = CsvProcessResult(
+            total_rows=total_rows,
+            processed_rows=processed,
+            failed_rows=failed,
+            portfolio_id=portfolio.id,
+            titulares=len(titulares_docs),
+            codeudores=len(codeudores_docs),
+            creditos=len(file_data.rows),
+            clientes_unicos=len(titulares_docs),
+            errors=errors,
+        )
+        logger.info("[update_csv] END | procesados=%d fallidos=%d", processed, failed)
+        return result

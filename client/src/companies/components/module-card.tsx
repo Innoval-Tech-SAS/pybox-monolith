@@ -2,12 +2,14 @@ import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router";
 import type { ModuleCardProps } from "@/types/props/module-card-props";
 
-export const ModuleCard: React.FC<ModuleCardProps> = ({ module, orgId, id }) => {
+export const ModuleCard: React.FC<ModuleCardProps> = ({ module, orgId, portfolioId, id }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
     if (!module.path) return;
-    navigate(`${module.path}?org=${orgId}`);
+    const params = new URLSearchParams({ org: orgId });
+    if (portfolioId) params.set("portfolio", portfolioId);
+    navigate(`${module.path}?${params}`);
   };
 
   return (

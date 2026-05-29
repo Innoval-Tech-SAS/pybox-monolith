@@ -75,3 +75,30 @@ class PortfolioUserAccessService:
         active_accesses = await self._repo.get_active_by_user_and_org(user_id, organization_id)
         granted_ids = {a.portfolio_id for a in active_accesses}
         return [(p.id, p.name, p.id in granted_ids) for p in all_portfolios]
+
+    async def list_portfolio_access(
+        self, portfolio_id: uuid.UUID
+    ) -> list[PortfolioUserAccessModel]:
+        return await self._repo.get_by_portfolio_id(portfolio_id)
+
+    async def replace_access(
+        self,
+        portfolio_id: uuid.UUID,
+        organization_id: uuid.UUID,
+        user_ids: list[int],
+        granted_by: int,
+    ) -> list[PortfolioUserAccessModel]:
+        existing = await self._repo.get_by_portfolio_id(portfolio_id)
+        existing_by_user = {a.user_id: a for a in existing}
+        new_set = set(user_ids)
+
+        for user_id, access in existing_by_user.items():
+            if user_id not in new_set and access.is_active:
+                await self.revoke_access(user_id, portfolio_id)
+
+        result = []
+        for user_id in user_ids:
+            access = await self.grant_access(user_id, portfolio_id, organization_id, granted_by)
+            result.append(access)
+
+        return result
