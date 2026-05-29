@@ -1,12 +1,16 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { Plus } from "lucide-react";
 import { Breadcrumb } from "@/ui/components/common/breadcrumb";
 import { Loader } from "@/ui/components/loader/loader";
 import EmptyState from "@/ui/components/common/empty-state";
 import { useTickets } from "@/support/hooks/use-tickets";
 import { TicketKanbanHeader } from "@/support/components/ticket-kanban/ticket-kanban-header";
 import { TicketListItem } from "@/support/components/ticket-list/ticket-list-item";
+import { CreateTicketModal } from "@/support/components/create-ticket/create-ticket-modal";
 import { getTicketKanbanGroups, mapTicketToKanban } from "@/support/utils/ticket-kanban-utils";
+import { getSession } from "@/auth/utils/auth-session-utils";
+import { Scope } from "@/types/auth/role";
 import type { SupportTicket } from "@/types/support/support-types";
 import type { TicketKanbanGroupKey } from "@/types/support/ticket-kanban-types";
 
@@ -48,10 +52,14 @@ function groupByDate(tickets: SupportTicket[]): DateGroup[] {
   return groups.filter((g) => g.tickets.length > 0);
 }
 
+const session = getSession();
+const canCreate = session?.scope !== Scope.GLOBAL || session?.role !== "ADMINISTRADOR";
+
 export const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { tickets, loading } = useTickets({ includeResolved: true });
+  const { tickets, loading, refetch } = useTickets({ includeResolved: true });
   const [selectedGroup, setSelectedGroup] = useState<TicketKanbanGroupKey>("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const filtered = useMemo(() => {
     if (selectedGroup === "all") return tickets;
@@ -67,7 +75,18 @@ export const TicketsPage: React.FC = () => {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <Breadcrumb pageTitle="Tickets" />
+      <div className="flex items-center justify-between">
+        <Breadcrumb pageTitle="Tickets" />
+        {canCreate && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="mb-4 inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
+          >
+            <Plus size={15} />
+            Nuevo ticket
+          </button>
+        )}
+      </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/3">
         <TicketKanbanHeader
           groups={groups}
@@ -107,6 +126,11 @@ export const TicketsPage: React.FC = () => {
           </div>
         )}
       </div>
+      <CreateTicketModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={() => { setShowCreateModal(false); refetch(); }}
+      />
     </div>
   );
 };

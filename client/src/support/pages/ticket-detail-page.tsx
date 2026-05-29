@@ -35,7 +35,11 @@ export const TicketDetailPage: React.FC = () => {
       pageTitle={getTicketDisplayId(ticket.ticketNumber, ticket.caseType)}
       breadcrumbItems={breadcrumbItems}
     >
-      <TicketDetailView ticket={ticket} onTicketResolved={(updated) => setTicket(updated)} />
+      <TicketDetailView
+        ticket={ticket}
+        onTicketResolved={(updated) => setTicket(updated)}
+        onTicketEscalated={(updated) => setTicket(updated)}
+      />
     </ModuleBase>
   );
 };

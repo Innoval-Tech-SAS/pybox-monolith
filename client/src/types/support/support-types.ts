@@ -16,6 +16,17 @@ export interface SupportTicket {
   createdAt: string;
 }
 
+export interface CreateTicketPayload {
+  organizationId: string;
+  title: string;
+  notes?: string;
+}
+
+export interface TicketOrg {
+  id: string;
+  name: string;
+}
+
 export interface UseTicketsOptions {
   includeResolved?: boolean;
 }

@@ -25,6 +25,9 @@ def get_support_filter(
             include_resolved=include_resolved,
             can_resolve=session.role in _STAFF_ROLES,
             can_assign=is_admin,
+            can_create=True,
+            can_escalate=True,
+            route_to_global=True,
         )
 
     # Org scope: role is per-org (session.role is None for org users)
@@ -33,17 +36,32 @@ def get_support_filter(
         org_ids = [uuid.UUID(o) for o in session.orgs]
         if org_roles & _STAFF_ROLES:
             is_admin = UserRole.ADMIN in org_roles
+            is_cs = UserRole.CUSTOMER_SERVICE in org_roles
             return SupportFilter(
                 org_ids=org_ids,
                 include_resolved=include_resolved,
-                can_resolve=UserRole.CUSTOMER_SERVICE in org_roles,
-                can_assign=is_admin,
+                can_resolve=is_cs,
+                can_assign=is_admin or is_cs,
+                can_create=True,
+                can_escalate=is_cs,
+                route_to_global=is_cs,
             )
-        return SupportFilter(created_by=session.user_id, include_resolved=True)
+        # Non-staff org user (USER ORG)
+        return SupportFilter(
+            org_ids=org_ids,
+            created_by=session.user_id,
+            include_resolved=True,
+            can_create=True,
+        )
 
     # Self scope (end users / debtors)
     if session.scope == UserScope.SELF or session.role in {UserRole.USER_ORGANIZATION, UserRole.USER}:
-        return SupportFilter(created_by=session.user_id, include_resolved=True)
+        return SupportFilter(
+            created_by=session.user_id,
+            include_resolved=True,
+            can_create=True,
+            check_portfolio_access=True,
+        )
 
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
 

@@ -1,7 +1,9 @@
 import { Card, CardTitle } from "@/ui/components/card";
+import { ArrowUpCircle } from "lucide-react";
 import { resolveProfilePhotoUrl } from "@/profile/utils/profile-photo-url";
 import { useTicketCreator } from "@/support/hooks/use-ticket-creator";
 import { useTicketAssignee } from "@/support/hooks/use-ticket-assignee";
+import { useEscalateTicket } from "@/support/hooks/use-escalate-ticket";
 import { TicketOrgDocsViewer } from "./ticket-org-docs-viewer";
 import {
   formatTicketDetailDate,
@@ -11,6 +13,8 @@ import {
   TICKET_STATUS_LABELS,
   TICKET_TYPE_LABELS,
 } from "@/support/utils/ticket-kanban-utils";
+import { getSession } from "@/auth/utils/auth-session-utils";
+import { Role, Scope } from "@/types/auth/role";
 import type { TicketDetailViewProps } from "@/types/props/ticket-detail-view-props";
 
 const UserAvatar: React.FC<{ name: string; photoUrl?: string | null; size?: "sm" | "md" }> = ({
@@ -47,11 +51,24 @@ const DetailRow: React.FC<{ label: string; children: React.ReactNode }> = ({ lab
   </div>
 );
 
-export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTicketResolved }) => {
+const _session = getSession();
+const _orgRoles = Object.values(_session?.orgs ?? {}).map((o) => o.role);
+const canEscalate =
+  _session?.scope === Scope.GLOBAL ||
+  (_session?.scope === Scope.ORG && _orgRoles.includes(Role.CS));
+
+export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTicketResolved, onTicketEscalated }) => {
   const { creator } = useTicketCreator(ticket.createdBy);
   const { assignee } = useTicketAssignee(ticket.assignedTo ?? undefined);
+  const { escalateTicket, loading: escalating } = useEscalateTicket();
   const isOrgVerification = ticket.caseType === "requirement";
   const displayId = getTicketDisplayId(ticket.ticketNumber, ticket.caseType);
+  const isResolved = ticket.status === "resolved";
+
+  const handleEscalate = async () => {
+    const updated = await escalateTicket(ticket.ticketNumber);
+    if (updated) onTicketEscalated?.(updated);
+  };
 
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -159,6 +176,17 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
               {displayId.split("-")[0]} · {TICKET_TYPE_LABELS[ticket.caseType]}
             </span>
           </div>
+
+          {canEscalate && !isResolved && (
+            <button
+              onClick={handleEscalate}
+              disabled={escalating}
+              className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-warning-200 bg-warning-50 px-4 py-2.5 text-sm font-medium text-warning-700 hover:bg-warning-100 disabled:opacity-60 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-400 dark:hover:bg-warning-500/20"
+            >
+              <ArrowUpCircle size={15} />
+              {escalating ? "Escalando..." : "Escalar a CS Global"}
+            </button>
+          )}
         </div>
       </Card>
     </div>

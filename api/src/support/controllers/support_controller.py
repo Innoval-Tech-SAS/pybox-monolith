@@ -2,14 +2,29 @@ from fastapi import APIRouter
 
 from security.dependencies import CurrentSession
 from support.dependencies import SupportAccessFilter, SupportServiceDep
-from support.schemas.support_schemas import AssignTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema, UpdateTicketStatusSchema
+from support.schemas.support_schemas import AssignTicketSchema, CreateTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema, TicketOrgSchema, UpdateTicketStatusSchema
 
 router = APIRouter(prefix="/cs/tickets", tags=["Support"])
+
+
+@router.get("/orgs", response_model=list[TicketOrgSchema])
+async def get_ticket_orgs(session: CurrentSession, service: SupportServiceDep):
+    return await service.get_ticket_orgs(session)
 
 
 @router.get("", response_model=list[SupportTicketSchema])
 async def list_tickets(f: SupportAccessFilter, service: SupportServiceDep):
     return await service.get_all_tickets(f)
+
+
+@router.post("", response_model=SupportTicketSchema, status_code=201)
+async def create_ticket(
+    body: CreateTicketSchema,
+    f: SupportAccessFilter,
+    service: SupportServiceDep,
+    session: CurrentSession,
+):
+    return await service.create_ticket(session.user_id, body, f)
 
 
 @router.get("/{ticket_number}", response_model=SupportTicketSchema)
@@ -40,6 +55,15 @@ async def assign_ticket(
     service: SupportServiceDep,
 ):
     return await service.assign_ticket(ticket_number, body, f)
+
+
+@router.post("/{ticket_number}/escalate", response_model=SupportTicketSchema)
+async def escalate_ticket(
+    ticket_number: int,
+    f: SupportAccessFilter,
+    service: SupportServiceDep,
+):
+    return await service.escalate_ticket(ticket_number, f)
 
 
 @router.post("/{ticket_number}/resolve", response_model=SupportTicketSchema)

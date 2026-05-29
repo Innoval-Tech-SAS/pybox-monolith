@@ -68,6 +68,18 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
         )
         return result.scalars().first()
 
+    async def get_distinct_org_ids_by_user(self, user_id: int) -> list[uuid.UUID]:
+        result = await self.session.execute(
+            select(PortfolioUserAccessModel.organization_id)
+            .where(
+                PortfolioUserAccessModel.user_id == user_id,
+                PortfolioUserAccessModel.is_active.is_(True),
+                PortfolioUserAccessModel.deleted_at.is_(None),
+            )
+            .distinct()
+        )
+        return list(result.scalars().all())
+
     async def check_active_access(
         self,
         user_id: int,

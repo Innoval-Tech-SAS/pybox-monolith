@@ -15,6 +15,10 @@ class SupportFilter:
     include_resolved: bool = False
     can_resolve: bool = False
     can_assign: bool = False
+    can_create: bool = False
+    can_escalate: bool = False
+    route_to_global: bool = False
+    check_portfolio_access: bool = False
 
 
 _CASE_TYPE_OUT = {
@@ -34,6 +38,17 @@ _STATUS_IN = {
     "resolved": SupportTicketStatus.RESOLVED,
     **{s.value: s for s in SupportTicketStatus},
 }
+
+
+class CreateTicketSchema(BaseSchema):
+    organization_id: uuid.UUID
+    title: str
+    notes: str | None = None
+
+
+class TicketOrgSchema(BaseSchema):
+    id: uuid.UUID
+    name: str
 
 
 class ResolveTicketSchema(BaseSchema):

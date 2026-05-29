@@ -11,10 +11,12 @@ from notifications.services.notification_service import NotificationService
 from organizations.enums.organization_enums import VerificationStatus
 from organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from organizations.repository.organization_repository import OrganizationRepository
+from portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
 from support.enums.support_enums import SupportCaseType, SupportTicketStatus
 from support.models.support_ticket_model import SupportTicketModel
 from support.repository.support_ticket_repository import SupportTicketRepository
-from support.schemas.support_schemas import AssignTicketSchema, OrgDocSchema, OrgDocsSchema, ResolveTicketSchema, SupportFilter, SupportTicketSchema, UpdateTicketStatusSchema
+from support.schemas.support_schemas import AssignTicketSchema, CreateTicketSchema, OrgDocSchema, OrgDocsSchema, ResolveTicketSchema, SupportFilter, SupportTicketSchema, TicketOrgSchema, UpdateTicketStatusSchema
+from users.schemas.user_session_schema import UserSession
 
 
 class SupportService:
@@ -22,6 +24,7 @@ class SupportService:
         self._ticket_repo = SupportTicketRepository(session)
         self._org_repo = OrganizationRepository(session)
         self._membership_repo = OrganizationMembershipRepository(session)
+        self._portfolio_access_repo = PortfolioUserAccessRepository(session)
         self._notification_service = NotificationService(session)
 
     async def create_org_verification_ticket(
@@ -89,6 +92,61 @@ class SupportService:
 
         updated = await self._ticket_repo.update(ticket)
         return await self._ticket_to_schema(updated)
+
+    async def get_ticket_orgs(self, session: UserSession) -> list[TicketOrgSchema]:
+        if session.is_self:
+            org_ids = await self._portfolio_access_repo.get_distinct_org_ids_by_user(session.user_id)
+            result = []
+            for org_id in org_ids:
+                org = await self._org_repo.get_by_id(org_id)
+                if org:
+                    result.append(TicketOrgSchema(id=org.id, name=org.name))
+            return result
+        return [
+            TicketOrgSchema(id=uuid.UUID(org_id), name=entry.org_name)
+            for org_id, entry in session.orgs.items()
+        ]
+
+    async def create_ticket(self, user_id: int, data: CreateTicketSchema, f: SupportFilter) -> SupportTicketSchema:
+        if not f.can_create:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para crear tickets.")
+
+        if f.check_portfolio_access:
+            accesses = await self._portfolio_access_repo.get_active_by_user_and_org(user_id, data.organization_id)
+            if not accesses:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta entidad.")
+        elif f.org_ids is not None and data.organization_id not in f.org_ids:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta entidad.")
+
+        ticket = SupportTicketModel(
+            case_type=SupportCaseType.INCIDENT,
+            status=SupportTicketStatus.OPEN,
+            organization_id=data.organization_id,
+            created_by=user_id,
+            title=data.title,
+            notes=data.notes,
+        )
+        ticket = await self._ticket_repo.add(ticket)
+
+        if f.route_to_global:
+            await self._auto_assign_global(ticket)
+        else:
+            await self._auto_assign_org(ticket)
+
+        return await self._ticket_to_schema(ticket)
+
+    async def escalate_ticket(self, ticket_number: int, f: SupportFilter) -> SupportTicketSchema:
+        if not f.can_escalate:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para escalar tickets.")
+
+        ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
+        if ticket is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
+        if ticket.status == SupportTicketStatus.RESOLVED:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No se puede escalar un ticket resuelto.")
+
+        await self._auto_assign_global(ticket)
+        return await self._ticket_to_schema(ticket)
 
     async def get_org_docs(self, ticket_number: int, f: SupportFilter) -> OrgDocsSchema:
         if not f.can_resolve:
@@ -171,6 +229,38 @@ class SupportService:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    async def _auto_assign_org(self, ticket: SupportTicketModel) -> None:
+        agent_id = await self._ticket_repo.find_least_loaded_cs_org(ticket.organization_id)
+        if agent_id is None:
+            return
+        ticket.assigned_to = agent_id
+        ticket.status = SupportTicketStatus.IN_PROGRESS
+        await self._ticket_repo.update(ticket)
+        await self._notification_service.create_notification(
+            user_id=agent_id,
+            title="Nuevo ticket asignado",
+            body=f"Se te asignó un ticket de soporte #{ticket.ticket_number}.",
+            category="support",
+            notif_type="info",
+            link=f"/cs/tickets/{ticket.ticket_number}",
+        )
+
+    async def _auto_assign_global(self, ticket: SupportTicketModel) -> None:
+        agent_id = await self._ticket_repo.find_least_loaded_cs_global()
+        if agent_id is None:
+            return
+        ticket.assigned_to = agent_id
+        ticket.status = SupportTicketStatus.IN_PROGRESS
+        await self._ticket_repo.update(ticket)
+        await self._notification_service.create_notification(
+            user_id=agent_id,
+            title="Nuevo ticket asignado",
+            body=f"Se te asignó un ticket de soporte #{ticket.ticket_number}.",
+            category="support",
+            notif_type="info",
+            link=f"/cs/tickets/{ticket.ticket_number}",
+        )
 
     async def _ticket_to_schema(self, ticket: SupportTicketModel) -> SupportTicketSchema:
         org = await self._org_repo.get_by_id(ticket.organization_id)
