@@ -3,52 +3,20 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from config.logger import logger
+from config.validation_messages import ERROR_MESSAGES, FIELD_NAMES
 from contacts.utils.contact_exceptions import DuplicateContactError
-
-_FIELD_NAMES: dict[str, str] = {
-    "email": "correo electrónico",
-    "password": "contraseña",
-    "current_password": "contraseña actual",
-    "new_password": "nueva contraseña",
-    "phone_number": "número de teléfono",
-    "firstname": "nombre",
-    "lastname": "apellido",
-    "document_type": "tipo de documento",
-    "document_number": "número de documento",
-    "nationality": "nacionalidad",
-    "channel": "canal",
-    "code": "código",
-    "provider": "proveedor",
-    "token": "token",
-    "refresh_token": "token de actualización",
-}
-
-_ERROR_MESSAGES: dict[str, str] = {
-    "missing": "El campo {field} es obligatorio.",
-    "value_error": "El valor de {field} no es válido.",
-    "string_type": "El campo {field} debe ser texto.",
-    "string_too_short": "El campo {field} es demasiado corto.",
-    "string_too_long": "El campo {field} es demasiado largo.",
-    "int_type": "El campo {field} debe ser un número entero.",
-    "float_type": "El campo {field} debe ser un número.",
-    "bool_type": "El campo {field} debe ser verdadero o falso.",
-    "enum": "El valor de {field} no está permitido.",
-    "url_type": "El campo {field} debe ser una URL válida.",
-    "json_invalid": "El cuerpo de la solicitud contiene JSON inválido.",
-}
 
 
 def _format_validation_error(error: dict) -> str:
     error_type: str = error.get("type", "")
     loc: tuple = error.get("loc", ())
     field_key = next((str(l) for l in reversed(loc) if str(l) not in ("body", "query", "path")), "campo")
-    field_label = _FIELD_NAMES.get(field_key, field_key.replace("_", " "))
+    field_label = FIELD_NAMES.get(field_key, field_key.replace("_", " "))
 
-    # Email específico
-    if field_key == "email" and "email" in error_type or "email" in error.get("msg", "").lower():
+    if field_key == "email" or "email" in error.get("msg", "").lower():
         return "El correo electrónico no es válido."
 
-    template = _ERROR_MESSAGES.get(error_type)
+    template = ERROR_MESSAGES.get(error_type)
     if template:
         return template.format(field=field_label)
 
