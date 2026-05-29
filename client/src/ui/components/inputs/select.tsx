@@ -3,6 +3,7 @@ import type { SelectProps } from "@/types/props/select-props";
 
 export const Select: React.FC<SelectProps> = ({
   options,
+  groups,
   placeholder = "Selecciona una opción",
   onChange,
   className = "",
@@ -31,11 +32,21 @@ export const Select: React.FC<SelectProps> = ({
       <option value="" disabled className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
         {placeholder}
       </option>
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value} className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
-          {opt.label}
-        </option>
-      ))}
+      {groups
+        ? groups.map((g) => (
+            <optgroup key={g.group} label={g.group}>
+              {g.options.map((opt) => (
+                <option key={opt.value} value={opt.value} className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                  {opt.label}
+                </option>
+              ))}
+            </optgroup>
+          ))
+        : options?.map((opt) => (
+            <option key={opt.value} value={opt.value} className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
+              {opt.label}
+            </option>
+          ))}
     </select>
   );
 };

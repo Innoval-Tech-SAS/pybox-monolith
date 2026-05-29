@@ -8,23 +8,7 @@ import { OtpInput } from "@/ui/components/inputs/otp-input";
 import { EyeCloseIcon, EyeIcon } from "@/ui/icons";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { useForgotPassword, type Channel, type LookupResult } from "../hooks/use-forgot-password";
-
-const DOCUMENT_TYPE_OPTIONS = [
-  { value: "CC", label: "CC – Cédula de Ciudadanía" },
-  { value: "CE", label: "CE – Cédula de Extranjería" },
-  { value: "NIT", label: "NIT" },
-  { value: "PEP", label: "PEP" },
-  { value: "CURP", label: "CURP" },
-  { value: "INE", label: "INE" },
-  { value: "RFC", label: "RFC" },
-  { value: "DNI", label: "DNI" },
-  { value: "CUIL", label: "CUIL" },
-  { value: "CUIT", label: "CUIT" },
-  { value: "RUC", label: "RUC" },
-  { value: "CI", label: "CI – Cédula de Identidad" },
-  { value: "RIF", label: "RIF" },
-  { value: "PASAPORTE", label: "Pasaporte" },
-];
+import { DOCUMENT_TYPE_GROUPS } from "@/constants/countries/doc-type-labels";
 
 // ── Paso 1: Ingresar documento ────────────────────────────────────────────────
 
@@ -51,7 +35,7 @@ const Step1: React.FC<{
             Tipo de documento <span className="text-error-500">*</span>
           </label>
           <Select
-            options={DOCUMENT_TYPE_OPTIONS}
+            groups={DOCUMENT_TYPE_GROUPS}
             value={documentType}
             placeholder="Seleccionar tipo"
             onChange={setDocumentType}

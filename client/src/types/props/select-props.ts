@@ -3,8 +3,14 @@ export interface SelectOption {
   label: string;
 }
 
-export interface SelectProps {
+export interface SelectOptionGroup {
+  group: string;
   options: SelectOption[];
+}
+
+export interface SelectProps {
+  options?: SelectOption[];
+  groups?: SelectOptionGroup[];
   placeholder?: string;
   onChange: (value: string) => void;
   className?: string;
