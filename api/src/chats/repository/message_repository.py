@@ -50,6 +50,7 @@ class MessageRepository(RepositoryBase[MessageModel]):
             )
             .values(read_at=now)
         )
+        await self.session.flush()
 
     async def get_unread_count(self, chat_id: str, user_id: int) -> int:
         result = await self.session.execute(

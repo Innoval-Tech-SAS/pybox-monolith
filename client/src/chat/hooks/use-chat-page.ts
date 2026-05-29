@@ -55,11 +55,11 @@ export const useChatPage = () => {
         const items = page.items ?? [];
         setSelected({ chatId, messages: items, loading: false, nextCursor: page.nextCursor });
 
-        const unread = items.filter((m) => m.status !== "read").map((m) => m.id);
-        if (unread.length) {
+        const allIds = items.map((m) => m.id);
+        if (allIds.length) {
           await apiClient(`/chats/${chatId}/read`, {
             method: "POST",
-            body: JSON.stringify({ messageIds: unread }),
+            body: JSON.stringify({ messageIds: allIds }),
           });
         }
       } catch {

@@ -61,11 +61,11 @@ export const useChat = () => {
         );
         const existingWin = windows.find((w) => w.chatId === existing.chatId);
         if (existingWin) {
-          const unread = existingWin.messages.filter((m) => m.status !== "read").map((m) => m.id);
-          if (unread.length) {
+          const allIds = existingWin.messages.map((m) => m.id);
+          if (allIds.length) {
             apiClient(`/chats/${existing.chatId}/read`, {
               method: "POST",
-              body: JSON.stringify({ messageIds: unread }),
+              body: JSON.stringify({ messageIds: allIds }),
             }).catch(() => {});
           }
         }
@@ -114,20 +114,18 @@ export const useChat = () => {
           ),
         );
 
-        const unread = (page.items ?? [])
-          .filter((m) => m.status !== "read")
-          .map((m) => m.id);
-        if (unread.length) {
+        const allIds = (page.items ?? []).map((m) => m.id);
+        if (allIds.length) {
           await apiClient(`/chats/${summary.id}/read`, {
             method: "POST",
-            body: JSON.stringify({ messageIds: unread }),
+            body: JSON.stringify({ messageIds: allIds }),
           });
-          setChats((prev) =>
-            prev.map((c) =>
-              c.id === summary.id ? { ...c, unreadCount: 0 } : c,
-            ),
-          );
         }
+        setChats((prev) =>
+          prev.map((c) =>
+            c.id === summary.id ? { ...c, unreadCount: 0 } : c,
+          ),
+        );
       } catch {
         setWindows((prev) =>
           prev.map((w) =>
@@ -160,11 +158,11 @@ export const useChat = () => {
       prev.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c)),
     );
     if (win) {
-      const unread = win.messages.filter((m) => m.status !== "read").map((m) => m.id);
-      if (unread.length) {
+      const allIds = win.messages.map((m) => m.id);
+      if (allIds.length) {
         apiClient(`/chats/${chatId}/read`, {
           method: "POST",
-          body: JSON.stringify({ messageIds: unread }),
+          body: JSON.stringify({ messageIds: allIds }),
         }).catch(() => {});
       }
     }
@@ -247,16 +245,16 @@ export const useChat = () => {
         setWindows((prev) =>
           prev.map((w) => (w.chatId === chatId ? { ...w, messages: items, nextCursor: page.nextCursor, loading: false } : w)),
         );
-        const unread = items.filter((m) => m.status !== "read").map((m) => m.id);
+        const allIds = items.map((m) => m.id);
+        if (allIds.length) {
+          await apiClient(`/chats/${chatId}/read`, {
+            method: "POST",
+            body: JSON.stringify({ messageIds: allIds }),
+          });
+        }
         setChats((prev) =>
           prev.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c)),
         );
-        if (unread.length) {
-          apiClient(`/chats/${chatId}/read`, {
-            method: "POST",
-            body: JSON.stringify({ messageIds: unread }),
-          }).catch(() => {});
-        }
       } catch {
         setWindows((prev) =>
           prev.map((w) => (w.chatId === chatId ? { ...w, loading: false } : w)),
