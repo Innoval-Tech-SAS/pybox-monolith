@@ -11,43 +11,22 @@ export const AuthForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const isLoading = loading || oauthLoading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
     try {
       await login({ email, password });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      setError(
-        msg.toLowerCase().includes("network") ||
-          msg.toLowerCase().includes("fetch")
-          ? "No se pudo conectar con el servidor. Verifica tu conexión."
-          : msg || "No se pudo conectar con el servidor.",
-      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleToken = async (token: string) => {
-    setError(null);
-    try {
-      await loginWithGoogle(token);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      setError(
-        msg.toLowerCase().includes("network") ||
-          msg.toLowerCase().includes("fetch")
-          ? "No se pudo conectar con el servidor. Verifica tu conexión."
-          : msg || "Error al iniciar sesión con Google.",
-      );
-    }
+    await loginWithGoogle(token);
   };
 
   return (
@@ -100,8 +79,6 @@ export const AuthForm: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
-                {error && <p className="text-sm text-red-500">{error}</p>}
 
                 <div>
                   <button

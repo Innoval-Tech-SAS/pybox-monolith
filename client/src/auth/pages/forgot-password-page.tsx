@@ -7,6 +7,7 @@ import { Select } from "@/ui/components/inputs/select";
 import { OtpInput } from "@/ui/components/inputs/otp-input";
 import { EyeCloseIcon, EyeIcon } from "@/ui/icons";
 import { PageMeta } from "@/ui/pages/page-meta";
+import { useToast } from "@/context/toast-context";
 import { useForgotPassword, type Channel, type LookupResult } from "../hooks/use-forgot-password";
 import { DOCUMENT_TYPE_GROUPS } from "@/constants/countries/doc-type-labels";
 
@@ -15,8 +16,7 @@ import { DOCUMENT_TYPE_GROUPS } from "@/constants/countries/doc-type-labels";
 const Step1: React.FC<{
   onNext: (docType: string, docNumber: string, result: LookupResult) => void;
   loading: boolean;
-  error: string | null;
-}> = ({ onNext, loading, error }) => {
+}> = ({ onNext, loading }) => {
   const { lookup } = useForgotPassword();
   const [documentType, setDocumentType] = useState("CC");
   const [documentNumber, setDocumentNumber] = useState("");
@@ -53,7 +53,6 @@ const Step1: React.FC<{
             required
           />
         </div>
-        {error && <p className="text-sm text-error-500">{error}</p>}
         <button
           type="submit"
           disabled={loading || !documentNumber}
@@ -74,8 +73,7 @@ const Step2: React.FC<{
   docNumber: string;
   onNext: (channel: Channel) => void;
   loading: boolean;
-  error: string | null;
-}> = ({ lookup, docType, docNumber, onNext, loading, error }) => {
+}> = ({ lookup, docType, docNumber, onNext, loading }) => {
   const { sendCode } = useForgotPassword();
   const [channel, setChannel] = useState<Channel>("EMAIL");
 
@@ -122,7 +120,6 @@ const Step2: React.FC<{
           </div>
         </div>
 
-        {error && <p className="text-sm text-error-500">{error}</p>}
         <button
           type="submit"
           disabled={loading}
@@ -143,15 +140,12 @@ const Step3: React.FC<{
   channel: Channel;
   onNext: (code: string) => void;
   loading: boolean;
-  error: string | null;
-  clearError: () => void;
-}> = ({ docType, docNumber, channel, onNext, loading, error, clearError }) => {
+}> = ({ docType, docNumber, channel, onNext, loading }) => {
   const { verifyCode } = useForgotPassword();
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
     const code = digits.join("");
     const ok = await verifyCode(docType, docNumber, code, channel);
     if (ok) onNext(code);
@@ -164,9 +158,8 @@ const Step3: React.FC<{
           <Label className="text-gray-500 mb-2 block">
             Código enviado por {channel === "EMAIL" ? "correo electrónico" : "SMS"}
           </Label>
-          <OtpInput value={digits} onChange={setDigits} disabled={loading} error={!!error} />
+          <OtpInput value={digits} onChange={setDigits} disabled={loading} />
         </div>
-        {error && <p className="text-sm text-error-500">{error}</p>}
         <button
           type="submit"
           disabled={loading || digits.join("").length < 6}
@@ -188,29 +181,23 @@ const Step4: React.FC<{
   channel: Channel;
   onSuccess: () => void;
   loading: boolean;
-  error: string | null;
-  clearError: () => void;
-}> = ({ docType, docNumber, code, channel, onSuccess, loading, error, clearError }) => {
+}> = ({ docType, docNumber, code, channel, onSuccess, loading }) => {
   const { resetPassword } = useForgotPassword();
+  const { error: toastError } = useToast();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
-    setLocalError(null);
     if (newPassword !== confirmPassword) {
-      setLocalError("Las contraseñas no coinciden.");
+      toastError("Error", "Las contraseñas no coinciden.");
       return;
     }
     const ok = await resetPassword(docType, docNumber, code, channel, newPassword);
     if (ok) onSuccess();
   };
-
-  const displayError = localError ?? error;
 
   return (
     <form onSubmit={handleSubmit}>
@@ -249,7 +236,6 @@ const Step4: React.FC<{
             </span>
           </div>
         </div>
-        {displayError && <p className="text-sm text-error-500">{displayError}</p>}
         <button
           type="submit"
           disabled={loading || !newPassword}
@@ -282,7 +268,7 @@ const STEP_SUBTITLES: Record<Step, string> = {
 
 export const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
-  const { loading, error, clearError } = useForgotPassword();
+  const { loading } = useForgotPassword();
   const [step, setStep] = useState<Step>(1);
   const [docType, setDocType] = useState("");
   const [docNumber, setDocNumber] = useState("");
@@ -297,16 +283,6 @@ export const ForgotPasswordPage: React.FC = () => {
     setStep(2);
   };
 
-  const handleSendCode = (ch: Channel) => {
-    setChannel(ch);
-    setStep(3);
-  };
-
-  const handleCodeVerified = (code: string) => {
-    setVerifiedCode(code);
-    setStep(4);
-  };
-
   return (
     <>
       <PageMeta title="Recuperar contraseña" description="Restablece tu contraseña" />
@@ -319,7 +295,7 @@ export const ForgotPasswordPage: React.FC = () => {
                   {step > 1 && step < 4 && (
                     <button
                       type="button"
-                      onClick={() => { clearError(); setStep((s) => (s - 1) as Step); }}
+                      onClick={() => setStep((s) => (s - 1) as Step)}
                       className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                     >
                       ← Atrás
@@ -334,16 +310,15 @@ export const ForgotPasswordPage: React.FC = () => {
               </div>
 
               {step === 1 && (
-                <Step1 onNext={handleLookup} loading={loading} error={error} />
+                <Step1 onNext={handleLookup} loading={loading} />
               )}
               {step === 2 && lookupResult && (
                 <Step2
                   lookup={lookupResult}
                   docType={docType}
                   docNumber={docNumber}
-                  onNext={handleSendCode}
+                  onNext={(ch) => { setChannel(ch); setStep(3); }}
                   loading={loading}
-                  error={error}
                 />
               )}
               {step === 3 && (
@@ -351,10 +326,8 @@ export const ForgotPasswordPage: React.FC = () => {
                   docType={docType}
                   docNumber={docNumber}
                   channel={channel}
-                  onNext={handleCodeVerified}
+                  onNext={(code) => { setVerifiedCode(code); setStep(4); }}
                   loading={loading}
-                  error={error}
-                  clearError={clearError}
                 />
               )}
               {step === 4 && (
@@ -365,8 +338,6 @@ export const ForgotPasswordPage: React.FC = () => {
                   channel={channel}
                   onSuccess={() => navigate("/admin/sign-in")}
                   loading={loading}
-                  error={error}
-                  clearError={clearError}
                 />
               )}
 
