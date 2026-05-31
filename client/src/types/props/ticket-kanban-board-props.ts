@@ -8,5 +8,5 @@ export interface TicketKanbanBoardProps {
   tickets: TicketKanban[];
   selectedGroup: TicketKanbanGroupKey;
   onOpenTicket: (ticketId: number) => void;
-  onStatusChange?: (ticketNumber: number, newStatus: SupportTicketStatus) => void;
+  onStatusChange?: (ticketNumber: number, newStatus: SupportTicketStatus) => Promise<boolean>;
 }

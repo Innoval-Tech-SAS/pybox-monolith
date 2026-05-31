@@ -9,4 +9,5 @@ export interface TicketKanbanColumnProps {
   moveTicket: (dragIndex: number, hoverIndex: number) => void;
   changeTicketStatus: (ticketId: string, ticketNumber: number, newStatus: SupportTicketStatus) => void;
   onOpenTicket: (ticketId: number) => void;
+  isTerminalColumn?: boolean;
 }

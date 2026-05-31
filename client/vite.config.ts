@@ -28,6 +28,18 @@ export default defineConfig({
         target: "http://localhost:5000",
         changeOrigin: true,
         ws: true,
+        configure: (proxy) => {
+          // Vite registers its own error logger first; we replace it so socket hang ups
+          // (expected when the API container restarts) don't pollute the terminal.
+          proxy.removeAllListeners("error");
+          proxy.on("error", (_err, _req, res) => {
+            if (res && "writeHead" in res && !res.headersSent) {
+              res.writeHead(502);
+              res.end();
+            }
+            // WS errors: res is a Socket — nothing to write, browser reconnects automatically
+          });
+        },
       },
       "/files": {
         target: "http://localhost:5000",

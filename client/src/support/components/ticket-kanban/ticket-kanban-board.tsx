@@ -10,6 +10,8 @@ import {
 } from "@/support/utils/ticket-kanban-utils";
 import { TicketKanbanColumn } from "./ticket-kanban-column";
 
+const TERMINAL_STATUSES = new Set<SupportTicketStatus>(["resolved", "closed"]);
+
 export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   tickets,
   selectedGroup,
@@ -18,63 +20,59 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
 }) => {
   const [kanbanTickets, setKanbanTickets] = useState<TicketKanban[]>(tickets);
 
-  useEffect(() => {
-    setKanbanTickets(tickets);
-  }, [tickets]);
+  useEffect(() => { setKanbanTickets(tickets); }, [tickets]);
 
   const moveTicket = useCallback((dragIndex: number, hoverIndex: number) => {
-    setKanbanTickets((previousTickets) => {
-      const newTickets = [...previousTickets];
-      const draggedTicket = newTickets[dragIndex];
-
-      if (!draggedTicket) return previousTickets;
-
-      newTickets.splice(dragIndex, 1);
-      newTickets.splice(hoverIndex, 0, draggedTicket);
-      return newTickets;
+    setKanbanTickets((prev) => {
+      const next = [...prev];
+      const dragged = next[dragIndex];
+      if (!dragged) return prev;
+      next.splice(dragIndex, 1);
+      next.splice(hoverIndex, 0, dragged);
+      return next;
     });
   }, []);
 
   const changeTicketStatus = useCallback(
     (ticketId: string, ticketNumber: number, newStatus: SupportTicketStatus) => {
-      setKanbanTickets((previousTickets) =>
-        previousTickets.map((ticket) =>
-          ticket.id === ticketId ? { ...ticket, status: newStatus } : ticket,
-        ),
-      );
-      onStatusChange?.(ticketNumber, newStatus);
+      // Optimistic update — capture snapshot for rollback
+      let snapshot: TicketKanban[] = [];
+      setKanbanTickets((prev) => {
+        snapshot = prev;
+        return prev.map((t) => t.id === ticketId ? { ...t, status: newStatus } : t);
+      });
+      // Persist + rollback on failure
+      onStatusChange?.(ticketNumber, newStatus).then((ok) => {
+        if (!ok) setKanbanTickets(snapshot);
+      });
     },
     [onStatusChange],
   );
 
   const filteredTickets = getFilteredKanbanTickets(kanbanTickets, selectedGroup);
   const visibleColumns = getVisibleKanbanColumns(selectedGroup);
-  const gridColumns =
-    visibleColumns.length === 1
-      ? "sm:grid-cols-1 xl:grid-cols-1"
-      : "sm:grid-cols-2 xl:grid-cols-3";
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div
-        className={`mt-7 grid grid-cols-1 divide-x divide-gray-200 border-t border-gray-200 dark:divide-white/5 dark:border-white/5 sm:mt-0 ${gridColumns}`}
-      >
-        {visibleColumns.map((column) => (
-          <TicketKanbanColumn
-            key={column.status}
-            title={column.title}
-            tickets={filteredTickets.filter(
-              (ticket) => ticket.status === column.status,
-            )}
-            status={column.status}
-            getTicketIndex={(ticketId) =>
-              kanbanTickets.findIndex((ticket) => ticket.id === ticketId)
-            }
-            moveTicket={moveTicket}
-            changeTicketStatus={changeTicketStatus}
-            onOpenTicket={onOpenTicket}
-          />
-        ))}
+      <div className="overflow-x-auto border-t border-gray-200 dark:border-white/5">
+        <div
+          className="flex min-w-max divide-x divide-gray-200 dark:divide-white/5"
+          style={{ minWidth: `${visibleColumns.length * 260}px` }}
+        >
+          {visibleColumns.map((column) => (
+            <TicketKanbanColumn
+              key={column.status}
+              title={column.title}
+              tickets={filteredTickets.filter((t) => t.status === column.status)}
+              status={column.status}
+              isTerminalColumn={TERMINAL_STATUSES.has(column.status)}
+              getTicketIndex={(id) => kanbanTickets.findIndex((t) => t.id === id)}
+              moveTicket={moveTicket}
+              changeTicketStatus={changeTicketStatus}
+              onOpenTicket={onOpenTicket}
+            />
+          ))}
+        </div>
       </div>
     </DndProvider>
   );

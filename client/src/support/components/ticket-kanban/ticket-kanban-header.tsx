@@ -5,8 +5,8 @@ export const TicketKanbanHeader: React.FC<TicketKanbanHeaderProps> = ({
   selectedGroup,
   onSelectGroup,
 }) => (
-  <div className="flex items-center px-4 py-5 xl:px-6 xl:py-6">
-    <div className="grid grid-cols-2 items-center gap-x-1 gap-y-2 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900 sm:grid-cols-4">
+  <div className="flex items-center overflow-x-auto px-4 py-4 xl:px-6">
+    <div className="flex flex-wrap items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
       {groups.map((group) => (
         <button
           key={group.key}

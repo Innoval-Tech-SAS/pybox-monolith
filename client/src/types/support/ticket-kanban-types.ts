@@ -1,4 +1,4 @@
-import type { SupportTicketStatus } from "./support-types";
+import type { SupportTicketPriority, SupportTicketStatus } from "./support-types";
 
 export type TicketKanbanCategoryColor =
   | "error"
@@ -24,6 +24,7 @@ export interface TicketKanban {
   links?: number;
   assigneeInitials: string;
   status: SupportTicketStatus;
+  priority: SupportTicketPriority;
   description?: string;
   category: TicketKanbanCategory;
   organizationId: string;
@@ -31,6 +32,7 @@ export interface TicketKanban {
   assignedTo: number | null;
   notes: string | null;
   resolvedAt: string | null;
+  closedAt: string | null;
   createdAt: string;
 }
 

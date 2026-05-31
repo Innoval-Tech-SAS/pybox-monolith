@@ -16,6 +16,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { ModuleBase } from "@/ui/components/common/module-base";
+import { getSession } from "@/auth/utils/auth-session-utils";
+import { Scope } from "@/types/auth/role";
 import { useTicketCategories } from "@/support/hooks/use-ticket-categories";
 import { useTicketOrgs } from "@/support/hooks/use-ticket-orgs";
 import { useCreateTicket } from "@/support/hooks/use-create-ticket";
@@ -151,6 +153,9 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, selected, onSelec
 
 export const CreateTicketPage: React.FC = () => {
   const navigate = useNavigate();
+  const session = getSession();
+  const isGlobal = session?.scope === Scope.GLOBAL;
+
   const { categories, loading: loadingCats } = useTicketCategories();
   const { orgs, loading: loadingOrgs } = useTicketOrgs();
   const { createTicket, loading: submitting } = useCreateTicket();
@@ -184,9 +189,10 @@ export const CreateTicketPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCategory || !organizationId) return;
+    if (!selectedCategory) return;
+    if (!isGlobal && !organizationId) return;
     const ticket = await createTicket({
-      organizationId,
+      organizationId: organizationId || undefined,
       title: selectedCategory.label,
       caseType: selectedCategory.caseType,
       notes: notes.trim(),
@@ -268,28 +274,52 @@ export const CreateTicketPage: React.FC = () => {
         </div>
       )}
 
-      <div>
-        <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Entidad <span className="text-error-500">*</span>
-        </label>
-        {loadingOrgs ? (
-          <div className="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-white/5" />
-        ) : (
-          <select
-            value={organizationId}
-            onChange={(e) => setOrganizationId(e.target.value)}
-            required
-            className={INPUT_BASE}
-          >
-            <option value="">Seleccionar entidad...</option>
-            {orgs.map((org) => (
-              <option key={org.id} value={org.id}>
-                {org.name}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
+      {!isGlobal ? (
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Entidad <span className="text-error-500">*</span>
+          </label>
+          {loadingOrgs ? (
+            <div className="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-white/5" />
+          ) : (
+            <select
+              value={organizationId}
+              onChange={(e) => setOrganizationId(e.target.value)}
+              required
+              className={INPUT_BASE}
+            >
+              <option value="">Seleccionar entidad...</option>
+              {orgs.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      ) : orgs.length > 0 ? (
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Entidad <span className="font-normal text-gray-400">(opcional)</span>
+          </label>
+          {loadingOrgs ? (
+            <div className="h-10 animate-pulse rounded-lg bg-gray-100 dark:bg-white/5" />
+          ) : (
+            <select
+              value={organizationId}
+              onChange={(e) => setOrganizationId(e.target.value)}
+              className={INPUT_BASE}
+            >
+              <option value="">Sin entidad específica</option>
+              {orgs.map((org) => (
+                <option key={org.id} value={org.id}>
+                  {org.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      ) : null}
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -359,7 +389,7 @@ export const CreateTicketPage: React.FC = () => {
         </button>
         <button
           type="submit"
-          disabled={!organizationId || !notes.trim() || submitting}
+          disabled={(!isGlobal && !organizationId) || !notes.trim() || submitting}
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:opacity-50"
         >
           {submitting ? "Creando..." : "Crear ticket"}

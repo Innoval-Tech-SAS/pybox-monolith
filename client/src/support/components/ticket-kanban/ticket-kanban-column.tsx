@@ -16,6 +16,7 @@ export const TicketKanbanColumn: React.FC<TicketKanbanColumnProps> = ({
   moveTicket,
   changeTicketStatus,
   onOpenTicket,
+  isTerminalColumn = false,
 }) => {
   const columnRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -84,6 +85,7 @@ export const TicketKanbanColumn: React.FC<TicketKanbanColumnProps> = ({
           moveTicket={moveTicket}
           changeTicketStatus={changeTicketStatus}
           onOpenTicket={onOpenTicket}
+          isTerminal={isTerminalColumn}
         />
       ))}
     </div>

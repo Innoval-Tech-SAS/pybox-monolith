@@ -5,7 +5,9 @@ import type {
   TicketKanbanDragItem,
   TicketKanbanDropResult,
 } from "@/types/support/ticket-kanban-types";
-import { getCategoryStyles } from "@/support/utils/ticket-kanban-utils";
+import { getCategoryStyles, getPriorityBadgeStyles, TICKET_PRIORITY_LABELS } from "@/support/utils/ticket-kanban-utils";
+
+const TERMINAL = new Set(["resolved", "closed"]);
 
 const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
   ticket,
@@ -13,8 +15,10 @@ const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
   moveTicket,
   changeTicketStatus,
   onOpenTicket,
+  isTerminal,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
+  const canDrag = !isTerminal && !TERMINAL.has(ticket.status);
 
   const [{ handlerId }, drop] = useDrop<
     TicketKanbanDragItem,
@@ -51,11 +55,12 @@ const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
     { isDragging: boolean }
   >({
     type: "ticket",
+    canDrag,
     item: () => ({ ...ticket, index }),
     collect: (monitor) => ({ isDragging: monitor.isDragging() }),
     end: (item, monitor) => {
       const dropResult = monitor.getDropResult();
-      if (dropResult && dropResult.name !== item.status) {
+      if (dropResult && dropResult.name !== item.status && !TERMINAL.has(dropResult.name)) {
         changeTicketStatus(item.id, item.ticketId, dropResult.name);
       }
     },
@@ -104,9 +109,14 @@ const TicketKanbanItem: React.FC<TicketKanbanItemProps> = ({
               </span>
             )}
           </div>
-          <span className={`mt-3 inline-flex rounded-full px-2 py-0.5 text-theme-xs font-medium ${getCategoryStyles(ticket.category.color)}`}>
-            {ticket.category.name}
-          </span>
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            <span className={`inline-flex rounded-full px-2 py-0.5 text-theme-xs font-medium ${getCategoryStyles(ticket.category.color)}`}>
+              {ticket.category.name}
+            </span>
+            <span className={`inline-flex rounded-full px-2 py-0.5 text-theme-xs font-medium ${getPriorityBadgeStyles(ticket.priority)}`}>
+              {TICKET_PRIORITY_LABELS[ticket.priority]}
+            </span>
+          </div>
         </div>
       </div>
       <div className="h-6 absolute top-5 right-5 w-full max-w-6 overflow-hidden rounded-full border-[0.5px] border-gray-200 dark:border-gray-800">

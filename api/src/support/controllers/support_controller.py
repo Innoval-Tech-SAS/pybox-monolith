@@ -3,9 +3,14 @@ from fastapi import APIRouter, File, UploadFile
 
 from security.dependencies import CurrentSession
 from support.dependencies import SupportAccessFilter, SupportServiceDep
-from support.schemas.support_schemas import AssignTicketSchema, CreateTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema, TicketAttachmentSchema, TicketCategorySchema, TicketOrgSchema, UpdateTicketStatusSchema
+from support.schemas.support_schemas import AssignTicketSchema, CreateMessageSchema, CreateTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema, TicketAttachmentSchema, TicketCategorySchema, TicketEventSchema, TicketMessageSchema, TicketMetricsSchema, TicketOrgSchema, UpdateTicketPrioritySchema, UpdateTicketStatusSchema
 
 router = APIRouter(prefix="/cs/tickets", tags=["Soporte"])
+
+
+@router.get("/metrics", response_model=TicketMetricsSchema, summary="Métricas de tickets")
+async def get_metrics(f: SupportAccessFilter, service: SupportServiceDep):
+    return await service.get_metrics(f)
 
 
 @router.get("/categories", response_model=list[TicketCategorySchema], summary="Listar categorías de tickets")
@@ -57,8 +62,9 @@ async def update_ticket_status(
     body: UpdateTicketStatusSchema,
     f: SupportAccessFilter,
     service: SupportServiceDep,
+    session: CurrentSession,
 ):
-    return await service.update_ticket_status(ticket_number, body, f)
+    return await service.update_ticket_status(ticket_number, session.user_id, body, f)
 
 
 @router.post(
@@ -71,8 +77,9 @@ async def assign_ticket(
     body: AssignTicketSchema,
     f: SupportAccessFilter,
     service: SupportServiceDep,
+    session: CurrentSession,
 ):
-    return await service.assign_ticket(ticket_number, body, f)
+    return await service.assign_ticket(ticket_number, session.user_id, body, f)
 
 
 @router.get(
@@ -119,6 +126,55 @@ async def upload_closure_attachments(
     service: SupportServiceDep,
 ):
     return await service.upload_closure_attachments(ticket_number, files, f)
+
+
+@router.get(
+    "/{ticket_number}/messages",
+    response_model=list[TicketMessageSchema],
+    summary="Listar mensajes del ticket",
+)
+async def list_messages(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+    return await service.list_messages(ticket_number, f)
+
+
+@router.post(
+    "/{ticket_number}/messages",
+    response_model=TicketMessageSchema,
+    status_code=201,
+    summary="Enviar mensaje al ticket",
+)
+async def create_message(
+    ticket_number: int,
+    body: CreateMessageSchema,
+    f: SupportAccessFilter,
+    service: SupportServiceDep,
+    session: CurrentSession,
+):
+    return await service.create_message(ticket_number, session.user_id, body, f)
+
+
+@router.get(
+    "/{ticket_number}/events",
+    response_model=list[TicketEventSchema],
+    summary="Historial de cambios del ticket",
+)
+async def list_events(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+    return await service.list_events(ticket_number, f)
+
+
+@router.patch(
+    "/{ticket_number}/priority",
+    response_model=SupportTicketSchema,
+    summary="Cambiar prioridad del ticket",
+)
+async def update_ticket_priority(
+    ticket_number: int,
+    body: UpdateTicketPrioritySchema,
+    f: SupportAccessFilter,
+    service: SupportServiceDep,
+    session: CurrentSession,
+):
+    return await service.update_ticket_priority(ticket_number, session.user_id, body, f)
 
 
 @router.post(

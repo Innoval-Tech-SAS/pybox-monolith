@@ -10,16 +10,19 @@ import { useUploadClosureAttachments } from "@/support/hooks/use-upload-closure-
 import { TicketOrgDocsViewer } from "./ticket-org-docs-viewer";
 import { TicketAttachments } from "./ticket-attachments";
 import { TicketClosureAttachments } from "./ticket-closure-attachments";
+import { TicketConversation } from "./ticket-conversation";
+import { TicketAuditLog } from "./ticket-audit-log";
 import {
   formatTicketDetailDate,
+  getPriorityBadgeStyles,
   getStatusBadgeStyles,
   getTicketDisplayId,
   TICKET_CASE_TYPE_LABELS,
+  TICKET_PRIORITY_LABELS,
   TICKET_STATUS_LABELS,
   TICKET_TYPE_LABELS,
 } from "@/support/utils/ticket-kanban-utils";
-import { getSession } from "@/auth/utils/auth-session-utils";
-import { Role, Scope } from "@/types/auth/role";
+import { useTicketPermissions } from "@/support/hooks/use-ticket-permissions";
 import type { TicketDetailViewProps } from "@/types/props/ticket-detail-view-props";
 
 const UserAvatar: React.FC<{ name: string; photoUrl?: string | null; size?: "sm" | "md" }> = ({
@@ -56,16 +59,8 @@ const DetailRow: React.FC<{ label: string; children: React.ReactNode }> = ({ lab
   </div>
 );
 
-const _session = getSession();
-const _orgRoles = Object.values(_session?.orgs ?? {}).map((o) => o.role);
-const canEscalate =
-  _session?.scope === Scope.GLOBAL ||
-  (_session?.scope === Scope.ORG && _orgRoles.includes(Role.CS));
-const canResolve =
-  (_session?.scope === Scope.GLOBAL && (_session?.role === Role.CS || _session?.role === Role.ADMIN)) ||
-  (_session?.scope === Scope.ORG && _orgRoles.includes(Role.CS));
-
 export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTicketResolved, onTicketEscalated }) => {
+  const { canResolve, canEscalate } = useTicketPermissions(ticket.status);
   const { creator } = useTicketCreator(ticket.createdBy);
   const { assignee } = useTicketAssignee(ticket.assignedTo ?? undefined);
   const { escalateTicket, loading: escalating } = useEscalateTicket();
@@ -145,6 +140,9 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
             {ticket.notes ?? "Este ticket todavía no tiene notas registradas."}
           </p>
         </div>
+
+        {/* Conversation */}
+        <TicketConversation ticketNumber={ticket.ticketNumber} status={ticket.status} />
 
         {/* Closure attachments — only when resolved */}
         {isResolved && !isOrgVerification && (
@@ -289,6 +287,16 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
             </span>
           </DetailRow>
 
+          {/* Priority */}
+          <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-white/3">
+            <p className="mb-1.5 text-xs text-gray-400 dark:text-gray-500">Prioridad</p>
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getPriorityBadgeStyles(ticket.priority)}`}
+            >
+              {TICKET_PRIORITY_LABELS[ticket.priority]}
+            </span>
+          </div>
+
           {/* Type badge */}
           <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-white/3">
             <p className="mb-1.5 text-xs text-gray-400 dark:text-gray-500">Tipo</p>
@@ -302,6 +310,8 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
               {displayId.split("-")[0]} · {TICKET_TYPE_LABELS[ticket.caseType]}
             </span>
           </div>
+
+          <TicketAuditLog ticketNumber={ticket.ticketNumber} />
 
           {canEscalate && !isResolved && (
             <button

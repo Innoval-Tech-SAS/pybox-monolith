@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from base.audit_model import AuditModel
-from support.enums.support_enums import SupportCaseType, SupportTicketStatus
+from support.enums.support_enums import SupportCaseType, SupportTicketPriority, SupportTicketStatus
 
 
 class SupportTicketModel(AuditModel):
@@ -23,8 +23,15 @@ class SupportTicketModel(AuditModel):
         default=SupportTicketStatus.OPEN,
         name="estado",
     )
-    organization_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, name="id_entidad"
+    priority: Mapped[SupportTicketPriority] = mapped_column(
+        ENUM(SupportTicketPriority),
+        nullable=False,
+        default=SupportTicketPriority.MEDIUM,
+        server_default=SupportTicketPriority.MEDIUM.value,
+        name="prioridad",
+    )
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=True, name="id_entidad"
     )
     created_by: Mapped[int] = mapped_column(
         Integer, ForeignKey("usuarios.id"), nullable=False, name="creado_por"
@@ -36,4 +43,10 @@ class SupportTicketModel(AuditModel):
     notes: Mapped[str | None] = mapped_column(String(2000), nullable=True, name="notas")
     resolved_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, name="resuelto_en"
+    )
+    closed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, name="cerrado_en"
+    )
+    closed_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("usuarios.id"), nullable=True, name="cerrado_por"
     )
