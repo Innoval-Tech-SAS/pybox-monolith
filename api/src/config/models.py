@@ -6,7 +6,8 @@ import credits.models.credit_adjustment_model  # noqa: F401
 import credits.models.uvr_quote_model  # noqa: F401
 import debtors.models.debtor_model  # noqa: F401
 import debtors.models.address_model  # noqa: F401
-import debtors.models.segment_model  # noqa: F401
+import segments.models.segment_model  # noqa: F401
+import segments.models.segment_execution_model  # noqa: F401
 import messaging.models.verification_code_model  # noqa: F401
 import notifications.models.notification_model  # noqa: F401
 import organizations.models.organization_model  # noqa: F401
