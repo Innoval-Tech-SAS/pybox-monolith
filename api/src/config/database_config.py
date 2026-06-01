@@ -19,3 +19,6 @@ class DatabaseConfig:
     url_connection: str = (
         f"{database_engine}+{database_driver}://{username}:{password}@{host}:{port}/{database_name}"
     )
+
+
+db_config = DatabaseConfig()

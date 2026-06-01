@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 
-from config.database_config import DatabaseConfig
+from config.database_config import db_config
 
 
 class Base(DeclarativeBase):
@@ -16,7 +16,7 @@ class Base(DeclarativeBase):
 
 
 class Database:
-    def __init__(self, database_config: DatabaseConfig = DatabaseConfig()):
+    def __init__(self, database_config=db_config):
         self.engine = create_async_engine(database_config.url_connection)
         self._Session: async_sessionmaker[AsyncSession] = async_sessionmaker(
             bind=self.engine, expire_on_commit=False

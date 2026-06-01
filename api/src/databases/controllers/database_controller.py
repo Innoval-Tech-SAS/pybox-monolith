@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 
 from config.api_router import APIRouter
-from databases.dependencies import DescriptorServiceDep, DynamicQueryServiceDep, SchemaAlterationServiceDep
+from databases.dependencies import DdlServiceDep, DmlServiceDep, InspectorServiceDep
 from databases.schemas.database_schemas import (
     AlterTableRequest,
     CreateDatabaseRequest,
@@ -28,62 +28,50 @@ def _require_org_or_global(session: UserSession) -> None:
 
 
 # ------------------------------------------------------------------
-# Lectura (org + global)
+# Inspección (org + global)
 # ------------------------------------------------------------------
 
-@router.get("/", response_model=list[str], summary="Listar bases de datos")
-async def list_databases(session: CurrentSession, service: DescriptorServiceDep) -> list[str]:
+@router.get("/schemas", response_model=list[str], summary="Listar esquemas")
+async def list_schemas(session: CurrentSession, service: InspectorServiceDep) -> list[str]:
     _require_org_or_global(session)
-    return await service.get_databases()
+    return await service.get_schemas()
 
 
-@router.get("/{database_name}/schemas", response_model=list[str], summary="Listar esquemas de una base de datos")
-async def list_schemas(
-    database_name: str,
-    session: CurrentSession,
-    service: DescriptorServiceDep,
-) -> list[str]:
-    _require_org_or_global(session)
-    return await service.get_schemas(database_name)
-
-
-@router.get(
-    "/{database_name}/schemas/{schema_name}/tables",
-    response_model=list[str],
-    summary="Listar tablas de un esquema",
-)
+@router.get("/schemas/{schema_name}/tables", response_model=list[str], summary="Listar tablas de un esquema")
 async def list_tables(
-    database_name: str,
     schema_name: str,
     session: CurrentSession,
-    service: DescriptorServiceDep,
+    service: InspectorServiceDep,
 ) -> list[str]:
     _require_org_or_global(session)
-    return await service.get_tables(database_name, schema_name)
+    return await service.get_tables(schema_name)
 
 
 @router.get(
-    "/{database_name}/schemas/{schema_name}/tables/{table_name}/fields",
+    "/schemas/{schema_name}/tables/{table_name}/fields",
     response_model=list[FieldInfo],
     summary="Listar campos de una tabla",
 )
 async def list_table_fields(
-    database_name: str,
     schema_name: str,
     table_name: str,
     session: CurrentSession,
-    service: DescriptorServiceDep,
+    service: InspectorServiceDep,
 ) -> list[FieldInfo]:
     _require_org_or_global(session)
-    raw = await service.get_table_fields(database_name, schema_name, table_name)
+    raw = await service.get_table_fields(schema_name, table_name)
     return [FieldInfo(name=col["name"], type=str(col["type"])) for col in raw]
 
+
+# ------------------------------------------------------------------
+# Consulta dinámica (org + global)
+# ------------------------------------------------------------------
 
 @router.post("/query", response_model=DynamicQueryResponse, summary="Ejecutar consulta dinámica")
 async def execute_query(
     body: DynamicQueryRequest,
     session: CurrentSession,
-    service: DynamicQueryServiceDep,
+    service: DmlServiceDep,
 ) -> DynamicQueryResponse:
     _require_org_or_global(session)
     result = await service.execute_query(
@@ -100,14 +88,14 @@ async def execute_query(
 
 
 # ------------------------------------------------------------------
-# Escritura (global only)
+# DDL (global only)
 # ------------------------------------------------------------------
 
 @router.post("/", response_model=OperationResponse, status_code=status.HTTP_201_CREATED, summary="Crear base de datos")
 async def create_database(
     body: CreateDatabaseRequest,
     session: CurrentSession,
-    service: SchemaAlterationServiceDep,
+    service: DdlServiceDep,
 ) -> OperationResponse:
     _require_global(session)
     result = await service.create_database(body.database_name)
@@ -125,7 +113,7 @@ async def create_table(
     schema_name: str,
     body: CreateTableRequest,
     session: CurrentSession,
-    service: SchemaAlterationServiceDep,
+    service: DdlServiceDep,
 ) -> OperationResponse:
     _require_global(session)
     result = await service.create_table(database_name, schema_name, body.table_name, body.columns)
@@ -143,7 +131,7 @@ async def alter_table(
     table_name: str,
     body: AlterTableRequest,
     session: CurrentSession,
-    service: SchemaAlterationServiceDep,
+    service: DdlServiceDep,
 ) -> OperationResponse:
     _require_global(session)
     result = await service.alter_table(
