@@ -4,25 +4,27 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_main_session
-from databases.services.database_descriptor_service import DatabaseDescriptorService
-from databases.services.dynamic_query_service import DynamicQueryService
-from databases.services.schema_alteration_service import SchemaAlterationService
+from databases.services.ddl_service import DdlService
+from databases.services.dml_service import DmlService
+from databases.services.inspector_service import InspectorService
 
 
-def get_descriptor_service() -> DatabaseDescriptorService:
-    return DatabaseDescriptorService()
-
-
-def get_dynamic_query_service(
+def get_inspector_service(
     session: Annotated[AsyncSession, Depends(get_main_session)],
-) -> DynamicQueryService:
-    return DynamicQueryService(session)
+) -> InspectorService:
+    return InspectorService(session)
 
 
-def get_schema_alteration_service() -> SchemaAlterationService:
-    return SchemaAlterationService()
+def get_dml_service(
+    session: Annotated[AsyncSession, Depends(get_main_session)],
+) -> DmlService:
+    return DmlService(session)
 
 
-DescriptorServiceDep = Annotated[DatabaseDescriptorService, Depends(get_descriptor_service)]
-DynamicQueryServiceDep = Annotated[DynamicQueryService, Depends(get_dynamic_query_service)]
-SchemaAlterationServiceDep = Annotated[SchemaAlterationService, Depends(get_schema_alteration_service)]
+def get_ddl_service() -> DdlService:
+    return DdlService()
+
+
+InspectorServiceDep = Annotated[InspectorService, Depends(get_inspector_service)]
+DmlServiceDep = Annotated[DmlService, Depends(get_dml_service)]
+DdlServiceDep = Annotated[DdlService, Depends(get_ddl_service)]
