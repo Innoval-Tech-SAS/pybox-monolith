@@ -1,11 +1,10 @@
-import csv
-import json
 import os
 import re
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Sequence
 
+import polars as pl
 from fastapi import HTTPException, status
 
 from config.logger import logger
@@ -87,34 +86,33 @@ class SegmentService:
             logger.error("[SegmentService] Error ejecutando segmento %d: %s", segment_id, result["error"])
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, result["error"])
 
-        data: list[dict[str, Any]] = json.loads(result["data"])
+        df = self._to_dataframe(result)
         file_name: str | None = None
         file_path: str | None = None
 
         if request.mode == "audit":
-            file_name, file_path = await self._save_audit_file(
+            file_name, file_path = self._save_audit_file(
                 organization_id=organization_id,
                 segment_id=segment_id,
                 segment_name=segment.name,
-                columns=result["columns"],
-                data=data,
+                df=df,
             )
             execution = SegmentExecutionModel(
                 segment_id=segment_id,
                 mode=request.mode,
                 file_name=file_name,
                 file_path=file_path,
-                rows=result["rows"],
-                columns=result["columns"],
+                rows=len(df),
+                columns=df.columns,
                 executed_by=user_id,
             )
             await self._execution_repo.add(execution)
 
         return {
             "success": True,
-            "rows": result["rows"],
-            "columns": result["columns"],
-            "data": data,
+            "rows": len(df),
+            "columns": df.columns,
+            "data": df.to_dicts(),
             "mode": request.mode,
             "file_name": file_name,
             "file_path": file_path,
@@ -124,26 +122,29 @@ class SegmentService:
         await self.get(segment_id, organization_id)
         return await self._execution_repo.get_by_segment(segment_id)
 
-    async def _save_audit_file(
+    def _to_dataframe(self, result: dict[str, Any]) -> pl.DataFrame:
+        import json
+        data = json.loads(result["data"])
+        if not data:
+            return pl.DataFrame(schema={col: pl.Utf8 for col in result["columns"]})
+        return pl.DataFrame(data)
+
+    def _save_audit_file(
         self,
         organization_id: uuid.UUID,
         segment_id: int,
         segment_name: str,
-        columns: list[str],
-        data: list[dict[str, Any]],
+        df: pl.DataFrame,
     ) -> tuple[str, str]:
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", segment_name)
         file_name = f"{timestamp}_{safe_name}.csv"
 
-        dir_path = os.path.join(UPLOADS_ROOT, str(organization_id), "segments", str(segment_id))
+        dir_path = os.path.join(UPLOADS_ROOT, "organizations", str(organization_id), "segments", str(segment_id))
         os.makedirs(dir_path, exist_ok=True)
 
         abs_path = os.path.join(dir_path, file_name)
-        with open(abs_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=columns)
-            writer.writeheader()
-            writer.writerows(data)
+        df.write_csv(abs_path)
 
         rel_path = os.path.relpath(abs_path, UPLOADS_ROOT)
         return file_name, rel_path
