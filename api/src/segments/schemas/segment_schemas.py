@@ -39,7 +39,7 @@ class SegmentUpdateRequest(BaseSchema):
 
 class SegmentExecuteRequest(BaseSchema):
     mode: Literal["preview", "audit"] = "preview"
-    limit: int = Field(default=1000, ge=1, le=50000)
+    limit: int | None = Field(default=None, ge=1)
 
 
 class SegmentResponse(BaseSchema):

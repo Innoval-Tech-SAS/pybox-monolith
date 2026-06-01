@@ -30,7 +30,7 @@ class DmlService:
         self,
         tables: list[dict[str, Any]],
         joins: list[dict[str, Any]] | None = None,
-        limit: int = 1000,
+        limit: int | None = None,
         query_mode: str = "detail",
         group_by: list[dict[str, Any]] | None = None,
         aggregations: list[dict[str, Any]] | None = None,
@@ -59,7 +59,7 @@ class DmlService:
             logger.error("Error executing dynamic query: %s", e, exc_info=True)
             return {"success": False, "rows": 0, "columns": [], "data": "[]", "error": str(e)}
 
-    async def _execute_single_table(self, table: dict[str, Any], limit: int) -> dict[str, Any]:
+    async def _execute_single_table(self, table: dict[str, Any], limit: int | None) -> dict[str, Any]:
         try:
             schema, table_name = sanitize_table_name(table["name"])
             alias = sanitize_identifier(table.get("alias") or table_name, label="table alias")
@@ -85,7 +85,7 @@ class DmlService:
         self,
         tables: list[dict[str, Any]],
         joins: list[dict[str, Any]],
-        limit: int,
+        limit: int | None,
     ) -> dict[str, Any]:
         try:
             if len(tables) > 1 and not joins:
@@ -145,7 +145,7 @@ class DmlService:
         aggregations: list[dict[str, Any]],
         having: list[dict[str, Any]],
         order_by: list[dict[str, Any]],
-        limit: int,
+        limit: int | None,
     ) -> dict[str, Any]:
         try:
             if len(tables) > 1 and not joins:
