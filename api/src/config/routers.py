@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from auth.controllers.auth_controller import router as auth_router
+from databases.controllers.database_controller import router as databases_router
 from contacts.controllers.contact_controller import router as contacts_router
 from debtors.controllers.debtor_controller import router as debtors_router
 from countries.controllers.countries_controller import router as countries_router
@@ -37,3 +38,4 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(users_router, prefix=_API_PREFIX)
     app.include_router(global_users_router, prefix=_API_PREFIX)
     app.include_router(permissions_router, prefix=_API_PREFIX)
+    app.include_router(databases_router, prefix=_API_PREFIX)
