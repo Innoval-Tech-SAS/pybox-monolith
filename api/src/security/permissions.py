@@ -3,6 +3,7 @@ ORG_PORTFOLIOS = "org.portfolios"
 ORG_PAYMENT_METHODS = "org.payment_methods"
 ORG_REPORTS = "org.reports"
 ORG_USERS = "org.users"
+ORG_CAMPAIGNS = "org.campaigns"
 
 
 # Portfolio card permissions — activan módulos al entrar a un portafolio
