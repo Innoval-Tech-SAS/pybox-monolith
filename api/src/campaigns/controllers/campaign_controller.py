@@ -52,7 +52,7 @@ async def get_campaign(
     return CampaignResponse.model_validate(campaign)
 
 
-@router.post(
+@router.post( 
     "/",
     response_model=CampaignResponse,
     status_code=status.HTTP_201_CREATED,
