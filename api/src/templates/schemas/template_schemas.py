@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pydantic import Field, model_validator
 
@@ -55,3 +56,23 @@ class TemplateResponse(BaseSchema):
     reply_to: str | None = Field(default=None, description="Dirección de respuesta")
     created_at: datetime = Field(description="Fecha de creación")
     updated_at: datetime | None = Field(default=None, description="Fecha de última actualización")
+
+
+class TemplatePreviewRequest(BaseSchema):
+    sub: dict[str, Any] = Field(default_factory=dict, description="Variables de sustitución")
+
+
+class TemplatePreviewResponse(BaseSchema):
+    html: str = Field(description="HTML renderizado con las variables sustituidas")
+    subject: str = Field(description="Asunto renderizado")
+    variables_used: list[str] = Field(description="Variables detectadas en la plantilla")
+
+
+class TemplateSendRequest(BaseSchema):
+    to: str = Field(description="Dirección de email del destinatario")
+    subject: str | None = Field(default=None, description="Asunto personalizado (sobreescribe el de la plantilla)")
+    sub: dict[str, Any] = Field(description="Variables de sustitución para renderizar la plantilla")
+
+
+class TemplateSendResponse(BaseSchema):
+    message: str = Field(description="Resultado del envío")

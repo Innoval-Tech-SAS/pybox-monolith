@@ -11,7 +11,11 @@ from templates.dependencies import TemplateServiceDep
 from templates.enums.template_enums import TemplateChannel
 from templates.schemas.template_schemas import (
     TemplateCreateRequest,
+    TemplatePreviewRequest,
+    TemplatePreviewResponse,
     TemplateResponse,
+    TemplateSendRequest,
+    TemplateSendResponse,
     TemplateUpdateRequest,
 )
 from users.enums.user_enums import UserRole
@@ -97,3 +101,35 @@ async def delete_template(
 ) -> None:
     _require_admin(session, str(organization_id))
     await service.delete(template_id, organization_id)
+
+
+@router.post(
+    "/{template_id}/preview",
+    response_model=TemplatePreviewResponse,
+    summary="Previsualizar plantilla renderizada con variables de prueba",
+)
+async def preview_template(
+    template_id: uuid.UUID,
+    body: TemplatePreviewRequest,
+    session: CurrentSession,
+    service: TemplateServiceDep,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+) -> TemplatePreviewResponse:
+    require_permission(ORG_TEMPLATES, session, str(organization_id))
+    return await service.preview(template_id, organization_id, body)
+
+
+@router.post(
+    "/{template_id}/send",
+    response_model=TemplateSendResponse,
+    summary="Renderizar plantilla y enviar email",
+)
+async def send_template_email(
+    template_id: uuid.UUID,
+    body: TemplateSendRequest,
+    session: CurrentSession,
+    service: TemplateServiceDep,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+) -> TemplateSendResponse:
+    require_permission(ORG_TEMPLATES, session, str(organization_id))
+    return await service.send_email(template_id, organization_id, body)
