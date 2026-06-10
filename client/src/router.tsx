@@ -32,6 +32,7 @@ import { UserSettingsPage } from "./users/pages/user-settings-page";
 import { UserPortfoliosPage } from "./users/pages/user-portfolios-page";
 import { CreateUserPage } from "./users/pages/create-user-page";
 import { ChatPage } from "./chat/pages/chat-page";
+import { SegmentsPage } from "./segments/pages/SegmentsPage";
 import { NotFound } from "./ui/pages/not-found";
 
 export const noAuthRouter = [
@@ -113,6 +114,10 @@ export const authRouter = [
   {
     path: "/my-companies/portfolios/settings",
     element: <PortfolioSettingsPage />,
+  },
+  {
+    path: "/my-companies/portfolios/segments",
+    element: <SegmentsPage />,
   },
   {
     path: "/my-companies/settings",
