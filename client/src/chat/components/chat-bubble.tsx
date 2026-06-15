@@ -44,7 +44,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         ✕
       </button>
 
-      <span className="mt-1 text-[10px] text-gray-500 dark:text-gray-400 max-w-[52px] truncate text-center leading-none">
+      <span className="mt-1 text-[10px] text-gray-500 dark:text-gray-400 max-w-13 truncate text-center leading-none">
         {window.title.split(" ")[0]}
       </span>
     </div>
