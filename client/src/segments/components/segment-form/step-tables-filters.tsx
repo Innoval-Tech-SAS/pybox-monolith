@@ -9,19 +9,10 @@ import {
   OPS_WITH_MULTIPLE_VALUES,
 } from "@/segments/constants/segment.constants";
 import type {
-  SegmentFormState,
-  SegmentFormTable,
   SegmentTableFilter,
   FilterOp,
 } from "@/segments/types/segment.types";
-
-interface StepTablesFiltersProps {
-  state: SegmentFormState;
-  update: (patch: Partial<SegmentFormState>) => void;
-  addTable: (table: SegmentFormTable) => void;
-  removeTable: (alias: string) => void;
-  updateTable: (alias: string, patch: Partial<SegmentFormTable>) => void;
-}
+import type { StepTablesFiltersProps, TableSectionProps, FilterRowProps } from "@/segments/types/step-tables-filters-props";
 
 export const StepTablesFilters: React.FC<StepTablesFiltersProps> = ({
   state,
@@ -103,17 +94,6 @@ export const StepTablesFilters: React.FC<StepTablesFiltersProps> = ({
     </div>
   );
 };
-
-interface TableSectionProps {
-  title: string;
-  tableName: string;
-  columns: string[];
-  filters: SegmentTableFilter[];
-  onColumnsChange: (cols: string[]) => void;
-  onFiltersChange: (filters: SegmentTableFilter[]) => void;
-  removable: boolean;
-  onRemove?: () => void;
-}
 
 const TableSection: React.FC<TableSectionProps> = ({
   title,
@@ -236,13 +216,6 @@ const TableSection: React.FC<TableSectionProps> = ({
     </div>
   );
 };
-
-interface FilterRowProps {
-  filter: SegmentTableFilter;
-  fields: string[];
-  onChange: (patch: Partial<SegmentTableFilter>) => void;
-  onRemove: () => void;
-}
 
 const FilterRow: React.FC<FilterRowProps> = ({ filter, fields, onChange, onRemove }) => {
   const noValue = OPS_WITHOUT_VALUE.includes(filter.op);

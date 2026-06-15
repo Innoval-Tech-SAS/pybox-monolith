@@ -1,14 +1,6 @@
 import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
-import type { ChatMessage, ChatWindow as ChatWindowType } from "../../types/chat/chat-types";
-
-interface ChatWindowProps {
-  window: ChatWindowType;
-  currentUserId: number;
-  onClose: () => void;
-  onMinimize: () => void;
-  onSend: (body: string) => void;
-  onLoadMore: () => void;
-}
+import type { ChatMessage } from "../../types/chat/chat-types";
+import type { ChatWindowProps } from "@/chat/types/chat-window-props";
 
 const StatusIcon: React.FC<{ status: ChatMessage["status"] }> = ({ status }) => {
   if (status === "read")
@@ -108,7 +100,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             Cargar más
           </button>
         )}
-        {win.messages.map((msg) => {
+        {win.messages.map((msg: ChatMessage) => {
           const isOwn = msg.senderId === currentUserId;
           return (
             <div

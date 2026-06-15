@@ -1,23 +1,14 @@
-import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useSegmentFields } from "@/segments/hooks/use-segment-fields";
 import { JOIN_TYPES } from "@/segments/constants/segment.constants";
-import type { SegmentFormState, SegmentJoin, JoinHow } from "@/segments/types/segment.types";
-
-interface StepJoinsProps {
-  state: SegmentFormState;
-  addJoin: (join: SegmentJoin) => void;
-  removeJoin: (index: number) => void;
-  updateJoin: (index: number, patch: Partial<SegmentJoin>) => void;
-  allTableAliases: { alias: string; label: string }[];
-}
+import type { JoinHow } from "@/segments/types/segment.types";
+import type { StepJoinsProps, JoinRowProps } from "@/segments/types/step-joins-props";
 
 export const StepJoins: React.FC<StepJoinsProps> = ({
   state,
   addJoin,
   removeJoin,
   updateJoin,
-  allTableAliases,
 }) => {
   const tables = [
     { alias: state.mainTable, name: state.mainTable },
@@ -78,13 +69,6 @@ export const StepJoins: React.FC<StepJoinsProps> = ({
     </div>
   );
 };
-
-interface JoinRowProps {
-  join: SegmentJoin;
-  tables: { alias: string; name: string }[];
-  onChange: (patch: Partial<SegmentJoin>) => void;
-  onRemove: () => void;
-}
 
 const JoinRow: React.FC<JoinRowProps> = ({ join, tables, onChange, onRemove }) => {
   const leftTable = tables.find((t) => t.alias === join.left);

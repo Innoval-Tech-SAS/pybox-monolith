@@ -1,4 +1,5 @@
 import type { NotifType } from "@/types/notifications/notification";
+import type { NotifIconProps } from "@/notifications/types/notif-icon-props";
 
 const ICON_CONFIG: Record<NotifType, { bg: string; icon: React.ReactNode }> = {
   success: {
@@ -45,11 +46,6 @@ const SIZE_CLASSES = {
   md: "h-10 w-10",
   lg: "h-14 w-14",
 };
-
-interface NotifIconProps {
-  type: NotifType;
-  size?: keyof typeof SIZE_CLASSES;
-}
 
 export const NotifIcon: React.FC<NotifIconProps> = ({ type, size = "md" }) => {
   const { bg, icon } = ICON_CONFIG[type] ?? ICON_CONFIG.info;

@@ -1,5 +1,5 @@
 export interface PortfolioAccessEntry {
-  portfolio_id: string;
+  portfolioId: string;
   name: string;
-  has_access: boolean;
+  hasAccess: boolean;
 }

@@ -11,10 +11,7 @@ import {
 } from "lucide-react";
 import { useTicketEvents } from "@/support/hooks/use-ticket-events";
 import type { TicketEventType } from "@/types/support/support-types";
-
-interface TicketAuditLogProps {
-  ticketNumber: number;
-}
+import type { TicketAuditLogProps } from "@/support/types/ticket-audit-log-props";
 
 const EVENT_LABELS: Record<TicketEventType, string> = {
   created: "Ticket creado",

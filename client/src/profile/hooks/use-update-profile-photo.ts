@@ -5,7 +5,6 @@ import { useApiClient } from "@/hooks/use-api-client";
 
 interface ProfilePhotoResponse {
   profilePhotoUrl?: string;
-  profile_photo_url?: string;
 }
 
 export const useUpdateProfilePhoto = () => {
@@ -33,25 +32,22 @@ export const useUpdateProfilePhoto = () => {
       })) as ProfilePhotoResponse;
       console.log("[profile-photo] upload response", response);
 
-      const profilePhotoUrl = response.profile_photo_url ?? response.profilePhotoUrl;
+      const profilePhotoUrl = response.profilePhotoUrl;
       if (!profilePhotoUrl) throw new Error("La API no devolvió la foto de perfil.");
 
       const session = getSession();
       console.log("[profile-photo] session before update", {
         profilePhoto: session?.profilePhoto,
         profilePhotoUrl: session?.profilePhotoUrl,
-        profile_photo_url: session?.profile_photo_url,
       });
       setSessionUser({
         ...(session ?? {}),
         profilePhoto: profilePhotoUrl,
         profilePhotoUrl,
-        profile_photo_url: profilePhotoUrl,
       });
       console.log("[profile-photo] session after update", {
         profilePhoto: profilePhotoUrl,
         profilePhotoUrl,
-        profile_photo_url: profilePhotoUrl,
       });
       success("Foto actualizada", "Tu perfil ya usa la nueva imagen.");
       return profilePhotoUrl;

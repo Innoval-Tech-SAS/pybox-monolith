@@ -3,8 +3,8 @@ export const MANUAL_INITIAL = {
   lastname: "",
   email: "",
   password: "",
-  phone_number: "",
+  phoneNumber: "",
   nationality: "",
 };
 
-export const DOC_INITIAL = { phone_number: "", nationality: "" };
+export const DOC_INITIAL = { phoneNumber: "", nationality: "" };

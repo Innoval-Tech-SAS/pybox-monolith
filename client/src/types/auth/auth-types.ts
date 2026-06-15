@@ -6,7 +6,7 @@ export interface LoginCredentials {
 export interface OAuthRegisterRequest {
   provider: string;
   token: string;
-  phone_number?: string;
+  phoneNumber?: string;
   nationality?: string;
 }
 

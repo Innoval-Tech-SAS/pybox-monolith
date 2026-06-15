@@ -1,9 +1,5 @@
 import { ALL_TABLES, JOIN_TYPES } from "@/segments/constants/segment.constants";
-import type { SegmentFormState } from "@/segments/types/segment.types";
-
-interface StepSummaryProps {
-  state: SegmentFormState;
-}
+import type { StepSummaryProps, SectionProps, RowProps } from "@/segments/types/step-summary-props";
 
 const tableLabel = (name: string) =>
   ALL_TABLES.find((t) => t.name === name)?.label ?? name;
@@ -57,8 +53,8 @@ export const StepSummary: React.FC<StepSummaryProps> = ({ state }) => {
       {state.joins.length > 0 && (
         <Section title="Uniones">
           {state.joins.map((j, i) => (
-            <p key={i} className="text-sm text-gray-600 dark:text-gray-400">
-              {joinLabel(j.how)}: {j.left}.{j.leftOn} = {j.right}.{j.rightOn}
+            <p key={i} className="text-sm text-gray-700 dark:text-gray-300">
+              {j.left}.{j.leftOn} <span className="text-xs text-gray-500">{joinLabel(j.how)}</span> {j.right}.{j.rightOn}
             </p>
           ))}
         </Section>
@@ -67,18 +63,16 @@ export const StepSummary: React.FC<StepSummaryProps> = ({ state }) => {
   );
 };
 
-const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="rounded-xl border border-gray-200 dark:border-gray-700">
-    <p className="border-b border-gray-100 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:border-gray-700 dark:text-gray-500">
-      {title}
-    </p>
-    <div className="px-4 py-3 space-y-1">{children}</div>
+const Section: React.FC<SectionProps> = ({ title, children }) => (
+  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-white/3">
+    <h3 className="mb-3 text-sm font-semibold text-gray-800 dark:text-white">{title}</h3>
+    <div className="space-y-2">{children}</div>
   </div>
 );
 
-const Row: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div className="flex gap-2">
-    <span className="text-sm text-gray-500 dark:text-gray-400 w-28 shrink-0">{label}</span>
-    <span className="text-sm font-medium text-gray-800 dark:text-white/90">{value}</span>
+const Row: React.FC<RowProps> = ({ label, value }) => (
+  <div className="flex justify-between py-1">
+    <span className="text-sm text-gray-600 dark:text-gray-400">{label}</span>
+    <span className="text-sm font-medium text-gray-800 dark:text-white">{value}</span>
   </div>
 );

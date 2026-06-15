@@ -1,5 +1,5 @@
 import { Calendar } from "lucide-react";
-import type { SupportTicket } from "@/types/support/support-types";
+import type { TicketListItemProps } from "@/support/types/ticket-list-item-props";
 import {
   getCategoryStyles,
   getPriorityBadgeStyles,
@@ -9,11 +9,6 @@ import {
   TICKET_PRIORITY_LABELS,
   TICKET_STATUS_LABELS,
 } from "@/support/utils/ticket-kanban-utils";
-
-interface TicketListItemProps {
-  ticket: SupportTicket;
-  onClick: () => void;
-}
 
 const STATUS_DOT: Record<string, string> = {
   open: "bg-gray-400 dark:bg-gray-500",

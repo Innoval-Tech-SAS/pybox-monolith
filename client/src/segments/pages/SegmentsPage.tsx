@@ -5,10 +5,10 @@ import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { useMyCompanies } from "@/companies/hooks/use-my-companies";
 import { usePortfolios } from "@/companies/hooks/use-portfolios";
-import { SegmentsTable } from "@/segments/components/SegmentsTable";
-import { SegmentForm } from "@/segments/components/SegmentForm/SegmentForm";
-import { SegmentExecuteModal } from "@/segments/components/SegmentExecuteModal";
-import { SegmentExecutionsHistory } from "@/segments/components/SegmentExecutionsHistory";
+import { SegmentsTable } from "@/segments/components/segments-table";
+import { SegmentForm } from "@/segments/components/segment-form/segment-form";
+import { SegmentExecuteModal } from "@/segments/components/segment-execute-modal";
+import { SegmentExecutionsHistory } from "@/segments/components/segment-executions-history";
 import { useSegments } from "@/segments/hooks/use-segments";
 import type { SegmentResponse } from "@/segments/types/segment.types";
 

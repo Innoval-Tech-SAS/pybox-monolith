@@ -2,16 +2,9 @@ import { useState } from "react";
 import { Play } from "lucide-react";
 import { Modal } from "@/ui/components/modal/modal";
 import { Loader } from "@/ui/components/loader/loader";
-import { SegmentResultsTable } from "@/segments/components/SegmentResultsTable";
+import { SegmentResultsTable } from "./segment-results-table";
 import { useSegmentExecute } from "@/segments/hooks/use-segment-execute";
-import type { SegmentResponse } from "@/segments/types/segment.types";
-
-interface SegmentExecuteModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  segment: SegmentResponse;
-  orgId: string;
-}
+import type { SegmentExecuteModalProps } from "@/segments/types/segment-execute-modal-props";
 
 export const SegmentExecuteModal: React.FC<SegmentExecuteModalProps> = ({
   isOpen,

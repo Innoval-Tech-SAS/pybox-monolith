@@ -1,17 +1,8 @@
 import { Edit2, Play, Trash2, History } from "lucide-react";
 import { Loader } from "@/ui/components/loader/loader";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/ui/components/table/table";
-import type { SegmentResponse } from "@/segments/types/segment.types";
+import type { SegmentsTableProps, ActionBtnProps } from "@/segments/types/segments-table-props";
 import { ALL_TABLES } from "@/segments/constants/segment.constants";
-
-interface SegmentsTableProps {
-  segments: SegmentResponse[];
-  loading: boolean;
-  onEdit: (segment: SegmentResponse) => void;
-  onExecute: (segment: SegmentResponse) => void;
-  onHistory: (segment: SegmentResponse) => void;
-  onDelete: (segment: SegmentResponse) => void;
-}
 
 const getMainTableLabel = (filterCriteria: Record<string, unknown>): string => {
   const tables = filterCriteria.tables as Array<{ name: string }> | undefined;
@@ -127,13 +118,6 @@ export const SegmentsTable: React.FC<SegmentsTableProps> = ({
     </>
   );
 };
-
-interface ActionBtnProps {
-  title: string;
-  onClick: () => void;
-  icon: React.ReactNode;
-  danger?: boolean;
-}
 
 const ActionBtn: React.FC<ActionBtnProps> = ({ title, onClick, icon, danger }) => (
   <button

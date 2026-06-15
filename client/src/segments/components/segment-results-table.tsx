@@ -1,9 +1,5 @@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/ui/components/table/table";
-import type { SegmentExecuteResponse } from "@/segments/types/segment.types";
-
-interface SegmentResultsTableProps {
-  result: SegmentExecuteResponse;
-}
+import type { SegmentResultsTableProps } from "@/segments/types/segment-results-table-props";
 
 export const SegmentResultsTable: React.FC<SegmentResultsTableProps> = ({ result }) => {
   if (!result.success || result.rows === 0) {

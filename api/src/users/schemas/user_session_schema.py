@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
-
+from base.schema_base import BaseSchema
 from organizations.enums.organization_enums import VerificationStatus
 from users.enums.user_enums import UserRole, UserScope
 
@@ -12,7 +11,7 @@ def session_key(user_id: int) -> str:
     return f"{SESSION_KEY_PREFIX}{user_id}"
 
 
-class OrgSessionEntry(BaseModel):
+class OrgSessionEntry(BaseSchema):
     role: UserRole
     org_name: str
     permissions: frozenset[str] = frozenset()
@@ -20,7 +19,7 @@ class OrgSessionEntry(BaseModel):
     created_at: datetime | None = None
 
 
-class UserSession(BaseModel):
+class UserSession(BaseSchema):
     user_id: int
     full_name: str
     email: str

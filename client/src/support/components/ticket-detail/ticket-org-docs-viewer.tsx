@@ -6,12 +6,7 @@ import { useTicketOrgDocs } from "@/support/hooks/use-ticket-org-docs";
 import { useResolveTicket } from "@/support/hooks/use-resolve-ticket";
 import { getSession } from "@/auth/utils/auth-session-utils";
 import { Role } from "@/types/auth/role";
-import type { SupportTicket } from "@/types/support/support-types";
-
-interface TicketOrgDocsViewerProps {
-  ticket: SupportTicket;
-  onResolved: (updated: SupportTicket) => void;
-}
+import type { TicketOrgDocsViewerProps } from "@/support/types/ticket-org-docs-viewer-props";
 
 export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
   ticket,

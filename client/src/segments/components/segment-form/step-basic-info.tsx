@@ -1,10 +1,5 @@
 import { MAIN_TABLES } from "@/segments/constants/segment.constants";
-import type { SegmentFormState } from "@/segments/types/segment.types";
-
-interface StepBasicInfoProps {
-  state: SegmentFormState;
-  update: (patch: Partial<SegmentFormState>) => void;
-}
+import type { StepBasicInfoProps } from "@/segments/types/step-basic-info-props";
 
 export const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ state, update }) => (
   <div className="space-y-5">

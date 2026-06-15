@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router";
 import { Card, CardTitle } from "@/ui/components/card";
 import { timeAgo } from "@/ui/utils/time-utils";
 import type { AppNotification, NotifType } from "@/types/notifications/notification";
+import type { NotificationDetailViewProps } from "@/notifications/types/notification-detail-view-props";
 import { NotifIcon } from "./notif-icon";
 
 const TYPE_BADGES: Record<NotifType, { label: string; className: string }> = {
@@ -26,10 +27,6 @@ const formatValue = (v: unknown): string => {
   if (typeof v === "boolean") return v ? "Sí" : "No";
   return String(v ?? "—");
 };
-
-interface NotificationDetailViewProps {
-  notification: AppNotification;
-}
 
 export const NotificationDetailView: React.FC<NotificationDetailViewProps> = ({ notification: n }) => {
   const navigate = useNavigate();

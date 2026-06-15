@@ -3,7 +3,7 @@ export interface RegisterRequest {
   lastname: string;
   email: string;
   password: string;
-  phone_number: string;
+  phoneNumber: string;
   nationality: string;
 }
 
@@ -21,40 +21,34 @@ export type OrgVerificationStatus = "pending" | "approved" | "denied";
 
 export interface OrgSessionEntry {
   role: string;
-  org_name: string;
+  orgName: string;
   permissions: string[];
-  verification_status: OrgVerificationStatus;
-  created_at?: string | null;
+  verificationStatus: OrgVerificationStatus;
+  createdAt?: string | null;
 }
 
 export interface User {
-  // /me response fields (snake_case from API)
-  user_id?: number;
-  full_name?: string;
+  // /me response fields (camelCase from API)
+  userId?: number;
+  fullName?: string;
   email: string;
   role?: string;
   scope?: string;
-  document_type?: string;
-  document_number?: string;
-  profile_photo_url?: string;
-  mfa_enabled?: boolean;
+  documentType?: string;
+  documentNumber?: string;
+  profilePhotoUrl?: string;
+  mfaEnabled?: boolean;
   orgs?: Record<string, OrgSessionEntry>;
 
   // legacy fields kept for auth session
-  id?: number;
   firstname?: string;
   lastname?: string;
   fullname?: string;
   phoneNumber?: string;
   authProvider?: string;
   nationality?: string;
-  documentType?: string;
-  documentNumber?: string;
   isActive?: boolean;
   profilePhoto?: string;
-  profilePhotoUrl?: string;
   userRole?: string;
   userScope?: string;
-  roles?: RoleAssignment[];
-  roleAssignments?: RoleAssignment[];
 }

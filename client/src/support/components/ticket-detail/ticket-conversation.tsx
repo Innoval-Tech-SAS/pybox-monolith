@@ -7,11 +7,7 @@ import { useApiClient } from "@/hooks/use-api-client";
 import { getSession } from "@/auth/utils/auth-session-utils";
 import type { SupportTicketStatus } from "@/types/support/support-types";
 import type { UserDetail } from "@/types/users/user-types";
-
-interface TicketConversationProps {
-  ticketNumber: number;
-  status: SupportTicketStatus;
-}
+import type { TicketConversationProps } from "@/support/types/ticket-conversation-props";
 
 const TERMINAL: SupportTicketStatus[] = ["resolved", "closed"];
 
@@ -21,7 +17,7 @@ export const TicketConversation: React.FC<TicketConversationProps> = ({
 }) => {
   const { apiClient } = useApiClient();
   const session = getSession();
-  const currentUserId = session?.user_id ?? session?.id;
+  const currentUserId = session?.userId;
 
   const { messages, loading } = useTicketMessages(ticketNumber);
   const { sendMessage, sending } = useSendTicketMessage(ticketNumber);
@@ -106,7 +102,7 @@ export const TicketConversation: React.FC<TicketConversationProps> = ({
                 </span>
               </div>
               <div
-                className={`max-w-[80%] rounded-xl px-3 py-2 text-sm break-words ${
+                className={`max-w-[80%] rounded-xl px-3 py-2 text-sm wrap-break-word ${
                   msg.isInternal
                     ? "border border-warning-200 bg-warning-50 text-warning-800 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300"
                     : isOwn

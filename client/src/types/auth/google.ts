@@ -1,7 +1,7 @@
 export interface GooglePayload {
   email: string;
-  given_name?: string;
-  family_name?: string;
+  givenName?: string;
+  familyName?: string;
 }
 
 export interface GoogleCredentialResponse {
@@ -14,7 +14,7 @@ declare global {
       accounts: {
         id: {
           initialize: (config: {
-            client_id: string;
+            clientId: string;
             callback: (res: GoogleCredentialResponse) => void;
           }) => void;
           prompt: () => void;

@@ -1,12 +1,5 @@
 import React from "react";
-import type { ChatWindow } from "../../types/chat/chat-types";
-
-interface ChatBubbleProps {
-  window: ChatWindow;
-  unreadCount: number;
-  onExpand: () => void;
-  onClose: () => void;
-}
+import type { ChatBubbleProps } from "@/chat/types/chat-bubble-props";
 
 export const ChatBubble: React.FC<ChatBubbleProps> = ({
   window,

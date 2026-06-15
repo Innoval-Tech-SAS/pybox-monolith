@@ -1,6 +1,7 @@
 import { Image, FileText, Download } from "lucide-react";
 import { API_URL } from "@/hooks/use-api-client";
 import { useClosureAttachments } from "@/support/hooks/use-closure-attachments";
+import type { TicketClosureAttachmentsProps } from "@/support/types/ticket-closure-attachments-props";
 
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png"]);
 
@@ -18,11 +19,6 @@ const FileIcon: React.FC<{ name: string }> = ({ name }) => {
     <FileText size={16} className="text-gray-500 dark:text-gray-400" />
   );
 };
-
-interface TicketClosureAttachmentsProps {
-  ticketNumber: number;
-  refreshTrigger?: number;
-}
 
 export const TicketClosureAttachments: React.FC<TicketClosureAttachmentsProps> = ({
   ticketNumber,

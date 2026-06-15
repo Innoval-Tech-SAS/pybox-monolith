@@ -41,9 +41,9 @@ export interface OrgModule {
 }
 
 export interface CreatePortfolioResult {
-  total_rows: number;
-  processed_rows: number;
-  failed_rows: number;
-  portfolio_id: string;
+  totalRows: number;
+  processedRows: number;
+  failedRows: number;
+  portfolioId: string;
   errors: string[];
 }

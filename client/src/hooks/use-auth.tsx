@@ -29,7 +29,7 @@ export const useAuth = () => {
       sessionStorage.setItem("refreshToken", data.refreshToken);
     const me = await apiClient("/users/me", {}).catch(() => null);
     setSessionUser(me ?? { email });
-    sessionStorage.setItem("mfaVerified", me?.mfa_enabled ? "false" : "true");
+    sessionStorage.setItem("mfaVerified", me?.mfaEnabled ? "false" : "true");
     navigate("/home", { replace: true });
   };
 

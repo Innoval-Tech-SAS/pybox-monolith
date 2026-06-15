@@ -1,6 +1,7 @@
 import { Image, FileText, Download } from "lucide-react";
 import { API_URL } from "@/hooks/use-api-client";
 import { useTicketAttachments } from "@/support/hooks/use-ticket-attachments";
+import type { TicketAttachmentsProps } from "@/support/types/ticket-attachments-props";
 
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png"]);
 
@@ -18,11 +19,6 @@ const FileIcon: React.FC<{ name: string }> = ({ name }) => {
     <FileText size={16} className="text-gray-500 dark:text-gray-400" />
   );
 };
-
-interface TicketAttachmentsProps {
-  ticketNumber: number;
-  refreshTrigger?: number;
-}
 
 export const TicketAttachments: React.FC<TicketAttachmentsProps> = ({ ticketNumber, refreshTrigger }) => {
   const { attachments, loading } = useTicketAttachments(ticketNumber, refreshTrigger);

@@ -1,15 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { resolveProfilePhotoUrl } from "@/profile/utils/profile-photo-url";
-import type { ChatAvailableUser, ChatSummary } from "../../types/chat/chat-types";
-
-interface AvailableUsersPanelProps {
-  users: ChatAvailableUser[];
-  chats: ChatSummary[];
-  onSelect: (user: ChatAvailableUser) => void;
-  onOpenChat: (chatId: string, title: string, peerAvatar: string | null) => void;
-  onClose: () => void;
-}
+import type { AvailableUsersPanelProps } from "@/chat/types/available-users-panel-props";
 
 const Avatar: React.FC<{ name: string; url: string | null; size?: number }> = ({ name, url, size = 8 }) => {
   const resolved = resolveProfilePhotoUrl(url);

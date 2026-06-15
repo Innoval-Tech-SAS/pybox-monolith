@@ -4,14 +4,7 @@ import { Loader } from "@/ui/components/loader/loader";
 import { Badge } from "@/ui/components/badge";
 import { Modal } from "@/ui/components/modal/modal";
 import { useSegmentExecutions } from "@/segments/hooks/use-segment-execute";
-import type { SegmentResponse } from "@/segments/types/segment.types";
-
-interface SegmentExecutionsHistoryProps {
-  isOpen: boolean;
-  onClose: () => void;
-  segment: SegmentResponse;
-  orgId: string;
-}
+import type { SegmentExecutionsHistoryProps } from "@/segments/types/segment-executions-history-props";
 
 export const SegmentExecutionsHistory: React.FC<SegmentExecutionsHistoryProps> = ({
   isOpen,

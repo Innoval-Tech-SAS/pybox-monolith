@@ -1,20 +1,13 @@
 import { ChevronLeft } from "lucide-react";
 import { StepIndicator } from "@/ui/components/step-indicator";
 import { Loader } from "@/ui/components/loader/loader";
-import { StepBasicInfo } from "./StepBasicInfo";
-import { StepTablesFilters } from "./StepTablesFilters";
-import { StepJoins } from "./StepJoins";
-import { StepSummary } from "./StepSummary";
+import { StepBasicInfo } from "./step-basic-info";
+import { StepTablesFilters } from "./step-tables-filters";
+import { StepJoins } from "./step-joins";
+import { StepSummary } from "./step-summary";
 import { useSegmentForm } from "@/segments/hooks/use-segment-form";
 import { SEGMENT_STEPS } from "@/segments/constants/segment.constants";
-import type { SegmentResponse } from "@/segments/types/segment.types";
-
-interface SegmentFormProps {
-  orgId: string;
-  onSuccess: () => void;
-  onCancel: () => void;
-  existing?: SegmentResponse;
-}
+import type { SegmentFormProps } from "@/segments/types/segment-form-props";
 
 export const SegmentForm: React.FC<SegmentFormProps> = ({
   orgId,
