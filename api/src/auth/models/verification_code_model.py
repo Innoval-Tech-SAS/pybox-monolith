@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import ENUM, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.database import Base
-from messaging.enums.notification_enums import VerificationChannel
+from auth.enums.notification_enums import VerificationChannel
 
 
 class VerificationCodeModel(Base):

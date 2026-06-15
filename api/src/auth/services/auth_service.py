@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from auth.enums.auth_enums import AuthProvider
 
 from config.logger import logger
-from messaging.dependencies import get_verification_service
-from messaging.enums.notification_enums import VerificationChannel
-from messaging.exceptions import CodeAlreadyUsedException, CodeExpiredException, CodeNotFoundException
+from auth.factories import get_verification_service
+from auth.enums.notification_enums import VerificationChannel
+from auth.exceptions import CodeAlreadyUsedException, CodeExpiredException, CodeNotFoundException
 from users.repository.user_repository import UserRepository
 from users.repository.role_assignment_repository import RoleAssignmentRepository
 from users.models.user_model import UserModel

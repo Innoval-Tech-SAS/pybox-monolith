@@ -6,16 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.logger import logger
 from tools.config_tools import get_or_throw
-from messaging.enums.notification_enums import VerificationChannel
-from messaging.exceptions import (
+from auth.enums.notification_enums import VerificationChannel
+from auth.exceptions import (
     CodeAlreadyUsedException,
     CodeExpiredException,
     CodeNotFoundException,
 )
-from messaging.models.verification_code_model import VerificationCodeModel
-from messaging.repositories.verification_code_repository import (
-    VerificationCodeRepository,
-)
+from auth.models.verification_code_model import VerificationCodeModel
+from auth.repository.verification_code_repository import VerificationCodeRepository
 
 EXPIRATION_MINUTES = 5
 

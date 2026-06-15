@@ -4,9 +4,9 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from base.repository_base import RepositoryBase
-from messaging.models.verification_code_model import VerificationCodeModel
-from messaging.enums.notification_enums import VerificationChannel
-from messaging.exceptions import (
+from auth.models.verification_code_model import VerificationCodeModel
+from auth.enums.notification_enums import VerificationChannel
+from auth.exceptions import (
     CodeAlreadyUsedException,
     CodeExpiredException,
     CodeNotFoundException,

@@ -1,10 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from messaging.enums.notification_enums import VerificationChannel
+from auth.enums.notification_enums import VerificationChannel
+from auth.constants.verification_constants import EMAIL_BODY as _EMAIL_BODY
+from auth.services.verification_service import VerificationService
 from messaging.providers.nrs360_provider import NRS360Provider
-from messaging.services.verification_service import VerificationService
-
-from ..constants.verification_contants import EMAIL_BODY as _EMAIL_BODY
 
 
 class EmailVerificationService(VerificationService):
