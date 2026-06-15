@@ -48,10 +48,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-72 h-[420px] rounded-t-xl bg-white dark:bg-gray-dark shadow-xl border border-gray-200 dark:border-gray-800">
+    <div className="flex flex-col w-72 h-105 rounded-t-xl bg-white dark:bg-gray-dark shadow-xl border border-gray-200 dark:border-gray-800">
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 dark:border-gray-800 rounded-t-xl">
-        <div className="relative flex-shrink-0">
+        <div className="relative shrink-0">
           {win.peerAvatar ? (
             <img
               src={win.peerAvatar}
@@ -113,7 +113,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 </span>
               )}
               <div
-                className={`max-w-[85%] px-3 py-1.5 text-sm break-words ${
+                className={`max-w-[85%] px-3 py-1.5 text-sm wrap-break-word ${
                   isOwn
                     ? "bg-brand-500 text-white rounded-t-xl rounded-bl-xl"
                     : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white/90 rounded-t-xl rounded-br-xl"
@@ -149,7 +149,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <button
           onClick={submit}
           disabled={!input.trim()}
-          className="flex-shrink-0 w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="shrink-0 w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           title="Enviar"
         >
           <svg
