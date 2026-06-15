@@ -6,6 +6,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
 from auth.enums.auth_enums import AuthProvider
+from config.logger import logger
 from tools.config_tools import get_or_throw
 
 
@@ -39,8 +40,10 @@ class OAuthProviderService:
                 token,
                 google_requests.Request(),
                 client_id,
+                clock_skew_in_seconds=10,
             )
         except ValueError as error:
+            logger.error("[oauth] google_token_error | %s", error)
             raise ValueError("Token de Google inválido.") from error
 
         email = str(payload.get("email") or "").strip().lower()
