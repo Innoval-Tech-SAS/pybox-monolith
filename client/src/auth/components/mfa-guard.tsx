@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import { OtpInput } from "@/ui/components/inputs/otp-input";
 import { useVerifyOtp } from "@/hooks/use-verify-otp";
 import { Modal } from "@/ui/components/modal/modal";
-
-interface MfaGuardProps {
-  children: React.ReactNode;
-}
+import type { MfaGuardProps } from "@/auth/types/mfa-guard-props";
 
 export const MfaGuard: React.FC<MfaGuardProps> = ({ children }) => {
   const verified = sessionStorage.getItem("mfaVerified");

@@ -21,6 +21,7 @@ import type {
   TemplatePreviewResponse,
   TemplateStatus,
 } from "@/types/templates/template-types";
+import type { PreviewModalProps, SendModalProps } from "@/templates/types/templates-page-props";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,13 +43,6 @@ function extractVariables(source: string): string[] {
 }
 
 // ─── preview modal ─────────────────────────────────────────────────────────────
-
-interface PreviewModalProps {
-  isOpen: boolean;
-  template: Template | null;
-  onClose: () => void;
-  onPreview: (id: string, sub: Record<string, string>) => Promise<TemplatePreviewResponse | null>;
-}
 
 const TemplatePreviewModal: React.FC<PreviewModalProps> = ({ isOpen, template, onClose, onPreview }) => {
   const variables = template
@@ -130,14 +124,6 @@ const TemplatePreviewModal: React.FC<PreviewModalProps> = ({ isOpen, template, o
 };
 
 // ─── send modal ────────────────────────────────────────────────────────────────
-
-interface SendModalProps {
-  isOpen: boolean;
-  template: Template | null;
-  saving: boolean;
-  onClose: () => void;
-  onSend: (id: string, to: string, subject: string, sub: Record<string, string>) => Promise<void>;
-}
 
 const TemplateSendModal: React.FC<SendModalProps> = ({ isOpen, template, saving, onClose, onSend }) => {
   const variables = template

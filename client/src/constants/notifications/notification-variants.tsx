@@ -6,12 +6,7 @@ import {
   InfoIcon,
 } from "@/ui/icons";
 import { NotificationVariant } from "@/types/props/notification-props";
-
-interface VariantStyle {
-  borderColor: string;
-  iconBg: string;
-  icon: React.ReactElement;
-}
+import type { VariantStyle } from "./types/notification-variant-style";
 
 export const notificationVariantStyles: Record<NotificationVariant, VariantStyle> = {
   success: {

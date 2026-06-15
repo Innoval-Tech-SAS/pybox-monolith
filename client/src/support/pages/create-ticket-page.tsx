@@ -23,6 +23,8 @@ import { useTicketOrgs } from "@/support/hooks/use-ticket-orgs";
 import { useCreateTicket } from "@/support/hooks/use-create-ticket";
 import { useUploadTicketAttachments } from "@/support/hooks/use-upload-ticket-attachments";
 import type { TicketCategory } from "@/types/support/support-types";
+import type { CreateTicketStepDef } from "@/support/types/create-ticket-step-def";
+import type { CategoryCardProps } from "@/support/types/category-card-props";
 
 const ALLOWED_TYPES = [".doc", ".jpg", ".jpeg", ".png"];
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png"]);
@@ -48,13 +50,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 const INPUT_BASE =
   "w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:border-gray-700 dark:focus:border-brand-800";
 
-interface StepDef {
-  label: string;
-  description: string;
-  icon: React.ReactNode;
-}
-
-const StepSidebar: React.FC<{ steps: StepDef[]; current: number }> = ({ steps, current }) => (
+const StepSidebar: React.FC<{ steps: CreateTicketStepDef[]; current: number }> = ({ steps, current }) => (
   <div className="flex flex-col gap-0">
     {steps.map((s, i) => {
       const n = i + 1;
@@ -109,12 +105,6 @@ const StepSidebar: React.FC<{ steps: StepDef[]; current: number }> = ({ steps, c
     })}
   </div>
 );
-
-interface CategoryCardProps {
-  category: TicketCategory;
-  selected: boolean;
-  onSelect: () => void;
-}
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ category, selected, onSelect }) => {
   const Icon = ICON_MAP[category.icon] ?? HelpCircle;

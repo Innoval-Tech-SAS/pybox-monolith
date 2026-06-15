@@ -2,6 +2,7 @@ import { Bell, RefreshCw, UploadCloud } from "lucide-react";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
 import { CSV_TYPES } from "../constants/portfolio-file-types";
 import { useUploadPortfolioCsv, type CsvUploadMode } from "../hooks/use-upload-portfolio-csv";
+import type { EditPortfolioFormProps } from "@/companies/types/edit-portfolio-form-props";
 
 const MODE_META: Record<CsvUploadMode, { title: string; description: string; buttonLabel: string }> = {
   append: {
@@ -15,10 +16,6 @@ const MODE_META: Record<CsvUploadMode, { title: string; description: string; but
     buttonLabel: "Actualizar cartera",
   },
 };
-
-interface EditPortfolioFormProps {
-  mode: CsvUploadMode;
-}
 
 export const EditPortfolioForm: React.FC<EditPortfolioFormProps> = ({ mode }) => {
   const {

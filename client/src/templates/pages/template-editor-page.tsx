@@ -13,6 +13,7 @@ import type {
   TemplateChannel,
   TemplateStatus,
 } from "@/types/templates/template-types";
+import type { TemplateEditorFormState } from "@/templates/types/template-editor-form-state";
 
 const STATUS_OPTIONS = [
   { value: "DRAFT", label: "Borrador" },
@@ -25,18 +26,7 @@ const CHANNEL_OPTIONS = [
   { value: "SMS", label: "SMS" },
 ];
 
-interface FormState {
-  name: string;
-  channel: TemplateChannel;
-  status: TemplateStatus;
-  body: string;
-  subject: string;
-  senderName: string;
-  senderEmail: string;
-  replyTo: string;
-}
-
-const EMPTY: FormState = {
+const EMPTY: TemplateEditorFormState = {
   name: "",
   channel: "EMAIL",
   status: "DRAFT",
@@ -55,7 +45,7 @@ export const TemplateEditorPage: React.FC = () => {
   const { apiClient } = useApiClient();
   const isEditing = !!id;
 
-  const [form, setForm] = useState<FormState>(EMPTY);
+  const [form, setForm] = useState<TemplateEditorFormState>(EMPTY);
   const [loadingTemplate, setLoadingTemplate] = useState(isEditing);
   const [saving, setSaving] = useState(false);
 
@@ -82,8 +72,8 @@ export const TemplateEditorPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const set = <K extends keyof FormState>(key: K) =>
-    (value: FormState[K]) =>
+  const set = <K extends keyof TemplateEditorFormState>(key: K) =>
+    (value: TemplateEditorFormState[K]) =>
       setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -228,7 +218,7 @@ export const TemplateEditorPage: React.FC = () => {
           </Card>
 
           {/* Editor visual */}
-          <Card className="!p-4 lg:!p-5">
+          <Card className="p-4! lg:p-5!">
             <CardTitle>
               {isEmail ? "Diseño del correo" : "Contenido del mensaje"}
             </CardTitle>

@@ -10,6 +10,7 @@ import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { API_URL } from "@/hooks/use-api-client";
 import { useOrgSettings } from "../hooks/use-org-settings";
+import type { DocType, DocFileRowProps } from "@/companies/types/doc-file-row-props";
 
 const FISCAL_DOC_OPTIONS = [
   { value: "NIT", label: "NIT – Número de Identificación Tributaria" },
@@ -64,16 +65,6 @@ const resolveFileUrl = (path: string | null | undefined): string | null => {
 };
 
 const fileNameFromUrl = (url: string) => url.split("/").pop() ?? url;
-
-type DocType = "fiscal" | "mercantil" | "representante";
-
-interface DocFileRowProps {
-  label: string;
-  fileUrl: string | null | undefined;
-  docType: DocType;
-  saving: boolean;
-  onUpload: (docType: DocType, file: File) => void;
-}
 
 const DocFileRow: React.FC<DocFileRowProps> = ({ label, fileUrl, docType, saving, onUpload }) => {
   const inputRef = useRef<HTMLInputElement>(null);

@@ -4,10 +4,7 @@ import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { useCountries } from "@/hooks/use-countries";
 import { useSetPhone } from "@/hooks/use-set-phone";
-
-interface SetPhoneStepProps {
-  onDone: () => void;
-}
+import type { SetPhoneStepProps } from "@/onboarding/types/set-phone-step-props";
 
 export const SetPhoneStep: React.FC<SetPhoneStepProps> = ({ onDone }) => {
   const [phoneNumber, setPhoneNumber] = useState("");

@@ -14,11 +14,7 @@ import { TicketListItem } from "@/support/components/ticket-list/ticket-list-ite
 import { getTicketKanbanGroups, mapTicketToKanban, TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from "@/support/utils/ticket-kanban-utils";
 import type { SupportTicket, SupportTicketPriority, SupportTicketStatus, TicketFilterParams } from "@/types/support/support-types";
 import type { TicketKanbanGroupKey } from "@/types/support/ticket-kanban-types";
-
-interface DateGroup {
-  label: string;
-  tickets: SupportTicket[];
-}
+import type { DateGroup } from "@/support/types/date-group";
 
 function groupByDate(tickets: SupportTicket[]): DateGroup[] {
   const now = new Date();

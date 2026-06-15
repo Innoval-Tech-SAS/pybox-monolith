@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import { Input } from "@/ui/components/inputs/input";
 import { Label } from "@/ui/components/inputs/label";
 import { useSetOnboardingPassword } from "@/hooks/use-set-onboarding-password";
-
-interface SetPasswordStepProps {
-  onDone: () => void;
-}
+import type { SetPasswordStepProps } from "@/onboarding/types/set-password-step-props";
 
 export const SetPasswordStep: React.FC<SetPasswordStepProps> = ({ onDone }) => {
   const [password, setPassword] = useState("");

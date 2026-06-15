@@ -2,12 +2,7 @@ import { useEffect, useRef } from "react";
 import grapesjs, { type Editor } from "grapesjs";
 import newsletterPlugin from "grapesjs-preset-newsletter";
 import "grapesjs/dist/css/grapes.min.css";
-
-interface TemplateEditorProps {
-  value: string;
-  onChange: (html: string) => void;
-  channel?: "EMAIL" | "SMS";
-}
+import type { TemplateEditorProps } from "@/templates/types/template-editor-props";
 
 export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   value,

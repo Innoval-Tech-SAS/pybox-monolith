@@ -1,12 +1,6 @@
 import type { ReactNode } from "react";
 import { useHasPermission } from "@/auth/hooks/use-has-permission";
-
-interface PermissionGuardProps {
-  permission: string;
-  orgId?: string;
-  children: ReactNode;
-  fallback?: ReactNode;
-}
+import type { PermissionGuardProps } from "@/ui/types/permission-guard-props";
 
 export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   permission,

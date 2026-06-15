@@ -1,15 +1,4 @@
-interface InputProps {
-  type?: string;
-  id?: string;
-  name?: string;
-  placeholder?: string;
-  value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  disabled?: boolean;
-  error?: boolean;
-  hint?: string;
-  label?: string;
-}
+import type { InputProps } from "@/ui/types/input-props";
 
 export const Input: React.FC<InputProps> = ({
   type = "text",

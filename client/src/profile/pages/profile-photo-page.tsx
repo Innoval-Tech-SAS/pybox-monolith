@@ -5,6 +5,7 @@ import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { useUpdateProfilePhoto } from "../hooks/use-update-profile-photo";
 import { useProfilePhotoTour } from "../hooks/use-profile-photo-tour";
+import type { SelectedImage, Point } from "@/profile/types/profile-photo-page-types";
 
 const OUTPUT_SIZE = 512;
 const VIEW_SIZE = 288;
@@ -12,19 +13,6 @@ const PREVIEW_SIZE = 96;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 3;
 const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
-
-interface SelectedImage {
-  url: string;
-  name: string;
-  size: number;
-  width: number;
-  height: number;
-}
-
-interface Point {
-  x: number;
-  y: number;
-}
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 

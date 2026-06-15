@@ -9,6 +9,7 @@ import { usePermissionsCatalog } from "../hooks/use-permissions-catalog";
 import { useUserPermissions } from "../hooks/use-user-permissions";
 import { useUserPortfolioAccess } from "../hooks/use-user-portfolio-access";
 import type { ManagedUserCreate } from "@/types/users/managed-user-types";
+import type { CreateUserStepDef } from "@/users/types/create-user-step-def";
 
 const ROLE_LABELS: Record<string, string> = {
   ADMINISTRADOR: "Administrador",
@@ -29,13 +30,7 @@ const INPUT_BASE =
 
 // ─── Vertical step sidebar ───────────────────────────────────────────────────
 
-interface StepDef {
-  label: string;
-  description: string;
-  icon: React.ReactNode;
-}
-
-const StepSidebar: React.FC<{ steps: StepDef[]; current: number }> = ({ steps, current }) => (
+const StepSidebar: React.FC<{ steps: CreateUserStepDef[]; current: number }> = ({ steps, current }) => (
   <div className="flex flex-col gap-0">
     {steps.map((s, i) => {
       const n = i + 1;
