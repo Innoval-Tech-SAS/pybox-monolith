@@ -2,8 +2,8 @@ import {
   BarChart2,
   CreditCard,
   FolderOpen,
+  Mail,
   Settings,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import type { OrgModule } from "@/types/companies/company-types";
@@ -54,6 +54,15 @@ export const ORG_MODULES: OrgModule[] = [
   //   path: null,
   //   adminOnly: true,
   // },
+  {
+    key: "templates",
+    title: "Plantillas",
+    description: "Diseña y gestiona plantillas de email y SMS.",
+    icon: <Mail size={24} className="text-white" />,
+    gradient: "from-violet-500 to-violet-600",
+    path: "/my-companies/templates",
+    requiredPermission: "org.templates",
+  },
   {
     key: "settings",
     title: "Configuración",

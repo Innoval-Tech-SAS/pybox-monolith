@@ -33,6 +33,8 @@ import { UserPortfoliosPage } from "./users/pages/user-portfolios-page";
 import { CreateUserPage } from "./users/pages/create-user-page";
 import { ChatPage } from "./chat/pages/chat-page";
 import { SegmentsPage } from "./segments/pages/SegmentsPage";
+import { TemplatesPage } from "./templates/pages/templates-page";
+import { TemplateEditorPage } from "./templates/pages/template-editor-page";
 import { NotFound } from "./ui/pages/not-found";
 
 export const noAuthRouter = [
@@ -134,6 +136,18 @@ export const authRouter = [
   {
     path: "/my-companies/payment-methods/:id/edit",
     element: <EditPaymentMethodPage />,
+  },
+  {
+    path: "/my-companies/templates",
+    element: <TemplatesPage />,
+  },
+  {
+    path: "/my-companies/templates/new",
+    element: <TemplateEditorPage />,
+  },
+  {
+    path: "/my-companies/templates/:id/edit",
+    element: <TemplateEditorPage />,
   },
   {
     path: "/my-users",

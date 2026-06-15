@@ -27,7 +27,6 @@ class SupportTicketModel(AuditModel):
         ENUM(SupportTicketPriority),
         nullable=False,
         default=SupportTicketPriority.MEDIUM,
-        server_default=SupportTicketPriority.MEDIUM.value,
         name="prioridad",
     )
     organization_id: Mapped[uuid.UUID | None] = mapped_column(
