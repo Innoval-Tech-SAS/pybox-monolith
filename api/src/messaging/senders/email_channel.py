@@ -4,6 +4,8 @@ from messaging.providers.nrs360_provider import NRS360Provider
 
 
 class EmailChannel:
+    sends_per_recipient = True
+
     def __init__(self, provider: NRS360Provider) -> None:
         self._provider = provider
 

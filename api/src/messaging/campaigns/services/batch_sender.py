@@ -25,16 +25,13 @@ class BatchSender:
 
         stats = BatchStats()
         unique_recipients: set[str] = set()
-        ch = channel_name.upper()
+        sender = self._gateway.get_sender(channel_name)
 
         chunks = [inputs[i : i + BATCH_SIZE] for i in range(0, len(inputs), BATCH_SIZE)]
 
         for chunk in chunks:
             try:
-                if ch == "EMAIL":
-                    ok, fail = await self._send_email_chunk(chunk, channel_name)
-                else:
-                    ok, fail = await self._send_sms_chunk(chunk, channel_name)
+                ok, fail = await self._send_chunk(chunk, channel_name, sender.sends_per_recipient)
                 stats.success_count += ok
                 stats.failure_count += fail
                 stats.total_sent += len(chunk)
@@ -94,30 +91,17 @@ class BatchSender:
         )
         await self._repo.add(contact)
 
-    async def _send_sms_chunk(
+    async def _send_chunk(
         self,
         chunk: list[SendInput],
         channel_name: str,
-        sender: str = "Template",
+        sends_per_recipient: bool,
     ) -> tuple[int, int]:
-        to = [inp.recipient for inp in chunk]
-        sub = [inp.sub[0] if inp.sub else {} for inp in chunk]
-        message = chunk[0].content
+        if sends_per_recipient:
+            return await self._send_individually(chunk, channel_name)
+        return await self._send_bulk(chunk, channel_name)
 
-        ok, err = await self._send_with_retry(channel_name, to, message, sender=sender, sub=sub)
-        now = datetime.now(timezone.utc) if ok else None
-        status = ContactStatus.SENT if ok else ContactStatus.FAILED
-
-        for inp in chunk:
-            await self._persist_contact(inp, status, None, err, now)
-
-        return (len(chunk), 0) if ok else (0, len(chunk))
-
-    async def _send_email_chunk(
-        self,
-        chunk: list[SendInput],
-        channel_name: str,
-    ) -> tuple[int, int]:
+    async def _send_individually(self, chunk: list[SendInput], channel_name: str) -> tuple[int, int]:
         success = 0
         failure = 0
         for inp in chunk:
@@ -136,3 +120,17 @@ class BatchSender:
             else:
                 failure += 1
         return success, failure
+
+    async def _send_bulk(self, chunk: list[SendInput], channel_name: str, sender: str = "Template") -> tuple[int, int]:
+        to = [inp.recipient for inp in chunk]
+        sub = [inp.sub[0] if inp.sub else {} for inp in chunk]
+        message = chunk[0].content
+
+        ok, err = await self._send_with_retry(channel_name, to, message, sender=sender, sub=sub)
+        now = datetime.now(timezone.utc) if ok else None
+        status = ContactStatus.SENT if ok else ContactStatus.FAILED
+
+        for inp in chunk:
+            await self._persist_contact(inp, status, None, err, now)
+
+        return (len(chunk), 0) if ok else (0, len(chunk))
