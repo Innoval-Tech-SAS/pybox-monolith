@@ -1,9 +1,9 @@
-from typing import Any
+﻿from typing import Any
 
-from messaging.channels.call_channel import CallChannel
-from messaging.channels.email_channel import EmailChannel
-from messaging.channels.sms_channel import SmsChannel
-from messaging.channels.whatsapp_channel import WhatsAppChannel
+from messaging.senders.call_channel import CallChannel
+from messaging.senders.email_channel import EmailChannel
+from messaging.senders.sms_channel import SmsChannel
+from messaging.senders.whatsapp_channel import WhatsAppChannel
 from messaging.constants import channels
 from messaging.providers.nrs360_provider import NRS360Provider
 

@@ -1,4 +1,4 @@
-from channels.enums.channel_enums import ChannelName as ChannelName
+﻿from messaging.channels.enums.channel_enums import ChannelName as ChannelName
 
 SMS = ChannelName.SMS.value
 EMAIL = ChannelName.EMAIL.value

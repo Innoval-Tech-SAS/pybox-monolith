@@ -1,8 +1,8 @@
-import httpx
+﻿import httpx
 
-from config.logger import logger
+from core.config.logger import logger
 from messaging.constants.nrs360_constants import EMAIL_URL, SMS_URL
-from tools.config_tools import get_or_throw
+from core.tools.config_tools import get_or_throw
 
 
 class NRS360Provider:
