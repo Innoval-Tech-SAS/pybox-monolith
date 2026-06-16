@@ -1,4 +1,5 @@
 import campaigns.models.campaign_model  # noqa: F401
+import channels.models.channel_model  # noqa: F401
 import contacts.models.contact_model  # noqa: F401
 import contact_methods.models.contact_method_model  # noqa: F401
 import credits.models.credit_model  # noqa: F401

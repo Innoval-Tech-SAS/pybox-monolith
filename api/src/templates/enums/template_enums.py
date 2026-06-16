@@ -1,13 +1,9 @@
 from enum import Enum
 
-from messaging.constants import channels
+from channels.enums.channel_enums import ChannelName
 
 
-class TemplateChannel(str, Enum):
-    EMAIL = channels.EMAIL
-    SMS = channels.SMS
-    WHATSAPP = channels.WHATSAPP
-    CALL = channels.CALL
+TemplateChannel = ChannelName
 
 
 class TemplateStatus(str, Enum):
