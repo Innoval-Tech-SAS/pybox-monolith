@@ -1,5 +1,3 @@
-from typing import cast
-
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,9 +39,9 @@ async def seed_admin(session: AsyncSession) -> None:
     await session.flush()
 
     session.add(RoleAssignmentModel(
-        user_id=cast(int, user.id),
+        user_id=user.id,
         role=UserRole.ADMIN,
         scope=UserScope.GLOBAL,
     ))
     await session.commit()
-    logger.info("[seed] admin_created | user_id=%d", user.id)
+    logger.info("[seed] admin_created | user_id=%s", user.id)

@@ -83,3 +83,27 @@ async def delete_campaign(
 ) -> None:
     require_org_admin(session, str(organization_id))
     await service.delete(campaign_id, organization_id)
+
+
+@router.post("/{campaign_id}/activate", response_model=CampaignResponse, summary="Activar campaña")
+async def activate_campaign(
+    campaign_id: uuid.UUID,
+    session: CurrentSession,
+    service: CampaignServiceDep,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+) -> CampaignResponse:
+    require_org_admin(session, str(organization_id))
+    campaign = await service.activate(campaign_id, organization_id)
+    return CampaignResponse.model_validate(campaign)
+
+
+@router.post("/{campaign_id}/pause", response_model=CampaignResponse, summary="Pausar campaña")
+async def pause_campaign(
+    campaign_id: uuid.UUID,
+    session: CurrentSession,
+    service: CampaignServiceDep,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+) -> CampaignResponse:
+    require_org_admin(session, str(organization_id))
+    campaign = await service.pause(campaign_id, organization_id)
+    return CampaignResponse.model_validate(campaign)

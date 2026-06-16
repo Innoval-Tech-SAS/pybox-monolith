@@ -1,6 +1,9 @@
 import messaging.campaigns.models.campaign_model  # noqa: F401
+import messaging.campaigns.models.campaign_time_model  # noqa: F401
+import messaging.campaigns.models.campaign_result_model  # noqa: F401
 import messaging.channels.models.channel_model  # noqa: F401
 import messaging.contacts.models.contact_model  # noqa: F401
+import messaging.templates.models.template_model  # noqa: F401
 import receivables.contact_methods.models.contact_method_model  # noqa: F401
 import receivables.credits.models.credit_model  # noqa: F401
 import receivables.credits.models.credit_adjustment_model  # noqa: F401

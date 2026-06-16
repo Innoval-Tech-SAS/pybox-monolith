@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema
-from messaging.campaigns.enums.campaign_enums import CampaignStatus
+from messaging.campaigns.enums.campaign_enums import CampaignStatus, Periodicity
 
 
 class CampaignResponse(BaseSchema):
@@ -20,6 +20,11 @@ class CampaignResponse(BaseSchema):
     scheduled_at: datetime | None = Field(default=None, description="Fecha y hora programada")
     timezone: str = Field(description="Zona horaria de la campaña")
     fallback: bool = Field(description="Indica si se usa canal de fallback")
+    segment_id: uuid.UUID | None = Field(default=None, description="ID del segmento de destinatarios")
+    template_id: uuid.UUID | None = Field(default=None, description="ID de la plantilla de mensaje")
+    periodicity: Periodicity | None = Field(default=None, description="Periodicidad de ejecución")
+    time_to_send: str | None = Field(default=None, description="Hora de envío HH:MM")
+    is_immediate: bool = Field(default=False, description="Enviar inmediatamente al activar")
     created_at: datetime = Field(description="Fecha de creación")
     updated_at: datetime | None = Field(default=None, description="Fecha de última actualización")
 
@@ -35,6 +40,11 @@ class CampaignCreateRequest(BaseSchema):
     scheduled_at: datetime | None = Field(default=None, description="Fecha y hora programada")
     timezone: str = Field(default="UTC", description="Zona horaria")
     fallback: bool = Field(default=True, description="Usar canal de fallback")
+    segment_id: uuid.UUID | None = Field(default=None, description="ID del segmento")
+    template_id: uuid.UUID | None = Field(default=None, description="ID de la plantilla")
+    periodicity: Periodicity | None = Field(default=None, description="Periodicidad")
+    time_to_send: str | None = Field(default=None, description="Hora HH:MM para campañas recurrentes")
+    is_immediate: bool = Field(default=False, description="Enviar inmediatamente al activar")
 
 
 class CampaignUpdateRequest(BaseSchema):
@@ -48,3 +58,8 @@ class CampaignUpdateRequest(BaseSchema):
     scheduled_at: datetime | None = Field(default=None, description="Nueva fecha programada")
     timezone: str | None = Field(default=None, description="Nueva zona horaria")
     fallback: bool | None = Field(default=None, description="Usar canal de fallback")
+    segment_id: uuid.UUID | None = Field(default=None, description="ID del segmento")
+    template_id: uuid.UUID | None = Field(default=None, description="ID de la plantilla")
+    periodicity: Periodicity | None = Field(default=None, description="Periodicidad")
+    time_to_send: str | None = Field(default=None, description="Hora HH:MM")
+    is_immediate: bool | None = Field(default=None, description="Enviar inmediatamente")

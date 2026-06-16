@@ -11,6 +11,14 @@ class CampaignStatus(str, Enum):
     CANCELLED = "cancelada"
 
 
+class Periodicity(str, Enum):
+    ONCE = "once"
+    IMMEDIATE = "immediate"
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+
+
 class DeliveryStatus(str, Enum):
     PENDING = "pendiente"  # En cola, no enviado aún
     QUEUED = "en cola"  # Enviado a Sent, esperando respuesta

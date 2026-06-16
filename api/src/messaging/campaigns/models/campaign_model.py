@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import AuditModel
-from messaging.campaigns.enums.campaign_enums import CampaignStatus
+from messaging.campaigns.enums.campaign_enums import CampaignStatus, Periodicity
 
 
 class CampaignModel(AuditModel):
@@ -62,3 +62,21 @@ class CampaignModel(AuditModel):
     timezone: Mapped[str] = mapped_column(String(50), default="UTC", name="zona_horaria")
 
     fallback: Mapped[bool] = mapped_column(Boolean, default=True, name="fallback")
+
+    segment_id: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("segmentos.id"), nullable=True, index=True, name="id_segmento"
+    )
+
+    template_id: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("plantillas.id"), nullable=True, name="id_plantilla"
+    )
+
+    periodicity: Mapped[Periodicity | None] = mapped_column(
+        Enum(Periodicity), nullable=True, name="periodicidad"
+    )
+
+    time_to_send: Mapped[str | None] = mapped_column(
+        String(8), nullable=True, name="hora_de_envio"
+    )
+
+    is_immediate: Mapped[bool] = mapped_column(Boolean, default=False, name="es_inmediato")
