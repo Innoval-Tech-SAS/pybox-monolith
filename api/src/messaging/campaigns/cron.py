@@ -1,9 +1,9 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 
 from core.config.logger import logger
 from core.database.database import db
-from messaging.campaigns.services.automation_service import tick_now
+from messaging.campaigns.services.automation_service import make_automation_service
 
 _running = False
 
@@ -16,7 +16,7 @@ async def _job() -> None:
     _running = True
     try:
         async with db.get_session() as session:
-            processed = await tick_now(session)
+            processed = await make_automation_service(session).tick()
         logger.info("[campaigns_cron] tick: %d campañas procesadas", processed)
     except Exception:
         logger.exception("[campaigns_cron] error en tick")
@@ -28,7 +28,7 @@ def create_campaigns_scheduler() -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         _job,
-        IntervalTrigger(minutes=1),
+        CronTrigger(second=0),
         id="campaigns_automation",
         max_instances=1,
         coalesce=True,

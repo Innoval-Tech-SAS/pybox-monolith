@@ -9,6 +9,7 @@ from messaging.campaigns.schemas.campaign_schemas import (
     CampaignResponse,
     CampaignUpdateRequest,
 )
+from messaging.campaigns.services.automation_service import is_executing
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from core.security.permissions import ORG_CAMPAIGNS
@@ -95,6 +96,22 @@ async def activate_campaign(
     require_org_admin(session, str(organization_id))
     campaign = await service.activate(campaign_id, organization_id)
     return CampaignResponse.model_validate(campaign)
+
+
+@router.get("/{campaign_id}/status", summary="Estado de ejecución de la campaña")
+async def campaign_execution_status(
+    campaign_id: uuid.UUID,
+    session: CurrentSession,
+    service: CampaignServiceDep,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+) -> dict:
+    require_permission(ORG_CAMPAIGNS, session, str(organization_id))
+    campaign = await service.get_by_id(campaign_id, organization_id)
+    return {
+        "campaign_id": campaign.id,
+        "status": campaign.status,
+        "is_executing": is_executing(campaign_id),
+    }
 
 
 @router.post("/{campaign_id}/pause", response_model=CampaignResponse, summary="Pausar campaña")

@@ -66,7 +66,6 @@ class CampaignService:
         await self._repo.delete(campaign)
 
     async def activate(self, campaign_id: uuid.UUID, organization_id: uuid.UUID) -> CampaignModel:
-        """Activa una campaña: crea CampaignTime y cambia estado a SCHEDULED."""
         campaign = await self.get_by_id(campaign_id, organization_id)
 
         if campaign.status not in (CampaignStatus.DRAFT, CampaignStatus.PAUSED):

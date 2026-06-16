@@ -1,9 +1,3 @@
-"""
-Calcula la siguiente ejecución UTC de una campaña dado periodicidad y timezone.
-
-Convención días de semana: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
-(compatible con pybox/JS)
-"""
 import calendar
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -32,7 +26,7 @@ def _to_utc(year: int, month: int, day: int, hour: int, minute: int, second: int
 
 
 def _python_weekday_to_app(python_wd: int) -> int:
-    """Python: 0=Lun..6=Dom → App: 0=Dom..6=Sáb"""
+    # Python 0=Lun..6=Dom → App 0=Dom..6=Sáb (compatible pybox/JS)
     return (python_wd + 1) % 7
 
 
