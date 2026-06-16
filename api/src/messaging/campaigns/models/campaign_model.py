@@ -1,7 +1,7 @@
 ﻿import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import ARRAY, Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -80,3 +80,7 @@ class CampaignModel(AuditModel):
     )
 
     is_immediate: Mapped[bool] = mapped_column(Boolean, default=False, name="es_inmediato")
+
+    days_of_week: Mapped[list[int] | None] = mapped_column(
+        ARRAY(Integer), nullable=True, name="dias_semana"
+    )

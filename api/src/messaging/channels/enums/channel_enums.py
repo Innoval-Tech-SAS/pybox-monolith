@@ -1,14 +1,15 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ChannelName(str, Enum):
+class ChannelName(StrEnum):
     SMS = "SMS"
     EMAIL = "EMAIL"
     WHATSAPP = "WHATSAPP"
     CALL = "CALL"
+    CALL_IA = "CALL_IA"
 
 
-class Currency(str, Enum):
+class Currency(StrEnum):
     USD = "USD"
     EUR = "EUR"
     COP = "COP"

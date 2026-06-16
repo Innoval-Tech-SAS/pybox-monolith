@@ -27,3 +27,5 @@ class ChannelModel(AuditModel):
     )
 
     description: Mapped[str] = mapped_column(String(255), nullable=False, name="descripcion")
+
+    label: Mapped[str] = mapped_column(String(50), nullable=False, name="etiqueta")

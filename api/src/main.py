@@ -20,6 +20,7 @@ from receivables.portfolios.scheduler import create_daily_counters_scheduler
 from receivables.portfolios.services.daily_counters_service import run_all_nationalities
 from core.security.seed_admin import seed_admin
 from core.security.seed_permissions import seed_permissions
+from messaging.channels.seed_channels import seed_channels
 from core.tools.config_tools import get_or_throw
 
 os.makedirs(UPLOADS_ROOT, exist_ok=True)
@@ -32,6 +33,8 @@ async def lifespan(_app: FastAPI):
         await seed_permissions(session)
     async with db.get_session() as session:
         await seed_admin(session)
+    async with db.get_session() as session:
+        await seed_channels(session)
     expiry_task = await start_session_expiry_listener()
 
     scheduler = create_daily_counters_scheduler()

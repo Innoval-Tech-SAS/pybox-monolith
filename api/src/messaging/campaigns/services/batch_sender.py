@@ -7,13 +7,13 @@ from typing import Any
 from core.config.logger import logger
 from messaging.campaigns.constants import BATCH_SIZE, MAX_RETRIES, RETRY_BASE_MS
 from messaging.campaigns.schemas.batch_schemas import BatchStats, SendInput
-from messaging.constants import channels
+from messaging.channels.enums.channel_enums import ChannelName
 from messaging.contacts.enums.contact_enums import ContactStatus, ProviderType
 from messaging.contacts.models.contact_model import ContactModel
 from messaging.contacts.repositories.contact_repository import ContactRepository
 from messaging.dispatcher import MessageDispatcher
 
-_NRS360_CHANNELS = {channels.SMS, channels.EMAIL}
+_NRS360_CHANNELS = {ChannelName.SMS, ChannelName.EMAIL}
 
 
 def _provider_for_channel(channel_name: str) -> ProviderType | None:

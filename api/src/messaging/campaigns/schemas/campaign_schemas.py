@@ -25,6 +25,9 @@ class CampaignResponse(BaseSchema):
     periodicity: Periodicity | None = Field(default=None, description="Periodicidad de ejecución")
     time_to_send: str | None = Field(default=None, description="Hora de envío HH:MM")
     is_immediate: bool = Field(default=False, description="Enviar inmediatamente al activar")
+    days_of_week: list[int] | None = Field(
+        default=None, description="Días de la semana para periodicidad weekly (0=domingo..6=sábado)"
+    )
     created_at: datetime = Field(description="Fecha de creación")
     updated_at: datetime | None = Field(default=None, description="Fecha de última actualización")
 
@@ -45,6 +48,9 @@ class CampaignCreateRequest(BaseSchema):
     periodicity: Periodicity | None = Field(default=None, description="Periodicidad")
     time_to_send: str | None = Field(default=None, description="Hora HH:MM para campañas recurrentes")
     is_immediate: bool = Field(default=False, description="Enviar inmediatamente al activar")
+    days_of_week: list[int] | None = Field(
+        default=None, description="Días de la semana para periodicidad weekly (0=domingo..6=sábado)"
+    )
 
 
 class CampaignUpdateRequest(BaseSchema):
@@ -63,3 +69,6 @@ class CampaignUpdateRequest(BaseSchema):
     periodicity: Periodicity | None = Field(default=None, description="Periodicidad")
     time_to_send: str | None = Field(default=None, description="Hora HH:MM")
     is_immediate: bool | None = Field(default=None, description="Enviar inmediatamente")
+    days_of_week: list[int] | None = Field(
+        default=None, description="Días de la semana para periodicidad weekly (0=domingo..6=sábado)"
+    )

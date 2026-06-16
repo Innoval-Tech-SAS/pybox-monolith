@@ -3,7 +3,9 @@ from typing import Annotated
 
 from fastapi import Query, status
 
+from messaging.campaigns.constants.campaign_options import PERIODICITY_LABELS, WEEKDAYS
 from messaging.campaigns.dependencies import CampaignServiceDep
+from messaging.campaigns.enums.campaign_enums import Periodicity
 from messaging.campaigns.schemas.campaign_schemas import (
     CampaignCreateRequest,
     CampaignResponse,
@@ -16,6 +18,24 @@ from core.security.permissions import ORG_CAMPAIGNS
 from core.security.policies import require_org_admin, require_permission
 
 router = APIRouter(prefix="/campaigns", tags=["Campañas"])
+
+
+@router.get("/periodicities", summary="Periodicidades disponibles para programar campañas")
+async def list_periodicities(
+    session: CurrentSession,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+) -> list[dict]:
+    require_permission(ORG_CAMPAIGNS, session, str(organization_id))
+    return [{"value": p.value, "label": PERIODICITY_LABELS[p]} for p in Periodicity]
+
+
+@router.get("/weekdays", summary="Días de la semana disponibles para campañas recurrentes")
+async def list_weekdays(
+    session: CurrentSession,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+) -> list[dict]:
+    require_permission(ORG_CAMPAIGNS, session, str(organization_id))
+    return [{"value": value, "label": label, "active": active} for value, label, active in WEEKDAYS]
 
 
 @router.get("/", response_model=list[CampaignResponse], summary="Listar campañas de la organización")

@@ -35,6 +35,8 @@ import { ChatPage } from "./chat/pages/chat-page";
 import { SegmentsPage } from "./segments/pages/SegmentsPage";
 import { TemplatesPage } from "./templates/pages/templates-page";
 import { TemplateEditorPage } from "./templates/pages/template-editor-page";
+import { CampaignsPage } from "./campaigns/pages/campaigns-page";
+import { CampaignEditorPage } from "./campaigns/pages/campaign-editor-page";
 import { NotFound } from "./ui/pages/not-found";
 
 export const noAuthRouter = [
@@ -148,6 +150,18 @@ export const authRouter = [
   {
     path: "/my-companies/templates/:id/edit",
     element: <TemplateEditorPage />,
+  },
+  {
+    path: "/my-companies/campaigns",
+    element: <CampaignsPage />,
+  },
+  {
+    path: "/my-companies/campaigns/new",
+    element: <CampaignEditorPage />,
+  },
+  {
+    path: "/my-companies/campaigns/:id/edit",
+    element: <CampaignEditorPage />,
   },
   {
     path: "/my-users",

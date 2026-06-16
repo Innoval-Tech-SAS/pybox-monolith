@@ -4,6 +4,7 @@ from typing import Sequence
 
 from fastapi import HTTPException, status
 
+from messaging.campaigns.constants.campaign_options import INACTIVE_WEEKDAYS
 from messaging.campaigns.enums.campaign_enums import CampaignStatus, Periodicity
 from messaging.campaigns.models.campaign_model import CampaignModel
 from messaging.campaigns.models.campaign_time_model import CampaignTimeModel
@@ -28,7 +29,12 @@ class CampaignService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Campaña no encontrada")
         return campaign
 
+    def _assert_valid_days_of_week(self, days_of_week: list[int] | None) -> None:
+        if days_of_week and INACTIVE_WEEKDAYS.intersection(days_of_week):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "No se pueden programar campañas el domingo")
+
     async def create(self, organization_id: uuid.UUID, data: CampaignCreateRequest) -> CampaignModel:
+        self._assert_valid_days_of_week(data.days_of_week)
         campaign = CampaignModel(
             organization_id=organization_id,
             name=data.name,
@@ -46,6 +52,7 @@ class CampaignService:
             periodicity=data.periodicity,
             time_to_send=data.time_to_send,
             is_immediate=data.is_immediate,
+            days_of_week=data.days_of_week,
         )
         return await self._repo.add(campaign)
 
@@ -56,6 +63,7 @@ class CampaignService:
         data: CampaignUpdateRequest,
     ) -> CampaignModel:
         campaign = await self.get_by_id(campaign_id, organization_id)
+        self._assert_valid_days_of_week(data.days_of_week)
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(campaign, key, value)
@@ -88,6 +96,7 @@ class CampaignService:
                 periodicity=campaign.periodicity.value,
                 time_to_send=campaign.time_to_send,
                 timezone_iana=campaign.timezone,
+                days_of_week=campaign.days_of_week,
                 from_dt=now,
             )
         else:
@@ -100,6 +109,7 @@ class CampaignService:
             existing_ct.timezone_iana = campaign.timezone
             existing_ct.is_immediate = campaign.is_immediate
             existing_ct.time_to_send = campaign.time_to_send
+            existing_ct.days_of_week = campaign.days_of_week
             await self._ct_repo.update(existing_ct)
         else:
             ct = CampaignTimeModel(
@@ -110,6 +120,7 @@ class CampaignService:
                 is_active=True,
                 is_immediate=campaign.is_immediate,
                 time_to_send=campaign.time_to_send,
+                days_of_week=campaign.days_of_week,
             )
             await self._ct_repo.add(ct)
 

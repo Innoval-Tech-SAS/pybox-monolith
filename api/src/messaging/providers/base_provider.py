@@ -4,8 +4,6 @@ import httpx
 class NRS360BaseProvider:
 
 
-    
-
     async def _request(
         self,
         method: str,

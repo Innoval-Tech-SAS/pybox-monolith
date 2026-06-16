@@ -1,4 +1,6 @@
-﻿from fastapi import status
+﻿import uuid
+
+from fastapi import status
 
 from messaging.channels.dependencies import ChannelServiceDep
 from messaging.channels.schemas.channel_schemas import (
@@ -8,7 +10,7 @@ from messaging.channels.schemas.channel_schemas import (
 )
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
-from core.security.policies import require_global, require_global_admin
+from core.security.policies import require_global, require_global_admin, require_org_or_global
 
 router = APIRouter(prefix="/channels", tags=["Canales"])
 
@@ -18,14 +20,14 @@ async def list_channels(
     session: CurrentSession,
     service: ChannelServiceDep,
 ) -> list[ChannelResponse]:
-    require_global(session)
+    require_org_or_global(session)
     channels = await service.list_all()
     return [ChannelResponse.model_validate(c) for c in channels]
 
 
 @router.get("/{channel_id}", response_model=ChannelResponse, summary="Obtener canal por ID")
 async def get_channel(
-    channel_id: int,
+    channel_id: uuid.UUID,
     session: CurrentSession,
     service: ChannelServiceDep,
 ) -> ChannelResponse:
@@ -52,7 +54,7 @@ async def create_channel(
 
 @router.patch("/{channel_id}", response_model=ChannelResponse, summary="Actualizar canal")
 async def update_channel(
-    channel_id: int,
+    channel_id: uuid.UUID,
     body: ChannelUpdateRequest,
     session: CurrentSession,
     service: ChannelServiceDep,
@@ -68,7 +70,7 @@ async def update_channel(
     summary="Eliminar canal",
 )
 async def delete_channel(
-    channel_id: int,
+    channel_id: uuid.UUID,
     session: CurrentSession,
     service: ChannelServiceDep,
 ) -> None:

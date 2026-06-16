@@ -3,6 +3,7 @@ import {
   CreditCard,
   FolderOpen,
   Mail,
+  Megaphone,
   Settings,
   Users,
 } from "lucide-react";
@@ -62,6 +63,15 @@ export const ORG_MODULES: OrgModule[] = [
     gradient: "from-violet-500 to-violet-600",
     path: "/my-companies/templates",
     requiredPermission: "org.templates",
+  },
+  {
+    key: "campaigns",
+    title: "Campañas",
+    description: "Crea y automatiza campañas de SMS y correo.",
+    icon: <Megaphone size={24} className="text-white" />,
+    gradient: "from-pink-500 to-rose-600",
+    path: "/my-companies/campaigns",
+    requiredPermission: "org.campaigns",
   },
   {
     key: "settings",
