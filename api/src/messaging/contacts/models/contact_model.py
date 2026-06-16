@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -14,8 +14,8 @@ class ContactModel(AuditModel):
 
     __tablename__ = "contactos"
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True, name="id_contacto"
+    id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id_contacto"
     )
 
     content: Mapped[str] = mapped_column(Text, nullable=False, name="contenido")
@@ -26,8 +26,8 @@ class ContactModel(AuditModel):
         Enum(ContactStatus), nullable=False, default=ContactStatus.PENDING, name="estado"
     )
 
-    debtor_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("deudores.id"), nullable=True, index=True, name="id_deudor"
+    debtor_id: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("deudores.id"), nullable=True, index=True, name="id_deudor"
     )
 
     debtor_document: Mapped[str | None] = mapped_column(
@@ -56,8 +56,8 @@ class ContactModel(AuditModel):
         PgUUID(as_uuid=True), nullable=True, name="id_portafolio"
     )
 
-    snapshot_channel_id: Mapped[int | None] = mapped_column(
-        Integer, nullable=True, name="snapshot_canal_id"
+    snapshot_channel_id: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), nullable=True, name="snapshot_canal_id"
     )
 
     snapshot_currency: Mapped[str | None] = mapped_column(

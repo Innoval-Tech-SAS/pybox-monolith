@@ -44,5 +44,5 @@ class CreditModel(AuditModel):
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
         PgUUID(as_uuid=True), ForeignKey("portafolios.id"), nullable=False, name="id_portafolio"
     )
-    debtor_id: Mapped[int] = mapped_column(Integer, ForeignKey("deudores.id"), nullable=False, name="id_deudor")
-    codebtor_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("deudores.id"), nullable=True, name="id_codeudor")
+    debtor_id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), ForeignKey("deudores.id"), nullable=False, name="id_deudor")
+    codebtor_id: Mapped[uuid.UUID | None] = mapped_column(PgUUID(as_uuid=True), ForeignKey("deudores.id"), nullable=True, name="id_codeudor")

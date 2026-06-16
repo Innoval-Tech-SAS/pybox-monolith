@@ -1,5 +1,5 @@
 ﻿import uuid
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,6 +13,6 @@ class ContactMethodModel(AuditModel):
     id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     contact_type: Mapped[ContactMethodType] = mapped_column(ENUM(ContactMethodType), nullable=False, name="tipo_contacto")
     contact_value: Mapped[str] = mapped_column(String, nullable=False, name="valor_contacto")
-    debtor_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("deudores.id"), nullable=False, name="id_deudor"
+    debtor_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("deudores.id"), nullable=False, name="id_deudor"
     )

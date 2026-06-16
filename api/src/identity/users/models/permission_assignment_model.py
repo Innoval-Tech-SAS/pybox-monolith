@@ -1,6 +1,6 @@
 ﻿import uuid
 
-from sqlalchemy import Boolean, Integer, ForeignKey, UniqueConstraint
+from sqlalchemy import Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,8 +18,8 @@ class PermissionAssignmentModel(AuditModel):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("usuarios.id"), nullable=False, name="id_usuario")
-    permission_id: Mapped[int] = mapped_column(Integer, ForeignKey("permisos.id"), nullable=False, name="id_permiso")
+    user_id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, name="id_usuario")
+    permission_id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), ForeignKey("permisos.id"), nullable=False, name="id_permiso")
     scope: Mapped[UserScope] = mapped_column(ENUM(UserScope), nullable=False, name="alcance")
     organization_id: Mapped[uuid.UUID | None] = mapped_column(PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=True, name="id_organizacion")
     effect: Mapped[PermissionEffect] = mapped_column(ENUM(PermissionEffect), nullable=False, default=PermissionEffect.GRANT, name="efecto")
