@@ -1,12 +1,12 @@
 from typing import Any
 
-from messaging.providers.nrs360_provider import NRS360Provider
+from messaging.providers.sms_provider import NRS360SmsProvider
 
 
 class SmsChannel:
     sends_per_recipient = False
 
-    def __init__(self, provider: NRS360Provider) -> None:
+    def __init__(self, provider: NRS360SmsProvider) -> None:
         self._provider = provider
 
     async def send(self, to: list[str], message: str, **kwargs: Any) -> bool:

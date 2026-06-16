@@ -1,4 +1,4 @@
-﻿from typing import Any
+from typing import Any
 
 from messaging.senders.base import ChannelSender
 from messaging.senders.call_channel import CallChannel
@@ -6,15 +6,15 @@ from messaging.senders.email_channel import EmailChannel
 from messaging.senders.sms_channel import SmsChannel
 from messaging.senders.whatsapp_channel import WhatsAppChannel
 from messaging.constants import channels
-from messaging.providers.nrs360_provider import NRS360Provider
+from messaging.providers.email_provider import NRS360EmailProvider
+from messaging.providers.sms_provider import NRS360SmsProvider
 
 
-class DeliveryGateway:
+class MessageDispatcher:
     def __init__(self) -> None:
-        nrs = NRS360Provider()
         self._channels: dict[str, ChannelSender] = {
-            channels.SMS: SmsChannel(nrs),
-            channels.EMAIL: EmailChannel(nrs),
+            channels.SMS: SmsChannel(NRS360SmsProvider()),
+            channels.EMAIL: EmailChannel(NRS360EmailProvider()),
             channels.WHATSAPP: WhatsAppChannel(),
             channels.CALL: CallChannel(),
         }

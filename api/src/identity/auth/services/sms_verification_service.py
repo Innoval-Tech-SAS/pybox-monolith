@@ -3,7 +3,7 @@
 from identity.auth.enums.notification_enums import VerificationChannel
 from identity.auth.constants.verification_constants import SMS_TEMPLATE as _SMS_TEMPLATE
 from identity.auth.services.verification_service import VerificationService
-from messaging.providers.nrs360_provider import NRS360Provider
+from messaging.providers.sms_provider import NRS360SmsProvider
 
 
 class SMSVerificationService(VerificationService):
@@ -11,7 +11,7 @@ class SMSVerificationService(VerificationService):
 
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
-        self._provider = NRS360Provider()
+        self._provider = NRS360SmsProvider()
 
     async def _dispatch(self, user, code: str) -> bool:
         if not user.phone_number:

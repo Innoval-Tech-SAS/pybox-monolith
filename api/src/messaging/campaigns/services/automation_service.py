@@ -22,10 +22,10 @@ from messaging.campaigns.utils.calculate_next import calculate_next_execution
 from messaging.channels.enums.channel_enums import ChannelName
 from messaging.channels.repositories.channel_repository import ChannelRepository
 from messaging.contacts.repositories.contact_repository import ContactRepository
-from messaging.gateway import DeliveryGateway
+from messaging.dispatcher import MessageDispatcher
 from receivables.segments.repository.segment_repository import SegmentRepository
 
-_GATEWAY = DeliveryGateway()
+_DISPATCHER = MessageDispatcher()
 
 _MAX_CONCURRENT = 100
 _sem = asyncio.Semaphore(_MAX_CONCURRENT)
@@ -48,7 +48,7 @@ def make_automation_service(session: AsyncSession) -> AutomationService:
         channel_repo=ChannelRepository(session),
         seg_repo=SegmentRepository(session),
         dml=DmlService(session),
-        batch_sender=BatchSender(_GATEWAY, ContactRepository(session)),
+        batch_sender=BatchSender(_DISPATCHER, ContactRepository(session)),
     )
 
 

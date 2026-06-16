@@ -10,13 +10,13 @@ from messaging.campaigns.schemas.batch_schemas import BatchStats, SendInput
 from messaging.contacts.enums.contact_enums import ContactStatus
 from messaging.contacts.models.contact_model import ContactModel
 from messaging.contacts.repositories.contact_repository import ContactRepository
-from messaging.gateway import DeliveryGateway
+from messaging.dispatcher import MessageDispatcher
 
 
 class BatchSender:
 
-    def __init__(self, gateway: DeliveryGateway, repo: ContactRepository) -> None:
-        self._gateway = gateway
+    def __init__(self, dispatcher: MessageDispatcher, repo: ContactRepository) -> None:
+        self._dispatcher = dispatcher
         self._repo = repo
 
     async def process_batch(self, inputs: list[SendInput], channel_name: str) -> BatchStats:
@@ -25,7 +25,7 @@ class BatchSender:
 
         stats = BatchStats()
         unique_recipients: set[str] = set()
-        sender = self._gateway.get_sender(channel_name)
+        sender = self._dispatcher.get_sender(channel_name)
 
         chunks = [inputs[i : i + BATCH_SIZE] for i in range(0, len(inputs), BATCH_SIZE)]
 
@@ -55,7 +55,7 @@ class BatchSender:
         last_err: str | None = None
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                ok = await self._gateway.send(channel, to, message, **kwargs)
+                ok = await self._dispatcher.send(channel, to, message, **kwargs)
                 if ok:
                     return True, None
                 last_err = "provider returned false"
