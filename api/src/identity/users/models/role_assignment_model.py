@@ -1,6 +1,6 @@
 ﻿import uuid
 
-from sqlalchemy import CheckConstraint, Integer, ForeignKey, UniqueConstraint
+from sqlalchemy import CheckConstraint, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
@@ -25,11 +25,11 @@ class RoleAssignmentModel(AuditModel):
         CheckConstraint(_CHECK_SQL, name="ck_rol_alcance_valido"),
     )
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, autoincrement=True, name="id"
+    id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id"
     )
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=False, name="id_usuario"
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, name="id_usuario"
     )
     role: Mapped[UserRole] = mapped_column(ENUM(UserRole), nullable=False, name="rol")
     scope: Mapped[UserScope] = mapped_column(

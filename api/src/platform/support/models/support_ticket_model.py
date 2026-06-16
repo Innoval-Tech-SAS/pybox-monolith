@@ -2,6 +2,7 @@
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Identity, Integer, String
+
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -32,11 +33,11 @@ class SupportTicketModel(AuditModel):
     organization_id: Mapped[uuid.UUID | None] = mapped_column(
         PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=True, name="id_entidad"
     )
-    created_by: Mapped[int] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=False, name="creado_por"
+    created_by: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, name="creado_por"
     )
-    assigned_to: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=True, name="asignado_a"
+    assigned_to: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True, name="asignado_a"
     )
     title: Mapped[str | None] = mapped_column(String(255), nullable=True, name="titulo")
     notes: Mapped[str | None] = mapped_column(String(2000), nullable=True, name="notas")
@@ -46,6 +47,6 @@ class SupportTicketModel(AuditModel):
     closed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, name="cerrado_en"
     )
-    closed_by: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=True, name="cerrado_por"
+    closed_by: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True, name="cerrado_por"
     )

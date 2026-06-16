@@ -1,6 +1,6 @@
 ﻿import uuid
 
-from sqlalchemy import Boolean, ForeignKey, Integer, Text
+from sqlalchemy import Boolean, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,8 +20,8 @@ class SupportTicketMessageModel(AuditModel):
         name="ticket_id",
         index=True,
     )
-    sender_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=False, name="remitente_id"
+    sender_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, name="remitente_id"
     )
     body: Mapped[str] = mapped_column(Text, nullable=False, name="cuerpo")
     is_internal: Mapped[bool] = mapped_column(

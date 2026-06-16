@@ -1,8 +1,7 @@
 ﻿import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, ForeignKey, Index, Integer, UniqueConstraint
-from sqlalchemy import DateTime
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,8 +17,8 @@ class PortfolioUserAccessModel(AuditModel):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=False, index=True, name="id_usuario"
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, index=True, name="id_usuario"
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
         PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, index=True, name="id_organizacion"
@@ -32,8 +31,8 @@ class PortfolioUserAccessModel(AuditModel):
         name="id_portafolio",
     )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="activo")
-    granted_by: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=True, name="otorgado_por"
+    granted_by: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True, name="otorgado_por"
     )
     revoked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, name="revocado_en"

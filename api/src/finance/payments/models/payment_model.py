@@ -1,10 +1,9 @@
 ﻿import uuid
 from datetime import datetime
 
-from sqlalchemy import Double, ForeignKey, Integer
-from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy import DateTime
-from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID as PgUUID`n
+from sqlalchemy import DateTime, Double, ForeignKey, Integer
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
+from sqlalchemy.orm import Mapped, mapped_column
 from core.base.audit_model import AuditModel
 
 
@@ -32,6 +31,6 @@ class PaymentModel(AuditModel):
     discount_amount: Mapped[float] = mapped_column(Double, nullable=False, default=0.0, name="descuento_aplicado")
     amount_uvr: Mapped[float | None] = mapped_column(Double, nullable=True, name="monto_uvr")
     uvr_quote_at_payment: Mapped[float | None] = mapped_column(Double, nullable=True, name="cotizacion_uvr_pago")
-    credit_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("creditos.id"), nullable=False, index=True, name="id_credito"
+    credit_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("creditos.id"), nullable=False, index=True, name="id_credito"
     )

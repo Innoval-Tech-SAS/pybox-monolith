@@ -1,8 +1,7 @@
 ﻿import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, ForeignKey, Integer, String
-from sqlalchemy import DateTime
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -25,8 +24,8 @@ class PortfolioDailyCounterConfigModel(AuditModel):
     reactivation_mode: Mapped[str] = mapped_column(
         String, nullable=False, default="FROM_TODAY", name="modo_reactivacion"
     )
-    updated_by: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=True, name="actualizado_por"
+    updated_by: Mapped[uuid.UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True, name="actualizado_por"
     )
     last_synced_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, name="ultima_sincronizacion_at"

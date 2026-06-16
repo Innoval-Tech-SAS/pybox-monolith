@@ -1,6 +1,6 @@
 ﻿import uuid
 
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,8 +21,8 @@ class SupportTicketEventModel(AuditModel):
         name="ticket_id",
         index=True,
     )
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=False, name="usuario_id"
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, name="usuario_id"
     )
     event_type: Mapped[SupportTicketEventType] = mapped_column(
         ENUM(SupportTicketEventType), nullable=False, name="tipo_evento"

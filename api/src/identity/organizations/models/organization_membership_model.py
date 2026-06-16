@@ -1,6 +1,6 @@
 ﻿import uuid
 
-from sqlalchemy import Boolean, Integer, ForeignKey, UniqueConstraint
+from sqlalchemy import Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,14 +16,14 @@ class OrganizationMembershipModel(AuditModel):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), nullable=False, name="id_usuario"
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, name="id_usuario"
     )
     organization_id: Mapped[uuid.UUID] = mapped_column(
         PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, name="id_entidad"
     )
-    created_by: Mapped[int] = mapped_column(
-        Integer, ForeignKey("usuarios.id"), name="creado_por", nullable=False
+    created_by: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), name="creado_por", nullable=False
     )
     is_legal_representative: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False, name="es_representante_legal"
