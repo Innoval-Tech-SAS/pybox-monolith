@@ -1,5 +1,8 @@
-﻿from core.config.api_router import APIRouter
+﻿import uuid
+
+from core.config.api_router import APIRouter
 from fastapi import File, HTTPException, Query, UploadFile, status
+from pydantic import ValidationError as PydanticValidationError
 
 from identity.auth.dependencies import TokenPayload
 from core.security.dependencies import CurrentSession
@@ -13,8 +16,18 @@ router = APIRouter(prefix="/users", tags=["Usuarios"])
 
 @router.get("/me", response_model=UserSession, summary="Obtener sesión del usuario autenticado")
 async def me(payload: TokenPayload, service: UserServiceDep) -> UserSession:
-    user_id = int(payload["sub"])
-    cached = await service.redis.get_json(session_key(user_id), UserSession)
+    try:
+        user_id = uuid.UUID(str(payload["sub"]))
+    except (KeyError, ValueError, TypeError):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.")
+
+    try:
+        cached = await service.redis.get_json(session_key(user_id), UserSession)
+    except PydanticValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tu sesión no es válida. Inicia sesión nuevamente.",
+        )
     if cached is not None:
         return cached
     return await service.get_user_session(user_id)
@@ -26,7 +39,7 @@ async def me(payload: TokenPayload, service: UserServiceDep) -> UserSession:
     summary="Obtener tours descartados por el usuario",
 )
 async def get_tour_preferences(payload: TokenPayload, service: UserServiceDep) -> UserToursSchema:
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(str(payload["sub"]))
     dismissed = await service.get_dismissed_tours(user_id)
     return UserToursSchema(dismissed_tours=dismissed)
 
@@ -37,7 +50,7 @@ async def get_tour_preferences(payload: TokenPayload, service: UserServiceDep) -
     summary="Descartar un tour de la interfaz",
 )
 async def dismiss_tour(tour_key: str, payload: TokenPayload, service: UserServiceDep) -> UserToursSchema:
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(str(payload["sub"]))
     dismissed = await service.dismiss_tour(user_id, tour_key)
     return UserToursSchema(dismissed_tours=dismissed)
 
@@ -52,7 +65,7 @@ async def update_profile_photo(
     service: UserServiceDep,
     file: UploadFile = File(...),
 ) -> ProfilePhotoSchema:
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(str(payload["sub"]))
     return await service.update_profile_photo(user_id, file)
 
 
@@ -87,7 +100,7 @@ async def update_user(user_id: int, data: UpdateUserSchema, session: CurrentSess
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar usuario")
 async def delete_user(user_id: int, payload: TokenPayload, service: UserServiceDep):
-    calling_user_id = int(payload["sub"])
+    calling_user_id = uuid.UUID(str(payload["sub"]))
     if calling_user_id == user_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No puedes eliminarte a ti mismo.")
     await service.soft_delete_user(user_id)

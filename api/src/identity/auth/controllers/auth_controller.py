@@ -1,4 +1,6 @@
-﻿from fastapi import HTTPException, status
+﻿import uuid
+
+from fastapi import HTTPException, status
 from core.config.api_router import APIRouter
 
 from identity.auth.dependencies import AuthServiceDep, TokenPayload
@@ -69,7 +71,7 @@ async def refresh(body: RefreshRequest, service: AuthServiceDep) -> AuthResponse
 
 @router.post("/logout", status_code=status.HTTP_200_OK, summary="Cerrar sesión")
 async def logout(payload: TokenPayload, service: AuthServiceDep) -> dict:
-    await service.logout(int(payload["sub"]))
+    await service.logout(uuid.UUID(str(payload["sub"])))
     return {"message": "Sesión cerrada."}
 
 
