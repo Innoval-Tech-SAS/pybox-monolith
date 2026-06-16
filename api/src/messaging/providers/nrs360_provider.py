@@ -1,15 +1,18 @@
 import httpx
+
 from config.logger import logger
+from messaging.constants.nrs360_constants import EMAIL_URL, SMS_URL
 from tools.config_tools import get_or_throw
 
 
 class NRS360Provider:
-    _SMS_URL = "https://dashboard.360nrs.com/api/rest/sms"
-    _EMAIL_URL = "https://dashboard.360nrs.com/api/rest/mailing"
 
-    def __init__(self) -> None:
-        self._sms_token = get_or_throw("NRS360_SMS_TOKEN")
-        self._email_token = get_or_throw("NRS360_EMAIL_TOKEN")
+    def __new__(cls) -> "NRS360Provider":
+        if not hasattr(cls, "_instance"):
+            cls._instance = super(NRS360Provider, cls).__new__(cls)
+            cls._instance._sms_token = get_or_throw("NRS360_SMS_TOKEN")
+            cls._instance._email_token = get_or_throw("NRS360_EMAIL_TOKEN")
+        return cls._instance
 
     async def send_sms(
         self,
@@ -29,7 +32,7 @@ class NRS360Provider:
         headers = {"Authorization": self._sms_token}
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.post(self._SMS_URL, json=payload, headers=headers)
+                response = await client.post(SMS_URL, json=payload, headers=headers)
             response.raise_for_status()
             logger.info("[nrs360] sms_sent | recipients=%d", len(to))
             return True
@@ -57,7 +60,7 @@ class NRS360Provider:
         headers = {"Authorization": self._email_token}
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.post(self._EMAIL_URL, json=payload, headers=headers)
+                response = await client.post(EMAIL_URL, json=payload, headers=headers)
             response.raise_for_status()
             logger.info("[nrs360] email_sent | recipients=%d", len(to))
             return True
