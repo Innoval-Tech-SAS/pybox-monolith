@@ -1,8 +1,8 @@
-﻿
+
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from platform.countries.enums.country_enums import (
+from app_platform.countries.enums.country_enums import (
     ORG_FISCAL_DOCUMENT_BY_NATIONALITY,
     ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY,
 )
@@ -19,7 +19,7 @@ from identity.auth.enums.auth_enums import AuthProvider
 from identity.onboarding.schemas.onboarding_schemas import OnboardingRepMode
 from identity.organizations.enums.organization_enums import VerificationStatus
 from identity.organizations.models.organization_model import OrganizationModel
-from platform.support.services.support_service import SupportService
+from app_platform.support.services.support_service import SupportService
 from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
 from identity.organizations.repository.organization_repository import OrganizationRepository
 from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository

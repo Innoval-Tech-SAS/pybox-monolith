@@ -1,14 +1,14 @@
-﻿import uuid
+import uuid
 from pathlib import Path
 from typing import Literal
 
 from fastapi import File, Form, HTTPException, UploadFile, status
 
 from core.config.api_router import APIRouter
-from platform.countries.enums.country_enums import Nationality, UserDocumentType
+from app_platform.countries.enums.country_enums import Nationality, UserDocumentType
 from identity.onboarding.dependencies import CurrentScope
 from identity.organizations.dependencies import AdminScopeDep, OrgServiceDep
-from platform.support.dependencies import SupportServiceDep
+from app_platform.support.dependencies import SupportServiceDep
 from identity.organizations.schemas.organization_schemas import (
     OrgRegisterResponse,
     OrganizationCreate,

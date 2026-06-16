@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from identity.auth.enums.auth_enums import AuthProvider
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from platform.countries.enums.country_enums import UserDocumentType
+from app_platform.countries.enums.country_enums import UserDocumentType
 from ..models.user_model import UserModel
 
 
@@ -175,8 +175,8 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
     ) -> Sequence[UserModel]:
         from datetime import datetime, timedelta, timezone
         from sqlalchemy import and_
-        from platform.chats.models.chat_member_model import ChatMemberModel
-        from platform.chats.models.message_model import MessageModel
+        from app_platform.chats.models.chat_member_model import ChatMemberModel
+        from app_platform.chats.models.message_model import MessageModel
         from identity.users.models.role_assignment_model import RoleAssignmentModel
         from identity.users.enums.user_enums import UserRole, UserScope
 

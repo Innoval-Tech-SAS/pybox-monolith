@@ -6,7 +6,7 @@ from datetime import datetime
 from core.config.paths import UPLOADS_ROOT
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from platform.countries.enums.country_enums import Nationality
+from app_platform.countries.enums.country_enums import Nationality
 
 from core.config.logger import logger
 

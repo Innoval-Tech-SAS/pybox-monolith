@@ -1,10 +1,10 @@
-﻿import uuid
+import uuid
 from datetime import date, datetime
 
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema
-from platform.countries.enums.country_enums import Nationality
+from app_platform.countries.enums.country_enums import Nationality
 
 
 class PortfolioResponse(BaseSchema):

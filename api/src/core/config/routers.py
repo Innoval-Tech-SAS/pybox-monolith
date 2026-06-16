@@ -1,19 +1,19 @@
 from fastapi import FastAPI
 
 from identity.auth.controllers.auth_controller import router as auth_router
-from platform.schema_manager.controllers.database_controller import router as schema_manager_router
+from app_platform.schema_manager.controllers.database_controller import router as schema_manager_router
 from messaging.contacts.controllers.contact_controller import router as contacts_router
 from receivables.debtors.controllers.debtor_controller import router as debtors_router
-from platform.countries.controllers.countries_controller import router as countries_router
+from app_platform.countries.controllers.countries_controller import router as countries_router
 from receivables.credits.controllers.my_credits_controller import router as my_credits_router
-from platform.notifications.controllers.notification_controller import router as notifications_router
+from app_platform.notifications.controllers.notification_controller import router as notifications_router
 from identity.onboarding.controllers.onboarding_controller import router as onboarding_router
 from identity.organizations.controllers.organization_controller import router as organizations_router
 from identity.organizations.controllers.org_members_controller import router as org_members_router
 from finance.payment_methods.controllers.payment_method_controller import router as payment_methods_router
 from receivables.portfolios.controllers.portfolio_controller import router as portfolios_router
-from platform.support.controllers.support_controller import router as support_router
-from platform.chats.controllers.chat_controller import router as chats_router
+from app_platform.support.controllers.support_controller import router as support_router
+from app_platform.chats.controllers.chat_controller import router as chats_router
 from receivables.segments.controllers.segment_controller import router as segments_router
 from messaging.campaigns.controllers.campaign_controller import router as campaigns_router
 from messaging.channels.controllers.channel_controller import router as channels_router

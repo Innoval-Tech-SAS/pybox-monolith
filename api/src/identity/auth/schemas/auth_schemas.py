@@ -1,10 +1,10 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 from identity.auth.enums.auth_enums import AuthProvider
 from core.base.schema_base import BaseSchema
-from platform.countries.enums.country_enums import DOCUMENTS_BY_NATIONALITY, Nationality, UserDocumentType
+from app_platform.countries.enums.country_enums import DOCUMENTS_BY_NATIONALITY, Nationality, UserDocumentType
 from identity.auth.enums.notification_enums import VerificationChannel
 
 

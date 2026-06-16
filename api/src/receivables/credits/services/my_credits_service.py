@@ -2,7 +2,7 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from platform.countries.enums.country_enums import NATIONALITY_CURRENCY_CODE, UserDocumentType
+from app_platform.countries.enums.country_enums import NATIONALITY_CURRENCY_CODE, UserDocumentType
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.credits.schemas.my_credits_schemas import CreditWithPayments, PaymentSummary
 from receivables.debtors.enums.debtor_enums import DebtorType

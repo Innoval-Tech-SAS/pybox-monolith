@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from pathlib import Path
 from typing import Sequence
 
@@ -7,7 +7,7 @@ from core.config.logger import logger
 from fastapi import HTTPException, status
 
 from core.tools.file_tools import save_org_document_bytes
-from platform.countries.enums.country_enums import (
+from app_platform.countries.enums.country_enums import (
     Nationality,
     UserDocumentType,
     ORG_FISCAL_DOCUMENT_BY_NATIONALITY,

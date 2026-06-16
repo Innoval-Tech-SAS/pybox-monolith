@@ -1,11 +1,11 @@
-﻿import uuid
+import uuid
 from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema
-from platform.schema_manager.schemas.database_schemas import (
+from app_platform.schema_manager.schemas.database_schemas import (
     AggregationSpec,
     GroupByField,
     HavingCondition,

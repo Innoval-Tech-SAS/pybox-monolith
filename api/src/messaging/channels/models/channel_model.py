@@ -2,8 +2,8 @@
 from decimal import Decimal
 
 from sqlalchemy import Enum, Numeric, String
-from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID as PgUUID`n
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
+from sqlalchemy.orm import Mapped, mapped_column
 from core.base.audit_model import AuditModel
 from messaging.channels.enums.channel_enums import ChannelName, Currency
 

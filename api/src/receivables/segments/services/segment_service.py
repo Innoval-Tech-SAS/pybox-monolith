@@ -9,7 +9,7 @@ from fastapi import HTTPException, status
 
 from core.config.logger import logger
 from core.config.paths import UPLOADS_ROOT
-from platform.schema_manager.services.dml_service import DmlService
+from app_platform.schema_manager.services.dml_service import DmlService
 from receivables.segments.models.segment_execution_model import SegmentExecutionModel
 from receivables.segments.models.segment_model import SegmentModel
 from receivables.segments.repository.segment_execution_repository import SegmentExecutionRepository

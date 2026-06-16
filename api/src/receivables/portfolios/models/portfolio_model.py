@@ -1,11 +1,11 @@
-﻿import uuid
+import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String
 from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import AuditModel
-from platform.countries.enums.country_enums import Nationality
+from app_platform.countries.enums.country_enums import Nationality
 
 
 class PortfolioModel(AuditModel):

@@ -1,12 +1,12 @@
-﻿import uuid
+import uuid
 from sqlalchemy import Boolean, Integer, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.base.audit_model import AuditModel
 from identity.auth.enums.auth_enums import AuthProvider
 from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
-from platform.countries.enums.country_enums import Nationality, UserDocumentType
+from app_platform.countries.enums.country_enums import Nationality, UserDocumentType
 
 
 class UserModel(AuditModel):

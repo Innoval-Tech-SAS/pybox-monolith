@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import AuditModel
-from platform.countries.enums.country_enums import UserDocumentType
+from app_platform.countries.enums.country_enums import UserDocumentType
 from receivables.debtors.enums.debtor_enums import DebtorType
 
 

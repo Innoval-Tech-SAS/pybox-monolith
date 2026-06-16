@@ -5,8 +5,8 @@ from fastapi import BackgroundTasks, HTTPException, Query, UploadFile, status
 
 from core.config.api_router import APIRouter
 from core.config.logger import logger
-from platform.countries.enums.country_enums import Nationality
-from platform.notifications.dependencies import NotificationServiceDep
+from app_platform.countries.enums.country_enums import Nationality
+from app_platform.notifications.dependencies import NotificationServiceDep
 from identity.onboarding.dependencies import CurrentOrg
 from receivables.portfolios.background_tasks import append_and_notify, process_and_notify, update_and_notify, uploading_orgs
 from receivables.portfolios.dependencies import PortfolioCsvServiceDep, PortfolioServiceDep, PortfolioUserAccessServiceDep

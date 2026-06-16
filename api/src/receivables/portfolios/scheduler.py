@@ -5,7 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from core.config.logger import logger
-from platform.countries.enums.country_enums import Nationality, NATIONALITY_TIMEZONE
+from app_platform.countries.enums.country_enums import Nationality, NATIONALITY_TIMEZONE
 from core.database.database import db
 from receivables.portfolios.services.daily_counters_service import run_daily_counters_update
 

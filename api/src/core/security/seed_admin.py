@@ -1,4 +1,4 @@
-﻿from typing import cast
+from typing import cast
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from identity.auth.enums.auth_enums import AuthProvider
 from core.config.seed_admin_config import SeedAdminConfig
 from core.config.logger import logger
-from platform.countries.enums.country_enums import Nationality, UserDocumentType
+from app_platform.countries.enums.country_enums import Nationality, UserDocumentType
 from core.security.services.encrypt_service import encrypt_service
 from core.security.services.password_hasher_service import PasswordHasherService
 from identity.users.enums.user_enums import UserRole, UserScope

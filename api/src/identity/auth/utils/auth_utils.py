@@ -1,5 +1,5 @@
-﻿from identity.auth.enums.auth_enums import AuthProvider
-from platform.countries.enums.country_enums import Nationality, UserDocumentType
+from identity.auth.enums.auth_enums import AuthProvider
+from app_platform.countries.enums.country_enums import Nationality, UserDocumentType
 
 
 def normalize_email(email: str) -> str:

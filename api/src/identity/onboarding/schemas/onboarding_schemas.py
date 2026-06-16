@@ -1,9 +1,9 @@
-﻿from enum import Enum
+from enum import Enum
 
 from pydantic import Field, field_validator
 
 from core.base.schema_base import BaseSchema
-from platform.countries.enums.country_enums import (
+from app_platform.countries.enums.country_enums import (
     Nationality,
     OrgFiscalDocumentType,
     OrgMercantileDocumentType,

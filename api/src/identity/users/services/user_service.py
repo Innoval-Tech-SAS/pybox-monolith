@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import uuid
 
@@ -343,7 +343,7 @@ class UserService:
         return user
 
     async def get_available_for_chat(self, session: UserSession) -> list:
-        from platform.chats.websocket.connection_manager import ws_manager
+        from app_platform.chats.websocket.connection_manager import ws_manager
         from identity.users.schemas.user_schemas import ChatAvailableUserSchema
 
         role = session.role

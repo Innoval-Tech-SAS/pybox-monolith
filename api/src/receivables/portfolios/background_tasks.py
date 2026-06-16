@@ -1,8 +1,8 @@
 import uuid
 
-from platform.countries.enums.country_enums import Nationality
+from app_platform.countries.enums.country_enums import Nationality
 from core.config.logger import logger
-from platform.notifications.services.notification_service import NotificationService
+from app_platform.notifications.services.notification_service import NotificationService
 from receivables.portfolios.services.portfolio_csv_service import PortfolioCsvService
 
 uploading_orgs: set[uuid.UUID] = set()

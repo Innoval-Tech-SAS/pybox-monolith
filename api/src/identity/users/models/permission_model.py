@@ -1,7 +1,7 @@
 ﻿import uuid
 from sqlalchemy import Boolean, Integer, SmallInteger, String
-from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID as PgUUID`n
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
+from sqlalchemy.orm import Mapped, mapped_column
 from core.base.audit_model import AuditModel
 
 

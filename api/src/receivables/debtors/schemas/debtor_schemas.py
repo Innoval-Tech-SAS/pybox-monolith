@@ -4,7 +4,7 @@ from pydantic import Field
 
 from core.base.schema_base import BaseSchema
 from receivables.contact_methods.enums.contact_method_enums import ContactMethodType
-from platform.countries.enums.country_enums import UserDocumentType
+from app_platform.countries.enums.country_enums import UserDocumentType
 from receivables.credits.enums.credit_enums import CreditTypes
 from receivables.debtors.enums.debtor_enums import DebtorType
 

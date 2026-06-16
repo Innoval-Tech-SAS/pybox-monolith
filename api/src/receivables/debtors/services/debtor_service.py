@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from receivables.contact_methods.models.contact_method_model import ContactMethodModel
 from receivables.contact_methods.repository.contact_method_repository import ContactMethodRepository
-from platform.countries.enums.country_enums import NATIONALITY_CURRENCY_CODE
+from app_platform.countries.enums.country_enums import NATIONALITY_CURRENCY_CODE
 from receivables.credits.models.credit_model import CreditModel
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.debtors.models.address_model import AddressModel

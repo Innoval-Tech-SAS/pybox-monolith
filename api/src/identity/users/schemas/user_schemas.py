@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime
 
@@ -6,7 +6,7 @@ from pydantic import Field, field_validator
 
 from identity.auth.enums.auth_enums import AuthProvider
 from core.base.schema_base import BaseSchema
-from platform.countries.enums.country_enums import Nationality, UserDocumentType
+from app_platform.countries.enums.country_enums import Nationality, UserDocumentType
 from core.security.services.encrypt_service import encrypt_service
 
 

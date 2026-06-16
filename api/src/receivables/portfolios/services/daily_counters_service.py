@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.types import Date as SADate
 
 from core.config.logger import logger
-from platform.countries.enums.country_enums import Nationality, NATIONALITY_TIMEZONE
+from app_platform.countries.enums.country_enums import Nationality, NATIONALITY_TIMEZONE
 from receivables.credits.models.credit_model import CreditModel
 from receivables.portfolios.models.portfolio_daily_counter_config_model import PortfolioDailyCounterConfigModel
 from receivables.portfolios.models.portfolio_model import PortfolioModel

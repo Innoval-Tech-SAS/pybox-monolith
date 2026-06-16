@@ -4,7 +4,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from platform.countries.enums.country_enums import UserDocumentType
+from app_platform.countries.enums.country_enums import UserDocumentType
 from receivables.credits.models.credit_model import CreditModel
 from receivables.debtors.models.debtor_model import DebtorModel
 
