@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import uuid
 from typing import Sequence
@@ -134,9 +134,9 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
         from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
         from identity.users.models.role_assignment_model import RoleAssignmentModel
         from identity.users.enums.user_enums import UserRole, UserScope
-        from collections.portfolios.models.portfolio_model import PortfolioModel
-        from collections.credits.models.credit_model import CreditModel
-        from collections.debtors.models.debtor_model import DebtorModel
+        from receivables.portfolios.models.portfolio_model import PortfolioModel
+        from receivables.credits.models.credit_model import CreditModel
+        from receivables.debtors.models.debtor_model import DebtorModel
 
         doc_hash_subq = (
             select(UserModel.document_number_hash)

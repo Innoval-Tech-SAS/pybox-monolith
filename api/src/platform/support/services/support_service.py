@@ -1,4 +1,4 @@
-﻿import os
+import os
 import re
 import uuid
 from datetime import datetime, timezone
@@ -12,7 +12,7 @@ from platform.notifications.services.notification_service import NotificationSer
 from identity.organizations.enums.organization_enums import VerificationStatus
 from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from identity.organizations.repository.organization_repository import OrganizationRepository
-from collections.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
+from receivables.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
 from platform.support.enums.support_enums import SupportCaseType, SupportTicketEventType, SupportTicketStatus
 from platform.support.models.support_ticket_event_model import SupportTicketEventModel
 from platform.support.models.support_ticket_message_model import SupportTicketMessageModel

@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import contextlib
 import os
 from contextlib import asynccontextmanager
@@ -14,8 +14,8 @@ from core.config.paths import UPLOADS_ROOT
 from core.config.routers import register_routers
 from core.database.database import db
 from core.database.session_expiry_listener import start_session_expiry_listener
-from collections.portfolios.scheduler import create_daily_counters_scheduler
-from collections.portfolios.services.daily_counters_service import run_all_nationalities
+from receivables.portfolios.scheduler import create_daily_counters_scheduler
+from receivables.portfolios.services.daily_counters_service import run_all_nationalities
 from core.security.seed_admin import seed_admin
 from core.security.seed_permissions import seed_permissions
 from core.tools.config_tools import get_or_throw

@@ -1,9 +1,9 @@
-﻿import uuid
+import uuid
 
 from fastapi import HTTPException, status
 
 from core.config.api_router import APIRouter
-from collections.portfolios.dependencies import PortfolioUserAccessServiceDep
+from receivables.portfolios.dependencies import PortfolioUserAccessServiceDep
 from core.security.dependencies import CurrentSession
 from core.security.policies import require_org_admin
 from identity.users.dependencies import UserManagementServiceDep
