@@ -11,6 +11,11 @@ class TemplateRenderer:
     The /send endpoint delegates substitution to NRS360 via the sub parameter.
     """
 
+    def __new__(cls) -> "TemplateRenderer":
+        if not hasattr(cls, "_instance"):
+            cls._instance = super(TemplateRenderer, cls).__new__(cls)
+        return cls._instance
+
     def find_variables(self, source: str) -> set[str]:
         return set(_VAR_PATTERN.findall(source))
 

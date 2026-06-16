@@ -68,11 +68,3 @@ class TemplatePreviewResponse(BaseSchema):
     variables_used: list[str] = Field(description="Variables detectadas en la plantilla")
 
 
-class TemplateSendRequest(BaseSchema):
-    to: str = Field(description="Dirección de email del destinatario")
-    subject: str | None = Field(default=None, description="Asunto personalizado (sobreescribe el de la plantilla)")
-    sub: dict[str, Any] = Field(description="Variables de sustitución para renderizar la plantilla")
-
-
-class TemplateSendResponse(BaseSchema):
-    message: str = Field(description="Resultado del envío")

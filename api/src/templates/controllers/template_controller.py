@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import HTTPException, Query, status
+from fastapi import Query, status
 
 from config.api_router import APIRouter
 from security.dependencies import CurrentSession
@@ -14,8 +14,6 @@ from templates.schemas.template_schemas import (
     TemplatePreviewRequest,
     TemplatePreviewResponse,
     TemplateResponse,
-    TemplateSendRequest,
-    TemplateSendResponse,
     TemplateUpdateRequest,
 )
 
@@ -106,18 +104,3 @@ async def preview_template(
     require_permission(ORG_TEMPLATES, session, str(organization_id))
     return await service.preview(template_id, organization_id, body)
 
-
-@router.post(
-    "/{template_id}/send",
-    response_model=TemplateSendResponse,
-    summary="Renderizar plantilla y enviar email",
-)
-async def send_template_email(
-    template_id: uuid.UUID,
-    body: TemplateSendRequest,
-    session: CurrentSession,
-    service: TemplateServiceDep,
-    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
-) -> TemplateSendResponse:
-    require_permission(ORG_TEMPLATES, session, str(organization_id))
-    return await service.send_email(template_id, organization_id, body)
