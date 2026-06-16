@@ -5,8 +5,8 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.logger import logger
-from databases.constants.query_constants import VALID_JOIN_TYPES
-from databases.utils.query_utils import (
+from schema_manager.constants.query_constants import VALID_JOIN_TYPES
+from schema_manager.utils.query_utils import (
     build_select_parts,
     build_table_alias_map,
     build_where_clauses,

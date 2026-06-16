@@ -4,9 +4,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_main_session
-from databases.services.ddl_service import DdlService
-from databases.services.dml_service import DmlService
-from databases.services.inspector_service import InspectorService
+from schema_manager.services.ddl_service import DdlService
+from schema_manager.services.dml_service import DmlService
+from schema_manager.services.inspector_service import InspectorService
 
 
 def get_inspector_service(

@@ -1,8 +1,6 @@
-from fastapi import HTTPException, status
-
 from config.api_router import APIRouter
-from databases.dependencies import DdlServiceDep, DmlServiceDep, InspectorServiceDep
-from databases.schemas.database_schemas import (
+from schema_manager.dependencies import DdlServiceDep, DmlServiceDep, InspectorServiceDep
+from schema_manager.schemas.database_schemas import (
     AlterTableRequest,
     CreateDatabaseRequest,
     CreateTableRequest,
@@ -12,19 +10,9 @@ from databases.schemas.database_schemas import (
     OperationResponse,
 )
 from security.dependencies import CurrentSession
-from users.schemas.user_session_schema import UserSession
+from security.policies import require_global, require_org_or_global
 
 router = APIRouter(prefix="/databases", tags=["Bases de datos"])
-
-
-def _require_global(session: UserSession) -> None:
-    if not session.is_global:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo usuarios globales pueden realizar esta acción")
-
-
-def _require_org_or_global(session: UserSession) -> None:
-    if not session.is_global and not session.orgs:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso")
 
 
 # ------------------------------------------------------------------

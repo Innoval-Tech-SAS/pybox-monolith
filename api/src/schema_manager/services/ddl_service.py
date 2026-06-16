@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from config.database_config import db_config
 from config.logger import logger
-from databases.schemas.database_schemas import AlterAction, ColumnDefinition
-from databases.utils.ddl_utils import build_column_ddl, build_column_type, validate_ident
+from schema_manager.schemas.database_schemas import AlterAction, ColumnDefinition
+from schema_manager.utils.ddl_utils import build_column_ddl, build_column_type, validate_ident
 
 
 class DdlService:

@@ -6,7 +6,7 @@ from fastapi import HTTPException, Query, status
 from config.api_router import APIRouter
 from security.dependencies import CurrentSession
 from security.permissions import ORG_TEMPLATES
-from security.policies import require_permission
+from security.policies import require_org_admin, require_permission
 from templates.dependencies import TemplateServiceDep
 from templates.enums.template_enums import TemplateChannel
 from templates.schemas.template_schemas import (
@@ -18,20 +18,8 @@ from templates.schemas.template_schemas import (
     TemplateSendResponse,
     TemplateUpdateRequest,
 )
-from users.enums.user_enums import UserRole
-from users.schemas.user_session_schema import UserSession
 
 router = APIRouter(prefix="/templates", tags=["Plantillas"])
-
-
-def _require_admin(session: UserSession, org_id: str) -> None:
-    if session.is_global:
-        return
-    org_entry = session.orgs.get(org_id)
-    if org_entry is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a esta organización")
-    if org_entry.role != UserRole.ADMIN:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo administradores pueden realizar esta acción")
 
 
 @router.get("/", response_model=list[TemplateResponse], summary="Listar plantillas de la organización")
@@ -70,7 +58,7 @@ async def create_template(
     service: TemplateServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> TemplateResponse:
-    _require_admin(session, str(organization_id))
+    require_org_admin(session, str(organization_id))
     template = await service.create(organization_id, body)
     return TemplateResponse.model_validate(template)
 
@@ -83,7 +71,7 @@ async def update_template(
     service: TemplateServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> TemplateResponse:
-    _require_admin(session, str(organization_id))
+    require_org_admin(session, str(organization_id))
     template = await service.update(template_id, organization_id, body)
     return TemplateResponse.model_validate(template)
 
@@ -99,7 +87,7 @@ async def delete_template(
     service: TemplateServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> None:
-    _require_admin(session, str(organization_id))
+    require_org_admin(session, str(organization_id))
     await service.delete(template_id, organization_id)
 
 

@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from databases.constants.query_constants import (
+from schema_manager.constants.query_constants import (
     IDENTIFIER_RE,
     OPERATOR_ALIASES,
     VALID_AGG_FUNCTIONS,

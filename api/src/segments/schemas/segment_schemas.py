@@ -5,7 +5,7 @@ from typing import Any, Literal
 from pydantic import Field
 
 from base.schema_base import BaseSchema
-from databases.schemas.database_schemas import (
+from schema_manager.schemas.database_schemas import (
     AggregationSpec,
     GroupByField,
     HavingCondition,

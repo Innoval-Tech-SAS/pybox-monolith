@@ -13,19 +13,9 @@ from payment_methods.schemas.payment_method_schemas import (
     PaymentMethodUpdateRequest,
 )
 from security.dependencies import CurrentSession
-from users.enums.user_enums import UserRole
+from security.policies import require_org_admin
 
 router = APIRouter(prefix="/payment-methods", tags=["Métodos de pago"])
-
-
-def _require_admin(session: CurrentSession, org_id: str) -> None:
-    if session.is_global:
-        return
-    org_entry = session.orgs.get(org_id)
-    if org_entry is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a esta organización")
-    if org_entry.role != UserRole.ADMIN:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo administradores pueden realizar esta acción")
 
 
 @router.get("/types", response_model=list[str], summary="Listar tipos de método de pago")
@@ -63,7 +53,7 @@ async def create_payment_method(
     session: CurrentSession,
     service: PaymentMethodServiceDep,
 ) -> PaymentMethodModel:
-    _require_admin(session, str(data.organization_id))
+    require_org_admin(session, str(data.organization_id))
     return await service.create(data)
 
 
@@ -75,7 +65,7 @@ async def update_payment_method(
     service: PaymentMethodServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> PaymentMethodModel:
-    _require_admin(session, str(organization_id))
+    require_org_admin(session, str(organization_id))
     return await service.update(id, organization_id, data)
 
 
@@ -86,5 +76,5 @@ async def delete_payment_method(
     service: PaymentMethodServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> None:
-    _require_admin(session, str(organization_id))
+    require_org_admin(session, str(organization_id))
     await service.delete(id, organization_id)

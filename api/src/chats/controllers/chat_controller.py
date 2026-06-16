@@ -1,35 +1,19 @@
 import json
 
-from fastapi import HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import Query, WebSocket, WebSocketDisconnect
 
 from chats.dependencies import ChatServiceDep
 from chats.websocket.connection_manager import ws_manager
 from config.api_router import APIRouter
-from database.redis import redis_client
-from security.services.auth_token_service import AuthTokenService
-from users.schemas.user_session_schema import UserSession, session_key
+from security.dependencies import get_ws_session
 
 router = APIRouter(prefix="/chats", tags=["Chats"])
-
-_ws_auth = AuthTokenService()
-
-
-async def _authenticate_ws(token: str) -> UserSession:
-    try:
-        payload = _ws_auth.verify_token(token)
-    except ValueError:
-        raise HTTPException(status_code=401)
-    user_id = int(payload["sub"])
-    session = await redis_client.get_json(session_key(user_id), UserSession)
-    if session is None:
-        raise HTTPException(status_code=401)
-    return session
 
 
 @router.websocket("/ws")
 async def chat_ws(ws: WebSocket, service: ChatServiceDep, token: str = Query(...)):
     try:
-        session = await _authenticate_ws(token)
+        session = await get_ws_session(token)
     except HTTPException:
         await ws.close(code=1008)
         return

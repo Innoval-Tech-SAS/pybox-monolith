@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.database import get_main_session
-from databases.services.dml_service import DmlService
+from schema_manager.services.dml_service import DmlService
 from segments.repository.segment_execution_repository import SegmentExecutionRepository
 from segments.repository.segment_repository import SegmentRepository
 from segments.services.segment_service import SegmentService

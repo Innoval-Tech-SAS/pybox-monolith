@@ -41,5 +41,22 @@ async def get_sse_session(token: Annotated[str, Query()]) -> UserSession:
     return session
 
 
+async def get_ws_session(token: str) -> UserSession:
+    try:
+        payload = _sse_token_service.verify_token(token)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.")
+    user_id = int(payload["sub"])
+    key = session_key(user_id)
+    session = await redis_client.get_json(key, UserSession)
+    if session is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sesión expirada. Inicia sesión nuevamente.",
+        )
+    await redis_client.expire(key, RedisConfig.DEFAULT_TTL)
+    return session
+
+
 CurrentSession = Annotated[UserSession, Depends(get_session)]
 SSESession = Annotated[UserSession, Depends(get_sse_session)]

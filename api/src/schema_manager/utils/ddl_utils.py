@@ -1,5 +1,5 @@
-from databases.constants.query_constants import IDENTIFIER_RE
-from databases.schemas.database_schemas import ColumnDataType, ColumnDefinition
+from schema_manager.constants.query_constants import IDENTIFIER_RE
+from schema_manager.schemas.database_schemas import ColumnDataType, ColumnDefinition
 
 
 def validate_ident(name: str, label: str) -> str:

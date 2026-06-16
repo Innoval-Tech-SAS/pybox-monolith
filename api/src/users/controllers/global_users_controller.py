@@ -1,17 +1,11 @@
-from fastapi import HTTPException, status
-
 from config.api_router import APIRouter
 from security.dependencies import CurrentSession
+from security.policies import require_global_admin
 from users.dependencies import UserManagementServiceDep
 from users.enums.user_enums import UserRole, UserScope
 from users.schemas.user_management_schemas import GlobalAdminCreate, ManagedUserCreate, ManagedUserResponse
 
 router = APIRouter(prefix="/users/global", tags=["Usuarios Globales"])
-
-
-def _require_global_admin(session: CurrentSession) -> None:
-    if not session.is_global or session.role != UserRole.ADMIN:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso restringido a administradores globales.")
 
 
 @router.post(
@@ -26,7 +20,7 @@ async def create_global_user(
     session: CurrentSession,
     service: UserManagementServiceDep,
 ) -> ManagedUserResponse:
-    _require_global_admin(session)
+    require_global_admin(session)
     if body.role not in {UserRole.ADMIN, UserRole.CUSTOMER_SERVICE}:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

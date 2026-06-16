@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import HTTPException, Query, status
+from fastapi import Query
 
 from campaigns.dependencies import CampaignServiceDep
 from campaigns.schemas.campaign_schemas import (
@@ -12,21 +12,9 @@ from campaigns.schemas.campaign_schemas import (
 from config.api_router import APIRouter
 from security.dependencies import CurrentSession
 from security.permissions import ORG_CAMPAIGNS
-from security.policies import require_permission
-from users.enums.user_enums import UserRole
-from users.schemas.user_session_schema import UserSession
+from security.policies import require_org_admin, require_permission
 
 router = APIRouter(prefix="/campaigns", tags=["Campañas"])
-
-
-def _require_admin(session: UserSession, org_id: str) -> None:
-    if session.is_global:
-        return
-    org_entry = session.orgs.get(org_id)
-    if org_entry is None:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a esta organización")
-    if org_entry.role != UserRole.ADMIN:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo administradores pueden realizar esta acción")
 
 
 @router.get("/", response_model=list[CampaignResponse], summary="Listar campañas de la organización")
@@ -64,7 +52,7 @@ async def create_campaign(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> CampaignResponse:
-    _require_admin(session, str(organization_id))
+    require_org_admin(session, str(organization_id))
     campaign = await service.create(organization_id, body)
     return CampaignResponse.model_validate(campaign)
 
@@ -77,7 +65,7 @@ async def update_campaign(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> CampaignResponse:
-    _require_admin(session, str(organization_id))
+    require_org_admin(session, str(organization_id))
     campaign = await service.update(campaign_id, organization_id, body)
     return CampaignResponse.model_validate(campaign)
 
@@ -93,5 +81,5 @@ async def delete_campaign(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> None:
-    _require_admin(session, str(organization_id))
+    require_org_admin(session, str(organization_id))
     await service.delete(campaign_id, organization_id)
