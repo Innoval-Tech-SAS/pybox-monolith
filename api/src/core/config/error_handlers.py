@@ -4,8 +4,6 @@ from fastapi.responses import JSONResponse
 
 from core.config.logger import logger
 from core.config.validation_messages import ERROR_MESSAGES, FIELD_NAMES
-from messaging.contacts.utils.contact_exceptions import DuplicateContactError
-
 
 def _format_validation_error(error: dict) -> str:
     error_type: str = error.get("type", "")
@@ -43,15 +41,6 @@ def register_error_handlers(app: FastAPI) -> None:
             status_code=exc.status_code,
             content={"error": exc.detail},
             headers=getattr(exc, "headers", None),
-        )
-
-    @app.exception_handler(DuplicateContactError)
-    async def handle_duplicate_contact(
-        _request: Request, error: DuplicateContactError
-    ) -> JSONResponse:
-        return JSONResponse(
-            status_code=409,
-            content={"error": str(error), "suggestion": error.suggestion},
         )
 
     @app.exception_handler(ValueError)

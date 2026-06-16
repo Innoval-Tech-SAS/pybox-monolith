@@ -17,7 +17,6 @@ from platform.chats.controllers.chat_controller import router as chats_router
 from collections.segments.controllers.segment_controller import router as segments_router
 from messaging.campaigns.controllers.campaign_controller import router as campaigns_router
 from messaging.channels.controllers.channel_controller import router as channels_router
-from collections.segments.controllers.segment_controller import router as segments_router
 from messaging.templates.controllers.template_controller import router as templates_router
 from identity.users.controllers.global_users_controller import router as global_users_router
 from identity.users.controllers.permissions_controller import router as permissions_router
@@ -47,5 +46,4 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(segments_router, prefix=API_PREFIX)
     app.include_router(campaigns_router, prefix=API_PREFIX)
     app.include_router(channels_router, prefix=API_PREFIX)
-    app.include_router(segments_router, prefix=API_PREFIX)
     app.include_router(templates_router, prefix=API_PREFIX)

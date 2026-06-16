@@ -1,5 +1,6 @@
-﻿from sqlalchemy import Boolean, Integer, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import ENUM
+﻿import uuid
+from sqlalchemy import Boolean, Integer, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.base.audit_model import AuditModel
@@ -18,7 +19,7 @@ class UserModel(AuditModel):
         ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     firstname: Mapped[str] = mapped_column(String(255), nullable=False, name="nombre")
     lastname: Mapped[str] = mapped_column(String(255), nullable=False, name="apellido")
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, name="correo_electronico")

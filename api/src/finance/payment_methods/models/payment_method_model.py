@@ -11,7 +11,7 @@ from finance.payment_methods.enums.payment_method_enums import PaymentMethodType
 class PaymentMethodModel(AuditModel):
     __tablename__ = "metodos_pago"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     organization_id: Mapped[uuid.UUID] = mapped_column(
         PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, index=True, name="id_organizacion"
     )

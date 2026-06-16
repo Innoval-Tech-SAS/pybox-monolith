@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from platform.reports.models.report_model import ReportModel
+from collections.reports.models.report_model import ReportModel
 
 
 class ReportRepository(SoftDeleteRepositoryBase[ReportModel]):

@@ -1,45 +1,51 @@
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
+import uuid
+from typing import Sequence
 
-from ..repositories.contact_repository import ContactRepository
-from ..utils.contact_error_messages import duplicate_contact_message
-from ..utils.contact_exceptions import DuplicateContactError
-from ..utils.contact_file_parser import ContactFileParser
+from fastapi import HTTPException, status
+
+from messaging.contacts.models.contact_model import ContactModel
+from messaging.contacts.repositories.contact_repository import ContactRepository
+from messaging.contacts.schemas.contact_schemas import ContactResponse, ContactsByChannelGroup
 
 
 class ContactService:
 
-    def __init__(self, session: AsyncSession):
-        self.repository = ContactRepository(session)
-        self.file_parser = ContactFileParser()
+    def __init__(self, repo: ContactRepository) -> None:
+        self._repo = repo
 
-    async def process_file(self, file_bytes: bytes, type_file: str) -> dict:
-        try:
-            return await self._process_file(file_bytes, type_file)
-        except IntegrityError as error:
-            raise DuplicateContactError(duplicate_contact_message(error)) from error
+    async def get_by_debtor(
+        self,
+        debtor_id: int,
+        organization_id: uuid.UUID,
+        portfolio_id: uuid.UUID | None = None,
+    ) -> list[ContactsByChannelGroup]:
+        contacts = await self._repo.get_by_debtor(debtor_id, organization_id, portfolio_id)
+        return self._group_by_channel(list(contacts))
 
-    async def _process_file(self, file_bytes: bytes, type_file: str) -> dict:
-        batch_size = 1000
-        total_saved = 0
-        batch = []
-        file_data = self.file_parser.parse(file_bytes, type_file)
+    async def update_status_by_provider_id(self, provider_id: str, new_status: str) -> None:
+        contact = await self._repo.get_by_provider_id(provider_id)
+        if contact is None:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                f"Contacto con providerId '{provider_id}' no encontrado",
+            )
+        contact.status = new_status
+        await self._repo.update(contact)
 
-        for contact_data in file_data.contacts:
-            contact = self.repository.model_class(**contact_data)
-            batch.append(contact)
+    def _group_by_channel(self, contacts: list[ContactModel]) -> list[ContactsByChannelGroup]:
+        buckets: dict[int | None, list[ContactModel]] = {}
+        for c in contacts:
+            buckets.setdefault(c.snapshot_channel_id, []).append(c)
 
-            if len(batch) >= batch_size:
-                saved = await self.repository.add_many(batch)
-                total_saved += len(saved)
-                batch.clear()
-
-        if batch:
-            saved = await self.repository.add_many(batch)
-            total_saved += len(saved)
-
-        return {
-            "total_saved": total_saved,
-            "total_skipped": file_data.total_skipped,
-            "extra_info_columns": file_data.extra_info_columns,
-        }
+        groups: list[ContactsByChannelGroup] = []
+        for channel_id, items in sorted(buckets.items(), key=lambda kv: (kv[0] is None, kv[0])):
+            channel_name = items[0].snapshot_currency or "UNKNOWN"
+            groups.append(
+                ContactsByChannelGroup(
+                    channel_id=channel_id,
+                    channel_name=channel_name,
+                    total=len(items),
+                    items=[ContactResponse.model_validate(c) for c in items],
+                )
+            )
+        return groups

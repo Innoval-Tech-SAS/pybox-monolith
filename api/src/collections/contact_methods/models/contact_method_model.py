@@ -1,5 +1,6 @@
-﻿from sqlalchemy import ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import ENUM
+﻿import uuid
+from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import AuditModel
@@ -9,7 +10,7 @@ from collections.contact_methods.enums.contact_method_enums import ContactMethod
 class ContactMethodModel(AuditModel):
     __tablename__ = "metodos_contacto"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     contact_type: Mapped[ContactMethodType] = mapped_column(ENUM(ContactMethodType), nullable=False, name="tipo_contacto")
     contact_value: Mapped[str] = mapped_column(String, nullable=False, name="valor_contacto")
     debtor_id: Mapped[int] = mapped_column(

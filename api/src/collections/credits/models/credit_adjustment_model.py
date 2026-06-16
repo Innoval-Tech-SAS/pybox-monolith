@@ -1,16 +1,17 @@
-﻿from datetime import datetime
+﻿import uuid
+from datetime import datetime
 
 from sqlalchemy import ForeignKey, Integer, Numeric, String
-from sqlalchemy import DateTime
-from sqlalchemy.orm import Mapped, mapped_column
-
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy import DateTime
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`n
 from core.base.audit_model import AuditModel
 
 
 class CreditAdjustmentModel(AuditModel):
     __tablename__ = "ajustes_credito"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     credit_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("creditos.id"), nullable=False, index=True, name="id_credito"
     )

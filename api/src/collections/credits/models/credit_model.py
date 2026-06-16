@@ -13,7 +13,7 @@ from collections.credits.enums.credit_enums import CreditTypes
 class CreditModel(AuditModel):
     __tablename__ = "creditos"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     credit_number: Mapped[str] = mapped_column(String, index=True, nullable=False, unique=True, name="numero_credito")
     credit_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, name="fecha_credito")
     credit_type: Mapped[CreditTypes] = mapped_column(ENUM(CreditTypes), nullable=False, name="tipo_credito")

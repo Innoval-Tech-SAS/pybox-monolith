@@ -1,13 +1,13 @@
-﻿from sqlalchemy import ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
-
+﻿import uuid
+from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from core.base.audit_model import AuditModel
 
 
 class AddressModel(AuditModel):
     __tablename__ = "direcciones"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     address: Mapped[str] = mapped_column(String, nullable=False, name="direccion")
     city: Mapped[str] = mapped_column(String, nullable=False, name="ciudad")
     state: Mapped[str] = mapped_column(String, nullable=False, name="departamento")

@@ -1,8 +1,9 @@
-﻿from decimal import Decimal
+﻿import uuid
+from decimal import Decimal
 
 from sqlalchemy import Enum, Numeric, String
-from sqlalchemy.orm import Mapped, mapped_column
-
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`n
 from core.base.audit_model import AuditModel
 from messaging.channels.enums.channel_enums import ChannelName, Currency
 
@@ -11,7 +12,7 @@ class ChannelModel(AuditModel):
 
     __tablename__ = "canales"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, name="id_canal")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id_canal")
 
     name: Mapped[ChannelName] = mapped_column(
         Enum(ChannelName), nullable=False, unique=True, index=True, name="nombre"

@@ -1,5 +1,6 @@
-﻿from sqlalchemy import Integer, String
-from sqlalchemy.dialects.postgresql import ENUM
+﻿import uuid
+from sqlalchemy import Integer, String
+from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import AuditModel
@@ -10,7 +11,7 @@ from collections.debtors.enums.debtor_enums import DebtorType
 class DebtorModel(AuditModel):
     __tablename__ = "deudores"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     full_name: Mapped[str] = mapped_column(String, nullable=False, name="nombre_completo")
     debtor_type: Mapped[DebtorType] = mapped_column(ENUM(DebtorType), nullable=False, name="tipo_deudor")
     document_type: Mapped[UserDocumentType] = mapped_column(ENUM(UserDocumentType), nullable=False, name="tipo_documento")

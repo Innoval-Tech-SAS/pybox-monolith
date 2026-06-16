@@ -1,44 +1,29 @@
-﻿from fastapi import HTTPException, UploadFile, status
-from core.config.api_router import APIRouter
+import uuid
+from typing import Annotated
 
-from identity.auth.dependencies import TokenPayload
+from fastapi import Query
+
+from core.config.api_router import APIRouter
+from core.security.dependencies import CurrentSession
+from core.security.policies import require_permission
+from core.security.permissions import ORG_CAMPAIGNS
 from messaging.contacts.dependencies import ContactServiceDep
+from messaging.contacts.schemas.contact_schemas import ContactsByChannelGroup
 
 router = APIRouter(prefix="/contacts", tags=["Contactos"])
 
-_ALLOWED_EXTENSIONS = {"csv", "xlsx"}
 
-
-@router.post(
-    "/upload-file",
-    status_code=status.HTTP_200_OK,
-    summary="Cargar archivo de contactos",
-    description="Procesa un archivo CSV o XLSX con contactos y retorna un resumen del resultado.",
+@router.get(
+    "/debtor/{debtor_id}",
+    response_model=list[ContactsByChannelGroup],
+    summary="Historial de contactos de un deudor agrupado por canal",
 )
-async def upload_file(
-    file: UploadFile,
-    _: TokenPayload,
+async def get_debtor_contacts(
+    debtor_id: int,
+    session: CurrentSession,
     service: ContactServiceDep,
-) -> dict:
-    filename = file.filename or ""
-
-    if not filename:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El nombre del archivo es inválido",
-        )
-
-    extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-    if extension not in _ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Archivo no permitido. Solo se aceptan archivos .csv o .xlsx",
-        )
-
-    file_bytes = await file.read()
-    resumen = await service.process_file(file_bytes, extension)
-
-    return {
-        "message": f"Archivo '{filename}' recibido exitosamente!",
-        "resumen": resumen,
-    }
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+    portfolio_id: Annotated[uuid.UUID | None, Query(alias="portfolioId")] = None,
+) -> list[ContactsByChannelGroup]:
+    require_permission(ORG_CAMPAIGNS, session, str(organization_id))
+    return await service.get_by_debtor(debtor_id, organization_id, portfolio_id)

@@ -1,5 +1,6 @@
-﻿from sqlalchemy import Boolean, ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import JSONB
+﻿import uuid
+from sqlalchemy import Boolean, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import AuditModel
@@ -8,7 +9,7 @@ from core.base.audit_model import AuditModel
 class NotificationModel(AuditModel):
     __tablename__ = "notificaciones"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("usuarios.id"), nullable=False, name="id_usuario"
     )

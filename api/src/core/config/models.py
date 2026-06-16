@@ -18,8 +18,8 @@ import finance.payment_methods.models.payment_method_model  # noqa: F401
 import collections.portfolios.models.portfolio_model  # noqa: F401
 import collections.portfolios.models.portfolio_user_access_model  # noqa: F401
 import collections.portfolios.models.portfolio_daily_counter_config_model  # noqa: F401
-import reports.models.report_model  # noqa: F401
-import support.models.support_ticket_model  # noqa: F401
+import collections.reports.models.report_model  # noqa: F401
+import platform.support.models.support_ticket_model  # noqa: F401
 import identity.users.models.user_model  # noqa: F401
 import identity.users.models.permission_model  # noqa: F401
 import identity.users.models.permission_assignment_model  # noqa: F401

@@ -1,16 +1,17 @@
-﻿from datetime import datetime
+﻿import uuid
+from datetime import datetime
 
 from sqlalchemy import Double, ForeignKey, Integer
-from sqlalchemy import DateTime
-from sqlalchemy.orm import Mapped, mapped_column
-
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy import DateTime
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`n
 from core.base.audit_model import AuditModel
 
 
 class PaymentModel(AuditModel):
     __tablename__ = "pagos"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     limit_pay_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, name="fecha_limite_pago")
     payment_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, name="fecha_pago")
     payment_amount: Mapped[float] = mapped_column(Double, nullable=False, default=0.0, name="monto_pago")

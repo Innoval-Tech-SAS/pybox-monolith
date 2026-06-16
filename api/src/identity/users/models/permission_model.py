@@ -1,13 +1,14 @@
-﻿from sqlalchemy import Boolean, Integer, SmallInteger, String
-from sqlalchemy.orm import Mapped, mapped_column
-
+﻿import uuid
+from sqlalchemy import Boolean, Integer, SmallInteger, String
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`n
 from core.base.audit_model import AuditModel
 
 
 class PermissionModel(AuditModel):
     __tablename__ = "permisos"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, name="nombre")
     label: Mapped[str | None] = mapped_column(String(255), nullable=True, name="etiqueta")
     description: Mapped[str | None] = mapped_column(String(500), nullable=True, name="descripcion")

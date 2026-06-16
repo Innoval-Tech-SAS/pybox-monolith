@@ -1,16 +1,17 @@
-﻿from datetime import datetime
+﻿import uuid
+from datetime import datetime
 
 from sqlalchemy import ForeignKey, Integer, Numeric
-from sqlalchemy import DateTime
-from sqlalchemy.orm import Mapped, mapped_column
-
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy import DateTime
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`nfrom sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID as PgUUID`n
 from core.base.audit_model import AuditModel
 
 
 class UVRQuoteModel(AuditModel):
     __tablename__ = "cotizaciones_uvr"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     quote_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True, name="fecha_cotizacion"
     )

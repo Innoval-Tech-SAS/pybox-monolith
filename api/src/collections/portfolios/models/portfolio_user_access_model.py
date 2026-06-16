@@ -17,7 +17,7 @@ class PortfolioUserAccessModel(AuditModel):
         Index("ix_acl_portfolio_user_active", "id_portafolio", "id_usuario", "activo"),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, name="id")
+    id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, name="id")
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("usuarios.id"), nullable=False, index=True, name="id_usuario"
     )
