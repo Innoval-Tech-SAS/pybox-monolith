@@ -5,7 +5,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator, model_validato
 from auth.enums.auth_enums import AuthProvider
 from base.schema_base import BaseSchema
 from countries.enums.country_enums import DOCUMENTS_BY_NATIONALITY, Nationality, UserDocumentType
-from messaging.enums.notification_enums import VerificationChannel
+from auth.enums.notification_enums import VerificationChannel
 
 
 class UserCreate(BaseModel):

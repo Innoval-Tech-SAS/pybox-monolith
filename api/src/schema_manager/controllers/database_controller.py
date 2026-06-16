@@ -1,3 +1,5 @@
+from fastapi import status
+
 from config.api_router import APIRouter
 from schema_manager.dependencies import DdlServiceDep, DmlServiceDep, InspectorServiceDep
 from schema_manager.schemas.database_schemas import (

@@ -8,7 +8,7 @@ import debtors.models.debtor_model  # noqa: F401
 import debtors.models.address_model  # noqa: F401
 import segments.models.segment_model  # noqa: F401
 import segments.models.segment_execution_model  # noqa: F401
-import messaging.models.verification_code_model  # noqa: F401
+import auth.models.verification_code_model  # noqa: F401
 import notifications.models.notification_model  # noqa: F401
 import organizations.models.organization_model  # noqa: F401
 import organizations.models.organization_membership_model  # noqa: F401

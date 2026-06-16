@@ -6,8 +6,8 @@ from countries.enums.country_enums import (
     ORG_FISCAL_DOCUMENT_BY_NATIONALITY,
     ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY,
 )
-from messaging.dependencies import get_verification_service
-from messaging.enums.notification_enums import VerificationChannel
+from auth.factories import get_verification_service
+from auth.enums.notification_enums import VerificationChannel
 from onboarding.schemas.onboarding_schemas import (
     OnboardingStatusSchema,
     OrganizationOnboardingSchema,

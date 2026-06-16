@@ -3,7 +3,7 @@ import json
 from fastapi import Form, HTTPException, UploadFile, status
 
 from config.api_router import APIRouter
-from messaging.exceptions import (
+from auth.exceptions import (
     CodeAlreadyUsedException,
     CodeExpiredException,
     CodeNotFoundException,

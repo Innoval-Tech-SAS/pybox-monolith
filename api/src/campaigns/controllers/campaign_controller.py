@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Query
+from fastapi import Query, status
 
 from campaigns.dependencies import CampaignServiceDep
 from campaigns.schemas.campaign_schemas import (
