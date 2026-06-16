@@ -19,7 +19,7 @@ router = APIRouter(prefix="/payment-methods", tags=["Métodos de pago"])
 
 
 @router.get("/types", response_model=list[str], summary="Listar tipos de método de pago")
-async def list_payment_method_types() -> list[str]:
+async def list_payment_method_types(session: CurrentSession) -> list[str]:
     return [t.value for t in PaymentMethodType]
 
 

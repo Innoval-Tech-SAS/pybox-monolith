@@ -76,12 +76,12 @@ async def list_users(session: CurrentSession, service: UserServiceDep, org_id: s
 
 
 @router.get("/{user_id}", response_model=AdminUserDetailSchema, summary="Obtener detalle de usuario")
-async def get_user(user_id: int, service: UserServiceDep):
+async def get_user(user_id: int, session: CurrentSession, service: UserServiceDep):
     return await service.get_user_detail(user_id)
 
 
 @router.patch("/{user_id}", response_model=AdminUserDetailSchema, summary="Actualizar datos de usuario")
-async def update_user(user_id: int, data: UpdateUserSchema, service: UserServiceDep):
+async def update_user(user_id: int, data: UpdateUserSchema, session: CurrentSession, service: UserServiceDep):
     return await service.update_user(user_id, data)
 
 

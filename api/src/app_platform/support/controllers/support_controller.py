@@ -14,7 +14,7 @@ async def get_metrics(f: SupportAccessFilter, service: SupportServiceDep):
 
 
 @router.get("/categories", response_model=list[TicketCategorySchema], summary="Listar categorías de tickets")
-async def get_ticket_categories(service: SupportServiceDep):
+async def get_ticket_categories(session: CurrentSession, service: SupportServiceDep):
     return service.get_categories()
 
 
