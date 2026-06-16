@@ -1,4 +1,22 @@
 services:
+  landing:
+    build:
+      context: ./landing
+      dockerfile: Dockerfile
+    container_name: template-landing
+    ports:
+      - "127.0.0.1:8080:80"
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: template-client
+    ports:
+      - "127.0.0.1:8081:80"
+    restart: unless-stopped
+
   api:
     build:
       context: ./api
@@ -34,7 +52,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     depends_on:
       database:
         condition: service_healthy
@@ -45,7 +63,7 @@ services:
     restart: unless-stopped
 
   database:
-    image: postgres:17-alpine
+    image: docker.io/library/postgres:17-alpine
     container_name: template-database
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -61,7 +79,7 @@ services:
     restart: unless-stopped
 
   pgadmin:
-    image: dpage/pgadmin4:latest
+    image: docker.io/dpage/pgadmin4:latest
     container_name: template-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
@@ -73,11 +91,9 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
+    image: docker.io/library/redis:7-alpine
     container_name: template-redis
     command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
