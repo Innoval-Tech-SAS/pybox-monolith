@@ -25,5 +25,5 @@ class MessageDispatcher:
             raise ValueError(f"Canal no soportado: {channel}")
         return sender
 
-    async def send(self, channel: str, to: list[str], message: str, **kwargs: Any) -> bool:
+    async def send(self, channel: str, to: list[str], message: str, **kwargs: Any) -> tuple[bool, dict[str, str] | None, str | None]:
         return await self.get_sender(channel).send(to, message, **kwargs)

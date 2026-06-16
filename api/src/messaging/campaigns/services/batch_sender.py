@@ -7,10 +7,17 @@ from typing import Any
 from core.config.logger import logger
 from messaging.campaigns.constants import BATCH_SIZE, MAX_RETRIES, RETRY_BASE_MS
 from messaging.campaigns.schemas.batch_schemas import BatchStats, SendInput
-from messaging.contacts.enums.contact_enums import ContactStatus
+from messaging.constants import channels
+from messaging.contacts.enums.contact_enums import ContactStatus, ProviderType
 from messaging.contacts.models.contact_model import ContactModel
 from messaging.contacts.repositories.contact_repository import ContactRepository
 from messaging.dispatcher import MessageDispatcher
+
+_NRS360_CHANNELS = {channels.SMS, channels.EMAIL}
+
+
+def _provider_for_channel(channel_name: str) -> ProviderType | None:
+    return ProviderType.NRS360 if channel_name in _NRS360_CHANNELS else None
 
 
 class BatchSender:
@@ -51,25 +58,27 @@ class BatchSender:
         to: list[str],
         message: str,
         **kwargs: Any,
-    ) -> tuple[bool, str | None]:
+    ) -> tuple[bool, str | None, dict[str, str] | None, str | None]:
         last_err: str | None = None
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                ok = await self._dispatcher.send(channel, to, message, **kwargs)
+                ok, ids_by_recipient, sending_id = await self._dispatcher.send(channel, to, message, **kwargs)
                 if ok:
-                    return True, None
+                    return True, None, ids_by_recipient, sending_id
                 last_err = "provider returned false"
             except Exception as exc:
                 last_err = str(exc)
             if attempt < MAX_RETRIES:
                 await asyncio.sleep(RETRY_BASE_MS * (2 ** (attempt - 1)) / 1000)
-        return False, last_err
+        return False, last_err, None, None
 
     async def _persist_contact(
         self,
         inp: SendInput,
         status: ContactStatus,
-        provider_id: str | None,
+        provider: ProviderType | None,
+        external_id: str | None,
+        sending_id: str | None,
         error: str | None,
         sent_at: datetime | None,
     ) -> None:
@@ -80,7 +89,9 @@ class BatchSender:
             debtor_id=inp.debtor_id,
             debtor_document=inp.debtor_document,
             sent_at=sent_at,
-            provider_id=provider_id,
+            provider=provider,
+            external_id=external_id,
+            sending_id=sending_id,
             error=error,
             campaign_id=inp.campaign_id,
             organization_id=inp.organization_id,
@@ -104,8 +115,9 @@ class BatchSender:
     async def _send_individually(self, chunk: list[SendInput], channel_name: str) -> tuple[int, int]:
         success = 0
         failure = 0
+        provider = _provider_for_channel(channel_name)
         for inp in chunk:
-            ok, err = await self._send_with_retry(
+            ok, err, ids_by_recipient, sending_id = await self._send_with_retry(
                 channel_name,
                 [inp.recipient],
                 inp.content,
@@ -114,7 +126,8 @@ class BatchSender:
             )
             now = datetime.now(timezone.utc) if ok else None
             status = ContactStatus.SENT if ok else ContactStatus.FAILED
-            await self._persist_contact(inp, status, None, err, now)
+            external_id = ids_by_recipient.get(inp.recipient) if ids_by_recipient else None
+            await self._persist_contact(inp, status, provider, external_id, sending_id, err, now)
             if ok:
                 success += 1
             else:
@@ -125,12 +138,16 @@ class BatchSender:
         to = [inp.recipient for inp in chunk]
         sub = [inp.sub[0] if inp.sub else {} for inp in chunk]
         message = chunk[0].content
+        provider = _provider_for_channel(channel_name)
 
-        ok, err = await self._send_with_retry(channel_name, to, message, sender=sender, sub=sub)
+        ok, err, ids_by_recipient, sending_id = await self._send_with_retry(
+            channel_name, to, message, sender=sender, sub=sub
+        )
         now = datetime.now(timezone.utc) if ok else None
         status = ContactStatus.SENT if ok else ContactStatus.FAILED
 
         for inp in chunk:
-            await self._persist_contact(inp, status, None, err, now)
+            external_id = ids_by_recipient.get(inp.recipient) if ids_by_recipient else None
+            await self._persist_contact(inp, status, provider, external_id, sending_id, err, now)
 
         return (len(chunk), 0) if ok else (0, len(chunk))

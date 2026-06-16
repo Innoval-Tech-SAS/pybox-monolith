@@ -16,7 +16,7 @@ class ContactResponse(BaseSchema):
     debtor_id: int | None = Field(default=None)
     debtor_document: str | None = Field(default=None)
     sent_at: datetime | None = Field(default=None)
-    provider_id: str | None = Field(default=None)
+    external_id: str | None = Field(default=None)
     error: str | None = Field(default=None)
     campaign_id: uuid.UUID | None = Field(default=None)
     organization_id: uuid.UUID | None = Field(default=None)

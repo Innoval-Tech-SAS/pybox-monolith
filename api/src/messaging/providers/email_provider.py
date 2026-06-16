@@ -1,6 +1,6 @@
 from core.config.logger import logger
 from core.tools.config_tools import get_or_throw
-from messaging.constants.nrs360_constants import EMAIL_URL
+from messaging.constants.nrs360_constants import EMAIL_ENDPOINT
 from messaging.providers.base_provider import NRS360BaseProvider
 
 
@@ -18,7 +18,7 @@ class NRS360EmailProvider(NRS360BaseProvider):
         body: str,
         to: list[str],
         sub: list[dict] | None = None,
-    ) -> bool:
+    ) -> tuple[bool, dict[str, str] | None, str | None]:
         payload: dict = {
             "subject": subject,
             "body": body,
@@ -30,9 +30,13 @@ class NRS360EmailProvider(NRS360BaseProvider):
         if sub:
             payload["sub"] = sub
         try:
-            await self._request("POST", EMAIL_URL, self._token, json=payload)
+            response = await self._request("POST", EMAIL_ENDPOINT, self._token, json=payload)
+            body_json = response.json()
+            result = body_json.get("result", [])
+            ids_by_recipient = {item["to"]: item["id"] for item in result if item.get("id")}
+            sending_id = body_json.get("sendingId")
             logger.info("[nrs360] email_sent | recipients=%d", len(to))
-            return True
+            return True, ids_by_recipient, str(sending_id) if sending_id is not None else None
         except Exception as exc:
             logger.error("[nrs360] email_error | error=%s", type(exc).__name__)
-            return False
+            return False, None, None

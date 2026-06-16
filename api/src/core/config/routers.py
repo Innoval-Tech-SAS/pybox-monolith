@@ -18,6 +18,7 @@ from receivables.segments.controllers.segment_controller import router as segmen
 from messaging.campaigns.controllers.campaign_controller import router as campaigns_router
 from messaging.channels.controllers.channel_controller import router as channels_router
 from messaging.templates.controllers.template_controller import router as templates_router
+from messaging.results.controllers.results_controller import router as results_router
 from identity.users.controllers.global_users_controller import router as global_users_router
 from identity.users.controllers.permissions_controller import router as permissions_router
 from identity.users.controllers.user_controller import router as users_router
@@ -47,3 +48,4 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(campaigns_router, prefix=API_PREFIX)
     app.include_router(channels_router, prefix=API_PREFIX)
     app.include_router(templates_router, prefix=API_PREFIX)
+    app.include_router(results_router, prefix=API_PREFIX)

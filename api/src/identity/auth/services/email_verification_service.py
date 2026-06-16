@@ -17,9 +17,10 @@ class EmailVerificationService(VerificationService):
         if not user.email:
             raise ValueError("El usuario no tiene email configurado")
 
-        return await self._provider.send_email(
+        ok, _ = await self._provider.send_email(
             subject="Código de verificación",
             body=_EMAIL_BODY,
             to=[user.email],
             sub=[{"name": user.full_name, "code": code}],
         )
+        return ok

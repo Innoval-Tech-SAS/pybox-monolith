@@ -1,8 +1,6 @@
 import uuid
 from typing import Sequence
 
-from fastapi import HTTPException, status
-
 from messaging.contacts.models.contact_model import ContactModel
 from messaging.contacts.repositories.contact_repository import ContactRepository
 from messaging.contacts.schemas.contact_schemas import ContactResponse, ContactsByChannelGroup
@@ -21,16 +19,6 @@ class ContactService:
     ) -> list[ContactsByChannelGroup]:
         contacts = await self._repo.get_by_debtor(debtor_id, organization_id, portfolio_id)
         return self._group_by_channel(list(contacts))
-
-    async def update_status_by_provider_id(self, provider_id: str, new_status: str) -> None:
-        contact = await self._repo.get_by_provider_id(provider_id)
-        if contact is None:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND,
-                f"Contacto con providerId '{provider_id}' no encontrado",
-            )
-        contact.status = new_status
-        await self._repo.update(contact)
 
     def _group_by_channel(self, contacts: list[ContactModel]) -> list[ContactsByChannelGroup]:
         buckets: dict[int | None, list[ContactModel]] = {}

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -45,4 +45,9 @@ class CampaignResultModel(AuditModel):
 
     sent_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=func.now(), name="fecha_envio"
+    )
+
+    # Id del envío de 360NRS (sendingId) reconciliado. Null para el resultado agregado inicial post-envío.
+    sending_id: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, index=True, name="id_envio"
     )

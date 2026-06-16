@@ -17,9 +17,10 @@ class SMSVerificationService(VerificationService):
         if not user.phone_number:
             raise ValueError("El usuario no tiene número de teléfono configurado")
 
-        return await self._provider.send_sms(
+        ok, _ = await self._provider.send_sms(
             message=_SMS_TEMPLATE,
             to=[user.phone_number.lstrip("+")],
             sender="TEMPLATE",
             sub=[{"code": code}],
         )
+        return ok

@@ -15,6 +15,7 @@ from core.config.routers import register_routers
 from core.database.database import db
 from core.database.session_expiry_listener import start_session_expiry_listener
 from messaging.campaigns.cron import create_campaigns_scheduler
+from messaging.results.cron import create_results_scheduler
 from receivables.portfolios.scheduler import create_daily_counters_scheduler
 from receivables.portfolios.services.daily_counters_service import run_all_nationalities
 from core.security.seed_admin import seed_admin
@@ -41,8 +42,12 @@ async def lifespan(_app: FastAPI):
     campaigns_scheduler = create_campaigns_scheduler()
     campaigns_scheduler.start()
 
+    results_scheduler = create_results_scheduler()
+    results_scheduler.start()
+
     yield
 
+    results_scheduler.shutdown(wait=False)
     campaigns_scheduler.shutdown(wait=False)
     scheduler.shutdown(wait=False)
     expiry_task.cancel()

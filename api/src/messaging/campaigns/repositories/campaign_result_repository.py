@@ -22,6 +22,7 @@ class CampaignResultRepository(RepositoryBase[CampaignResultModel]):
         success_count: int,
         failure_count: int,
         unique_customers: int,
+        sending_id: str | None = None,
     ) -> CampaignResultModel:
         result = CampaignResultModel(
             campaign_id=campaign_id,
@@ -32,5 +33,6 @@ class CampaignResultRepository(RepositoryBase[CampaignResultModel]):
             failure_count=failure_count,
             unique_customers=unique_customers,
             sent_at=datetime.now(timezone.utc),
+            sending_id=sending_id,
         )
         return await self.add(result)

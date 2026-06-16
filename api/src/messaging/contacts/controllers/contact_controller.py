@@ -27,17 +27,3 @@ async def get_debtor_contacts(
 ) -> list[ContactsByChannelGroup]:
     require_permission(ORG_CAMPAIGNS, session, str(organization_id))
     return await service.get_by_debtor(debtor_id, organization_id, portfolio_id)
-
-
-@router.get(
-    "/webhook/result",
-    summary="Webhook de estado de entrega del proveedor",
-    include_in_schema=False,
-)
-async def delivery_status_webhook(
-    service: ContactServiceDep,
-    provider_id: Annotated[str, Query(alias="providerId")],
-    status: Annotated[str, Query()],
-) -> dict:
-    await service.update_status_by_provider_id(provider_id, status)
-    return {"success": True}
