@@ -1,4 +1,6 @@
+import { Download } from "lucide-react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/ui/components/table/table";
+import { resolveSegmentFileUrl } from "@/segments/utils/segment-file-url";
 import type { SegmentResultsTableProps } from "@/segments/types/segment-results-table-props";
 
 export const SegmentResultsTable: React.FC<SegmentResultsTableProps> = ({ result }) => {
@@ -12,8 +14,8 @@ export const SegmentResultsTable: React.FC<SegmentResultsTableProps> = ({ result
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex shrink-0 items-center justify-between">
         <p className="text-sm text-gray-500 dark:text-gray-400">
           <span className="font-semibold text-gray-800 dark:text-white">{result.rows}</span> fila
           {result.rows !== 1 ? "s" : ""} ·{" "}
@@ -22,15 +24,20 @@ export const SegmentResultsTable: React.FC<SegmentResultsTableProps> = ({ result
           </span>{" "}
           columna{result.columns.length !== 1 ? "s" : ""}
         </p>
-        {result.mode === "audit" && result.fileName && (
-          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-            CSV generado: {result.fileName}
-          </span>
+        {result.mode === "audit" && result.fileName && result.filePath && (
+          <a
+            href={resolveSegmentFileUrl(result.filePath)}
+            download={result.fileName}
+            className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400"
+          >
+            <Download size={13} />
+            Descargar {result.fileName}
+          </a>
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
-        <div className="overflow-x-auto custom-scrollbar max-h-96">
+      <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
+        <div className="custom-scrollbar h-full overflow-auto">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/3 sticky top-0">

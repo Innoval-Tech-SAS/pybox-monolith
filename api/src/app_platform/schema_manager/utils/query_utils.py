@@ -2,6 +2,7 @@ import json
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
+from uuid import UUID
 
 from app_platform.schema_manager.constants.query_constants import (
     IDENTIFIER_RE,
@@ -20,6 +21,8 @@ def serialize_value(value: Any) -> Any:
         return value.isoformat()
     if isinstance(value, bytes):
         return value.decode("utf-8")
+    if isinstance(value, UUID):
+        return str(value)
     return value
 
 

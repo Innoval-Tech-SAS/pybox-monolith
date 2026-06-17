@@ -182,7 +182,7 @@ const TableSection: React.FC<TableSectionProps> = ({
                 <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Columnas a incluir
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid max-h-72 grid-cols-2 gap-2 overflow-y-auto pr-1 custom-scrollbar">
                   {fields.map((f) => (
                     <label
                       key={f.name}

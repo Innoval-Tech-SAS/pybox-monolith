@@ -27,7 +27,11 @@ export const SegmentExecuteModal: React.FC<SegmentExecuteModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} className="max-w-4xl mx-4 p-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      className={`mx-4 flex max-h-[90vh] w-full flex-col p-6 ${result ? "max-w-[95vw]" : "max-w-4xl"}`}
+    >
       <h2 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white">
         Ejecutar — {segment.name}
       </h2>
@@ -87,12 +91,12 @@ export const SegmentExecuteModal: React.FC<SegmentExecuteModalProps> = ({
       )}
 
       {result && !executing && (
-        <div className="space-y-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           <SegmentResultsTable result={result} />
           <button
             type="button"
             onClick={clearResult}
-            className="text-sm text-brand-500 hover:underline"
+            className="shrink-0 text-sm text-brand-500 hover:underline"
           >
             ← Volver a configurar
           </button>

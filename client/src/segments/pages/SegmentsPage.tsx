@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router";
 import { Plus } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
+import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
 import { useMyCompanies } from "@/companies/hooks/use-my-companies";
 import { usePortfolios } from "@/companies/hooks/use-portfolios";
 import { SegmentsTable } from "@/segments/components/segments-table";
@@ -27,6 +28,8 @@ export const SegmentsPage: React.FC = () => {
   const [editing, setEditing] = useState<SegmentResponse | undefined>();
   const [executing, setExecuting] = useState<SegmentResponse | null>(null);
   const [history, setHistory] = useState<SegmentResponse | null>(null);
+  const [deleting, setDeleting] = useState<SegmentResponse | null>(null);
+  const [deletingInProgress, setDeletingInProgress] = useState(false);
 
   const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
   const portfolioName = portfolios.find((p) => p.id === portfolioId)?.name ?? "Portafolio";
@@ -37,7 +40,6 @@ export const SegmentsPage: React.FC = () => {
     { label: "Mis Portafolios", path: `/my-companies/portfolios?org=${orgId}` },
     { label: portfolioName, path: `/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}` },
     { label: "Comunicaciones", path: `/my-companies/portfolios/communications?org=${orgId}&portfolio=${portfolioId}` },
-    { label: "Segmentos" },
   ];
 
   const handleFormSuccess = () => {
@@ -51,9 +53,17 @@ export const SegmentsPage: React.FC = () => {
     setView("edit");
   };
 
-  const handleDelete = async (segment: SegmentResponse) => {
-    if (!confirm(`¿Eliminar el segmento "${segment.name}"?`)) return;
-    await deleteSegment(segment.id);
+  const handleDelete = (segment: SegmentResponse) => setDeleting(segment);
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setDeletingInProgress(true);
+    try {
+      await deleteSegment(deleting.id);
+      setDeleting(null);
+    } finally {
+      setDeletingInProgress(false);
+    }
   };
 
   return (
@@ -112,6 +122,15 @@ export const SegmentsPage: React.FC = () => {
           orgId={orgId}
         />
       )}
+
+      <ConfirmModal
+        isOpen={!!deleting}
+        onClose={() => setDeleting(null)}
+        onConfirm={confirmDelete}
+        title="Eliminar segmento"
+        message={`¿Seguro que deseas eliminar el segmento "${deleting?.name}"? Esta acción no se puede deshacer.`}
+        loading={deletingInProgress}
+      />
     </>
   );
 };
