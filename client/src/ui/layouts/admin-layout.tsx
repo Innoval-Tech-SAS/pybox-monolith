@@ -32,7 +32,10 @@ const LayoutContent: React.FC = () => {
   const isOrgOrGlobal = scope === Scope.ORG || scope === Scope.GLOBAL;
   const navItems = isOrgOrGlobal ? signInNavbarItems : signInNavbarItems.slice(0, 1);
   const othersItems = isOrgOrGlobal
-    ? otherSignInItems.filter((item) => !item.permission || hasAnyPermission(item.permission))
+    ? otherSignInItems.filter((item) => {
+        if (item.globalOnly) return scope === Scope.GLOBAL;
+        return !item.permission || hasAnyPermission(item.permission);
+      })
     : [];
 
   return (

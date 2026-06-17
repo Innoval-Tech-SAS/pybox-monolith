@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 
+from billing.billing_status.controllers.billing_status_controller import router as billing_status_router
+from billing.bold.controllers.bold_webhook_controller import router as bold_webhook_router
+from billing.invoices.controllers.invoice_controller import router as invoices_router
 from identity.auth.controllers.auth_controller import router as auth_router
 from app_platform.schema_manager.controllers.database_controller import router as schema_manager_router
 from messaging.contacts.controllers.contact_controller import router as contacts_router
@@ -29,6 +32,9 @@ API_PREFIX = "/api/v1"
 
 def register_routers(app: FastAPI) -> None:
     app.include_router(auth_router, prefix=API_PREFIX)
+    app.include_router(invoices_router, prefix=API_PREFIX)
+    app.include_router(bold_webhook_router, prefix=API_PREFIX)
+    app.include_router(billing_status_router, prefix=API_PREFIX)
     app.include_router(contacts_router, prefix=API_PREFIX)
     app.include_router(debtors_router, prefix=API_PREFIX)
     app.include_router(countries_router, prefix=API_PREFIX)

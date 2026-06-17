@@ -9,6 +9,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.schema_manager.services.dml_service import DmlService
+from billing.billing_status.services.billing_status_service import BillingStatusService
+from billing.invoices.repository.invoice_repository import InvoiceRepository
 from core.config.logger import logger
 from messaging.campaigns.enums.campaign_enums import CampaignStatus, Periodicity
 from messaging.campaigns.models.campaign_model import CampaignModel
@@ -49,6 +51,7 @@ def make_automation_service(session: AsyncSession) -> AutomationService:
         seg_repo=SegmentRepository(session),
         dml=DmlService(session),
         batch_sender=BatchSender(_DISPATCHER, ContactRepository(session)),
+        billing_status_service=BillingStatusService(InvoiceRepository(session)),
     )
 
 
@@ -63,6 +66,7 @@ class AutomationService:
         seg_repo: SegmentRepository,
         dml: DmlService,
         batch_sender: BatchSender,
+        billing_status_service: BillingStatusService,
     ) -> None:
         self._campaign_repo = campaign_repo
         self._ct_repo = ct_repo
@@ -71,6 +75,7 @@ class AutomationService:
         self._seg_repo = seg_repo
         self._dml = dml
         self._batch_sender = batch_sender
+        self._billing_status_service = billing_status_service
 
     async def tick(self) -> int:
         now = datetime.now(timezone.utc).replace(second=0, microsecond=0)
@@ -115,6 +120,14 @@ class AutomationService:
     async def _process_due(self, ct: CampaignTimeModel, now: datetime) -> bool:
         campaign = await self._campaign_repo.get_by_id(ct.campaign_id)
         if campaign is None:
+            return False
+
+        if await self._billing_status_service.is_blocked(campaign.organization_id):
+            logger.warning(
+                "[automation] organización %s bloqueada por facturación, envío de campaña %s omitido",
+                campaign.organization_id, campaign.id,
+            )
+            # No se desactiva ni reprograma: se reintenta en el siguiente tick hasta que se desbloquee.
             return False
 
         await self._execute_campaign_once(campaign, ct)

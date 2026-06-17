@@ -15,6 +15,9 @@ import { OrgSettingsPage } from "./companies/pages/org-settings-page";
 import { PaymentMethodsPage } from "./companies/pages/payment-methods-page";
 import { CreatePaymentMethodPage } from "./companies/pages/create-payment-method-page";
 import { EditPaymentMethodPage } from "./companies/pages/edit-payment-method-page";
+import { BillingPage } from "./companies/pages/billing-page";
+import { BillingInvoiceDetailPage } from "./companies/pages/billing-invoice-detail-page";
+import { BillingAdminPage } from "./billing/pages/billing-admin-page";
 import { HomePage } from "./home/pages/home-page";
 import { NotificationDetailPage } from "./notifications/pages/notification-detail-page";
 import { NotificationsPage } from "./notifications/pages/notifications-page";
@@ -37,6 +40,7 @@ import { SegmentsPage } from "./segments/pages/SegmentsPage";
 import { ReportsPage } from "./reports/pages/ReportsPage";
 import { TemplatesPage } from "./templates/pages/templates-page";
 import { TemplateEditorPage } from "./templates/pages/template-editor-page";
+import { BoldPaymentResultPage } from "./billing/pages/bold-payment-result-page";
 import { NotFound } from "./ui/pages/not-found";
 
 export const noAuthRouter = [
@@ -51,6 +55,10 @@ export const noAuthRouter = [
   {
     path: "/admin/forgot-password",
     element: <ForgotPasswordPage />,
+  },
+  {
+    path: "/billing/payment-result",
+    element: <BoldPaymentResultPage />,
   },
   {
     path: "*",
@@ -146,6 +154,22 @@ export const authRouter = [
   {
     path: "/my-companies/payment-methods/:id/edit",
     element: <EditPaymentMethodPage />,
+  },
+  {
+    path: "/my-companies/billing",
+    element: <BillingPage />,
+  },
+  {
+    path: "/my-companies/billing/:invoiceId",
+    element: <BillingInvoiceDetailPage />,
+  },
+  {
+    path: "/billing",
+    element: <BillingAdminPage />,
+  },
+  {
+    path: "/billing/:invoiceId",
+    element: <BillingInvoiceDetailPage />,
   },
   {
     path: "/my-companies/templates",
