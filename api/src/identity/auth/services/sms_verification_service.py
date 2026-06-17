@@ -1,5 +1,6 @@
 ﻿from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config.logger import logger
 from identity.auth.enums.notification_enums import VerificationChannel
 from identity.auth.constants.verification_constants import SMS_TEMPLATE as _SMS_TEMPLATE
 from identity.auth.services.verification_service import VerificationService
@@ -20,11 +21,23 @@ class SMSVerificationService(VerificationService):
             raise ValueError("El usuario no tiene número de teléfono configurado")
 
         recipient = user.phone_number.lstrip("+")
+        logger.info(
+            "[verification_sms] dispatch_provider_start | user_id=%s recipient=%s",
+            user.id,
+            recipient,
+        )
         ok, ids_by_recipient, sending_id = await self._provider.send_sms(
             message=_SMS_TEMPLATE,
             to=[recipient],
             sender="TEMPLATE",
             sub=[{"code": code}],
+        )
+        logger.info(
+            "[verification_sms] dispatch_provider_result | user_id=%s recipient=%s ok=%s sending_id=%s",
+            user.id,
+            recipient,
+            ok,
+            sending_id,
         )
 
         contact = ContactModel(
@@ -38,5 +51,11 @@ class SMSVerificationService(VerificationService):
         )
         self._session.add(contact)
         await self._session.flush()
+        logger.info(
+            "[verification_sms] contact_saved | user_id=%s recipient=%s status=%s",
+            user.id,
+            recipient,
+            contact.status,
+        )
 
         return ok

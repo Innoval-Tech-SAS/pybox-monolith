@@ -1,5 +1,6 @@
 ﻿from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config.logger import logger
 from identity.auth.enums.notification_enums import VerificationChannel
 from identity.auth.constants.verification_constants import EMAIL_BODY as _EMAIL_BODY
 from identity.auth.services.verification_service import VerificationService
@@ -20,11 +21,23 @@ class EmailVerificationService(VerificationService):
             raise ValueError("El usuario no tiene email configurado")
 
         recipient = user.email
+        logger.info(
+            "[verification_email] dispatch_provider_start | user_id=%s recipient=%s",
+            user.id,
+            recipient,
+        )
         ok, ids_by_recipient, sending_id = await self._provider.send_email(
             subject="Código de verificación",
             body=_EMAIL_BODY,
             to=[recipient],
             sub=[{"name": user.full_name, "code": code}],
+        )
+        logger.info(
+            "[verification_email] dispatch_provider_result | user_id=%s recipient=%s ok=%s sending_id=%s",
+            user.id,
+            recipient,
+            ok,
+            sending_id,
         )
 
         contact = ContactModel(
@@ -38,5 +51,11 @@ class EmailVerificationService(VerificationService):
         )
         self._session.add(contact)
         await self._session.flush()
+        logger.info(
+            "[verification_email] contact_saved | user_id=%s recipient=%s status=%s",
+            user.id,
+            recipient,
+            contact.status,
+        )
 
         return ok

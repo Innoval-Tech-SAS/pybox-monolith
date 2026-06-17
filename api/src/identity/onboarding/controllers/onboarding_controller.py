@@ -3,6 +3,7 @@
 from fastapi import Form, HTTPException, UploadFile, status
 
 from core.config.api_router import APIRouter
+from core.config.logger import logger
 from identity.auth.exceptions import (
     CodeAlreadyUsedException,
     CodeExpiredException,
@@ -53,7 +54,17 @@ async def request_otp(
     session: CurrentSession,
     service: OnboardingServiceDep,
 ):
+    logger.info(
+        "[onboarding] request_otp_start | user_id=%s channel=%s",
+        session.user_id,
+        body.channel.value,
+    )
     await service.request_otp(session.user_id, body.channel)
+    logger.info(
+        "[onboarding] request_otp_done | user_id=%s channel=%s",
+        session.user_id,
+        body.channel.value,
+    )
 
 
 @router.post(
@@ -66,13 +77,38 @@ async def verify_otp(
     session: CurrentSession,
     service: OnboardingServiceDep,
 ):
+    logger.info(
+        "[onboarding] verify_otp_start | user_id=%s channel=%s",
+        session.user_id,
+        body.channel.value,
+    )
     try:
         await service.verify_otp(session.user_id, body.channel, body.code)
+        logger.info(
+            "[onboarding] verify_otp_done | user_id=%s channel=%s",
+            session.user_id,
+            body.channel.value,
+        )
     except CodeNotFoundException:
+        logger.warning(
+            "[onboarding] verify_otp_failed | user_id=%s channel=%s reason=not_found",
+            session.user_id,
+            body.channel.value,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Código no encontrado")
     except CodeExpiredException:
+        logger.warning(
+            "[onboarding] verify_otp_failed | user_id=%s channel=%s reason=expired",
+            session.user_id,
+            body.channel.value,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código ha expirado")
     except CodeAlreadyUsedException:
+        logger.warning(
+            "[onboarding] verify_otp_failed | user_id=%s channel=%s reason=already_used",
+            session.user_id,
+            body.channel.value,
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código ya fue utilizado")
 
 

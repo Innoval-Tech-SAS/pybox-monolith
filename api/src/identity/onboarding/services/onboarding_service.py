@@ -24,6 +24,7 @@ from identity.organizations.models.organization_membership_model import Organiza
 from identity.organizations.repository.organization_repository import OrganizationRepository
 from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from core.tools.file_tools import save_upload_file
+from core.config.logger import logger
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.models.role_assignment_model import RoleAssignmentModel
 from identity.users.models.user_model import UserModel
@@ -108,15 +109,20 @@ class OnboardingService:
         )
 
     async def request_otp(self, user_id: int, channel: VerificationChannel) -> None:
+        logger.info("[onboarding_service] request_otp | user_id=%s channel=%s", user_id, channel.value)
         user = await self._user_repo.get_by_id(user_id)
         if user is None:
+            logger.warning("[onboarding_service] request_otp_user_missing | user_id=%s", user_id)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
         service = get_verification_service(channel, self._session)
         await service.send_code(user)
+        logger.info("[onboarding_service] request_otp_sent | user_id=%s channel=%s", user_id, channel.value)
 
     async def verify_otp(self, user_id: int, channel: VerificationChannel, code: str) -> None:
+        logger.info("[onboarding_service] verify_otp | user_id=%s channel=%s", user_id, channel.value)
         user = await self._user_repo.get_by_id(user_id)
         if user is None:
+            logger.warning("[onboarding_service] verify_otp_user_missing | user_id=%s", user_id)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
         service = get_verification_service(channel, self._session)
         await service.verify_code(user_id, code)
@@ -127,6 +133,7 @@ class OnboardingService:
             user.is_phone_verified = True
 
         await self._user_repo.update(user)
+        logger.info("[onboarding_service] verify_otp_done | user_id=%s channel=%s", user_id, channel.value)
 
     async def set_phone(self, user_id: int, data: SetPhoneSchema) -> None:
         user = await self._user_repo.get_by_id(user_id)
