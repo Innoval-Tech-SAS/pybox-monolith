@@ -83,7 +83,7 @@ class SegmentService:
         )
 
         if not result["success"]:
-            logger.error("[SegmentService] Error ejecutando segmento %d: %s", segment_id, result["error"])
+            logger.error("[SegmentService] Error ejecutando segmento %s: %s", segment_id, result["error"])
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, result["error"])
 
         df = self._to_dataframe(result)

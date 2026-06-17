@@ -36,6 +36,7 @@ export const SegmentsPage: React.FC = () => {
     { label: orgName, path: `/my-companies?org=${orgId}` },
     { label: "Mis Portafolios", path: `/my-companies/portfolios?org=${orgId}` },
     { label: portfolioName, path: `/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}` },
+    { label: "Comunicaciones", path: `/my-companies/portfolios/communications?org=${orgId}&portfolio=${portfolioId}` },
     { label: "Segmentos" },
   ];
 

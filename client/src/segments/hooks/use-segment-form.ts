@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
+import { SEGMENT_STEPS } from "@/segments/constants/segment.constants";
 import type {
   SegmentFormState,
   SegmentFormTable,
   SegmentJoin,
   SegmentTableFilter,
+  SegmentGroupBy,
+  SegmentAggregation,
+  SegmentHaving,
+  SegmentOrderBy,
   SegmentResponse,
 } from "@/segments/types/segment.types";
 
@@ -16,6 +21,11 @@ const EMPTY_STATE: SegmentFormState = {
   mainTableFilters: [],
   additionalTables: [],
   joins: [],
+  aggregateMode: false,
+  groupBy: [],
+  aggregations: [],
+  having: [],
+  orderBy: [],
 };
 
 const parseExisting = (segment: SegmentResponse): SegmentFormState => {
@@ -53,6 +63,27 @@ const parseExisting = (segment: SegmentResponse): SegmentFormState => {
       rightOn: ((j.right_on ?? j.rightOn) as string) ?? "",
       how: (j.how as SegmentJoin["how"]) ?? "inner",
     })),
+    aggregateMode: (criteria.query_mode as string) === "aggregate",
+    groupBy: ((criteria.group_by as Record<string, unknown>[]) ?? []).map((g) => ({
+      table: (g.table as string) ?? "",
+      column: g.column as string,
+      alias: (g.alias as string) ?? (g.column as string),
+    })),
+    aggregations: ((criteria.aggregations as Record<string, unknown>[]) ?? []).map((a) => ({
+      function: a.function as SegmentAggregation["function"],
+      table: (a.table as string) ?? "",
+      column: a.column as string,
+      alias: (a.alias as string) ?? "",
+    })),
+    having: ((criteria.having as Record<string, unknown>[]) ?? []).map((h) => ({
+      metric: h.metric as string,
+      op: h.op as SegmentHaving["op"],
+      value: (h.value as string | string[] | null) ?? null,
+    })),
+    orderBy: ((criteria.order_by as Record<string, unknown>[]) ?? []).map((o) => ({
+      field: o.field as string,
+      direction: ((o.direction as string) ?? "asc") as SegmentOrderBy["direction"],
+    })),
   };
 };
 
@@ -84,7 +115,11 @@ const buildPayload = (state: SegmentFormState, orgId: string) => {
         rightOn: j.rightOn,
         how: j.how,
       })),
-      queryMode: "detail",
+      queryMode: state.aggregateMode ? "aggregate" : "detail",
+      groupBy: state.aggregateMode ? state.groupBy : [],
+      aggregations: state.aggregateMode ? state.aggregations : [],
+      having: state.aggregateMode ? state.having : [],
+      orderBy: state.aggregateMode ? state.orderBy : [],
     },
     organizationId: orgId,
   };
@@ -105,7 +140,7 @@ export const useSegmentForm = (
   const update = (patch: Partial<SegmentFormState>) =>
     setState((prev) => ({ ...prev, ...patch }));
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, 3));
+  const nextStep = () => setStep((s) => Math.min(s + 1, SEGMENT_STEPS.length - 1));
   const prevStep = () => setStep((s) => Math.max(s - 1, 0));
 
   // Additional tables helpers

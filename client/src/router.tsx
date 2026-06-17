@@ -32,6 +32,7 @@ import { UserSettingsPage } from "./users/pages/user-settings-page";
 import { UserPortfoliosPage } from "./users/pages/user-portfolios-page";
 import { CreateUserPage } from "./users/pages/create-user-page";
 import { ChatPage } from "./chat/pages/chat-page";
+import { CommunicationsHubPage } from "./companies/pages/communications-hub-page";
 import { SegmentsPage } from "./segments/pages/SegmentsPage";
 import { TemplatesPage } from "./templates/pages/templates-page";
 import { TemplateEditorPage } from "./templates/pages/template-editor-page";
@@ -116,6 +117,10 @@ export const authRouter = [
   {
     path: "/my-companies/portfolios/settings",
     element: <PortfolioSettingsPage />,
+  },
+  {
+    path: "/my-companies/portfolios/communications",
+    element: <CommunicationsHubPage />,
   },
   {
     path: "/my-companies/portfolios/segments",

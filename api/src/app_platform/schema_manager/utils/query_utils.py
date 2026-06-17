@@ -10,6 +10,7 @@ from app_platform.schema_manager.constants.query_constants import (
     VALID_HAVING_OPERATORS,
     VALID_WHERE_OPERATORS,
 )
+from app_platform.schema_manager.utils.relative_dates import resolve_filter_value
 
 
 def serialize_value(value: Any) -> Any:
@@ -59,9 +60,10 @@ def sanitize_identifier(value: str | None, *, label: str) -> str:
 
 
 def sanitize_table_name(full_name: str) -> tuple[str, str]:
-    if "." not in str(full_name or ""):
-        raise ValueError(f"Table name must include schema: {full_name}")
-    schema, table = full_name.split(".", 1)
+    raw = str(full_name or "")
+    if "." not in raw:
+        return "public", sanitize_identifier(raw, label="table")
+    schema, table = raw.split(".", 1)
     return sanitize_identifier(schema, label="schema"), sanitize_identifier(table, label="table")
 
 
@@ -127,7 +129,7 @@ def build_where_clauses(filters: list[dict[str, Any]], alias: str) -> str:
     for f in filters:
         column = sanitize_identifier(f["column"], label="filter column")
         op = ensure_operator_allowed(f.get("op", "="), in_having=False)
-        value = parse_json_if_string(f.get("value"))
+        value = resolve_filter_value(parse_json_if_string(f.get("value")))
         clauses.append(build_sql_condition(f"{alias}.{column}", op, value))
     return " AND ".join(clauses)
 

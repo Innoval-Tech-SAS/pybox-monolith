@@ -3,6 +3,7 @@ import type {
   SegmentFormTable,
   SegmentTableFilter,
   FilterOp,
+  FieldInfo,
 } from "@/segments/types/segment.types";
 
 export interface StepTablesFiltersProps {
@@ -26,7 +27,7 @@ export interface TableSectionProps {
 
 export interface FilterRowProps {
   filter: SegmentTableFilter;
-  fields: string[];
+  fields: FieldInfo[];
   onChange: (patch: Partial<SegmentTableFilter>) => void;
   onRemove: () => void;
 }

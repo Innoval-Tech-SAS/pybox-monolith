@@ -5,7 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config.logger import logger
-from app_platform.schema_manager.constants.query_constants import VALID_JOIN_TYPES
+from app_platform.schema_manager.constants.query_constants import JOIN_SQL_KEYWORDS, VALID_JOIN_TYPES
 from app_platform.schema_manager.utils.query_utils import (
     build_select_parts,
     build_table_alias_map,
@@ -112,7 +112,7 @@ class DmlService:
                 join_type = str(join.get("how", "inner") or "inner").strip().lower()
                 if join_type not in VALID_JOIN_TYPES:
                     raise ValueError(f"Invalid join type: {join_type}")
-                query += f" {join_type.upper()} JOIN {right_schema}.{right_table} AS {right_alias}"
+                query += f" {JOIN_SQL_KEYWORDS[join_type]} {right_schema}.{right_table} AS {right_alias}"
                 query += f" ON {left_alias}.{left_on} = {right_alias}.{right_on}"
 
             where_parts: list[str] = []
@@ -172,7 +172,7 @@ class DmlService:
                 join_type = str(join.get("how", "inner") or "inner").strip().lower()
                 if join_type not in VALID_JOIN_TYPES:
                     raise ValueError(f"Invalid join type: {join_type}")
-                query += f" {join_type.upper()} JOIN {right_schema}.{right_table} AS {right_alias}"
+                query += f" {JOIN_SQL_KEYWORDS[join_type]} {right_schema}.{right_table} AS {right_alias}"
                 query += f" ON {left_alias}.{left_on} = {right_alias}.{right_on}"
 
             where_parts2: list[str] = []

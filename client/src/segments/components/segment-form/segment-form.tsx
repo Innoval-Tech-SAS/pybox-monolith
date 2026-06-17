@@ -4,6 +4,7 @@ import { Loader } from "@/ui/components/loader/loader";
 import { StepBasicInfo } from "./step-basic-info";
 import { StepTablesFilters } from "./step-tables-filters";
 import { StepJoins } from "./step-joins";
+import { StepAggregation } from "./step-aggregation";
 import { StepSummary } from "./step-summary";
 import { useSegmentForm } from "@/segments/hooks/use-segment-form";
 import { SEGMENT_STEPS } from "@/segments/constants/segment.constants";
@@ -36,6 +37,9 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({
 
   const canNext = () => {
     if (step === 0) return !!state.name.trim() && !!state.mainTable;
+    if (step === 3 && state.aggregateMode) {
+      return state.aggregations.length > 0 && state.aggregations.every((a) => !!a.column && !!a.alias);
+    }
     return true;
   };
 
@@ -79,7 +83,8 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({
             allTableAliases={allTableAliases}
           />
         )}
-        {step === 3 && <StepSummary state={state} />}
+        {step === 3 && <StepAggregation state={state} update={update} />}
+        {step === 4 && <StepSummary state={state} />}
       </div>
 
       {/* Actions */}

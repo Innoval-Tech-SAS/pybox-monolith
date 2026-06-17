@@ -1,6 +1,5 @@
 import {
   CalendarDays,
-  Filter,
   Plus,
   Send,
   Settings,
@@ -39,21 +38,13 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     requiredPermission: "portfolio.upload_new",
   },
   {
-    key: "segments",
-    title: "Segmentos",
-    description: "Listas dinámicas de deudores y sus relaciones. Filtra, une tablas y exporta.",
-    icon: <Filter size={24} className="text-white" />,
-    gradient: "from-violet-500 to-purple-600",
-    path: "/my-companies/portfolios/segments",
-    requiredPermission: "portfolio.clients",
-  },
-  {
     key: "messages",
     title: "Comunicaciones",
-    description: "Flujos, campañas masivas y plantillas de mensajería.",
+    description: "Segmentos, plantillas y campañas masivas de mensajería.",
     icon: <Send size={24} className="text-white" />,
     gradient: "from-indigo-500 to-blue-600",
-    path: null,
+    path: "/my-companies/portfolios/communications",
+    requiredPermission: "portfolio.communications",
     requiresVerification: true,
   },
   {
