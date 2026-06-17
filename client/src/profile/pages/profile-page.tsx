@@ -18,29 +18,29 @@ export const ProfilePage: React.FC = () => {
           apiClient("/users/me") as Promise<User>,
           (async () => {
             const s = await apiClient("/users/me") as User;
-            const uid = s.user_id ?? s.id;
+            const uid = s.userId;
             if (!uid) return null;
             return apiClient(`/users/${uid}`) as Promise<UserDetail>;
           })(),
         ]);
 
         setData({
-          userId: session.user_id ?? session.id,
-          fullName: session.full_name ?? session.fullname ?? "",
+          userId: session.userId,
+          fullName: session.fullName ?? "",
           firstname: detail?.firstname,
           lastname: detail?.lastname,
           email: session.email,
           phoneNumber: detail?.phoneNumber,
           authProvider: detail?.authProvider,
-          documentType: session.document_type ?? session.documentType ?? detail?.documentType,
-          documentNumber: session.document_number ?? session.documentNumber ?? detail?.documentNumber,
-          profilePhotoUrl: session.profile_photo_url ?? session.profilePhotoUrl ?? detail?.profilePhotoUrl,
+          documentType: session.documentType ?? detail?.documentType,
+          documentNumber: session.documentNumber ?? detail?.documentNumber,
+          profilePhotoUrl: session.profilePhotoUrl ?? detail?.profilePhotoUrl,
           role: session.role,
           scope: session.scope,
           isActive: detail?.isActive,
           isEmailVerified: detail?.isEmailVerified,
           isPhoneVerified: detail?.isPhoneVerified,
-          mfaEnabled: session.mfa_enabled ?? detail?.mfaEnabled,
+          mfaEnabled: session.mfaEnabled ?? detail?.mfaEnabled,
           isActiveSessions: detail?.isActiveSessions,
           createdAt: detail?.createdAt,
           updatedAt: detail?.updatedAt,

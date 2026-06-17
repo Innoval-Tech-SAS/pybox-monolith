@@ -163,7 +163,7 @@ export const useChatPage = () => {
   );
 
   const openNewChat = useCallback(
-    async (peerId: number, peerName: string, peerAvatar: string | null) => {
+    async (peerId: string, peerName: string, peerAvatar: string | null) => {
       setShowNewChat(false);
       const summary = await request<ChatSummary>("create_direct_chat", { peerId });
       setChats((prev) => {

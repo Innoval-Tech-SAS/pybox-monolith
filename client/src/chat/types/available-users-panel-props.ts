@@ -1,4 +1,4 @@
-import type { ChatAvailableUser, ChatSummary } from "@/chat/types/chat/chat-types";
+import type { ChatAvailableUser, ChatSummary } from "@/types/chat/chat-types";
 
 export interface AvailableUsersPanelProps {
   users: ChatAvailableUser[];

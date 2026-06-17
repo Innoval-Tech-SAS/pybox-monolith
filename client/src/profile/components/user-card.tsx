@@ -315,10 +315,10 @@ export const UserCard: React.FC<UserCardProps> = ({ data, isOwnProfile = false, 
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                   {orgEntries.map(([orgId, entry]) => {
-                    const v = VERIFICATION_CONFIG[entry.verification_status] ?? VERIFICATION_CONFIG.pending;
+                    const v = VERIFICATION_CONFIG[entry.verificationStatus] ?? VERIFICATION_CONFIG.pending;
                     return (
                       <tr key={orgId}>
-                        <td className="py-3 font-medium text-gray-800 dark:text-white/90">{entry.org_name}</td>
+                        <td className="py-3 font-medium text-gray-800 dark:text-white/90">{entry.orgName}</td>
                         <td className="py-3">
                           <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-500/10 dark:text-brand-400">
                             {entry.role}
@@ -333,7 +333,7 @@ export const UserCard: React.FC<UserCardProps> = ({ data, isOwnProfile = false, 
                           </span>
                         </td>
                         <td className="py-3 text-xs text-gray-500 whitespace-nowrap dark:text-gray-400">
-                          {fmt(entry.created_at)}
+                          {fmt(entry.createdAt)}
                         </td>
                       </tr>
                     );

@@ -100,10 +100,10 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {orgEntries.map(([orgId, entry]) => {
-                  const verification = VERIFICATION_CONFIG[entry.verification_status] ?? VERIFICATION_CONFIG.pending;
+                  const verification = VERIFICATION_CONFIG[entry.verificationStatus] ?? VERIFICATION_CONFIG.pending;
                   return (
                     <tr key={orgId}>
-                      <td className="py-3 font-medium text-gray-800 dark:text-white/90">{entry.org_name}</td>
+                      <td className="py-3 font-medium text-gray-800 dark:text-white/90">{entry.orgName}</td>
                       <td className="py-3">
                         <span className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-500/10 dark:text-brand-400">
                           {entry.role}
@@ -121,7 +121,7 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
                         </span>
                       </td>
                       <td className="py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {formatDate(entry.created_at)}
+                        {formatDate(entry.createdAt)}
                       </td>
                     </tr>
                   );

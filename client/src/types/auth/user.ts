@@ -29,7 +29,7 @@ export interface OrgSessionEntry {
 
 export interface User {
   // /me response fields (camelCase from API)
-  userId?: number;
+  userId?: string;
   fullName?: string;
   email: string;
   role?: string;

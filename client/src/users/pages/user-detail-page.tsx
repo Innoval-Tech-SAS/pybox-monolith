@@ -16,7 +16,7 @@ export const UserDetailPage: React.FC = () => {
   const session = getSession();
   const isGlobal = session?.scope === "GLOBAL";
   const isOrgAdmin = Object.values(session?.orgs ?? {}).some((e) => e.role === "ADMINISTRADOR");
-  const canForceLogout = (isGlobal || isOrgAdmin) && !!user && user.id !== (session?.user_id ?? session?.id);
+  const canForceLogout = (isGlobal || isOrgAdmin) && !!user && user.id !== session?.userId;
 
   const handleForceLogout = async () => {
     if (!user) return;

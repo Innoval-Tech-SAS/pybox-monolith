@@ -26,7 +26,7 @@ export const ChatBubblesContainer: React.FC = () => {
 
   const { getSession } = useAuth();
   const session = getSession();
-  const currentUserId = session?.user_id ?? 0;
+  const currentUserId = session?.userId ?? "";
   useEffect(() => {
     loadChats();
   }, [loadChats]);
