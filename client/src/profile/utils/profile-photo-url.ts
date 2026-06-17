@@ -16,7 +16,8 @@ export const resolveProfilePhotoUrl = (value?: string | null): string | null => 
   }
 
   try {
-    const resolved = `${new URL(API_URL).origin}${value}`;
+    const base = API_URL.replace(/\/+$/, "");
+    const resolved = `${base}${value}`;
     console.log("[profile-photo] resolve output", { resolved, reason: "api-origin" });
     return resolved;
   } catch {

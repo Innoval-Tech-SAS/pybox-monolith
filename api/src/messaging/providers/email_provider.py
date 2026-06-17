@@ -12,6 +12,8 @@ class NRS360EmailProvider(NRS360BaseProvider):
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
             cls._instance._token = get_or_throw("NRS360_EMAIL_TOKEN")
+            cls._instance._sender = get_or_throw("NRS360_EMAIL_SENDER")
+            cls._instance._sender_name = get_or_throw("NRS360_EMAIL_SENDER_NAME")
         return cls._instance
 
     async def send_email(
@@ -25,8 +27,9 @@ class NRS360EmailProvider(NRS360BaseProvider):
             "subject": subject,
             "body": body,
             "to": to,
-            "from": "info@puntualmente.info",
-            "fromName": "PYBOX Info",
+            "fromEmail": self._sender,
+            "fromName": self._sender_name,
+            "replyTo": self._sender,
             "campaignName": "otp-verification",
         }
         if sub:

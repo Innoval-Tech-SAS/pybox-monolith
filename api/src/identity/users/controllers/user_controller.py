@@ -89,17 +89,17 @@ async def list_users(session: CurrentSession, service: UserServiceDep, org_id: s
 
 
 @router.get("/{user_id}", response_model=AdminUserDetailSchema, summary="Obtener detalle de usuario")
-async def get_user(user_id: int, session: CurrentSession, service: UserServiceDep):
+async def get_user(user_id: uuid.UUID, session: CurrentSession, service: UserServiceDep):
     return await service.get_user_detail(user_id)
 
 
 @router.patch("/{user_id}", response_model=AdminUserDetailSchema, summary="Actualizar datos de usuario")
-async def update_user(user_id: int, data: UpdateUserSchema, session: CurrentSession, service: UserServiceDep):
+async def update_user(user_id: uuid.UUID, data: UpdateUserSchema, session: CurrentSession, service: UserServiceDep):
     return await service.update_user(user_id, data)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar usuario")
-async def delete_user(user_id: int, payload: TokenPayload, service: UserServiceDep):
+async def delete_user(user_id: uuid.UUID, payload: TokenPayload, service: UserServiceDep):
     calling_user_id = uuid.UUID(str(payload["sub"]))
     if calling_user_id == user_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No puedes eliminarte a ti mismo.")

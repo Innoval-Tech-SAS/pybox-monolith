@@ -80,7 +80,7 @@ app.add_middleware(
 app.add_middleware(LoggingMiddleware)
 register_error_handlers(app)
 
-app.mount("/files", StaticFiles(directory=UPLOADS_ROOT), name="uploads")
+app.mount("/api/v1/files", StaticFiles(directory=UPLOADS_ROOT), name="uploads")
 
 register_routers(app)
 

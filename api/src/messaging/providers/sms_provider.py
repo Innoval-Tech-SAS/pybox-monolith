@@ -12,19 +12,19 @@ class NRS360SmsProvider(NRS360BaseProvider):
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
             cls._instance._token = get_or_throw("NRS360_SMS_TOKEN")
+            cls._instance._sender = get_or_throw("NRS360_SMS_SENDER")
         return cls._instance
 
     async def send_sms(
         self,
         message: str,
         to: list[str],
-        sender: str,
         sub: list[dict] | None = None,
     ) -> tuple[bool, dict[str, str] | None, str | None]:
         payload: dict = {
             "message": message,
             "to": to,
-            "sender": sender,
+            "from": self._sender,
             "campaignName": "otp-verification",
         }
         if sub:

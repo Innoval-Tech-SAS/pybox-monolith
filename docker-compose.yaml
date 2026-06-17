@@ -44,7 +44,10 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       CORS_ORIGINS: ${CORS_ORIGINS}
       NRS360_SMS_TOKEN: ${NRS360_SMS_TOKEN}
+      NRS360_SMS_SENDER: ${NRS360_SMS_SENDER}
       NRS360_EMAIL_TOKEN: ${NRS360_EMAIL_TOKEN}
+      NRS360_EMAIL_SENDER: ${NRS360_EMAIL_SENDER}
+      NRS360_EMAIL_SENDER_NAME: ${NRS360_EMAIL_SENDER_NAME}
       SEED_ADMIN_FIRSTNAME: ${SEED_ADMIN_FIRSTNAME}
       SEED_ADMIN_LASTNAME: ${SEED_ADMIN_LASTNAME}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
@@ -95,6 +98,8 @@ services:
       - "5050:80"
     depends_on:
       - database
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
     restart: unless-stopped
 
   redis:
@@ -116,3 +121,4 @@ volumes:
   postgres_data:
   redis_data:
   uploads_data:
+  pgadmin_data:

@@ -29,7 +29,6 @@ class SMSVerificationService(VerificationService):
         ok, ids_by_recipient, sending_id = await self._provider.send_sms(
             message=_SMS_TEMPLATE,
             to=[recipient],
-            sender="TEMPLATE",
             sub=[{"code": code}],
         )
         logger.info(
