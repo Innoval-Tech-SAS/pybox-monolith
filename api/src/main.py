@@ -3,6 +3,7 @@ import contextlib
 import os
 from contextlib import asynccontextmanager
 
+import redis.exceptions
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -54,7 +55,7 @@ async def lifespan(_app: FastAPI):
     campaigns_scheduler.shutdown(wait=False)
     scheduler.shutdown(wait=False)
     expiry_task.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
+    with contextlib.suppress(asyncio.CancelledError, redis.exceptions.RedisError):
         await expiry_task
     await db.engine.dispose()
 
