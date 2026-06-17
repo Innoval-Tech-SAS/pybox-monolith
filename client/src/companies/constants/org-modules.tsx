@@ -3,6 +3,7 @@ import {
   CreditCard,
   FolderOpen,
   Mail,
+  Receipt,
   Settings,
   Users,
 } from "lucide-react";
@@ -35,6 +36,15 @@ export const ORG_MODULES: OrgModule[] = [
     gradient: "from-emerald-500 to-cyan-600",
     path: "/my-companies/payment-methods",
     requiredPermission: "org.payment_methods",
+  },
+  {
+    key: "billing",
+    title: "Facturación",
+    description: "Consulta y paga las facturas de la empresa.",
+    icon: <Receipt size={24} className="text-white" />,
+    gradient: "from-rose-500 to-pink-600",
+    path: "/my-companies/billing",
+    requiredPermission: "org.billing",
   },
   {
     key: "reports",

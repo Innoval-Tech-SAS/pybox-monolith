@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from billing.invoices.enums.invoice_enums import InvoiceStatus
 from billing.invoices.models.invoice_model import InvoiceModel
+from identity.organizations.models.organization_model import OrganizationModel
 
 
 class InvoiceRepository(SoftDeleteRepositoryBase[InvoiceModel]):
@@ -88,6 +89,32 @@ class InvoiceRepository(SoftDeleteRepositoryBase[InvoiceModel]):
             .limit(limit)
         )
         return list(result.scalars().all()), total or 0
+
+    async def get_by_id_with_organization_name(self, id: uuid.UUID) -> tuple[InvoiceModel, str] | None:
+        result = await self.session.execute(
+            select(InvoiceModel, OrganizationModel.name)
+            .join(OrganizationModel, OrganizationModel.id == InvoiceModel.organization_id)
+            .where(InvoiceModel.id == id, InvoiceModel.deleted_at.is_(None))
+        )
+        return result.first()
+
+    async def list_all_with_organization_name(
+        self, page: int, limit: int, organization_id: uuid.UUID | None = None
+    ) -> tuple[list[tuple[InvoiceModel, str]], int]:
+        filters = [InvoiceModel.deleted_at.is_(None)]
+        if organization_id is not None:
+            filters.append(InvoiceModel.organization_id == organization_id)
+
+        total = await self.session.scalar(select(func.count()).select_from(InvoiceModel).where(*filters))
+        result = await self.session.execute(
+            select(InvoiceModel, OrganizationModel.name)
+            .join(OrganizationModel, OrganizationModel.id == InvoiceModel.organization_id)
+            .where(*filters)
+            .order_by(InvoiceModel.created_at.desc())
+            .offset((page - 1) * limit)
+            .limit(limit)
+        )
+        return list(result.all()), total or 0
 
     async def mark_overdue(self, now: datetime) -> None:
         await self.session.execute(

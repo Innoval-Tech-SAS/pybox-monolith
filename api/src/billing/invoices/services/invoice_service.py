@@ -18,7 +18,12 @@ from billing.invoices.models.invoice_item_model import InvoiceItemModel
 from billing.invoices.models.payment_attempt_model import PaymentAttemptModel
 from billing.invoices.repository.invoice_repository import InvoiceRepository
 from billing.invoices.repository.payment_attempt_repository import PaymentAttemptRepository
-from billing.invoices.schemas.invoice_schemas import ListInvoicesResponse, PaymentLinkResponse
+from billing.invoices.schemas.invoice_schemas import (
+    AdminInvoiceResponse,
+    AdminListInvoicesResponse,
+    ListInvoicesResponse,
+    PaymentLinkResponse,
+)
 from messaging.contacts.repositories.contact_repository import ContactRepository
 
 # Reutilizar un intento solo si el enlace sigue activo y tiene menos de 1 hora de antiguedad.
@@ -48,6 +53,17 @@ class CreateInvoiceParams:
 
 def _round_pesos(value: Decimal) -> int:
     return int(value.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
+def _to_bold_tax(tax_type: str, tax_rate: Decimal) -> str | None:
+    """
+    Traduce nuestro tipo/tasa de impuesto al valor que espera data-tax del
+    boton de pagos Bold (ej. 'vat-19'). Bold solo documenta IVA (vat-N) e
+    impuesto al consumo (iac-N); otros tipos se omiten (sin data-tax).
+    """
+    if tax_rate <= 0 or tax_type != "IVA":
+        return None
+    return f"vat-{int(tax_rate * 100)}"
 
 
 def _to_base36(value: int) -> str:
@@ -94,6 +110,33 @@ class InvoiceService:
         if invoice is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Factura no encontrada")
         return invoice
+
+    # -- Consulta admin (cross-organizacion, solo lectura) ------------------------
+
+    async def get_invoice_admin(self, id: uuid.UUID) -> AdminInvoiceResponse:
+        row = await self._invoice_repo.get_by_id_with_organization_name(id)
+        if row is None:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Factura no encontrada")
+        invoice, organization_name = row
+        return AdminInvoiceResponse.model_validate(invoice).model_copy(
+            update={"organization_name": organization_name}
+        )
+
+    async def list_invoices_admin(
+        self, page: int, limit: int, organization_id: uuid.UUID | None = None
+    ) -> AdminListInvoicesResponse:
+        rows, total = await self._invoice_repo.list_all_with_organization_name(page, limit, organization_id)
+        invoices = [
+            AdminInvoiceResponse.model_validate(invoice).model_copy(update={"organization_name": organization_name})
+            for invoice, organization_name in rows
+        ]
+        return AdminListInvoicesResponse(
+            invoices=invoices,
+            total=total,
+            page=page,
+            limit=limit,
+            total_pages=-(-total // limit) if limit else 0,
+        )
 
     # -- Calculo de consumo -------------------------------------------------------
 
@@ -237,6 +280,7 @@ class InvoiceService:
                 integrity_signature=integrity_signature,
                 description=description,
                 tax_type=invoice.tax_type,
+                tax_rate=invoice.tax_rate,
                 attempt_id=latest_attempt.id,
                 reused=True,
             )
@@ -269,6 +313,7 @@ class InvoiceService:
             integrity_signature=integrity_signature,
             description=description,
             tax_type=invoice.tax_type,
+            tax_rate=invoice.tax_rate,
             attempt_id=attempt.id,
             reused=False,
         )
@@ -281,6 +326,7 @@ class InvoiceService:
         integrity_signature: str,
         description: str,
         tax_type: str,
+        tax_rate: Decimal,
         attempt_id: uuid.UUID,
         reused: bool,
     ) -> PaymentLinkResponse:
@@ -291,6 +337,7 @@ class InvoiceService:
             integrity_signature=integrity_signature,
             description=description,
             tax_type=tax_type,
+            bold_tax=_to_bold_tax(tax_type, tax_rate),
             attempt_id=attempt_id,
             reused=reused,
             api_key=get_or_throw("BOLD_API_KEY"),

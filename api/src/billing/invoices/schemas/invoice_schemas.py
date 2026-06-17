@@ -69,6 +69,18 @@ class ListInvoicesResponse(BaseSchema):
     total_pages: int = Field(description="Total de paginas")
 
 
+class AdminInvoiceResponse(InvoiceResponse):
+    organization_name: str = Field(description="Nombre de la organizacion duenia de la factura")
+
+
+class AdminListInvoicesResponse(BaseSchema):
+    invoices: list[AdminInvoiceResponse] = Field(description="Facturas de todas las organizaciones")
+    total: int = Field(description="Total de facturas")
+    page: int = Field(description="Pagina actual")
+    limit: int = Field(description="Tamano de pagina")
+    total_pages: int = Field(description="Total de paginas")
+
+
 class PaymentLinkResponse(BaseSchema):
     order_id: str = Field(description="Referencia Bold (orderId)")
     amount: int = Field(description="Monto en pesos COP enteros")
@@ -76,6 +88,9 @@ class PaymentLinkResponse(BaseSchema):
     integrity_signature: str = Field(description="Hash de integridad Bold")
     description: str = Field(description="Descripcion del cobro")
     tax_type: str = Field(description="Tipo de impuesto de la factura")
+    bold_tax: str | None = Field(
+        default=None, description="Valor para data-tax del boton Bold (ej. 'vat-19'), None si no aplica"
+    )
     attempt_id: uuid.UUID = Field(description="ID del intento de pago")
     reused: bool = Field(description="Indica si se reutilizo un intento existente")
     api_key: str = Field(description="Llave publica de identidad Bold")

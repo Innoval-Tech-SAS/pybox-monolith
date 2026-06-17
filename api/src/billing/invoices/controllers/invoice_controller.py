@@ -1,14 +1,17 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Query
+from fastapi import HTTPException, Query, status
 
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from core.security.permissions import ORG_BILLING
-from core.security.policies import require_permission
+from core.security.policies import require_global, require_permission
+from identity.users.schemas.user_session_schema import UserSession
 from billing.invoices.dependencies import InvoiceServiceDep
 from billing.invoices.schemas.invoice_schemas import (
+    AdminInvoiceResponse,
+    AdminListInvoicesResponse,
     CurrentInvoiceResponse,
     InvoiceResponse,
     ListInvoicesResponse,
@@ -18,6 +21,16 @@ from billing.invoices.schemas.invoice_schemas import (
 router = APIRouter(prefix="/billing", tags=["Facturación"])
 
 OrganizationIdQuery = Annotated[uuid.UUID, Query(alias="organizationId")]
+
+
+def _require_billing_payer(session: UserSession, organization_id: str) -> None:
+    """Los administradores globales solo consultan la facturacion; no pagan."""
+    if session.is_global:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Los administradores globales no pueden realizar pagos, solo consultar la facturación.",
+        )
+    require_permission(ORG_BILLING, session, organization_id)
 
 
 @router.get("/current-invoice", response_model=CurrentInvoiceResponse, summary="Obtener factura vigente")
@@ -65,7 +78,7 @@ async def create_or_reuse_payment_link(
     service: InvoiceServiceDep,
     organization_id: OrganizationIdQuery,
 ) -> PaymentLinkResponse:
-    require_permission(ORG_BILLING, session, str(organization_id))
+    _require_billing_payer(session, str(organization_id))
     return await service.create_or_reuse_payment_link(id, organization_id)
 
 
@@ -76,5 +89,35 @@ async def sync_invoice_payment_status(
     service: InvoiceServiceDep,
     organization_id: OrganizationIdQuery,
 ) -> InvoiceResponse:
-    require_permission(ORG_BILLING, session, str(organization_id))
+    _require_billing_payer(session, str(organization_id))
     return await service.sync_invoice_payment_status(id, organization_id)  # type: ignore[return-value]
+
+
+@router.get(
+    "/admin/invoices",
+    response_model=AdminListInvoicesResponse,
+    summary="Listar facturas de todas las organizaciones (solo admin global)",
+)
+async def list_invoices_admin(
+    session: CurrentSession,
+    service: InvoiceServiceDep,
+    page: Annotated[int, Query(ge=1)] = 1,
+    limit: Annotated[int, Query(ge=1, le=100)] = 10,
+    organization_id: Annotated[uuid.UUID | None, Query(alias="organizationId")] = None,
+) -> AdminListInvoicesResponse:
+    require_global(session)
+    return await service.list_invoices_admin(page, limit, organization_id)
+
+
+@router.get(
+    "/admin/invoices/{id}",
+    response_model=AdminInvoiceResponse,
+    summary="Obtener cualquier factura de cualquier organizacion (solo admin global)",
+)
+async def get_invoice_admin(
+    id: uuid.UUID,
+    session: CurrentSession,
+    service: InvoiceServiceDep,
+) -> AdminInvoiceResponse:
+    require_global(session)
+    return await service.get_invoice_admin(id)
