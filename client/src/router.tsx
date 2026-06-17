@@ -34,6 +34,7 @@ import { CreateUserPage } from "./users/pages/create-user-page";
 import { ChatPage } from "./chat/pages/chat-page";
 import { CommunicationsHubPage } from "./companies/pages/communications-hub-page";
 import { SegmentsPage } from "./segments/pages/SegmentsPage";
+import { ReportsPage } from "./reports/pages/ReportsPage";
 import { TemplatesPage } from "./templates/pages/templates-page";
 import { TemplateEditorPage } from "./templates/pages/template-editor-page";
 import { NotFound } from "./ui/pages/not-found";
@@ -133,6 +134,10 @@ export const authRouter = [
   {
     path: "/my-companies/payment-methods",
     element: <PaymentMethodsPage />,
+  },
+  {
+    path: "/my-companies/reports",
+    element: <ReportsPage />,
   },
   {
     path: "/my-companies/payment-methods/new",

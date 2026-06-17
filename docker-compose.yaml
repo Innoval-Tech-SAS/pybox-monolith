@@ -73,6 +73,7 @@ services:
   database:
     image: docker.io/library/postgres:17-alpine
     container_name: template-database
+    command: ["postgres", "-c", "timezone=America/Bogota"]
     environment:
       TZ: America/Bogota
       POSTGRES_DB: ${DB_NAME}

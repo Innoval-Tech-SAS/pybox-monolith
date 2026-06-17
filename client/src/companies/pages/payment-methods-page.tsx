@@ -8,6 +8,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/ui/compone
 import { getSession } from "@/auth/utils/auth-session-utils";
 import { PAYMENT_METHOD_TYPE_LABELS } from "@/constants/payment-methods/payment-method-labels";
 import { usePaymentMethods } from "../hooks/use-payment-methods";
+import { useMyCompanies } from "../hooks/use-my-companies";
 
 export const PaymentMethodsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -15,6 +16,8 @@ export const PaymentMethodsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const { items, loading, saving, remove } = usePaymentMethods(orgId);
+  const { orgs } = useMyCompanies();
+  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
 
   const user = getSession();
   const isAdmin = user?.scope === "GLOBAL" || user?.orgs?.[orgId]?.role === "ADMIN";
@@ -33,7 +36,7 @@ export const PaymentMethodsPage: React.FC = () => {
         pageTitle="Métodos de Pago"
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: "Empresa", path: `/my-companies?org=${orgId}` }] : []),
+          ...(orgId ? [{ label: orgName, path: `/my-companies?org=${orgId}` }] : []),
         ]}
       >
         {loading ? (
