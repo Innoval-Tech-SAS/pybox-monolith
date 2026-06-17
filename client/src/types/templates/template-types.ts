@@ -1,4 +1,6 @@
-export type TemplateChannel = "EMAIL" | "SMS";
+import type { ChannelName } from "@/types/channels/channel-types";
+
+export type TemplateChannel = ChannelName;
 export type TemplateStatus = "DRAFT" | "ACTIVE" | "INACTIVE";
 
 export interface Template {

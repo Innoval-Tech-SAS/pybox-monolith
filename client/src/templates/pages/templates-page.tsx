@@ -24,6 +24,7 @@ import type {
   TemplateStatus,
 } from "@/types/templates/template-types";
 import type { PreviewModalProps, SendModalProps } from "@/templates/types/templates-page-props";
+import { extractVariables } from "@/templates/utils/template-variables";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -38,11 +39,6 @@ const STATUS_COLORS: Record<TemplateStatus, string> = {
   ACTIVE: "bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400",
   INACTIVE: "bg-error-50 text-error-600 dark:bg-error-500/10 dark:text-error-400",
 };
-
-function extractVariables(source: string): string[] {
-  const matches = [...source.matchAll(/\{(\w+)\}/g)];
-  return [...new Set(matches.map((m) => m[1]))];
-}
 
 // ─── preview modal ─────────────────────────────────────────────────────────────
 

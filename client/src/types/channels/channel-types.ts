@@ -1,4 +1,4 @@
-export type ChannelName = "SMS" | "EMAIL" | "WHATSAPP" | "CALL";
+export type ChannelName = "SMS" | "EMAIL" | "WHATSAPP" | "CALL" | "CALL_IA";
 export type Currency = "USD" | "EUR" | "COP" | "MXN";
 
 export interface Channel {
