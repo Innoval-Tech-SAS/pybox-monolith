@@ -88,7 +88,19 @@ export const ReportForm: React.FC<ReportFormProps> = ({
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
+      <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
+        {step > 0 ? (
+          <button
+            type="button"
+            onClick={prevStep}
+            className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <ChevronLeft size={16} />
+            Anterior
+          </button>
+        ) : (
+          <span />
+        )}
         {isLastStep ? (
           <button
             type="button"
