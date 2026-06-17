@@ -1,17 +1,91 @@
 import uuid
+from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from core.base.repository_base import RepositoryBase
+from messaging.campaigns.models.campaign_model import CampaignModel
 from messaging.channels.enums.channel_enums import ChannelName
 from messaging.channels.models.channel_model import ChannelModel
 from messaging.contacts.enums.contact_enums import ContactStatus, ProviderType
 from messaging.contacts.models.contact_model import ContactModel
 
 
+@dataclass
+class CampaignUsageRow:
+    campaign_id: uuid.UUID
+    campaign_name: str
+    channel_id: uuid.UUID
+    channel_name: str
+    currency: str
+    quantity: int
+    subtotal: Decimal
+
+
 class ContactRepository(RepositoryBase[ContactModel]):
     model_class = ContactModel
+
+    async def get_billing_usage(
+        self, organization_id: uuid.UUID, period_start: datetime, period_end: datetime
+    ) -> list[CampaignUsageRow]:
+        """
+        Desglose de consumo facturable por campaña dentro del periodo [period_start, period_end).
+        Solo cuenta contactos efectivamente enviados (sent_at no nulo) con precio registrado;
+        el costo se suma a partir del snapshot de precio de cada envío individual, ya que el
+        precio del canal puede haber cambiado durante el periodo.
+        """
+        stmt = (
+            select(
+                ContactModel.campaign_id,
+                CampaignModel.name,
+                ContactModel.snapshot_channel_id,
+                ChannelModel.name,
+                ContactModel.snapshot_currency,
+                func.count(ContactModel.id),
+                func.sum(ContactModel.snapshot_unit_price),
+            )
+            .join(CampaignModel, CampaignModel.id == ContactModel.campaign_id)
+            .join(ChannelModel, ChannelModel.id == ContactModel.snapshot_channel_id)
+            .where(
+                ContactModel.organization_id == organization_id,
+                ContactModel.sent_at.is_not(None),
+                ContactModel.sent_at >= period_start,
+                ContactModel.sent_at < period_end,
+                ContactModel.snapshot_unit_price.is_not(None),
+            )
+            .group_by(
+                ContactModel.campaign_id,
+                CampaignModel.name,
+                ContactModel.snapshot_channel_id,
+                ChannelModel.name,
+                ContactModel.snapshot_currency,
+            )
+            .order_by(CampaignModel.name)
+        )
+        result = await self.session.execute(stmt)
+        return [
+            CampaignUsageRow(
+                campaign_id=campaign_id,
+                campaign_name=campaign_name,
+                channel_id=channel_id,
+                channel_name=channel_name.value if hasattr(channel_name, "value") else channel_name,
+                currency=currency or "USD",
+                quantity=quantity,
+                subtotal=subtotal or Decimal("0"),
+            )
+            for (
+                campaign_id,
+                campaign_name,
+                channel_id,
+                channel_name,
+                currency,
+                quantity,
+                subtotal,
+            ) in result.all()
+        ]
 
     async def get_by_debtor(
         self,
