@@ -8,7 +8,7 @@ from finance.payment_methods.enums.payment_method_enums import PaymentMethodType
 
 
 class PaymentMethodResponse(BaseSchema):
-    id: int = Field(description="ID del método de pago")
+    id: uuid.UUID = Field(description="ID del método de pago")
     organization_id: uuid.UUID = Field(description="ID de la organización")
     name: str = Field(description="Nombre del método de pago")
     type: PaymentMethodType = Field(description="Tipo de método de pago")

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import type { PortfolioAccessEntry } from "@/types/users/portfolio-access-types";
 
-export const useUserPortfolioAccess = (orgId: string, userId: number) => {
+export const useUserPortfolioAccess = (orgId: string, userId: string) => {
   const { apiClient } = useApiClient();
   const [portfolios, setPortfolios] = useState<PortfolioAccessEntry[]>([]);
   const [loading, setLoading] = useState(true);

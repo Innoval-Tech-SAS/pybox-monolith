@@ -56,7 +56,7 @@ class UserService:
             self._redis = redis_client
         return self._redis
 
-    async def get_user_session(self, user_id: int) -> UserSession:
+    async def get_user_session(self, user_id: uuid.UUID) -> UserSession:
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
@@ -150,7 +150,7 @@ class UserService:
         await self.redis.set_json(session_key(user_id), session)
         return session
 
-    async def get_profile(self, user_id: int) -> UserModel:
+    async def get_profile(self, user_id: uuid.UUID) -> UserModel:
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
             raise HTTPException(
@@ -159,7 +159,7 @@ class UserService:
             )
         return user
 
-    async def soft_delete_user(self, user_id: int) -> None:
+    async def soft_delete_user(self, user_id: uuid.UUID) -> None:
         admin_org_ids = await self.role_assignment_repo.get_admin_org_ids(user_id)
 
         for org_id in admin_org_ids:
@@ -195,7 +195,7 @@ class UserService:
         org_ids = list({a.organization_id for a in assignments if a.organization_id})
         orgs = {o.id: o for o in await self.org_repo.get_by_ids(org_ids)} if org_ids else {}
 
-        assignments_by_user: dict[int, list[RoleAssignmentModel]] = {}
+        assignments_by_user: dict[uuid.UUID, list[RoleAssignmentModel]] = {}
         for a in assignments:
             assignments_by_user.setdefault(a.user_id, []).append(a)
 
@@ -248,7 +248,7 @@ class UserService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
         return await self._enrich_users(users)
 
-    async def get_user_detail(self, user_id: int) -> AdminUserDetailSchema:
+    async def get_user_detail(self, user_id: uuid.UUID) -> AdminUserDetailSchema:
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
@@ -275,7 +275,7 @@ class UserService:
             roles=roles,
         )
 
-    async def update_user(self, user_id: int, data: UpdateUserSchema) -> AdminUserDetailSchema:
+    async def update_user(self, user_id: uuid.UUID, data: UpdateUserSchema) -> AdminUserDetailSchema:
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
@@ -303,7 +303,7 @@ class UserService:
         await self.user_repo.update(user)
         return await self.get_user_detail(user_id)
 
-    async def update_profile_photo(self, user_id: int, file: UploadFile) -> ProfilePhotoSchema:
+    async def update_profile_photo(self, user_id: uuid.UUID, file: UploadFile) -> ProfilePhotoSchema:
         logger.debug("[profile-photo] service update start user_id=%s filename=%s", user_id, file.filename)
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
@@ -320,15 +320,15 @@ class UserService:
         logger.debug("[profile-photo] service update done user_id=%s profile_photo_url=%s", user_id, profile_photo_url)
         return ProfilePhotoSchema(profile_photo_url=profile_photo_url)
 
-    async def get_dismissed_tours(self, user_id: int) -> list[str]:
+    async def get_dismissed_tours(self, user_id: uuid.UUID) -> list[str]:
         prefs = await self.preferences_repo.get_by_user_id(user_id)
         return prefs.dismissed_tours if prefs else []
 
-    async def dismiss_tour(self, user_id: int, tour_key: str) -> list[str]:
+    async def dismiss_tour(self, user_id: uuid.UUID, tour_key: str) -> list[str]:
         prefs = await self.preferences_repo.dismiss_tour(user_id, tour_key)
         return prefs.dismissed_tours
 
-    async def restore_user(self, user_id: int) -> UserModel | None:
+    async def restore_user(self, user_id: uuid.UUID) -> UserModel | None:
         user = await self.user_repo.get_by_id_including_deleted(user_id)
         if user is None or user.deleted_at is None:
             return user

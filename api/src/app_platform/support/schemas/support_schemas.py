@@ -12,7 +12,7 @@ from app_platform.support.enums.support_enums import SupportCaseType, SupportTic
 class SupportFilter:
     # Access control
     org_ids: list[uuid.UUID] | None = None
-    created_by: int | None = None
+    created_by: uuid.UUID | None = None
     include_resolved: bool = False
     can_resolve: bool = False
     can_assign: bool = False
@@ -25,7 +25,7 @@ class SupportFilter:
     status_filter: SupportTicketStatus | None = None
     priority_filter: SupportTicketPriority | None = None
     case_type_filter: SupportCaseType | None = None
-    assigned_to_filter: int | None = None
+    assigned_to_filter: uuid.UUID | None = None
     from_date: datetime | None = None
     to_date: datetime | None = None
 
@@ -147,7 +147,7 @@ class UpdateTicketPrioritySchema(BaseSchema):
 
 
 class AssignTicketSchema(BaseSchema):
-    user_id: int = Field(description="ID del agente al que se asigna el ticket")
+    user_id: uuid.UUID = Field(description="ID del agente al que se asigna el ticket")
 
 
 class SupportTicketSchema(BaseSchema):
@@ -158,8 +158,8 @@ class SupportTicketSchema(BaseSchema):
     priority: SupportTicketPriority = Field(description="Prioridad del ticket")
     organization_id: uuid.UUID | None = Field(description="ID de la organización")
     organization_name: str = Field(default="", description="Nombre de la organización")
-    created_by: int = Field(description="ID del usuario que creó el ticket")
-    assigned_to: int | None = Field(description="ID del agente asignado")
+    created_by: uuid.UUID = Field(description="ID del usuario que creó el ticket")
+    assigned_to: uuid.UUID | None = Field(description="ID del agente asignado")
     title: str | None = Field(description="Título del ticket")
     notes: str | None = Field(description="Notas o descripción")
     resolved_at: datetime | None = Field(description="Fecha de resolución")
@@ -203,7 +203,7 @@ class CreateMessageSchema(BaseSchema):
 class TicketMessageSchema(BaseSchema):
     id: uuid.UUID = Field(description="ID del mensaje")
     ticket_id: uuid.UUID = Field(description="ID del ticket")
-    sender_id: int = Field(description="ID del remitente")
+    sender_id: uuid.UUID = Field(description="ID del remitente")
     body: str = Field(description="Contenido del mensaje")
     is_internal: bool = Field(description="Mensaje interno de agente")
     created_at: datetime = Field(description="Fecha de envío")
@@ -212,7 +212,7 @@ class TicketMessageSchema(BaseSchema):
 class TicketEventSchema(BaseSchema):
     id: uuid.UUID = Field(description="ID del evento")
     ticket_id: uuid.UUID = Field(description="ID del ticket")
-    user_id: int = Field(description="ID del usuario que realizó la acción")
+    user_id: uuid.UUID = Field(description="ID del usuario que realizó la acción")
     event_type: SupportTicketEventType = Field(description="Tipo de evento")
     from_value: str | None = Field(description="Valor anterior")
     to_value: str | None = Field(description="Valor nuevo")

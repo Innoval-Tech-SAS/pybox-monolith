@@ -37,7 +37,7 @@ export const usePaymentMethods = (organizationId: string) => {
     }
   };
 
-  const update = async (id: number, payload: PaymentMethodUpdatePayload): Promise<PaymentMethod | null> => {
+  const update = async (id: string, payload: PaymentMethodUpdatePayload): Promise<PaymentMethod | null> => {
     setSaving(true);
     try {
       const updated: PaymentMethod = await apiClient(
@@ -53,7 +53,7 @@ export const usePaymentMethods = (organizationId: string) => {
     }
   };
 
-  const remove = async (id: number): Promise<boolean> => {
+  const remove = async (id: string): Promise<boolean> => {
     setSaving(true);
     try {
       await apiClient(`/payment-methods/${id}?organizationId=${organizationId}`, { method: "DELETE" });

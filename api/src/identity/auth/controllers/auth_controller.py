@@ -1,4 +1,6 @@
-﻿from fastapi import HTTPException, status
+﻿import uuid
+
+from fastapi import HTTPException, status
 from core.config.api_router import APIRouter
 
 from identity.auth.dependencies import AuthServiceDep, TokenPayload
@@ -69,12 +71,12 @@ async def refresh(body: RefreshRequest, service: AuthServiceDep) -> AuthResponse
 
 @router.post("/logout", status_code=status.HTTP_200_OK, summary="Cerrar sesión")
 async def logout(payload: TokenPayload, service: AuthServiceDep) -> dict:
-    await service.logout(int(payload["sub"]))
+    await service.logout(uuid.UUID(str(payload["sub"])))
     return {"message": "Sesión cerrada."}
 
 
 @router.post("/logout/{user_id}", status_code=status.HTTP_200_OK, summary="Cerrar sesión de otro usuario (admin)")
-async def force_logout(user_id: int, session: CurrentSession, service: AuthServiceDep) -> dict:
+async def force_logout(user_id: uuid.UUID, session: CurrentSession, service: AuthServiceDep) -> dict:
     is_org_admin = any(entry.role == UserRole.ADMIN for entry in session.orgs.values())
     if not session.is_global and not is_org_admin:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin permisos para esta acción.")

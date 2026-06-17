@@ -15,6 +15,7 @@ from core.config.paths import UPLOADS_ROOT
 from core.config.routers import register_routers
 from core.database.database import db
 from core.database.session_expiry_listener import start_session_expiry_listener
+from billing.invoices.cron import create_billing_scheduler
 from messaging.campaigns.cron import create_campaigns_scheduler
 from messaging.results.cron import create_results_scheduler
 from receivables.portfolios.scheduler import create_daily_counters_scheduler
@@ -49,8 +50,12 @@ async def lifespan(_app: FastAPI):
     results_scheduler = create_results_scheduler()
     results_scheduler.start()
 
+    billing_scheduler = create_billing_scheduler()
+    billing_scheduler.start()
+
     yield
 
+    billing_scheduler.shutdown(wait=False)
     results_scheduler.shutdown(wait=False)
     campaigns_scheduler.shutdown(wait=False)
     scheduler.shutdown(wait=False)
@@ -84,7 +89,7 @@ app.add_middleware(
 app.add_middleware(LoggingMiddleware)
 register_error_handlers(app)
 
-app.mount("/files", StaticFiles(directory=UPLOADS_ROOT), name="uploads")
+app.mount("/api/v1/files", StaticFiles(directory=UPLOADS_ROOT), name="uploads")
 
 register_routers(app)
 

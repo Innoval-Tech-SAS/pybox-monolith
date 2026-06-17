@@ -3,27 +3,38 @@ import { OtpInput } from "@/ui/components/inputs/otp-input";
 import { useVerifyOtp } from "@/hooks/use-verify-otp";
 import { Modal } from "@/ui/components/modal/modal";
 import type { MfaGuardProps } from "@/auth/types/mfa-guard-props";
+import type { VerificationChannel } from "@/types/onboarding/onboarding-types";
 
 export const MfaGuard: React.FC<MfaGuardProps> = ({ children }) => {
   const verified = sessionStorage.getItem("mfaVerified");
   const [done, setDone] = useState(verified === "true");
+  const [channel, setChannel] = useState<VerificationChannel | null>(null);
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [codeSent, setCodeSent] = useState(false);
   const { requestOtp, verifyOtp, loading, error, clearError } = useVerifyOtp();
 
   if (done) return <>{children}</>;
 
-  const handleRequest = async () => {
+  const handleRequest = async (selectedChannel: VerificationChannel) => {
     clearError();
-    await requestOtp("EMAIL");
+    setChannel(selectedChannel);
+    await requestOtp(selectedChannel);
     setCodeSent(true);
   };
 
   const handleVerify = async () => {
+    if (!channel) return;
     clearError();
-    await verifyOtp("EMAIL", digits.join(""));
+    await verifyOtp(channel, digits.join(""));
     sessionStorage.setItem("mfaVerified", "true");
     setDone(true);
+  };
+
+  const handleResend = () => {
+    setCodeSent(false);
+    setDigits(Array(6).fill(""));
+    setChannel(null);
+    clearError();
   };
 
   return (
@@ -54,27 +65,40 @@ export const MfaGuard: React.FC<MfaGuardProps> = ({ children }) => {
         <div className="w-full max-w-lg space-y-5">
           <div>
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Verifica tu correo electrónico
+              Verifica tu identidad
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Enviaremos un código de 6 dígitos a tu correo registrado.
+              Enviaremos un código de 6 dígitos para confirmar tu acceso.
             </p>
           </div>
 
           {!codeSent ? (
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleRequest}
-              className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
-            >
-              {loading ? "Enviando..." : "Enviar código"}
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleRequest("EMAIL")}
+                className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
+              >
+                {loading ? "Enviando..." : "Enviar código por correo"}
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleRequest("SMS")}
+                className="flex w-full items-center justify-center rounded-lg border border-brand-500 px-4 py-3 text-sm font-medium text-brand-600 transition hover:bg-brand-50 disabled:opacity-50"
+              >
+                {loading ? "Enviando..." : "Enviar código por SMS"}
+              </button>
+            </div>
           ) : (
             <>
               <div className="space-y-3">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Ingresa el código de 6 dígitos enviado por <span className="font-medium">correo</span>.
+                  Ingresa el código de 6 dígitos enviado por{" "}
+                  <span className="font-medium">
+                    {channel === "EMAIL" ? "correo" : "SMS"}
+                  </span>.
                 </p>
                 <OtpInput value={digits} onChange={setDigits} disabled={loading} error={!!error} />
                 {error && <p className="text-xs text-error-500">{error}</p>}
@@ -91,10 +115,10 @@ export const MfaGuard: React.FC<MfaGuardProps> = ({ children }) => {
                 <button
                   type="button"
                   disabled={loading}
-                  onClick={() => { setCodeSent(false); setDigits(Array(6).fill("")); clearError(); }}
+                  onClick={handleResend}
                   className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400"
                 >
-                  Reenviar código
+                  Cambiar canal o reenviar código
                 </button>
               </div>
             </>

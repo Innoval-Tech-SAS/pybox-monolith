@@ -14,7 +14,7 @@ async def process_and_notify(
     organization_id: uuid.UUID,
     portfolio_name: str | None,
     country: Nationality | None,
-    user_id: int,
+    user_id: uuid.UUID,
     service: PortfolioCsvService,
     notification_service: NotificationService,
 ) -> None:
@@ -60,7 +60,7 @@ async def append_and_notify(
     filename: str,
     portfolio_id: uuid.UUID,
     organization_id: uuid.UUID,
-    user_id: int,
+    user_id: uuid.UUID,
     service: PortfolioCsvService,
     notification_service: NotificationService,
 ) -> None:
@@ -98,7 +98,7 @@ async def update_and_notify(
     filename: str,
     portfolio_id: uuid.UUID,
     organization_id: uuid.UUID,
-    user_id: int,
+    user_id: uuid.UUID,
     service: PortfolioCsvService,
     notification_service: NotificationService,
 ) -> None:

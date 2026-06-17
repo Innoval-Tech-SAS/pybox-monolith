@@ -1,3 +1,4 @@
+import uuid
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +25,7 @@ from identity.organizations.models.organization_membership_model import Organiza
 from identity.organizations.repository.organization_repository import OrganizationRepository
 from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from core.tools.file_tools import save_upload_file
+from core.config.logger import logger
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.models.role_assignment_model import RoleAssignmentModel
 from identity.users.models.user_model import UserModel
@@ -55,7 +57,7 @@ class OnboardingService:
 
     async def get_status(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         scope: UserScope,
         org: OrganizationModel | None = None,
     ) -> OnboardingStatusSchema:
@@ -107,16 +109,21 @@ class OnboardingService:
             missing_steps=missing,
         )
 
-    async def request_otp(self, user_id: int, channel: VerificationChannel) -> None:
+    async def request_otp(self, user_id: uuid.UUID, channel: VerificationChannel) -> None:
+        logger.info("[onboarding_service] request_otp | user_id=%s channel=%s", user_id, channel.value)
         user = await self._user_repo.get_by_id(user_id)
         if user is None:
+            logger.warning("[onboarding_service] request_otp_user_missing | user_id=%s", user_id)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
         service = get_verification_service(channel, self._session)
         await service.send_code(user)
+        logger.info("[onboarding_service] request_otp_sent | user_id=%s channel=%s", user_id, channel.value)
 
-    async def verify_otp(self, user_id: int, channel: VerificationChannel, code: str) -> None:
+    async def verify_otp(self, user_id: uuid.UUID, channel: VerificationChannel, code: str) -> None:
+        logger.info("[onboarding_service] verify_otp | user_id=%s channel=%s", user_id, channel.value)
         user = await self._user_repo.get_by_id(user_id)
         if user is None:
+            logger.warning("[onboarding_service] verify_otp_user_missing | user_id=%s", user_id)
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
         service = get_verification_service(channel, self._session)
         await service.verify_code(user_id, code)
@@ -127,8 +134,9 @@ class OnboardingService:
             user.is_phone_verified = True
 
         await self._user_repo.update(user)
+        logger.info("[onboarding_service] verify_otp_done | user_id=%s channel=%s", user_id, channel.value)
 
-    async def set_phone(self, user_id: int, data: SetPhoneSchema) -> None:
+    async def set_phone(self, user_id: uuid.UUID, data: SetPhoneSchema) -> None:
         user = await self._user_repo.get_by_id(user_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
@@ -139,7 +147,7 @@ class OnboardingService:
         user.is_phone_verified = False
         await self._user_repo.update(user)
 
-    async def update_profile(self, user_id: int, data: UpdateProfileSchema) -> None:
+    async def update_profile(self, user_id: uuid.UUID, data: UpdateProfileSchema) -> None:
         user = await self._user_repo.get_by_id(user_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
@@ -152,7 +160,7 @@ class OnboardingService:
 
     async def create_first_org(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         data: OrganizationOnboardingSchema,
         fiscal_file: UploadFile,
         mercantile_file: UploadFile,
@@ -223,7 +231,7 @@ class OnboardingService:
 
         return updated_org
 
-    async def set_onboarding_password(self, user_id: int, data: SetOnboardingPasswordSchema) -> None:
+    async def set_onboarding_password(self, user_id: uuid.UUID, data: SetOnboardingPasswordSchema) -> None:
         user = await self._user_repo.get_by_id(user_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")

@@ -1,4 +1,5 @@
 ﻿import secrets
+import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 
@@ -29,6 +30,11 @@ class VerificationService(ABC):
         return str(secrets.randbelow(1_000_000)).zfill(6)
 
     async def send_code(self, user) -> None:
+        logger.info(
+            "[verification] send_code_start | user_id=%s channel=%s",
+            user.id,
+            self.channel.value,
+        )
         code = self._generate_code()
         record = VerificationCodeModel(
             user_id=user.id,
@@ -37,18 +43,40 @@ class VerificationService(ABC):
             expires_at=datetime.now() + timedelta(minutes=EXPIRATION_MINUTES),
         )
         await self._repo.add(record)
+        logger.info(
+            "[verification] code_record_created | user_id=%s channel=%s expires_at=%s",
+            user.id,
+            self.channel.value,
+            record.expires_at,
+        )
 
         if get_or_throw("ENV") == "development":
-            logger.info("[verification] code_sent_dev | user_id=%d channel=%s code=%s", user.id, self.channel.value, code)
+            logger.info("[verification] code_sent_dev | user_id=%s channel=%s code=%s", user.id, self.channel.value, code)
             return
 
+        logger.info(
+            "[verification] dispatch_start | user_id=%s channel=%s",
+            user.id,
+            self.channel.value,
+        )
         sent = await self._dispatch(user, code)
+        logger.info(
+            "[verification] dispatch_result | user_id=%s channel=%s sent=%s",
+            user.id,
+            self.channel.value,
+            sent,
+        )
         if not sent:
+            logger.error(
+                "[verification] dispatch_failed | user_id=%s channel=%s",
+                user.id,
+                self.channel.value,
+            )
             raise RuntimeError(
                 f"No fue posible enviar el código por {self.channel.value}"
             )
 
-    async def verify_code(self, user_id: int, code: str) -> None:
+    async def verify_code(self, user_id: uuid.UUID, code: str) -> None:
         try:
             record = await self._repo.verify_with_exceptions(
                 user_id, code, self.channel
@@ -60,12 +88,12 @@ class VerificationService(ABC):
             CodeAlreadyUsedException,
         ) as exc:
             logger.warning(
-                "[verification] verify_failed | user_id=%d channel=%s error=%s",
+                "[verification] verify_failed | user_id=%s channel=%s error=%s",
                 user_id, self.channel.value, type(exc).__name__,
             )
             raise
 
-    async def peek_code(self, user_id: int, code: str) -> None:
+    async def peek_code(self, user_id: uuid.UUID, code: str) -> None:
         """Valida el código sin consumirlo."""
         try:
             await self._repo.verify_with_exceptions(user_id, code, self.channel)
@@ -75,7 +103,7 @@ class VerificationService(ABC):
             CodeAlreadyUsedException,
         ) as exc:
             logger.warning(
-                "[verification] peek_failed | user_id=%d channel=%s error=%s",
+                "[verification] peek_failed | user_id=%s channel=%s error=%s",
                 user_id, self.channel.value, type(exc).__name__,
             )
             raise

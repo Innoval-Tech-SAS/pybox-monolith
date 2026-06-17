@@ -8,7 +8,7 @@ export interface ManagedUserCreate {
 }
 
 export interface ManagedUserResponse {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   phoneNumber: string;

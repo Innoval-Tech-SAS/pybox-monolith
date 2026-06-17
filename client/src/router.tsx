@@ -15,6 +15,9 @@ import { OrgSettingsPage } from "./companies/pages/org-settings-page";
 import { PaymentMethodsPage } from "./companies/pages/payment-methods-page";
 import { CreatePaymentMethodPage } from "./companies/pages/create-payment-method-page";
 import { EditPaymentMethodPage } from "./companies/pages/edit-payment-method-page";
+import { BillingPage } from "./companies/pages/billing-page";
+import { BillingInvoiceDetailPage } from "./companies/pages/billing-invoice-detail-page";
+import { BillingAdminPage } from "./billing/pages/billing-admin-page";
 import { HomePage } from "./home/pages/home-page";
 import { NotificationDetailPage } from "./notifications/pages/notification-detail-page";
 import { NotificationsPage } from "./notifications/pages/notifications-page";
@@ -32,11 +35,14 @@ import { UserSettingsPage } from "./users/pages/user-settings-page";
 import { UserPortfoliosPage } from "./users/pages/user-portfolios-page";
 import { CreateUserPage } from "./users/pages/create-user-page";
 import { ChatPage } from "./chat/pages/chat-page";
+import { CommunicationsHubPage } from "./companies/pages/communications-hub-page";
 import { SegmentsPage } from "./segments/pages/SegmentsPage";
+import { ReportsPage } from "./reports/pages/ReportsPage";
 import { TemplatesPage } from "./templates/pages/templates-page";
 import { TemplateEditorPage } from "./templates/pages/template-editor-page";
 import { CampaignsPage } from "./campaigns/pages/campaigns-page";
 import { CampaignEditorPage } from "./campaigns/pages/campaign-editor-page";
+import { BoldPaymentResultPage } from "./billing/pages/bold-payment-result-page";
 import { NotFound } from "./ui/pages/not-found";
 
 export const noAuthRouter = [
@@ -51,6 +57,10 @@ export const noAuthRouter = [
   {
     path: "/admin/forgot-password",
     element: <ForgotPasswordPage />,
+  },
+  {
+    path: "/billing/payment-result",
+    element: <BoldPaymentResultPage />,
   },
   {
     path: "*",
@@ -120,6 +130,10 @@ export const authRouter = [
     element: <PortfolioSettingsPage />,
   },
   {
+    path: "/my-companies/portfolios/communications",
+    element: <CommunicationsHubPage />,
+  },
+  {
     path: "/my-companies/portfolios/segments",
     element: <SegmentsPage />,
   },
@@ -132,12 +146,32 @@ export const authRouter = [
     element: <PaymentMethodsPage />,
   },
   {
+    path: "/my-companies/reports",
+    element: <ReportsPage />,
+  },
+  {
     path: "/my-companies/payment-methods/new",
     element: <CreatePaymentMethodPage />,
   },
   {
     path: "/my-companies/payment-methods/:id/edit",
     element: <EditPaymentMethodPage />,
+  },
+  {
+    path: "/my-companies/billing",
+    element: <BillingPage />,
+  },
+  {
+    path: "/my-companies/billing/:invoiceId",
+    element: <BillingInvoiceDetailPage />,
+  },
+  {
+    path: "/billing",
+    element: <BillingAdminPage />,
+  },
+  {
+    path: "/billing/:invoiceId",
+    element: <BillingInvoiceDetailPage />,
   },
   {
     path: "/my-companies/templates",

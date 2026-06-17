@@ -1,7 +1,7 @@
 export type NotifType = "success" | "info" | "warning" | "error";
 
 export interface AppNotification {
-  id: number;
+  id: string;
   title: string;
   body: string;
   category: string;

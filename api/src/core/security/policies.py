@@ -65,12 +65,15 @@ async def require_portfolio_access(
     session: UserSession,
     org_id: str,
     portfolio_id: uuid.UUID,
-    check_access: Callable[[int, uuid.UUID, str], Awaitable[bool]],
+    check_access: Callable[[uuid.UUID, uuid.UUID, str], Awaitable[bool]],
 ) -> None:
     if session.is_global:
         return
-    if org_id not in session.orgs:
+    org_entry = session.orgs.get(org_id)
+    if org_entry is None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a esta organización")
+    if org_entry.role == UserRole.ADMIN:
+        return
     allowed = await check_access(session.user_id, portfolio_id, org_id)
     if not allowed:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a este portafolio")

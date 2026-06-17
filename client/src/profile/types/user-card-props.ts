@@ -2,7 +2,7 @@ import type { OrgSessionEntry } from "@/types/auth/user";
 import type { RoleEntry } from "@/types/users/user-types";
 
 export interface UserCardData {
-  userId?: number;
+  userId?: string;
   fullName: string;
   firstname?: string;
   lastname?: string;

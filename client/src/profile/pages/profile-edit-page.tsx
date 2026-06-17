@@ -28,7 +28,7 @@ const DOCUMENT_TYPE_OPTIONS = [
 export const ProfileEditPage: React.FC = () => {
   const navigate = useNavigate();
   const { getSession } = useAuth();
-  const userId = String(getSession()?.user_id ?? "");
+  const userId = String(getSession()?.userId ?? "");
   const { user, loading } = useUser(userId);
   const { updateUser, loading: saving, error } = useUpdateUser();
 

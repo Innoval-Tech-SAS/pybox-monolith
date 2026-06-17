@@ -15,6 +15,8 @@ import {
   TableRow,
 } from "@/ui/components/table/table";
 import { getSession } from "@/auth/utils/auth-session-utils";
+import { useMyCompanies } from "@/companies/hooks/use-my-companies";
+import { usePortfolios } from "@/companies/hooks/use-portfolios";
 import { useTemplates } from "../hooks/use-templates";
 import type {
   Template,
@@ -204,7 +206,13 @@ const TemplateSendModal: React.FC<SendModalProps> = ({ isOpen, template, saving,
 export const TemplatesPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const orgId = searchParams.get("org") ?? "";
+  const portfolioId = searchParams.get("portfolio") ?? "";
   const navigate = useNavigate();
+
+  const { orgs } = useMyCompanies();
+  const { portfolios } = usePortfolios(orgId);
+  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
+  const portfolioName = portfolios.find((p) => p.id === portfolioId)?.name ?? "Portafolio";
 
   const { items, loading, saving, remove, preview, send } = useTemplates(orgId);
 
@@ -231,7 +239,14 @@ export const TemplatesPage: React.FC = () => {
         pageTitle="Plantillas"
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: "Empresa", path: `/my-companies?org=${orgId}` }] : []),
+          ...(orgId ? [{ label: orgName, path: `/my-companies?org=${orgId}` }] : []),
+          ...(portfolioId
+            ? [
+                { label: "Mis Portafolios", path: `/my-companies/portfolios?org=${orgId}` },
+                { label: portfolioName, path: `/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}` },
+                { label: "Comunicaciones", path: `/my-companies/portfolios/communications?org=${orgId}&portfolio=${portfolioId}` },
+              ]
+            : []),
         ]}
       >
         {loading ? (

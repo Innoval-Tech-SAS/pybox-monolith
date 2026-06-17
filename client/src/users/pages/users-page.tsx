@@ -109,7 +109,7 @@ export const UsersPage: React.FC = () => {
   const { updateUser } = useUpdateUser();
   const { deleteUser } = useDeleteUser();
 
-  const handleToggleStatus = async (userId: number, isActive: boolean) => {
+  const handleToggleStatus = async (userId: string, isActive: boolean) => {
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, isActive } : u)),
     );
@@ -121,7 +121,7 @@ export const UsersPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (userId: number) => {
+  const handleDelete = async (userId: string) => {
     const ok = await deleteUser(userId);
     if (ok) refetch();
   };

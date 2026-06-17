@@ -22,6 +22,7 @@ import receivables.portfolios.models.portfolio_model  # noqa: F401
 import receivables.portfolios.models.portfolio_user_access_model  # noqa: F401
 import receivables.portfolios.models.portfolio_daily_counter_config_model  # noqa: F401
 import receivables.reports.models.report_model  # noqa: F401
+import receivables.reports.models.report_execution_model  # noqa: F401
 import app_platform.support.models.support_ticket_model  # noqa: F401
 import identity.users.models.user_model  # noqa: F401
 import identity.users.models.permission_model  # noqa: F401

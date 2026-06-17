@@ -1,0 +1,107 @@
+import { useState } from "react";
+import { Play } from "lucide-react";
+import { Modal } from "@/ui/components/modal/modal";
+import { Loader } from "@/ui/components/loader/loader";
+import { ReportResultsTable } from "./report-results-table";
+import { useReportExecute } from "@/reports/hooks/use-report-execute";
+import type { ReportExecuteModalProps } from "@/reports/types/report-execute-modal-props";
+
+export const ReportExecuteModal: React.FC<ReportExecuteModalProps> = ({
+  isOpen,
+  onClose,
+  report,
+  orgId,
+}) => {
+  const { executing, result, execute, clearResult } = useReportExecute(orgId);
+  const [mode, setMode] = useState<"preview" | "audit">("preview");
+  const [limit, setLimit] = useState("100");
+
+  const handleClose = () => {
+    clearResult();
+    onClose();
+  };
+
+  const handleExecute = () => {
+    const lim = parseInt(limit);
+    execute(report.id, mode, isNaN(lim) || lim <= 0 ? undefined : lim);
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      className={`mx-4 flex max-h-[90vh] w-full flex-col p-6 ${result ? "max-w-[95vw]" : "max-w-4xl"}`}
+    >
+      <h2 className="mb-1 text-lg font-semibold text-gray-800 dark:text-white">
+        Ejecutar — {report.name}
+      </h2>
+      <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
+        <strong>Preview</strong> muestra datos sin guardar. <strong>Audit</strong> genera un CSV y registra la ejecución.
+      </p>
+
+      {!result && (
+        <div className="space-y-4">
+          {/* Mode selector */}
+          <div className="flex gap-3">
+            {(["preview", "audit"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={`flex-1 rounded-xl border-2 py-3 text-sm font-medium transition-colors ${
+                  mode === m
+                    ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
+                }`}
+              >
+                {m === "preview" ? "Preview" : "Audit (genera CSV)"}
+              </button>
+            ))}
+          </div>
+
+          {/* Limit */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Límite de filas
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={limit}
+              onChange={(e) => setLimit(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleExecute}
+            disabled={executing}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
+          >
+            {executing ? <Loader /> : <><Play size={16} /> Ejecutar</>}
+          </button>
+        </div>
+      )}
+
+      {executing && (
+        <div className="py-12">
+          <Loader />
+        </div>
+      )}
+
+      {result && !executing && (
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <ReportResultsTable result={result} />
+          <button
+            type="button"
+            onClick={clearResult}
+            className="shrink-0 text-sm text-brand-500 hover:underline"
+          >
+            ← Volver a configurar
+          </button>
+        </div>
+      )}
+    </Modal>
+  );
+};

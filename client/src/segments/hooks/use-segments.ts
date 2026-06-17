@@ -18,7 +18,7 @@ export const useSegments = (orgId: string) => {
 
   useEffect(() => { fetch(); }, [orgId]);
 
-  const deleteSegment = async (id: number) => {
+  const deleteSegment = async (id: string) => {
     await apiClient(`/segments/${id}?organizationId=${orgId}`, { method: "DELETE" });
     setSegments((prev) => prev.filter((s) => s.id !== id));
   };

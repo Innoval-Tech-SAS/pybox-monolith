@@ -21,7 +21,7 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const goToDebtor = (debtorId: number) => {
+  const goToDebtor = (debtorId: string) => {
     navigate(`/my-companies/portfolios/debtors/${debtorId}?org=${orgId}&portfolio=${portfolioId}`);
   };
 

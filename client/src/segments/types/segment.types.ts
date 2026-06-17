@@ -9,10 +9,17 @@ export type FilterOp =
   | "ilike"
   | "in"
   | "not_in"
+  | "between"
   | "is_null"
   | "is_not_null";
 
 export type JoinHow = "inner" | "left" | "right" | "full";
+
+export type AggFunction = "count" | "sum" | "avg" | "min" | "max";
+
+export type HavingOp = "=" | "!=" | ">" | "<" | ">=" | "<=" | "in" | "not_in" | "between";
+
+export type SortDirection = "asc" | "desc";
 
 export interface SegmentTableFilter {
   column: string;
@@ -35,6 +42,30 @@ export interface SegmentJoin {
   how: JoinHow;
 }
 
+export interface SegmentGroupBy {
+  table: string;
+  column: string;
+  alias: string;
+}
+
+export interface SegmentAggregation {
+  function: AggFunction;
+  table: string;
+  column: string;
+  alias: string;
+}
+
+export interface SegmentHaving {
+  metric: string;
+  op: HavingOp;
+  value: string | string[] | null;
+}
+
+export interface SegmentOrderBy {
+  field: string;
+  direction: SortDirection;
+}
+
 export interface SegmentFormState {
   name: string;
   description: string;
@@ -43,6 +74,11 @@ export interface SegmentFormState {
   mainTableFilters: SegmentTableFilter[];
   additionalTables: SegmentFormTable[];
   joins: SegmentJoin[];
+  aggregateMode: boolean;
+  groupBy: SegmentGroupBy[];
+  aggregations: SegmentAggregation[];
+  having: SegmentHaving[];
+  orderBy: SegmentOrderBy[];
 }
 
 export interface FieldInfo {
@@ -53,7 +89,7 @@ export interface FieldInfo {
 // API types
 
 export interface SegmentResponse {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   filterCriteria: Record<string, unknown>;
@@ -76,12 +112,12 @@ export interface SegmentExecuteResponse {
 }
 
 export interface SegmentExecutionResponse {
-  id: number;
-  segmentId: number;
+  id: string;
+  segmentId: string;
   mode: string;
   fileName: string | null;
   filePath: string | null;
   rows: number;
   columns: string[];
-  executedBy: number;
+  executedBy: string;
 }

@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 
+from billing.billing_status.controllers.billing_status_controller import router as billing_status_router
+from billing.bold.controllers.bold_webhook_controller import router as bold_webhook_router
+from billing.invoices.controllers.invoice_controller import router as invoices_router
 from identity.auth.controllers.auth_controller import router as auth_router
 from app_platform.schema_manager.controllers.database_controller import router as schema_manager_router
 from messaging.contacts.controllers.contact_controller import router as contacts_router
@@ -15,6 +18,7 @@ from receivables.portfolios.controllers.portfolio_controller import router as po
 from app_platform.support.controllers.support_controller import router as support_router
 from app_platform.chats.controllers.chat_controller import router as chats_router
 from receivables.segments.controllers.segment_controller import router as segments_router
+from receivables.reports.controllers.report_controller import router as reports_router
 from messaging.campaigns.controllers.campaign_controller import router as campaigns_router
 from messaging.channels.controllers.channel_controller import router as channels_router
 from messaging.templates.controllers.template_controller import router as templates_router
@@ -28,6 +32,9 @@ API_PREFIX = "/api/v1"
 
 def register_routers(app: FastAPI) -> None:
     app.include_router(auth_router, prefix=API_PREFIX)
+    app.include_router(invoices_router, prefix=API_PREFIX)
+    app.include_router(bold_webhook_router, prefix=API_PREFIX)
+    app.include_router(billing_status_router, prefix=API_PREFIX)
     app.include_router(contacts_router, prefix=API_PREFIX)
     app.include_router(debtors_router, prefix=API_PREFIX)
     app.include_router(countries_router, prefix=API_PREFIX)
@@ -45,6 +52,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(permissions_router, prefix=API_PREFIX)
     app.include_router(schema_manager_router, prefix=API_PREFIX)
     app.include_router(segments_router, prefix=API_PREFIX)
+    app.include_router(reports_router, prefix=API_PREFIX)
     app.include_router(campaigns_router, prefix=API_PREFIX)
     app.include_router(channels_router, prefix=API_PREFIX)
     app.include_router(templates_router, prefix=API_PREFIX)

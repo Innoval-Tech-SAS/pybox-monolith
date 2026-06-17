@@ -5,6 +5,7 @@ from typing import Sequence
 from fastapi import HTTPException, status
 
 from messaging.campaigns.constants.campaign_options import INACTIVE_WEEKDAYS
+from billing.billing_status.services.billing_status_service import BillingStatusService
 from messaging.campaigns.enums.campaign_enums import CampaignStatus, Periodicity
 from messaging.campaigns.models.campaign_model import CampaignModel
 from messaging.campaigns.models.campaign_time_model import CampaignTimeModel
@@ -16,9 +17,15 @@ from messaging.campaigns.utils.calculate_next import calculate_next_execution
 
 class CampaignService:
 
-    def __init__(self, campaign_repo: CampaignRepository, ct_repo: CampaignTimeRepository) -> None:
+    def __init__(
+        self,
+        campaign_repo: CampaignRepository,
+        ct_repo: CampaignTimeRepository,
+        billing_status_service: BillingStatusService,
+    ) -> None:
         self._repo = campaign_repo
         self._ct_repo = ct_repo
+        self._billing_status_service = billing_status_service
 
     async def list_by_org(self, organization_id: uuid.UUID) -> Sequence[CampaignModel]:
         return await self._repo.list_by_organization(organization_id)
@@ -74,6 +81,12 @@ class CampaignService:
         await self._repo.delete(campaign)
 
     async def activate(self, campaign_id: uuid.UUID, organization_id: uuid.UUID) -> CampaignModel:
+        if await self._billing_status_service.is_blocked(organization_id):
+            raise HTTPException(
+                status.HTTP_402_PAYMENT_REQUIRED,
+                "Cuenta bloqueada por factura impaga. Realiza el pago para restablecer el acceso.",
+            )
+
         campaign = await self.get_by_id(campaign_id, organization_id)
 
         if campaign.status not in (CampaignStatus.DRAFT, CampaignStatus.PAUSED):

@@ -129,7 +129,7 @@ class PortfolioService:
         self,
         portfolio_id: uuid.UUID,
         data: PortfolioDailyCounterConfigUpdateRequest,
-        updated_by: int,
+        updated_by: uuid.UUID,
     ) -> PortfolioDailyCounterConfigModel:
         config = await self.daily_counter_repo.get_by_portfolio_id(portfolio_id)
         if config is None:
@@ -150,7 +150,7 @@ class PortfolioService:
         self,
         portfolio_id: uuid.UUID,
         data: PortfolioDailyCounterConfigSyncRequest,
-        updated_by: int,
+        updated_by: uuid.UUID,
     ) -> PortfolioDailyCounterConfigModel:
         config = await self.daily_counter_repo.get_by_portfolio_id(portfolio_id)
         if config is None:

@@ -1,3 +1,3 @@
-import os
+from core.tools.config_tools import get_or_throw
 
-UPLOADS_ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "uploads")
+UPLOADS_ROOT = get_or_throw("UPLOADS_DIR")

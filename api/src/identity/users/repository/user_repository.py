@@ -62,7 +62,7 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
         )
         return result.scalars().first()
 
-    async def get_all_active_except(self, self_id: int) -> Sequence[UserModel]:
+    async def get_all_active_except(self, self_id: uuid.UUID) -> Sequence[UserModel]:
         result = await self.session.execute(
             select(UserModel)
             .where(
@@ -75,7 +75,7 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
         return result.scalars().all()
 
     async def get_active_org_members(
-        self, self_id: int, org_ids: list[uuid.UUID]
+        self, self_id: uuid.UUID, org_ids: list[uuid.UUID]
     ) -> Sequence[UserModel]:
         from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
         result = await self.session.execute(
@@ -94,7 +94,7 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
         return result.scalars().all()
 
     async def get_cs_org_members_and_global_cs(
-        self, self_id: int, org_ids: list[uuid.UUID]
+        self, self_id: uuid.UUID, org_ids: list[uuid.UUID]
     ) -> Sequence[UserModel]:
         from sqlalchemy import or_
         from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
@@ -130,7 +130,7 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
         )
         return result.scalars().all()
 
-    async def get_cs_agents_for_self_user(self, self_id: int) -> Sequence[UserModel]:
+    async def get_cs_agents_for_self_user(self, self_id: uuid.UUID) -> Sequence[UserModel]:
         from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
         from identity.users.models.role_assignment_model import RoleAssignmentModel
         from identity.users.enums.user_enums import UserRole, UserScope
@@ -171,7 +171,7 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
         return result.scalars().all()
 
     async def get_global_admins_chatted_recently(
-        self, self_id: int, hours: int = 48
+        self, self_id: uuid.UUID, hours: int = 48
     ) -> Sequence[UserModel]:
         from datetime import datetime, timedelta, timezone
         from sqlalchemy import and_

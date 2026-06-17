@@ -13,7 +13,7 @@ class OrganizationMembershipRepository(SoftDeleteRepositoryBase[OrganizationMemb
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def get_by_user_id(self, user_id: int) -> list[OrganizationMembershipModel]:
+    async def get_by_user_id(self, user_id: uuid.UUID) -> list[OrganizationMembershipModel]:
         result = await self.session.execute(
             select(OrganizationMembershipModel).where(
                 OrganizationMembershipModel.user_id == user_id,
@@ -22,7 +22,7 @@ class OrganizationMembershipRepository(SoftDeleteRepositoryBase[OrganizationMemb
         )
         return list(result.scalars().all())
 
-    async def get_by_user_id_including_deleted(self, user_id: int) -> list[OrganizationMembershipModel]:
+    async def get_by_user_id_including_deleted(self, user_id: uuid.UUID) -> list[OrganizationMembershipModel]:
         result = await self.session.execute(
             select(OrganizationMembershipModel).where(
                 OrganizationMembershipModel.user_id == user_id,

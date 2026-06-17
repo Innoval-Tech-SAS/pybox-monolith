@@ -4,6 +4,7 @@ import { Loader } from "@/ui/components/loader/loader";
 import { StepBasicInfo } from "./step-basic-info";
 import { StepTablesFilters } from "./step-tables-filters";
 import { StepJoins } from "./step-joins";
+import { StepAggregation } from "./step-aggregation";
 import { StepSummary } from "./step-summary";
 import { useSegmentForm } from "@/segments/hooks/use-segment-form";
 import { SEGMENT_STEPS } from "@/segments/constants/segment.constants";
@@ -36,6 +37,9 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({
 
   const canNext = () => {
     if (step === 0) return !!state.name.trim() && !!state.mainTable;
+    if (step === 3 && state.aggregateMode) {
+      return state.aggregations.length > 0 && state.aggregations.every((a) => !!a.column && !!a.alias);
+    }
     return true;
   };
 
@@ -79,11 +83,24 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({
             allTableAliases={allTableAliases}
           />
         )}
-        {step === 3 && <StepSummary state={state} />}
+        {step === 3 && <StepAggregation state={state} update={update} />}
+        {step === 4 && <StepSummary state={state} />}
       </div>
 
       {/* Actions */}
-      <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
+      <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
+        {step > 0 ? (
+          <button
+            type="button"
+            onClick={prevStep}
+            className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <ChevronLeft size={16} />
+            Anterior
+          </button>
+        ) : (
+          <span />
+        )}
         {isLastStep ? (
           <button
             type="button"

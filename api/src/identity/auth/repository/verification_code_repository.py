@@ -1,4 +1,5 @@
-﻿from datetime import datetime, timezone
+﻿import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +21,7 @@ class VerificationCodeRepository(RepositoryBase[VerificationCodeModel]):
         super().__init__(session)
 
     async def get_active_by_user_and_channel(
-        self, user_id: int, code: str, channel: VerificationChannel
+        self, user_id: uuid.UUID, code: str, channel: VerificationChannel
     ) -> VerificationCodeModel | None:
         result = await self.session.execute(
             select(VerificationCodeModel).where(
@@ -34,7 +35,7 @@ class VerificationCodeRepository(RepositoryBase[VerificationCodeModel]):
         return result.scalar_one_or_none()
 
     async def verify_with_exceptions(
-        self, user_id: int, code: str, channel: VerificationChannel
+        self, user_id: uuid.UUID, code: str, channel: VerificationChannel
     ) -> VerificationCodeModel:
         result = await self.session.execute(
             select(VerificationCodeModel).where(

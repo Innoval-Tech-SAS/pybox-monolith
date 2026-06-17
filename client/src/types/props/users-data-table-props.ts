@@ -7,6 +7,6 @@ export interface UsersDataTableProps {
   users: UserSummary[];
   loading: boolean;
   orgId?: string;
-  onToggleStatus: (userId: number, isActive: boolean) => void;
-  onDelete: (userId: number) => void;
+  onToggleStatus: (userId: string, isActive: boolean) => void;
+  onDelete: (userId: string) => void;
 }

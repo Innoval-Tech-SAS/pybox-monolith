@@ -48,7 +48,7 @@ async def create_org_member(
 )
 async def list_permissions(
     org_id: uuid.UUID,
-    user_id: int,
+    user_id: uuid.UUID,
     session: CurrentSession,
     service: UserManagementServiceDep,
 ) -> PermissionListResponse:
@@ -64,7 +64,7 @@ async def list_permissions(
 )
 async def assign_permission(
     org_id: uuid.UUID,
-    user_id: int,
+    user_id: uuid.UUID,
     body: PermissionAssignRequest,
     session: CurrentSession,
     service: UserManagementServiceDep,
@@ -80,7 +80,7 @@ async def assign_permission(
 )
 async def remove_permission(
     org_id: uuid.UUID,
-    user_id: int,
+    user_id: uuid.UUID,
     permission_name: str,
     session: CurrentSession,
     service: UserManagementServiceDep,
@@ -96,7 +96,7 @@ async def remove_permission(
 )
 async def list_portfolio_access(
     org_id: uuid.UUID,
-    user_id: int,
+    user_id: uuid.UUID,
     session: CurrentSession,
     access_service: PortfolioUserAccessServiceDep,
 ) -> list[PortfolioAccessEntry]:
@@ -112,7 +112,7 @@ async def list_portfolio_access(
 )
 async def grant_portfolio_access(
     org_id: uuid.UUID,
-    user_id: int,
+    user_id: uuid.UUID,
     portfolio_id: uuid.UUID,
     session: CurrentSession,
     access_service: PortfolioUserAccessServiceDep,
@@ -128,7 +128,7 @@ async def grant_portfolio_access(
 )
 async def revoke_portfolio_access(
     org_id: uuid.UUID,
-    user_id: int,
+    user_id: uuid.UUID,
     portfolio_id: uuid.UUID,
     session: CurrentSession,
     access_service: PortfolioUserAccessServiceDep,

@@ -35,26 +35,72 @@ export const useChat = () => {
       if (event.event === "message") {
         const msg = event.data;
         playMessageSound();
-        const winExpanded = windows.find((w) => w.chatId === msg.chatId)?.status === "expanded";
-        setWindows((prev) =>
-          prev.map((w) =>
-            w.chatId === msg.chatId && !w.messages.some((m) => m.id === msg.id)
-              ? { ...w, messages: [...w.messages, msg] }
-              : w,
-          ),
-        );
-        setChats((prev) =>
-          prev.map((c) =>
-            c.id === msg.chatId
-              ? {
-                  ...c,
-                  lastMessage: msg.body,
-                  lastMessageAt: msg.createdAt,
-                  unreadCount: winExpanded ? c.unreadCount : c.unreadCount + 1,
-                }
-              : c,
-          ),
-        );
+        const win = windows.find((w) => w.chatId === msg.chatId);
+        const winExpanded = win?.status === "expanded";
+        const chatExists = chats.some((c) => c.id === msg.chatId);
+
+        if (win) {
+          setWindows((prev) =>
+            prev.map((w) =>
+              w.chatId === msg.chatId && !w.messages.some((m) => m.id === msg.id)
+                ? { ...w, messages: [...w.messages, msg] }
+                : w,
+            ),
+          );
+        } else {
+          const newWindow: ChatWindow = {
+            chatId: msg.chatId,
+            title: msg.senderName,
+            peerAvatar: msg.senderAvatar,
+            status: "minimized",
+            messages: [msg],
+            loading: true,
+            nextCursor: null,
+          };
+          setWindows((prev) => [...prev, newWindow].slice(-MAX_EXPANDED));
+          request<MessagesPage>("list_messages", { chatId: msg.chatId, limit: 50 })
+            .then((page) => {
+              setWindows((prev) =>
+                prev.map((w) =>
+                  w.chatId === msg.chatId
+                    ? { ...w, messages: page.items ?? [], nextCursor: page.nextCursor, loading: false }
+                    : w,
+                ),
+              );
+            })
+            .catch(() => {
+              setWindows((prev) =>
+                prev.map((w) => (w.chatId === msg.chatId ? { ...w, loading: false } : w)),
+              );
+            });
+        }
+
+        setChats((prev) => {
+          if (chatExists) {
+            return prev.map((c) =>
+              c.id === msg.chatId
+                ? {
+                    ...c,
+                    lastMessage: msg.body,
+                    lastMessageAt: msg.createdAt,
+                    unreadCount: winExpanded ? c.unreadCount : c.unreadCount + 1,
+                  }
+                : c,
+            );
+          }
+          const newChat: ChatSummary = {
+            id: msg.chatId,
+            type: 0,
+            title: msg.senderName,
+            peerId: msg.senderId,
+            peerAvatar: msg.senderAvatar,
+            lastMessage: msg.body,
+            lastMessageAt: msg.createdAt,
+            unreadCount: 1,
+          };
+          return [newChat, ...prev];
+        });
+
         if (winExpanded) {
           send("read", { chatId: msg.chatId, messageIds: [msg.id] });
         }
@@ -74,7 +120,7 @@ export const useChat = () => {
         );
       }
     },
-    [windows],
+    [windows, chats],
   );
 
   const { send, request } = useChatWebSocket(handleWsEvent);
@@ -91,7 +137,7 @@ export const useChat = () => {
   }, [request]);
 
   const openChat = useCallback(
-    async (peerId: number, peerName: string, peerAvatar: string | null) => {
+    async (peerId: string, peerName: string, peerAvatar: string | null) => {
       setShowPanel(false);
 
       const existing = windows.find((w) => {

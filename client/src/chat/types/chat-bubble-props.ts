@@ -1,4 +1,4 @@
-import type { ChatWindow } from "@/chat/types/chat/chat-types";
+import type { ChatWindow } from "@/types/chat/chat-types";
 
 export interface ChatBubbleProps {
   window: ChatWindow;

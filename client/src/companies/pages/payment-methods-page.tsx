@@ -6,8 +6,10 @@ import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/ui/components/table/table";
 import { getSession } from "@/auth/utils/auth-session-utils";
+import { Role } from "@/types/auth/role";
 import { PAYMENT_METHOD_TYPE_LABELS } from "@/constants/payment-methods/payment-method-labels";
 import { usePaymentMethods } from "../hooks/use-payment-methods";
+import { useMyCompanies } from "../hooks/use-my-companies";
 
 export const PaymentMethodsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -15,13 +17,15 @@ export const PaymentMethodsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const { items, loading, saving, remove } = usePaymentMethods(orgId);
+  const { orgs } = useMyCompanies();
+  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
 
   const user = getSession();
-  const isAdmin = user?.scope === "GLOBAL" || user?.orgs?.[orgId]?.role === "ADMIN";
+  const isAdmin = user?.scope === "GLOBAL" || user?.orgs?.[orgId]?.role === Role.ADMIN;
 
   const [confirmId, setConfirmId] = useState<number | null>(null);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     await remove(id);
     setConfirmId(null);
   };
@@ -33,7 +37,7 @@ export const PaymentMethodsPage: React.FC = () => {
         pageTitle="Métodos de Pago"
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: "Empresa", path: `/my-companies?org=${orgId}` }] : []),
+          ...(orgId ? [{ label: orgName, path: `/my-companies?org=${orgId}` }] : []),
         ]}
       >
         {loading ? (

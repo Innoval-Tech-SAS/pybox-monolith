@@ -200,7 +200,7 @@ class PortfolioCsvService:
         logger.debug("[_upsert_debtor] END created | id=%d", result.id)
         return result
 
-    async def _upsert_address(self, debtor_id: int, data: AddressRowData) -> None:
+    async def _upsert_address(self, debtor_id: uuid.UUID, data: AddressRowData) -> None:
         logger.debug("[_upsert_address] START | debtor_id=%d type=%s", debtor_id, data.address_type)
         existing_list = await self.address_repo.get_by_debtor_id(debtor_id)
         existing = next(
@@ -225,7 +225,7 @@ class PortfolioCsvService:
             )
 
     async def _upsert_contact_methods(
-        self, debtor_id: int, contacts: list
+        self, debtor_id: uuid.UUID, contacts: list
     ) -> None:
         logger.debug("[_upsert_contact_methods] START | debtor_id=%d count=%d", debtor_id, len(contacts))
         existing_list = await self.contact_method_repo.get_by_debtor_id(debtor_id)
@@ -249,8 +249,8 @@ class PortfolioCsvService:
         self,
         data: CreditRowData,
         portfolio_id: uuid.UUID,
-        debtor_id: int,
-        codebtor_id: int | None,
+        debtor_id: uuid.UUID,
+        codebtor_id: uuid.UUID | None,
     ) -> CreditModel:
         logger.debug("[_upsert_credit] START | credit_number=%s debtor_id=%d", data.credit_number, debtor_id)
         fields = dict(
@@ -294,7 +294,7 @@ class PortfolioCsvService:
         logger.debug("[_upsert_credit] END created | id=%d", result.id)
         return result
 
-    async def _insert_payment(self, credit_id: int, data: PaymentRowData) -> None:
+    async def _insert_payment(self, credit_id: uuid.UUID, data: PaymentRowData) -> None:
         logger.debug("[_insert_payment] START | credit_id=%d", credit_id)
         insurances_total = data.life_insurance_charge + data.vehicle_insurance_charge
         total_interest = data.current_interest_amount + data.overdue_interest_amount
@@ -323,7 +323,7 @@ class PortfolioCsvService:
         )
         logger.debug("[_insert_payment] END | credit_id=%d", credit_id)
 
-    async def _insert_uvr_quote(self, credit_id: int, data: UVRQuoteRowData) -> None:
+    async def _insert_uvr_quote(self, credit_id: uuid.UUID, data: UVRQuoteRowData) -> None:
         logger.debug("[_insert_uvr_quote] START | credit_id=%d", credit_id)
         await self.uvr_quote_repo.add(
             UVRQuoteModel(
@@ -335,7 +335,7 @@ class PortfolioCsvService:
         logger.debug("[_insert_uvr_quote] END | credit_id=%d", credit_id)
 
     async def _insert_credit_adjustment(
-        self, credit_id: int, data: CreditAdjustmentRowData
+        self, credit_id: uuid.UUID, data: CreditAdjustmentRowData
     ) -> None:
         logger.debug("[_insert_credit_adjustment] START | credit_id=%d type=%s", credit_id, data.adjustment_type)
         await self.credit_adjustment_repo.add(

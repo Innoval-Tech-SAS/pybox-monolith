@@ -9,7 +9,13 @@ VALID_WHERE_OPERATORS: set[str] = {
 VALID_HAVING_OPERATORS: set[str] = {
     "=", "!=", "<>", ">", "<", ">=", "<=", "in", "not_in", "between",
 }
-VALID_JOIN_TYPES: set[str] = {"inner", "left", "right", "outer"}
+JOIN_SQL_KEYWORDS: dict[str, str] = {
+    "inner": "INNER JOIN",
+    "left": "LEFT JOIN",
+    "right": "RIGHT JOIN",
+    "full": "FULL JOIN",
+}
+VALID_JOIN_TYPES: set[str] = set(JOIN_SQL_KEYWORDS)
 VALID_AGG_FUNCTIONS: set[str] = {"count", "sum", "avg", "min", "max"}
 
 OPERATOR_ALIASES: dict[str, str] = {

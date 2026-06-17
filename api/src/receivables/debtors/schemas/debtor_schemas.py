@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from pydantic import Field
@@ -10,7 +11,7 @@ from receivables.debtors.enums.debtor_enums import DebtorType
 
 
 class AddressResponse(BaseSchema):
-    id: int = Field(description="ID de la dirección")
+    id: uuid.UUID = Field(description="ID de la dirección")
     address: str = Field(description="Dirección")
     city: str = Field(description="Ciudad")
     state: str = Field(description="Departamento o estado")
@@ -19,13 +20,13 @@ class AddressResponse(BaseSchema):
 
 
 class ContactMethodResponse(BaseSchema):
-    id: int = Field(description="ID del método de contacto")
+    id: uuid.UUID = Field(description="ID del método de contacto")
     contact_type: ContactMethodType = Field(description="Tipo: EMAIL o PHONE")
     contact_value: str = Field(description="Valor del contacto (correo o teléfono)")
 
 
 class DebtorResponse(BaseSchema):
-    id: int = Field(description="ID del deudor")
+    id: uuid.UUID = Field(description="ID del deudor")
     full_name: str = Field(description="Nombre completo")
     debtor_type: DebtorType = Field(description="Tipo: Titular o Co-deudor")
     document_type: UserDocumentType = Field(description="Tipo de documento de identidad")
@@ -33,7 +34,7 @@ class DebtorResponse(BaseSchema):
 
 
 class DebtorDetailResponse(BaseSchema):
-    id: int = Field(description="ID del deudor")
+    id: uuid.UUID = Field(description="ID del deudor")
     full_name: str = Field(description="Nombre completo")
     debtor_type: DebtorType = Field(description="Tipo: Titular o Co-deudor")
     document_type: UserDocumentType = Field(description="Tipo de documento")
@@ -75,7 +76,7 @@ class CreateContactMethodRequest(BaseSchema):
 
 
 class DebtorCreditResponse(BaseSchema):
-    id: int = Field(description="ID del crédito")
+    id: uuid.UUID = Field(description="ID del crédito")
     credit_number: str = Field(description="Número de crédito")
     credit_type: CreditTypes = Field(description="Tipo de crédito")
     disbursed_date: datetime = Field(description="Fecha de desembolso")

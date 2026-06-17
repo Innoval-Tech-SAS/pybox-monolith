@@ -7,7 +7,7 @@ export const useUpdateUser = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const updateUser = async (userId: number, data: UpdateUserPayload): Promise<UserDetail | null> => {
+  const updateUser = async (userId: string, data: UpdateUserPayload): Promise<UserDetail | null> => {
     setLoading(true);
     setError(null);
     try {

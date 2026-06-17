@@ -35,7 +35,7 @@ class PortfolioRepository(SoftDeleteRepositoryBase[PortfolioModel]):
         return await self.list_all(is_active=True)
 
     async def get_active_accessible_by_user_and_org(
-        self, user_id: int, organization_id: uuid.UUID
+        self, user_id: uuid.UUID, organization_id: uuid.UUID
     ) -> list[PortfolioModel]:
         return await self.list_accessible_by_user_and_org(
             user_id,
@@ -70,7 +70,7 @@ class PortfolioRepository(SoftDeleteRepositoryBase[PortfolioModel]):
 
     async def list_accessible_by_user_and_org(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         organization_id: uuid.UUID,
         is_active: bool | None = None,
     ) -> list[PortfolioModel]:

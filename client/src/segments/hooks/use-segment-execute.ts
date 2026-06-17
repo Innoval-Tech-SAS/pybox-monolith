@@ -11,7 +11,7 @@ export const useSegmentExecute = (orgId: string) => {
   const [result, setResult] = useState<SegmentExecuteResponse | null>(null);
 
   const execute = async (
-    segmentId: number,
+    segmentId: string,
     mode: "preview" | "audit",
     limit?: number,
   ) => {
@@ -38,7 +38,7 @@ export const useSegmentExecute = (orgId: string) => {
   return { executing, result, execute, clearResult };
 };
 
-export const useSegmentExecutions = (orgId: string, segmentId: number | null) => {
+export const useSegmentExecutions = (orgId: string, segmentId: string | null) => {
   const { apiClient } = useApiClient();
   const [executions, setExecutions] = useState<SegmentExecutionResponse[]>([]);
   const [loading, setLoading] = useState(false);

@@ -1,7 +1,7 @@
 export type MessageStatus = "sent" | "delivered" | "read";
 
 export interface ChatAvailableUser {
-  id: number;
+  id: string;
   fullName: string;
   profilePhotoUrl: string | null;
   isOnline: boolean;
@@ -10,7 +10,7 @@ export interface ChatAvailableUser {
 export interface ChatMessage {
   id: string;
   chatId: string;
-  senderId: number;
+  senderId: string;
   senderName: string;
   senderAvatar: string | null;
   body: string;
@@ -22,7 +22,7 @@ export interface ChatSummary {
   id: string;
   type: number;
   title: string;
-  peerId: number | null;
+  peerId: string | null;
   peerAvatar: string | null;
   lastMessage: string | null;
   lastMessageAt: string | null;
@@ -46,7 +46,7 @@ export interface ChatWindow {
 
 export type WsChatEvent =
   | { event: "message"; data: ChatMessage }
-  | { event: "read"; data: { chatId: string; messageIds: string[]; readerId: number } }
+  | { event: "read"; data: { chatId: string; messageIds: string[]; readerId: string } }
   | { event: "chats"; data: ChatSummary[] }
   | { event: "chat"; data: ChatSummary }
   | { event: "messages"; data: MessagesPage }

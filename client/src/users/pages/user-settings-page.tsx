@@ -75,7 +75,7 @@ const ChecklistCard: React.FC<{
 
 const PermissionsList: React.FC<{
   orgId: string;
-  userId: number;
+  userId: string;
   catalog: PermissionCatalogEntry[];
   catalogLoading: boolean;
 }> = ({ orgId, userId, catalog, catalogLoading }) => {
@@ -123,7 +123,7 @@ const PermissionsList: React.FC<{
 
 const PortfoliosList: React.FC<{
   orgId: string;
-  userId: number;
+  userId: string;
   permsCatalog: PermissionCatalogEntry[];
   catalogLoading: boolean;
 }> = ({ orgId, userId, permsCatalog, catalogLoading }) => {

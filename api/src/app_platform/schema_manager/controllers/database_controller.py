@@ -23,7 +23,7 @@ router = APIRouter(prefix="/databases", tags=["Bases de datos"])
 
 @router.get("/schemas", response_model=list[str], summary="Listar esquemas")
 async def list_schemas(session: CurrentSession, service: InspectorServiceDep) -> list[str]:
-    _require_org_or_global(session)
+    require_org_or_global(session)
     return await service.get_schemas()
 
 
@@ -33,7 +33,7 @@ async def list_tables(
     session: CurrentSession,
     service: InspectorServiceDep,
 ) -> list[str]:
-    _require_org_or_global(session)
+    require_org_or_global(session)
     return await service.get_tables(schema_name)
 
 
@@ -48,7 +48,7 @@ async def list_table_fields(
     session: CurrentSession,
     service: InspectorServiceDep,
 ) -> list[FieldInfo]:
-    _require_org_or_global(session)
+    require_org_or_global(session)
     raw = await service.get_table_fields(schema_name, table_name)
     return [FieldInfo(name=col["name"], type=str(col["type"])) for col in raw]
 
@@ -63,7 +63,7 @@ async def execute_query(
     session: CurrentSession,
     service: DmlServiceDep,
 ) -> DynamicQueryResponse:
-    _require_org_or_global(session)
+    require_org_or_global(session)
     result = await service.execute_query(
         tables=[t.model_dump() for t in body.tables],
         joins=[j.model_dump() for j in body.joins],
@@ -87,7 +87,7 @@ async def create_database(
     session: CurrentSession,
     service: DdlServiceDep,
 ) -> OperationResponse:
-    _require_global(session)
+    require_global(session)
     result = await service.create_database(body.database_name)
     return OperationResponse(**result)
 
@@ -105,7 +105,7 @@ async def create_table(
     session: CurrentSession,
     service: DdlServiceDep,
 ) -> OperationResponse:
-    _require_global(session)
+    require_global(session)
     result = await service.create_table(database_name, schema_name, body.table_name, body.columns)
     return OperationResponse(**result)
 
@@ -123,7 +123,7 @@ async def alter_table(
     session: CurrentSession,
     service: DdlServiceDep,
 ) -> OperationResponse:
-    _require_global(session)
+    require_global(session)
     result = await service.alter_table(
         database_name,
         schema_name,

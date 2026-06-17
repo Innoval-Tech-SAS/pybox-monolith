@@ -1,4 +1,5 @@
 ﻿import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -42,7 +43,7 @@ class AuthTokenService:
         )
         return token
 
-    async def generate_refresh_token(self, user_id: int) -> str:
+    async def generate_refresh_token(self, user_id: uuid.UUID) -> str:
         jti = secrets.token_urlsafe(32)
         token = jwt.encode(
             {
@@ -69,11 +70,11 @@ class AuthTokenService:
             logger.debug("[token] verify_access | result=invalid error=%s", type(e).__name__)
             raise ValueError("El token no es válido.") from e
 
-    async def verify_refresh_token(self, user_id: int, jti: str) -> bool:
+    async def verify_refresh_token(self, user_id: uuid.UUID, jti: str) -> bool:
         stored = await self.redis.get(f"refresh:{user_id}")
         return stored == jti
 
-    async def revoke_refresh_token(self, user_id: int) -> None:
+    async def revoke_refresh_token(self, user_id: uuid.UUID) -> None:
         await self.redis.delete(f"refresh:{user_id}")
 
     def verify_token(self, token: str) -> dict[str, Any]:

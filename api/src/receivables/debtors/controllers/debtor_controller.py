@@ -54,7 +54,7 @@ async def list_debtors(
     description="Retorna el deudor con sus direcciones y métodos de contacto.",
 )
 async def get_debtor(
-    debtor_id: int,
+    debtor_id: uuid.UUID,
     session: CurrentSession,
     service: DebtorServiceDep,
     portfolio_id: Annotated[uuid.UUID | None, Query(alias="portfolioId")] = None,
@@ -69,7 +69,7 @@ async def get_debtor(
     description="Retorna el deudor titular y sus co-deudores con direcciones y métodos de contacto.",
 )
 async def get_related_contacts(
-    debtor_id: int,
+    debtor_id: uuid.UUID,
     session: CurrentSession,
     service: DebtorServiceDep,
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
@@ -84,7 +84,7 @@ async def get_related_contacts(
     description="Lista de créditos del deudor (como titular) en el portafolio dado.",
 )
 async def get_debtor_credits(
-    debtor_id: int,
+    debtor_id: uuid.UUID,
     session: CurrentSession,
     service: DebtorServiceDep,
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
@@ -120,7 +120,7 @@ async def create_debtor(
     summary="Agregar dirección al deudor",
 )
 async def create_address(
-    debtor_id: int,
+    debtor_id: uuid.UUID,
     data: CreateAddressRequest,
     session: CurrentSession,
     service: DebtorServiceDep,
@@ -136,7 +136,7 @@ async def create_address(
     summary="Agregar método de contacto al deudor",
 )
 async def create_contact_method(
-    debtor_id: int,
+    debtor_id: uuid.UUID,
     data: CreateContactMethodRequest,
     session: CurrentSession,
     service: DebtorServiceDep,

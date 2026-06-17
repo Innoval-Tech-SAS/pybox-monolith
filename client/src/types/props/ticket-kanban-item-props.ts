@@ -7,5 +7,5 @@ export interface TicketKanbanItemProps {
   moveTicket: (dragIndex: number, hoverIndex: number) => void;
   changeTicketStatus: (ticketId: string, ticketNumber: number, newStatus: SupportTicketStatus) => void;
   isTerminal?: boolean;
-  onOpenTicket: (ticketId: number) => void;
+  onOpenTicket: (ticketId: string) => void;
 }

@@ -27,7 +27,7 @@ export const ChatPage: React.FC = () => {
   } = useChatPage();
 
   const { getSession } = useAuth();
-  const currentUserId = getSession()?.user_id ?? 0;
+  const currentUserId = getSession()?.userId ?? "";
 
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");

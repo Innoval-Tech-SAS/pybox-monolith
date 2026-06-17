@@ -1,4 +1,5 @@
 import { ALL_TABLES, JOIN_TYPES } from "@/segments/constants/segment.constants";
+import { relativeValueLabel } from "@/segments/utils/relative-date";
 import type { StepSummaryProps, SectionProps, RowProps } from "@/segments/types/step-summary-props";
 
 const tableLabel = (name: string) =>
@@ -38,11 +39,16 @@ export const StepSummary: React.FC<StepSummaryProps> = ({ state }) => {
             )}
             {t.filters.length > 0 && (
               <ul className="mt-1 space-y-0.5">
-                {t.filters.map((f, i) => (
-                  <li key={i} className="text-xs text-gray-500 dark:text-gray-400">
-                    {f.column} {f.op} {f.value == null ? "" : Array.isArray(f.value) ? `[${f.value.join(", ")}]` : String(f.value)}
-                  </li>
-                ))}
+                {t.filters.map((f, i) => {
+                  const relativeLabel = relativeValueLabel(f.op, f.value);
+                  const valueText = relativeLabel
+                    ?? (f.value == null ? "" : Array.isArray(f.value) ? `[${f.value.join(", ")}]` : String(f.value));
+                  return (
+                    <li key={i} className="text-xs text-gray-500 dark:text-gray-400">
+                      {f.column} {f.op} {valueText}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -55,6 +61,30 @@ export const StepSummary: React.FC<StepSummaryProps> = ({ state }) => {
           {state.joins.map((j, i) => (
             <p key={i} className="text-sm text-gray-700 dark:text-gray-300">
               {j.left}.{j.leftOn} <span className="text-xs text-gray-500">{joinLabel(j.how)}</span> {j.right}.{j.rightOn}
+            </p>
+          ))}
+        </Section>
+      )}
+
+      {/* Aggregation */}
+      {state.aggregateMode && (
+        <Section title="Agregación">
+          {state.groupBy.length > 0 && (
+            <Row label="Agrupado por" value={state.groupBy.map((g) => `${g.table}.${g.column}`).join(", ")} />
+          )}
+          {state.aggregations.map((a, i) => (
+            <p key={i} className="text-sm text-gray-700 dark:text-gray-300">
+              {a.function.toUpperCase()}({a.table}.{a.column}) <span className="text-xs text-gray-500">como</span> {a.alias}
+            </p>
+          ))}
+          {state.having.map((h, i) => (
+            <p key={i} className="text-xs text-gray-500 dark:text-gray-400">
+              HAVING {h.metric} {h.op} {Array.isArray(h.value) ? `[${h.value.join(", ")}]` : h.value ?? ""}
+            </p>
+          ))}
+          {state.orderBy.map((o, i) => (
+            <p key={i} className="text-xs text-gray-500 dark:text-gray-400">
+              ORDER BY {o.field} {o.direction.toUpperCase()}
             </p>
           ))}
         </Section>

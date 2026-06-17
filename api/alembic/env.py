@@ -14,31 +14,52 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 load_dotenv()
 
 # Importar todos los modelos para que Alembic los detecte en Base.metadata
-from database.database import Base  # noqa: E402
-import campaigns.models.campaign_model  # noqa: E402, F401
-import contacts.models.contact_model  # noqa: E402, F401
-import messaging.models.verification_code_model  # noqa: E402, F401
-import organizations.models.organization_model  # noqa: E402, F401
-import organizations.models.organization_membership_model  # noqa: E402, F401
-import users.models.user_model  # noqa: E402, F401
-import users.models.permission_model  # noqa: E402, F401
-import users.models.role_assignment_model  # noqa: E402, F401
-import users.models.permission_assignment_model  # noqa: E402, F401
-import portfolios.models.portfolio_model  # noqa: E402, F401
-import portfolios.models.portfolio_user_access_model  # noqa: E402, F401
-import portfolios.models.portfolio_daily_counter_config_model  # noqa: E402, F401
-import debtors.models.debtor_model  # noqa: E402, F401
-import debtors.models.address_model  # noqa: E402, F401
-import debtors.models.segment_model  # noqa: E402, F401
-import credits.models.credit_model  # noqa: E402, F401
-import credits.models.credit_adjustment_model  # noqa: E402, F401
-import credits.models.uvr_quote_model  # noqa: E402, F401
-import payments.models.payment_model  # noqa: E402, F401
-import payment_methods.models.payment_method_model  # noqa: E402, F401
-import contact_methods.models.contact_method_model  # noqa: E402, F401
-import reports.models.report_model  # noqa: E402, F401
-import support.models.support_ticket_model  # noqa: E402, F401
-import notifications.models.notification_model  # noqa: E402, F401
+from core.database.database import Base  # noqa: E402
+
+import app_platform.chats.models.chat_member_model  # noqa: E402, F401
+import app_platform.chats.models.chat_model  # noqa: E402, F401
+import app_platform.chats.models.message_model  # noqa: E402, F401
+import app_platform.chats.models.message_status_model  # noqa: E402, F401
+import app_platform.notifications.models.notification_model  # noqa: E402, F401
+import app_platform.support.models.support_ticket_event_model  # noqa: E402, F401
+import app_platform.support.models.support_ticket_message_model  # noqa: E402, F401
+import app_platform.support.models.support_ticket_model  # noqa: E402, F401
+
+import billing.invoices.models.invoice_model  # noqa: E402, F401
+import billing.invoices.models.invoice_item_model  # noqa: E402, F401
+import billing.invoices.models.payment_attempt_model  # noqa: E402, F401
+
+import finance.payment_methods.models.payment_method_model  # noqa: E402, F401
+import finance.payments.models.payment_model  # noqa: E402, F401
+
+import identity.auth.models.verification_code_model  # noqa: E402, F401
+import identity.organizations.models.organization_membership_model  # noqa: E402, F401
+import identity.organizations.models.organization_model  # noqa: E402, F401
+import identity.users.models.permission_assignment_model  # noqa: E402, F401
+import identity.users.models.permission_model  # noqa: E402, F401
+import identity.users.models.role_assignment_model  # noqa: E402, F401
+import identity.users.models.user_model  # noqa: E402, F401
+import identity.users.models.user_preferences_model  # noqa: E402, F401
+
+import messaging.campaigns.models.campaign_model  # noqa: E402, F401
+import messaging.campaigns.models.campaign_result_model  # noqa: E402, F401
+import messaging.campaigns.models.campaign_time_model  # noqa: E402, F401
+import messaging.channels.models.channel_model  # noqa: E402, F401
+import messaging.contacts.models.contact_model  # noqa: E402, F401
+import messaging.templates.models.template_model  # noqa: E402, F401
+
+import receivables.contact_methods.models.contact_method_model  # noqa: E402, F401
+import receivables.credits.models.credit_adjustment_model  # noqa: E402, F401
+import receivables.credits.models.credit_model  # noqa: E402, F401
+import receivables.credits.models.uvr_quote_model  # noqa: E402, F401
+import receivables.debtors.models.address_model  # noqa: E402, F401
+import receivables.debtors.models.debtor_model  # noqa: E402, F401
+import receivables.portfolios.models.portfolio_daily_counter_config_model  # noqa: E402, F401
+import receivables.portfolios.models.portfolio_model  # noqa: E402, F401
+import receivables.portfolios.models.portfolio_user_access_model  # noqa: E402, F401
+import receivables.reports.models.report_model  # noqa: E402, F401
+import receivables.segments.models.segment_execution_model  # noqa: E402, F401
+import receivables.segments.models.segment_model  # noqa: E402, F401
 
 config = context.config
 

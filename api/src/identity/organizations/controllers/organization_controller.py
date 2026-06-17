@@ -161,7 +161,7 @@ async def register_organization(
     fiscal_document_number: str | None = Form(None),
     description: str | None = Form(None),
     representative_mode: RepresentativeMode = Form(...),
-    representative_user_id: int | None = Form(None),
+    representative_user_id: uuid.UUID | None = Form(None),
     rep_firstname: str | None = Form(None),
     rep_lastname: str | None = Form(None),
     rep_email: str | None = Form(None),

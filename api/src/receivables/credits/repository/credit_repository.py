@@ -31,7 +31,7 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         )
         return list(result.scalars().all())
 
-    async def get_by_debtor_id(self, debtor_id: int) -> list[CreditModel]:
+    async def get_by_debtor_id(self, debtor_id: uuid.UUID) -> list[CreditModel]:
         result = await self.session.execute(
             select(CreditModel).where(
                 CreditModel.debtor_id == debtor_id,
@@ -40,7 +40,7 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         )
         return list(result.scalars().all())
 
-    async def get_by_debtor_and_portfolio(self, debtor_id: int, portfolio_id: uuid.UUID) -> list[CreditModel]:
+    async def get_by_debtor_and_portfolio(self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID) -> list[CreditModel]:
         result = await self.session.execute(
             select(CreditModel).where(
                 CreditModel.debtor_id == debtor_id,
@@ -50,7 +50,7 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         )
         return list(result.scalars().all())
 
-    async def get_by_codebtor_id(self, codebtor_id: int) -> list[CreditModel]:
+    async def get_by_codebtor_id(self, codebtor_id: uuid.UUID) -> list[CreditModel]:
         result = await self.session.execute(
             select(CreditModel).where(
                 CreditModel.codebtor_id == codebtor_id,

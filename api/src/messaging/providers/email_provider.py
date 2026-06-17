@@ -1,3 +1,5 @@
+import httpx
+
 from core.config.logger import logger
 from core.tools.config_tools import get_or_throw
 from messaging.constants.nrs360_constants import EMAIL_ENDPOINT
@@ -10,6 +12,8 @@ class NRS360EmailProvider(NRS360BaseProvider):
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
             cls._instance._token = get_or_throw("NRS360_EMAIL_TOKEN")
+            cls._instance._sender = get_or_throw("NRS360_EMAIL_SENDER")
+            cls._instance._sender_name = get_or_throw("NRS360_EMAIL_SENDER_NAME")
         return cls._instance
 
     async def send_email(
@@ -23,20 +27,35 @@ class NRS360EmailProvider(NRS360BaseProvider):
             "subject": subject,
             "body": body,
             "to": to,
-            "from": "info@puntualmente.info",
-            "fromName": "PYBOX Info",
+            "fromEmail": self._sender,
+            "fromName": self._sender_name,
+            "replyTo": self._sender,
             "campaignName": "otp-verification",
         }
         if sub:
             payload["sub"] = sub
+        logger.info("[nrs360] email_send_start | recipients=%d", len(to))
         try:
             response = await self._request("POST", EMAIL_ENDPOINT, self._token, json=payload)
             body_json = response.json()
             result = body_json.get("result", [])
             ids_by_recipient = {item["to"]: item["id"] for item in result if item.get("id")}
             sending_id = body_json.get("sendingId")
-            logger.info("[nrs360] email_sent | recipients=%d", len(to))
+            logger.info(
+                "[nrs360] email_sent | recipients=%d response_items=%d sending_id=%s",
+                len(to),
+                len(result),
+                sending_id,
+            )
             return True, ids_by_recipient, str(sending_id) if sending_id is not None else None
+        except httpx.HTTPStatusError as exc:
+            response_body = exc.response.text[:500] if exc.response is not None else ""
+            logger.error(
+                "[nrs360] email_http_error | status=%s body=%s",
+                exc.response.status_code if exc.response is not None else "?",
+                response_body,
+            )
+            return False, None, None
         except Exception as exc:
-            logger.error("[nrs360] email_error | error=%s", type(exc).__name__)
+            logger.error("[nrs360] email_error | error=%s detail=%s", type(exc).__name__, exc)
             return False, None, None
