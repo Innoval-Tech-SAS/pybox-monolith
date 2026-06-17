@@ -1,4 +1,5 @@
-﻿from typing import Sequence
+﻿import uuid
+from typing import Sequence
 
 from fastapi import HTTPException, status
 
@@ -15,7 +16,7 @@ class ChannelService:
     async def list_all(self) -> Sequence[ChannelModel]:
         return await self._repo.get_all()
 
-    async def get_by_id(self, channel_id: int) -> ChannelModel:
+    async def get_by_id(self, channel_id: uuid.UUID) -> ChannelModel:
         channel = await self._repo.get_by_id(channel_id)
         if channel is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Canal no encontrado")
@@ -33,13 +34,13 @@ class ChannelService:
         )
         return await self._repo.add(channel)
 
-    async def update(self, channel_id: int, data: ChannelUpdateRequest) -> ChannelModel:
+    async def update(self, channel_id: uuid.UUID, data: ChannelUpdateRequest) -> ChannelModel:
         channel = await self.get_by_id(channel_id)
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(channel, key, value)
         return await self._repo.update(channel)
 
-    async def delete(self, channel_id: int) -> None:
+    async def delete(self, channel_id: uuid.UUID) -> None:
         channel = await self.get_by_id(channel_id)
         await self._repo.delete(channel)

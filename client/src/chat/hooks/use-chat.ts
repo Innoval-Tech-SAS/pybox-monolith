@@ -39,25 +39,41 @@ export const useChat = () => {
         const winExpanded = win?.status === "expanded";
         const chatExists = chats.some((c) => c.id === msg.chatId);
 
-        setWindows((prev) => {
-          if (win) {
-            return prev.map((w) =>
+        if (win) {
+          setWindows((prev) =>
+            prev.map((w) =>
               w.chatId === msg.chatId && !w.messages.some((m) => m.id === msg.id)
                 ? { ...w, messages: [...w.messages, msg] }
                 : w,
-            );
-          }
+            ),
+          );
+        } else {
           const newWindow: ChatWindow = {
             chatId: msg.chatId,
             title: msg.senderName,
             peerAvatar: msg.senderAvatar,
             status: "minimized",
             messages: [msg],
-            loading: false,
+            loading: true,
             nextCursor: null,
           };
-          return [...prev, newWindow].slice(-MAX_EXPANDED);
-        });
+          setWindows((prev) => [...prev, newWindow].slice(-MAX_EXPANDED));
+          request<MessagesPage>("list_messages", { chatId: msg.chatId, limit: 50 })
+            .then((page) => {
+              setWindows((prev) =>
+                prev.map((w) =>
+                  w.chatId === msg.chatId
+                    ? { ...w, messages: page.items ?? [], nextCursor: page.nextCursor, loading: false }
+                    : w,
+                ),
+              );
+            })
+            .catch(() => {
+              setWindows((prev) =>
+                prev.map((w) => (w.chatId === msg.chatId ? { ...w, loading: false } : w)),
+              );
+            });
+        }
 
         setChats((prev) => {
           if (chatExists) {

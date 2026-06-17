@@ -19,8 +19,8 @@ export interface SupportTicket {
   priority: SupportTicketPriority;
   organizationId: string | null;
   organizationName: string;
-  createdBy: number;
-  assignedTo: number | null;
+  createdBy: string;
+  assignedTo: string | null;
   title: string | null;
   notes: string | null;
   resolvedAt: string | null;
@@ -63,7 +63,7 @@ export interface UseTicketsOptions {
 }
 
 export interface AssignTicketPayload {
-  userId: number;
+  userId: string;
 }
 
 export interface ResolveTicketPayload {
@@ -84,7 +84,7 @@ export interface OrgDocsData {
 export interface TicketMessage {
   id: string;
   ticketId: string;
-  senderId: number;
+  senderId: string;
   body: string;
   isInternal: boolean;
   createdAt: string;
@@ -104,7 +104,7 @@ export type TicketEventType =
 export interface TicketEvent {
   id: string;
   ticketId: string;
-  userId: number;
+  userId: string;
   eventType: TicketEventType;
   fromValue: string | null;
   toValue: string | null;

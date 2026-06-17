@@ -6,7 +6,7 @@ export interface RoleEntry {
 }
 
 export interface UserSummary {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   phoneNumber: string | null;

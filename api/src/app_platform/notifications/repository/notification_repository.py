@@ -1,3 +1,4 @@
+import uuid
 from typing import Sequence
 
 from sqlalchemy import select, update
@@ -13,7 +14,7 @@ class NotificationRepository(RepositoryBase[NotificationModel]):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def get_by_user_id(self, user_id: int) -> Sequence[NotificationModel]:
+    async def get_by_user_id(self, user_id: uuid.UUID) -> Sequence[NotificationModel]:
         result = await self.session.execute(
             select(NotificationModel)
             .where(NotificationModel.user_id == user_id)
@@ -21,7 +22,7 @@ class NotificationRepository(RepositoryBase[NotificationModel]):
         )
         return result.scalars().all()
 
-    async def get_by_id_and_user(self, notification_id: int, user_id: int) -> NotificationModel | None:
+    async def get_by_id_and_user(self, notification_id: uuid.UUID, user_id: uuid.UUID) -> NotificationModel | None:
         result = await self.session.execute(
             select(NotificationModel).where(
                 NotificationModel.id == notification_id,
@@ -30,7 +31,7 @@ class NotificationRepository(RepositoryBase[NotificationModel]):
         )
         return result.scalar_one_or_none()
 
-    async def mark_all_read(self, user_id: int) -> None:
+    async def mark_all_read(self, user_id: uuid.UUID) -> None:
         await self.session.execute(
             update(NotificationModel)
             .where(

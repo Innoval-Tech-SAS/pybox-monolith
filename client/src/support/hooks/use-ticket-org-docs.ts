@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import type { OrgDocsData } from "@/types/support/support-types";
 
-export const useTicketOrgDocs = (ticketId: number | undefined, enabled: boolean) => {
+export const useTicketOrgDocs = (ticketId: string | undefined, enabled: boolean) => {
   const { apiClient } = useApiClient();
   const [orgDocs, setOrgDocs] = useState<OrgDocsData | null>(null);
   const [loading, setLoading] = useState(false);

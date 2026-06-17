@@ -86,7 +86,7 @@ const StepSidebar: React.FC<{ steps: CreateUserStepDef[]; current: number }> = (
 
 // ─── Step 2 sub-components ───────────────────────────────────────────────────
 
-const PermissionCheckboxes: React.FC<{ orgId: string; userId: number }> = ({ orgId, userId }) => {
+const PermissionCheckboxes: React.FC<{ orgId: string; userId: string }> = ({ orgId, userId }) => {
   const { catalog, loading } = usePermissionsCatalog();
   const { permissions, assignPermission, removePermission } = useUserPermissions(orgId, userId);
   const [busy, setBusy] = useState<string | null>(null);
@@ -143,7 +143,7 @@ const PermissionCheckboxes: React.FC<{ orgId: string; userId: number }> = ({ org
   );
 };
 
-const PortfolioCheckboxes: React.FC<{ orgId: string; userId: number }> = ({ orgId, userId }) => {
+const PortfolioCheckboxes: React.FC<{ orgId: string; userId: string }> = ({ orgId, userId }) => {
   const { portfolios, loading, grantAccess, revokeAccess } = useUserPortfolioAccess(orgId, userId);
   const [busy, setBusy] = useState<string | null>(null);
 

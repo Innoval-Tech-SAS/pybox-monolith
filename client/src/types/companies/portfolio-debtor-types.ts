@@ -1,5 +1,5 @@
 export interface PortfolioDebtor {
-  id: number;
+  id: string;
   fullName: string;
   documentType: string;
   documentNumber: string;
@@ -7,7 +7,7 @@ export interface PortfolioDebtor {
 }
 
 export interface DebtorAddress {
-  id: number;
+  id: string;
   address: string;
   city: string;
   state: string;
@@ -16,13 +16,13 @@ export interface DebtorAddress {
 }
 
 export interface DebtorContactMethod {
-  id: number;
+  id: string;
   contactType: string;
   contactValue: string;
 }
 
 export interface DebtorDetail {
-  id: number;
+  id: string;
   fullName: string;
   debtorType: string;
   documentType: string;
@@ -37,7 +37,7 @@ export interface RelatedContactsResponse {
 }
 
 export interface DebtorCredit {
-  id: number;
+  id: string;
   creditNumber: string;
   creditType: string;
   disbursedDate: string;

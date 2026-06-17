@@ -64,7 +64,7 @@ class AuthService:
     ) -> AuthResponse:
         user = await self.register_user(user_data)
         await self.role_assignment_repository.add(
-            RoleAssignmentModel(user_id=cast(int, user.id), role=role, scope=scope)
+            RoleAssignmentModel(user_id=user.id, role=role, scope=scope)
         )
         return await self._build_response(user, AuthProvider.SELF)
 
@@ -155,7 +155,7 @@ class AuthService:
             logger.warning("[auth] oauth_register_failed | provider=%s reason=already_exists user_id=%s", provider.value, user.id)
             raise ValueError("Ya tienes una cuenta registrada con este proveedor. Inicia sesión.")
         await self.role_assignment_repository.add(
-            RoleAssignmentModel(user_id=cast(int, user.id), role=role, scope=scope)
+            RoleAssignmentModel(user_id=user.id, role=role, scope=scope)
         )
         logger.info("[auth] oauth_register | user_id=%s provider=%s", user.id, provider.value)
         return await self._build_response(user, provider)
@@ -289,10 +289,10 @@ class AuthService:
         await self.user_repository.update(user)
         access_token = self.token_service.generate_access_token(user, auth_provider)
         refresh_token = await self.token_service.generate_refresh_token(
-            cast(int, user.id)
+            user.id
         )
         if self._user_service is not None:
-            await self._user_service.get_user_session(cast(int, user.id))
+            await self._user_service.get_user_session(user.id)
         return AuthResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -300,7 +300,7 @@ class AuthService:
             auth_provider=auth_provider,
         )
 
-    async def change_password(self, user_id: int, current_password: str, new_password: str) -> None:
+    async def change_password(self, user_id: uuid.UUID, current_password: str, new_password: str) -> None:
         user = await self.user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Usuario no encontrado.")
@@ -335,7 +335,7 @@ class AuthService:
             raise ValueError("Credenciales inválidas.")
         svc = get_verification_service(channel, self._session)
         try:
-            await svc.peek_code(cast(int, user.id), code)
+            await svc.peek_code(user.id, code)
         except CodeNotFoundException:
             raise ValueError("Código incorrecto.")
         except CodeExpiredException:
@@ -366,7 +366,7 @@ class AuthService:
             raise ValueError("Credenciales inválidas.")
         svc = get_verification_service(channel, self._session)
         try:
-            await svc.verify_code(cast(int, user.id), code)
+            await svc.verify_code(user.id, code)
         except CodeNotFoundException:
             raise ValueError("Código no encontrado.")
         except CodeExpiredException:

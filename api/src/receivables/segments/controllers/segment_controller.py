@@ -44,7 +44,7 @@ async def list_segments(
 
 @router.get("/{segment_id}", response_model=SegmentResponse, summary="Obtener segmento por ID")
 async def get_segment(
-    segment_id: int,
+    segment_id: uuid.UUID,
     session: CurrentSession,
     service: SegmentServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
@@ -56,7 +56,7 @@ async def get_segment(
 
 @router.patch("/{segment_id}", response_model=SegmentResponse, summary="Actualizar segmento")
 async def update_segment(
-    segment_id: int,
+    segment_id: uuid.UUID,
     body: SegmentUpdateRequest,
     session: CurrentSession,
     service: SegmentServiceDep,
@@ -69,7 +69,7 @@ async def update_segment(
 
 @router.delete("/{segment_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar segmento")
 async def delete_segment(
-    segment_id: int,
+    segment_id: uuid.UUID,
     session: CurrentSession,
     service: SegmentServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
@@ -80,7 +80,7 @@ async def delete_segment(
 
 @router.post("/{segment_id}/execute", response_model=SegmentExecuteResponse, summary="Ejecutar segmento")
 async def execute_segment(
-    segment_id: int,
+    segment_id: uuid.UUID,
     body: SegmentExecuteRequest,
     session: CurrentSession,
     service: SegmentServiceDep,
@@ -97,7 +97,7 @@ async def execute_segment(
     summary="Listar ejecuciones de un segmento",
 )
 async def list_executions(
-    segment_id: int,
+    segment_id: uuid.UUID,
     session: CurrentSession,
     service: SegmentServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],

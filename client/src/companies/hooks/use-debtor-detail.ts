@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import type { DebtorCredit, RelatedContactsResponse } from "@/types/companies/portfolio-debtor-types";
 
-export const useDebtorRelatedContacts = (debtorId: number | null, portfolioId: string) => {
+export const useDebtorRelatedContacts = (debtorId: string | null, portfolioId: string) => {
   const { apiClient } = useApiClient();
   const [data, setData] = useState<RelatedContactsResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ export const useDebtorRelatedContacts = (debtorId: number | null, portfolioId: s
   return { data, loading };
 };
 
-export const useDebtorCredits = (debtorId: number | null, portfolioId: string) => {
+export const useDebtorCredits = (debtorId: string | null, portfolioId: string) => {
   const { apiClient } = useApiClient();
   const [credits, setCredits] = useState<DebtorCredit[]>([]);
   const [loading, setLoading] = useState(false);

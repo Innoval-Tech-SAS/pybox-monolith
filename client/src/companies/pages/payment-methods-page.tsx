@@ -21,7 +21,7 @@ export const PaymentMethodsPage: React.FC = () => {
 
   const [confirmId, setConfirmId] = useState<number | null>(null);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     await remove(id);
     setConfirmId(null);
   };

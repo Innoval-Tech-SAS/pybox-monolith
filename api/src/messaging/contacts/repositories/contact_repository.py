@@ -15,7 +15,7 @@ class ContactRepository(RepositoryBase[ContactModel]):
 
     async def get_by_debtor(
         self,
-        debtor_id: int,
+        debtor_id: uuid.UUID,
         organization_id: uuid.UUID,
         portfolio_id: uuid.UUID | None = None,
     ) -> Sequence[ContactModel]:

@@ -1,4 +1,5 @@
 ﻿import secrets
+import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 
@@ -75,7 +76,7 @@ class VerificationService(ABC):
                 f"No fue posible enviar el código por {self.channel.value}"
             )
 
-    async def verify_code(self, user_id: int, code: str) -> None:
+    async def verify_code(self, user_id: uuid.UUID, code: str) -> None:
         try:
             record = await self._repo.verify_with_exceptions(
                 user_id, code, self.channel
@@ -92,7 +93,7 @@ class VerificationService(ABC):
             )
             raise
 
-    async def peek_code(self, user_id: int, code: str) -> None:
+    async def peek_code(self, user_id: uuid.UUID, code: str) -> None:
         """Valida el código sin consumirlo."""
         try:
             await self._repo.verify_with_exceptions(user_id, code, self.channel)

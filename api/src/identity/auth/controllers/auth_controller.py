@@ -76,7 +76,7 @@ async def logout(payload: TokenPayload, service: AuthServiceDep) -> dict:
 
 
 @router.post("/logout/{user_id}", status_code=status.HTTP_200_OK, summary="Cerrar sesión de otro usuario (admin)")
-async def force_logout(user_id: int, session: CurrentSession, service: AuthServiceDep) -> dict:
+async def force_logout(user_id: uuid.UUID, session: CurrentSession, service: AuthServiceDep) -> dict:
     is_org_admin = any(entry.role == UserRole.ADMIN for entry in session.orgs.values())
     if not session.is_global and not is_org_admin:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin permisos para esta acción.")

@@ -1,4 +1,5 @@
-﻿from datetime import datetime
+﻿import uuid
+from datetime import datetime
 from typing import Any
 
 from pydantic import Field, field_validator
@@ -7,7 +8,7 @@ from core.base.schema_base import BaseSchema
 
 
 class NotificationSchema(BaseSchema):
-    id: int = Field(description="ID de la notificación")
+    id: uuid.UUID = Field(description="ID de la notificación")
     title: str = Field(description="Título de la notificación")
     body: str = Field(description="Cuerpo del mensaje")
     category: str = Field(description="Categoría (portfolio, support, etc.)")

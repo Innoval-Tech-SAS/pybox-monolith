@@ -28,8 +28,8 @@ export interface TicketKanban {
   description?: string;
   category: TicketKanbanCategory;
   organizationId: string;
-  createdBy: number;
-  assignedTo: number | null;
+  createdBy: string;
+  assignedTo: string | null;
   notes: string | null;
   resolvedAt: string | null;
   closedAt: string | null;

@@ -19,7 +19,7 @@ router = APIRouter(prefix="/contacts", tags=["Contactos"])
     summary="Historial de contactos de un deudor agrupado por canal",
 )
 async def get_debtor_contacts(
-    debtor_id: int,
+    debtor_id: uuid.UUID,
     session: CurrentSession,
     service: ContactServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],

@@ -7,6 +7,6 @@ import type {
 export interface TicketKanbanBoardProps {
   tickets: TicketKanban[];
   selectedGroup: TicketKanbanGroupKey;
-  onOpenTicket: (ticketId: number) => void;
+  onOpenTicket: (ticketId: string) => void;
   onStatusChange?: (ticketNumber: number, newStatus: SupportTicketStatus) => Promise<boolean>;
 }

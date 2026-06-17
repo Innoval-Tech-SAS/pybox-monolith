@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from pydantic import Field
@@ -8,7 +9,7 @@ from receivables.debtors.enums.debtor_enums import DebtorType
 
 
 class PaymentSummary(BaseSchema):
-    id: int = Field(description="ID del pago")
+    id: uuid.UUID = Field(description="ID del pago")
     limit_pay_date: datetime = Field(description="Fecha límite de pago")
     payment_date: datetime | None = Field(default=None, description="Fecha en que se realizó el pago")
     payment_amount: float = Field(description="Monto pagado")
@@ -19,7 +20,7 @@ class PaymentSummary(BaseSchema):
 
 
 class CreditWithPayments(BaseSchema):
-    id: int = Field(description="ID del crédito")
+    id: uuid.UUID = Field(description="ID del crédito")
     credit_number: str = Field(description="Número de crédito")
     credit_type: CreditTypes = Field(description="Tipo de crédito")
     disbursed_date: datetime = Field(description="Fecha de desembolso")

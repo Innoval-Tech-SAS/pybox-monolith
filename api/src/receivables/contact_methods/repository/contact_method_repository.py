@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +13,7 @@ class ContactMethodRepository(SoftDeleteRepositoryBase[ContactMethodModel]):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def get_by_debtor_id(self, debtor_id: int) -> list[ContactMethodModel]:
+    async def get_by_debtor_id(self, debtor_id: uuid.UUID) -> list[ContactMethodModel]:
         result = await self.session.execute(
             select(ContactMethodModel).where(
                 ContactMethodModel.debtor_id == debtor_id,

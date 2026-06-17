@@ -1,5 +1,5 @@
 export interface PaymentSummary {
-  id: number;
+  id: string;
   limitPayDate: string;
   paymentDate: string | null;
   paymentAmount: number;
@@ -10,7 +10,7 @@ export interface PaymentSummary {
 }
 
 export interface CreditWithPayments {
-  id: number;
+  id: string;
   creditNumber: string;
   creditType: string;
   disbursedDate: string;

@@ -1,4 +1,5 @@
 ﻿import asyncio
+import uuid
 
 from core.config.logger import logger
 from core.database.database import db
@@ -10,7 +11,7 @@ from identity.users.schemas.user_session_schema import SESSION_KEY_PREFIX
 _KEYEVENT_CHANNEL = "__keyevent@0__:expired"
 
 
-async def _mark_user_logged_out(user_id: int) -> None:
+async def _mark_user_logged_out(user_id: uuid.UUID) -> None:
     async with db.get_session() as session:
         repo = UserRepository(session)
         user = await repo.get_by_id(user_id)
@@ -26,7 +27,7 @@ async def _listen(event_client) -> None:
         if not key.startswith(SESSION_KEY_PREFIX):
             continue
         try:
-            user_id = int(key.removeprefix(SESSION_KEY_PREFIX))
+            user_id = uuid.UUID(key.removeprefix(SESSION_KEY_PREFIX))
             await _mark_user_logged_out(user_id)
         except Exception:
             logger.exception("session expiry handler failed for key=%s", key)

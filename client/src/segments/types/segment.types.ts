@@ -53,7 +53,7 @@ export interface FieldInfo {
 // API types
 
 export interface SegmentResponse {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   filterCriteria: Record<string, unknown>;
@@ -76,12 +76,12 @@ export interface SegmentExecuteResponse {
 }
 
 export interface SegmentExecutionResponse {
-  id: number;
-  segmentId: number;
+  id: string;
+  segmentId: string;
   mode: string;
   fileName: string | null;
   filePath: string | null;
   rows: number;
   columns: string[];
-  executedBy: number;
+  executedBy: string;
 }

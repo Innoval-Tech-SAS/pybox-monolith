@@ -33,23 +33,23 @@ class PortfolioStatsResponse(BaseSchema):
 
 
 class PortfolioAccessEntry(BaseSchema):
-    user_id: int = Field(description="ID del usuario")
+    user_id: uuid.UUID = Field(description="ID del usuario")
     portfolio_id: uuid.UUID = Field(description="ID del portafolio")
     is_active: bool = Field(description="Indica si el acceso está activo")
     granted_at: datetime = Field(description="Fecha en que se concedió el acceso")
-    granted_by: int | None = Field(default=None, description="ID del usuario que concedió el acceso")
+    granted_by: uuid.UUID | None = Field(default=None, description="ID del usuario que concedió el acceso")
     revoked_at: datetime | None = Field(default=None, description="Fecha en que se revocó el acceso")
 
 
 class PortfolioAccessReplaceRequest(BaseSchema):
-    user_ids: list[int] = Field(description="Lista de IDs de usuarios con acceso al portafolio")
+    user_ids: list[uuid.UUID] = Field(description="Lista de IDs de usuarios con acceso al portafolio")
 
 
 class PortfolioDailyCounterConfigResponse(BaseSchema):
     portfolio_id: uuid.UUID = Field(description="ID del portafolio")
     enabled: bool = Field(description="Indica si el contador diario está habilitado")
     reactivation_mode: str = Field(description="Modo de reactivación: FROM_TODAY u otro")
-    updated_by: int | None = Field(default=None, description="ID del usuario que actualizó la configuración")
+    updated_by: uuid.UUID | None = Field(default=None, description="ID del usuario que actualizó la configuración")
     last_synced_at: datetime | None = Field(default=None, description="Última sincronización")
     last_synced_cutoff_date: date | None = Field(default=None, description="Fecha de corte de la última sincronización")
 

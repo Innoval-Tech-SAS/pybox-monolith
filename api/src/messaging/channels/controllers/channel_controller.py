@@ -1,4 +1,6 @@
-﻿from fastapi import status
+﻿import uuid
+
+from fastapi import status
 
 from messaging.channels.dependencies import ChannelServiceDep
 from messaging.channels.schemas.channel_schemas import (
@@ -25,7 +27,7 @@ async def list_channels(
 
 @router.get("/{channel_id}", response_model=ChannelResponse, summary="Obtener canal por ID")
 async def get_channel(
-    channel_id: int,
+    channel_id: uuid.UUID,
     session: CurrentSession,
     service: ChannelServiceDep,
 ) -> ChannelResponse:
@@ -52,7 +54,7 @@ async def create_channel(
 
 @router.patch("/{channel_id}", response_model=ChannelResponse, summary="Actualizar canal")
 async def update_channel(
-    channel_id: int,
+    channel_id: uuid.UUID,
     body: ChannelUpdateRequest,
     session: CurrentSession,
     service: ChannelServiceDep,
@@ -68,7 +70,7 @@ async def update_channel(
     summary="Eliminar canal",
 )
 async def delete_channel(
-    channel_id: int,
+    channel_id: uuid.UUID,
     session: CurrentSession,
     service: ChannelServiceDep,
 ) -> None:

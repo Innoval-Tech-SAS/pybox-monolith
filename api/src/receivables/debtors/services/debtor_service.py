@@ -51,7 +51,7 @@ class DebtorService:
         self.portfolio_repo = portfolio_repo
         self.credit_repo = credit_repo
 
-    async def get_debtor(self, debtor_id: int, user_session: UserSession, portfolio_id: uuid.UUID | None) -> DebtorDetailResponse:
+    async def get_debtor(self, debtor_id: uuid.UUID, user_session: UserSession, portfolio_id: uuid.UUID | None) -> DebtorDetailResponse:
         if portfolio_id is not None:
             await self._check_portfolio_access(user_session, portfolio_id)
         debtor = await self._require_debtor(debtor_id)
@@ -87,7 +87,7 @@ class DebtorService:
         )
 
     async def get_related_contacts(
-        self, debtor_id: int, portfolio_id: uuid.UUID, user_session: UserSession
+        self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
     ) -> RelatedContactsResponse:
         await self._check_portfolio_access(user_session, portfolio_id)
         debtor = await self._require_debtor(debtor_id)
@@ -121,7 +121,7 @@ class DebtorService:
         )
 
     async def get_debtor_credits(
-        self, debtor_id: int, portfolio_id: uuid.UUID, user_session: UserSession
+        self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
     ) -> list[DebtorCreditResponse]:
         await self._check_portfolio_access(user_session, portfolio_id)
         await self._require_debtor(debtor_id)
@@ -162,7 +162,7 @@ class DebtorService:
             )
         )
 
-    async def create_address(self, debtor_id: int, data: CreateAddressRequest) -> AddressModel:
+    async def create_address(self, debtor_id: uuid.UUID, data: CreateAddressRequest) -> AddressModel:
         await self._require_debtor(debtor_id)
         return await self.address_repo.add(
             AddressModel(
@@ -175,7 +175,7 @@ class DebtorService:
             )
         )
 
-    async def create_contact_method(self, debtor_id: int, data: CreateContactMethodRequest) -> ContactMethodModel:
+    async def create_contact_method(self, debtor_id: uuid.UUID, data: CreateContactMethodRequest) -> ContactMethodModel:
         await self._require_debtor(debtor_id)
         return await self.contact_repo.add(
             ContactMethodModel(
@@ -193,7 +193,7 @@ class DebtorService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Portafolio no encontrado")
         require_permission(PORTFOLIO_CLIENTS, user_session, str(portfolio.organization_id))
 
-    async def _require_debtor(self, debtor_id: int) -> DebtorModel:
+    async def _require_debtor(self, debtor_id: uuid.UUID) -> DebtorModel:
         debtor = await self.debtor_repo.get_by_id(debtor_id)
         if debtor is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Deudor no encontrado")

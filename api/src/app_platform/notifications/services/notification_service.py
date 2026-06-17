@@ -1,3 +1,4 @@
+import uuid
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,20 +13,20 @@ class NotificationService:
     def __init__(self, session: AsyncSession) -> None:
         self._repo = NotificationRepository(session)
 
-    async def get_notifications(self, user_id: int) -> list[NotificationSchema]:
+    async def get_notifications(self, user_id: uuid.UUID) -> list[NotificationSchema]:
         items = await self._repo.get_by_user_id(user_id)
         return [NotificationSchema.model_validate(n) for n in items]
 
-    async def get_notification(self, notification_id: int, user_id: int) -> NotificationSchema | None:
+    async def get_notification(self, notification_id: uuid.UUID, user_id: uuid.UUID) -> NotificationSchema | None:
         n = await self._repo.get_by_id_and_user(notification_id, user_id)
         return NotificationSchema.model_validate(n) if n else None
 
-    async def mark_all_read(self, user_id: int) -> None:
+    async def mark_all_read(self, user_id: uuid.UUID) -> None:
         await self._repo.mark_all_read(user_id)
 
     async def create_notification(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         title: str,
         body: str,
         category: str,

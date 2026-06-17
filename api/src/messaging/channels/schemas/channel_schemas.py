@@ -1,4 +1,5 @@
-﻿from decimal import Decimal
+﻿import uuid
+from decimal import Decimal
 from datetime import datetime
 
 from pydantic import Field
@@ -21,7 +22,7 @@ class ChannelUpdateRequest(BaseSchema):
 
 
 class ChannelResponse(BaseSchema):
-    id: int = Field(description="ID del canal")
+    id: uuid.UUID = Field(description="ID del canal")
     name: ChannelName = Field(description="Nombre del canal")
     currency: Currency = Field(description="Moneda")
     unit_price: Decimal = Field(description="Precio unitario")

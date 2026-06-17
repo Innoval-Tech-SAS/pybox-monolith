@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from sqlalchemy import select
@@ -13,7 +14,7 @@ class UVRQuoteRepository(SoftDeleteRepositoryBase[UVRQuoteModel]):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def get_by_credit_id(self, credit_id: int) -> list[UVRQuoteModel]:
+    async def get_by_credit_id(self, credit_id: uuid.UUID) -> list[UVRQuoteModel]:
         result = await self.session.execute(
             select(UVRQuoteModel).where(
                 UVRQuoteModel.credit_id == credit_id,

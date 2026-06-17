@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import type { UserDetail } from "@/types/users/user-types";
 
-export const useTicketAssignee = (userId: number | undefined) => {
+export const useTicketAssignee = (userId: string | undefined) => {
   const { apiClient } = useApiClient();
   const [assignee, setAssignee] = useState<UserDetail | null>(null);
 

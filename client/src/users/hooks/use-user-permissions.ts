@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import type { UserPermissionEntry, UserPermissionList } from "@/types/users/permission-types";
 
-export const useUserPermissions = (orgId: string, userId: number) => {
+export const useUserPermissions = (orgId: string, userId: string) => {
   const { apiClient } = useApiClient();
   const [permissions, setPermissions] = useState<UserPermissionEntry[]>([]);
   const [loading, setLoading] = useState(true);

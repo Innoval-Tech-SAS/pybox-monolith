@@ -5,7 +5,7 @@ export const useDeleteUser = () => {
   const { apiClient } = useApiClient();
   const [loading, setLoading] = useState(false);
 
-  const deleteUser = async (userId: number): Promise<boolean> => {
+  const deleteUser = async (userId: string): Promise<boolean> => {
     setLoading(true);
     try {
       await apiClient(`/users/${userId}`, { method: "DELETE" });

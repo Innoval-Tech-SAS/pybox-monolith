@@ -16,7 +16,7 @@ class PermissionAssignmentRepository(RepositoryBase[PermissionAssignmentModel]):
         super().__init__(session)
 
     async def get_overrides_for_user_org(
-        self, user_id: int, organization_id: uuid.UUID
+        self, user_id: uuid.UUID, organization_id: uuid.UUID
     ) -> list[tuple[str, PermissionEffect]]:
         result = await self.session.execute(
             select(PermissionModel.name, PermissionAssignmentModel.effect)
@@ -36,7 +36,7 @@ class PermissionAssignmentRepository(RepositoryBase[PermissionAssignmentModel]):
         return result.scalar_one_or_none()
 
     async def get_assignment(
-        self, user_id: int, permission_id: int, organization_id: uuid.UUID
+        self, user_id: uuid.UUID, permission_id: uuid.UUID, organization_id: uuid.UUID
     ) -> PermissionAssignmentModel | None:
         result = await self.session.execute(
             select(PermissionAssignmentModel).where(
@@ -49,8 +49,8 @@ class PermissionAssignmentRepository(RepositoryBase[PermissionAssignmentModel]):
 
     async def upsert_for_org(
         self,
-        user_id: int,
-        permission_id: int,
+        user_id: uuid.UUID,
+        permission_id: uuid.UUID,
         organization_id: uuid.UUID,
         effect: PermissionEffect,
     ) -> PermissionAssignmentModel:
@@ -70,7 +70,7 @@ class PermissionAssignmentRepository(RepositoryBase[PermissionAssignmentModel]):
         )
 
     async def delete_for_org(
-        self, user_id: int, permission_id: int, organization_id: uuid.UUID
+        self, user_id: uuid.UUID, permission_id: uuid.UUID, organization_id: uuid.UUID
     ) -> bool:
         existing = await self.get_assignment(user_id, permission_id, organization_id)
         if not existing:

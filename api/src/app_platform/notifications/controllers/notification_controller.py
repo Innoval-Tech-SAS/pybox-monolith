@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 
 from fastapi import APIRouter, HTTPException, status
 from sse_starlette.sse import EventSourceResponse
@@ -53,7 +54,7 @@ async def notification_stream(session: SSESession):
     summary="Obtener notificación por ID",
 )
 async def get_notification(
-    notification_id: int,
+    notification_id: uuid.UUID,
     session: CurrentSession,
     service: NotificationServiceDep,
 ):

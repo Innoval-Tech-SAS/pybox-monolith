@@ -14,7 +14,7 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
         super().__init__(session)
 
     async def get_by_user_and_org(
-        self, user_id: int, organization_id: uuid.UUID
+        self, user_id: uuid.UUID, organization_id: uuid.UUID
     ) -> list[PortfolioUserAccessModel]:
         result = await self.session.execute(
             select(PortfolioUserAccessModel).where(
@@ -26,7 +26,7 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
         return list(result.scalars().all())
 
     async def get_active_by_user_and_org(
-        self, user_id: int, organization_id: uuid.UUID
+        self, user_id: uuid.UUID, organization_id: uuid.UUID
     ) -> list[PortfolioUserAccessModel]:
         result = await self.session.execute(
             select(PortfolioUserAccessModel).where(
@@ -51,7 +51,7 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
 
     async def get_by_user_and_portfolio(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         portfolio_id: uuid.UUID,
         organization_id: uuid.UUID | None = None,
     ) -> PortfolioUserAccessModel | None:
@@ -68,7 +68,7 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
         )
         return result.scalars().first()
 
-    async def get_distinct_org_ids_by_user(self, user_id: int) -> list[uuid.UUID]:
+    async def get_distinct_org_ids_by_user(self, user_id: uuid.UUID) -> list[uuid.UUID]:
         result = await self.session.execute(
             select(PortfolioUserAccessModel.organization_id)
             .where(
@@ -82,7 +82,7 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
 
     async def check_active_access(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         portfolio_id: uuid.UUID,
         organization_id: uuid.UUID | None = None,
     ) -> bool:

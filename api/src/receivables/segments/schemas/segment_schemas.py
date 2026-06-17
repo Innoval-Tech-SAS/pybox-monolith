@@ -43,7 +43,7 @@ class SegmentExecuteRequest(BaseSchema):
 
 
 class SegmentResponse(BaseSchema):
-    id: int
+    id: uuid.UUID
     name: str
     description: str | None
     filter_criteria: dict[str, Any]
@@ -62,12 +62,12 @@ class SegmentExecuteResponse(BaseSchema):
 
 
 class SegmentExecutionResponse(BaseSchema):
-    id: int
-    segment_id: int
+    id: uuid.UUID
+    segment_id: uuid.UUID
     mode: str
     file_name: str | None
     file_path: str | None
     rows: int
     columns: list[str]
-    executed_by: int
+    executed_by: uuid.UUID
     created_at: datetime

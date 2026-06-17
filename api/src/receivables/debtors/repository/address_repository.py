@@ -11,7 +11,7 @@ class AddressRepository(SoftDeleteRepositoryBase[AddressModel]):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def get_by_debtor_id(self, debtor_id: int) -> list[AddressModel]:
+    async def get_by_debtor_id(self, debtor_id: uuid.UUID) -> list[AddressModel]:
         result = await self.session.execute(
             select(AddressModel).where(
                 AddressModel.debtor_id == debtor_id,

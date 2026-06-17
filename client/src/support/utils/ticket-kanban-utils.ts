@@ -246,5 +246,5 @@ const getTicketDescription = (ticket: SupportTicket): string => {
   return `Caso creado por el usuario ${ticket.createdBy}.`;
 };
 
-const getTicketAssigneeInitials = (userId: number): string =>
+const getTicketAssigneeInitials = (userId: string): string =>
   `U${userId}`.slice(0, 3).toUpperCase();

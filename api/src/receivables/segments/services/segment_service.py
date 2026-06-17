@@ -41,13 +41,13 @@ class SegmentService:
     async def list_by_org(self, organization_id: uuid.UUID) -> Sequence[SegmentModel]:
         return await self._segment_repo.get_by_organization(organization_id)
 
-    async def get(self, segment_id: int, organization_id: uuid.UUID) -> SegmentModel:
+    async def get(self, segment_id: uuid.UUID, organization_id: uuid.UUID) -> SegmentModel:
         segment = await self._segment_repo.get_by_id(segment_id)
         if not segment or segment.organization_id != organization_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Segmento no encontrado")
         return segment
 
-    async def update(self, segment_id: int, organization_id: uuid.UUID, data: SegmentUpdateRequest) -> SegmentModel:
+    async def update(self, segment_id: uuid.UUID, organization_id: uuid.UUID, data: SegmentUpdateRequest) -> SegmentModel:
         segment = await self.get(segment_id, organization_id)
         if data.name is not None:
             segment.name = data.name
@@ -57,16 +57,16 @@ class SegmentService:
             segment.filter_criteria = data.filter_criteria.model_dump(by_alias=False)
         return await self._segment_repo.update(segment)
 
-    async def delete(self, segment_id: int, organization_id: uuid.UUID) -> None:
+    async def delete(self, segment_id: uuid.UUID, organization_id: uuid.UUID) -> None:
         segment = await self.get(segment_id, organization_id)
         await self._segment_repo.delete(segment)
 
     async def execute(
         self,
-        segment_id: int,
+        segment_id: uuid.UUID,
         organization_id: uuid.UUID,
         request: SegmentExecuteRequest,
-        user_id: int,
+        user_id: uuid.UUID,
     ) -> dict[str, Any]:
         segment = await self.get(segment_id, organization_id)
         criteria = segment.filter_criteria
@@ -118,7 +118,7 @@ class SegmentService:
             "file_path": file_path,
         }
 
-    async def list_executions(self, segment_id: int, organization_id: uuid.UUID) -> Sequence[SegmentExecutionModel]:
+    async def list_executions(self, segment_id: uuid.UUID, organization_id: uuid.UUID) -> Sequence[SegmentExecutionModel]:
         await self.get(segment_id, organization_id)
         return await self._execution_repo.get_by_segment(segment_id)
 
@@ -132,7 +132,7 @@ class SegmentService:
     def _save_audit_file(
         self,
         organization_id: uuid.UUID,
-        segment_id: int,
+        segment_id: uuid.UUID,
         segment_name: str,
         df: pl.DataFrame,
     ) -> tuple[str, str]:

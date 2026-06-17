@@ -13,7 +13,7 @@ class PortfolioUserAccessService:
         self._repo = PortfolioUserAccessRepository(session)
         self._portfolio_repo = PortfolioRepository(session)
 
-    async def check_access(self, user_id: int, portfolio_id: uuid.UUID, org_id: str) -> bool:
+    async def check_access(self, user_id: uuid.UUID, portfolio_id: uuid.UUID, org_id: str) -> bool:
         try:
             organization_id = uuid.UUID(str(org_id))
             portfolio_uuid = uuid.UUID(str(portfolio_id))
@@ -23,10 +23,10 @@ class PortfolioUserAccessService:
 
     async def grant_access(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         portfolio_id: uuid.UUID,
         organization_id: uuid.UUID,
-        granted_by: int,
+        granted_by: uuid.UUID,
     ) -> PortfolioUserAccessModel:
         existing = await self._repo.get_by_user_and_portfolio(user_id, portfolio_id)
         if existing is not None:
@@ -45,7 +45,7 @@ class PortfolioUserAccessService:
             granted_by=granted_by,
         ))
 
-    async def revoke_access(self, user_id: int, portfolio_id: uuid.UUID) -> None:
+    async def revoke_access(self, user_id: uuid.UUID, portfolio_id: uuid.UUID) -> None:
         existing = await self._repo.get_by_user_and_portfolio(user_id, portfolio_id)
         if existing is None or not existing.is_active:
             return
@@ -54,12 +54,12 @@ class PortfolioUserAccessService:
         await self._repo.update(existing)
 
     async def get_user_portfolios(
-        self, user_id: int, organization_id: uuid.UUID
+        self, user_id: uuid.UUID, organization_id: uuid.UUID
     ) -> list[PortfolioUserAccessModel]:
         return await self._repo.get_active_by_user_and_org(user_id, organization_id)
 
     async def revoke_all_for_user_in_org(
-        self, user_id: int, organization_id: uuid.UUID
+        self, user_id: uuid.UUID, organization_id: uuid.UUID
     ) -> None:
         accesses = await self._repo.get_active_by_user_and_org(user_id, organization_id)
         now = datetime.utcnow()
@@ -69,7 +69,7 @@ class PortfolioUserAccessService:
             await self._repo.update(access)
 
     async def list_org_portfolios_with_access_status(
-        self, user_id: int, organization_id: uuid.UUID
+        self, user_id: uuid.UUID, organization_id: uuid.UUID
     ) -> list[tuple[uuid.UUID, str, bool]]:
         all_portfolios = await self._portfolio_repo.get_active_by_organization_id(organization_id)
         active_accesses = await self._repo.get_active_by_user_and_org(user_id, organization_id)
@@ -85,8 +85,8 @@ class PortfolioUserAccessService:
         self,
         portfolio_id: uuid.UUID,
         organization_id: uuid.UUID,
-        user_ids: list[int],
-        granted_by: int,
+        user_ids: list[uuid.UUID],
+        granted_by: uuid.UUID,
     ) -> list[PortfolioUserAccessModel]:
         existing = await self._repo.get_by_portfolio_id(portfolio_id)
         existing_by_user = {a.user_id: a for a in existing}

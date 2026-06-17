@@ -6,7 +6,7 @@ export const useResolveTicket = () => {
   const { apiClient } = useApiClient();
   const [loading, setLoading] = useState(false);
 
-  const resolveTicket = async (ticketId: number, payload: ResolveTicketPayload): Promise<SupportTicket | null> => {
+  const resolveTicket = async (ticketId: string, payload: ResolveTicketPayload): Promise<SupportTicket | null> => {
     setLoading(true);
     try {
       return await apiClient(`/cs/tickets/${ticketId}/resolve`, {
