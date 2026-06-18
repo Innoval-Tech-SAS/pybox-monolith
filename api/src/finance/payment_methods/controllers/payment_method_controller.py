@@ -1,7 +1,7 @@
 ﻿import uuid
 from typing import Annotated
 
-from fastapi import HTTPException, Query, status
+from fastapi import Query, status
 
 from core.config.api_router import APIRouter
 from finance.payment_methods.dependencies import PaymentMethodServiceDep
@@ -13,7 +13,8 @@ from finance.payment_methods.schemas.payment_method_schemas import (
     PaymentMethodUpdateRequest,
 )
 from core.security.dependencies import CurrentSession
-from core.security.policies import require_org_admin
+from core.security.permissions import ORG_PAYMENT_METHODS
+from core.security.policies import require_admin_or_org
 
 router = APIRouter(prefix="/payment-methods", tags=["Métodos de pago"])
 
@@ -30,8 +31,7 @@ async def list_payment_methods(
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
     is_active: Annotated[bool | None, Query(alias="isActive")] = None,
 ) -> list[PaymentMethodModel]:
-    if not session.is_global and str(organization_id) not in session.orgs:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a esta organización")
+    require_admin_or_org(ORG_PAYMENT_METHODS, session, str(organization_id))
     return await service.list(organization_id, is_active)
 
 
@@ -42,8 +42,7 @@ async def get_payment_method(
     service: PaymentMethodServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> PaymentMethodModel:
-    if not session.is_global and str(organization_id) not in session.orgs:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a esta organización")
+    require_admin_or_org(ORG_PAYMENT_METHODS, session, str(organization_id))
     return await service.get(id, organization_id)
 
 
@@ -53,7 +52,7 @@ async def create_payment_method(
     session: CurrentSession,
     service: PaymentMethodServiceDep,
 ) -> PaymentMethodModel:
-    require_org_admin(session, str(data.organization_id))
+    require_admin_or_org(ORG_PAYMENT_METHODS, session, str(data.organization_id))
     return await service.create(data)
 
 
@@ -65,7 +64,7 @@ async def update_payment_method(
     service: PaymentMethodServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> PaymentMethodModel:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_PAYMENT_METHODS, session, str(organization_id))
     return await service.update(id, organization_id, data)
 
 
@@ -76,5 +75,5 @@ async def delete_payment_method(
     service: PaymentMethodServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> None:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_PAYMENT_METHODS, session, str(organization_id))
     await service.delete(id, organization_id)

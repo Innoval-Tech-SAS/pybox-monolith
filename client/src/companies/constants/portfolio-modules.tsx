@@ -54,6 +54,7 @@ export const PORTFOLIO_MODULES: OrgModule[] = [
     icon: <CalendarDays size={24} className="text-white" />,
     gradient: "from-emerald-500 to-teal-600",
     path: null,
+    requiredPermission: "portfolio.calendar",
     requiresVerification: true,
   },
   {

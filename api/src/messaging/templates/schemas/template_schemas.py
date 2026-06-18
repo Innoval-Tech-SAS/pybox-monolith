@@ -68,3 +68,9 @@ class TemplatePreviewResponse(BaseSchema):
     variables_used: list[str] = Field(description="Variables detectadas en la plantilla")
 
 
+class TemplateVariableOption(BaseSchema):
+    key: str = Field(description="Clave de la variable, usada como {key} en el cuerpo del mensaje")
+    label: str = Field(description="Etiqueta legible para mostrar en el editor")
+    example: str = Field(description="Valor de ejemplo usado en la vista previa")
+
+

@@ -27,5 +27,6 @@ export const COMMUNICATIONS_MODULES: OrgModule[] = [
     icon: <Send size={24} className="text-white" />,
     gradient: "from-indigo-500 to-blue-600",
     path: null,
+    requiredPermission: "org.campaigns",
   },
 ];

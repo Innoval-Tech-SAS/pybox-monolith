@@ -50,7 +50,7 @@ export const useCreatePortfolio = () => {
     const data = new FormData();
     data.set("file", selectedFile);
 
-    const params = new URLSearchParams({ portfolioName, tenantId: orgId });
+    const params = new URLSearchParams({ portfolioName, organizationId: orgId });
     if (selectedCountry) params.set("countryId", selectedCountry);
 
     console.log("[portfolio] disparando request a /portfolios/upload-csv?" + params.toString());
