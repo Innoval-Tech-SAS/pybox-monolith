@@ -6,7 +6,7 @@ from fastapi import Query, status
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from core.security.permissions import ORG_TEMPLATES
-from core.security.policies import require_org_admin, require_permission
+from core.security.policies import require_admin_or_org
 from messaging.templates.dependencies import TemplateServiceDep, TemplateVariableServiceDep
 from messaging.templates.enums.template_enums import TemplateChannel
 from messaging.templates.schemas.template_schemas import (
@@ -28,7 +28,7 @@ async def list_templates(
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
     channel: Annotated[TemplateChannel | None, Query(alias="channel")] = None,
 ) -> list[TemplateResponse]:
-    require_permission(ORG_TEMPLATES, session, str(organization_id))
+    require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
     templates = await service.list_by_org(organization_id, channel)
     return [TemplateResponse.model_validate(t) for t in templates]
 
@@ -43,7 +43,7 @@ async def list_template_variables(
     service: TemplateVariableServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> list[TemplateVariableOption]:
-    require_permission(ORG_TEMPLATES, session, str(organization_id))
+    require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
     return await service.list_available_variables()
 
 
@@ -54,7 +54,7 @@ async def get_template(
     service: TemplateServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> TemplateResponse:
-    require_permission(ORG_TEMPLATES, session, str(organization_id))
+    require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
     template = await service.get_by_id(template_id, organization_id)
     return TemplateResponse.model_validate(template)
 
@@ -71,7 +71,7 @@ async def create_template(
     service: TemplateServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> TemplateResponse:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
     template = await service.create(organization_id, body)
     return TemplateResponse.model_validate(template)
 
@@ -84,7 +84,7 @@ async def update_template(
     service: TemplateServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> TemplateResponse:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
     template = await service.update(template_id, organization_id, body)
     return TemplateResponse.model_validate(template)
 
@@ -100,7 +100,7 @@ async def delete_template(
     service: TemplateServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> None:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
     await service.delete(template_id, organization_id)
 
 
@@ -116,6 +116,6 @@ async def preview_template(
     service: TemplateServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> TemplatePreviewResponse:
-    require_permission(ORG_TEMPLATES, session, str(organization_id))
+    require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
     return await service.preview(template_id, organization_id, body)
 

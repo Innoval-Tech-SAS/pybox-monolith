@@ -15,7 +15,7 @@ from messaging.campaigns.services.automation_service import is_executing
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from core.security.permissions import ORG_CAMPAIGNS
-from core.security.policies import require_org_admin, require_permission
+from core.security.policies import require_admin_or_org
 
 router = APIRouter(prefix="/campaigns", tags=["Campañas"])
 
@@ -25,7 +25,7 @@ async def list_periodicities(
     session: CurrentSession,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> list[dict]:
-    require_permission(ORG_CAMPAIGNS, session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     return [{"value": p.value, "label": PERIODICITY_LABELS[p]} for p in Periodicity]
 
 
@@ -34,7 +34,7 @@ async def list_weekdays(
     session: CurrentSession,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> list[dict]:
-    require_permission(ORG_CAMPAIGNS, session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     return [{"value": value, "label": label, "active": active} for value, label, active in WEEKDAYS]
 
 
@@ -44,7 +44,7 @@ async def list_campaigns(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> list[CampaignResponse]:
-    require_permission(ORG_CAMPAIGNS, session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     campaigns = await service.list_by_org(organization_id)
     return [CampaignResponse.model_validate(c) for c in campaigns]
 
@@ -56,7 +56,7 @@ async def get_campaign(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> CampaignResponse:
-    require_permission(ORG_CAMPAIGNS, session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     campaign = await service.get_by_id(campaign_id, organization_id)
     return CampaignResponse.model_validate(campaign)
 
@@ -73,7 +73,7 @@ async def create_campaign(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> CampaignResponse:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     campaign = await service.create(organization_id, body)
     return CampaignResponse.model_validate(campaign)
 
@@ -86,7 +86,7 @@ async def update_campaign(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> CampaignResponse:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     campaign = await service.update(campaign_id, organization_id, body)
     return CampaignResponse.model_validate(campaign)
 
@@ -102,7 +102,7 @@ async def delete_campaign(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> None:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     await service.delete(campaign_id, organization_id)
 
 
@@ -113,7 +113,7 @@ async def activate_campaign(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> CampaignResponse:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     campaign = await service.activate(campaign_id, organization_id)
     return CampaignResponse.model_validate(campaign)
 
@@ -125,7 +125,7 @@ async def campaign_execution_status(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> dict:
-    require_permission(ORG_CAMPAIGNS, session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     campaign = await service.get_by_id(campaign_id, organization_id)
     return {
         "campaign_id": campaign.id,
@@ -141,6 +141,6 @@ async def pause_campaign(
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> CampaignResponse:
-    require_org_admin(session, str(organization_id))
+    require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     campaign = await service.pause(campaign_id, organization_id)
     return CampaignResponse.model_validate(campaign)

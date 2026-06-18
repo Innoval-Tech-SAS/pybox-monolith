@@ -4,11 +4,10 @@ import uuid
 
 from fastapi import HTTPException, UploadFile, status
 
-from core.database.redis import RedisClient
+from core.database.redis import RedisClient, redis_client
 from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
 from identity.organizations.repository.organization_repository import OrganizationRepository
 from identity.organizations.services.organization_service import OrganizationService
-from core.security.permissions import ORG_USERS
 from core.security.role_permissions_catalog import get_base_permissions
 from core.security.services.encrypt_service import encrypt_service
 from core.config.logger import logger
@@ -52,7 +51,6 @@ class UserService:
     @property
     def redis(self) -> RedisClient:
         if self._redis is None:
-            from core.database.redis import redis_client
             self._redis = redis_client
         return self._redis
 
@@ -220,32 +218,8 @@ class UserService:
             for u in users
         ]
 
-    async def get_accessible_users(self, session: UserSession, org_id: str | None = None) -> list[AdminUserSummarySchema]:
-        if session.scope == UserScope.GLOBAL:
-            if org_id:
-                users = list(await self.user_repo.get_accessible(org_ids=[uuid.UUID(org_id)]))
-            else:
-                users = list(await self.user_repo.get_accessible(org_ids=None))
-        elif session.scope == UserScope.ORGANIZATION:
-            accessible_org_ids = [uuid.UUID(o) for o in session.orgs.keys()]
-            if org_id:
-                target = uuid.UUID(org_id)
-                if target not in accessible_org_ids:
-                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
-                org_entry = session.orgs.get(org_id)
-                if not org_entry or ORG_USERS not in org_entry.permissions:
-                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
-                users = list(await self.user_repo.get_accessible(org_ids=[target]))
-            else:
-                allowed_org_ids = [
-                    uuid.UUID(oid) for oid, entry in session.orgs.items()
-                    if ORG_USERS in entry.permissions
-                ]
-                if not allowed_org_ids:
-                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
-                users = list(await self.user_repo.get_accessible(org_ids=allowed_org_ids))
-        else:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+    async def get_accessible_users(self, org_ids: list[uuid.UUID] | None = None) -> list[AdminUserSummarySchema]:
+        users = list(await self.user_repo.get_accessible(org_ids=org_ids))
         return await self._enrich_users(users)
 
     async def get_user_detail(self, user_id: uuid.UUID) -> AdminUserDetailSchema:

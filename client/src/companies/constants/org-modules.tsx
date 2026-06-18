@@ -25,7 +25,7 @@ export const ORG_MODULES: OrgModule[] = [
     icon: <Users size={24} className="text-white" />,
     gradient: "from-blue-500 to-blue-600",
     path: "/my-companies/users",
-    adminOnly: true,
+    requiredPermission: "org.users",
   },
   {
     key: "payment-methods",

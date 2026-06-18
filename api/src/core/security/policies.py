@@ -45,6 +45,19 @@ def require_permission(perm: str, session: UserSession, org_id: str) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No tienes permisos para esta acción")
 
 
+def require_admin_or_org(perm: str, session: UserSession, org_id: str) -> None:
+    """Permite el acceso si el usuario es global, admin de la organización, o tiene el permiso indicado."""
+    if session.is_global:
+        return
+    org_entry = session.orgs.get(org_id)
+    if org_entry is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a esta organización")
+    if org_entry.role == UserRole.ADMIN:
+        return
+    if perm not in org_entry.permissions:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "No tienes permisos para esta acción")
+
+
 def require_org_access(session: UserSession, org_id: str) -> None:
     if session.is_global:
         return

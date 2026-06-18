@@ -24,8 +24,8 @@ from receivables.portfolios.schemas.portfolio_schemas import (
 )
 from receivables.portfolios.utils.file_utils import validate_portfolio_file
 from core.security.dependencies import CurrentSession
-from core.security.permissions import PORTFOLIO_UPLOAD_UPDATE
-from core.security.policies import require_org_admin, require_portfolio_access
+from core.security.permissions import ORG_PORTFOLIOS, PORTFOLIO_UPLOAD_UPDATE
+from core.security.policies import require_admin_or_org, require_org_admin, require_portfolio_access
 
 router = APIRouter(prefix="/portfolios", tags=["Portafolios"])
 
@@ -39,19 +39,19 @@ async def list_portfolios(
     session: CurrentSession,
     service: PortfolioServiceDep,
     organization_id: Annotated[uuid.UUID | None, Query(alias="organizationId")] = None,
-    tenant_id: Annotated[uuid.UUID | None, Query(alias="tenantId")] = None,
     is_active: Annotated[bool | None, Query(alias="isActive")] = None,
 ) -> list[PortfolioModel]:
-    selected_org_id = organization_id or tenant_id
-    if (
-        organization_id is not None
-        and tenant_id is not None
-        and organization_id != tenant_id
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="organizationId y tenantId no coinciden",
-        )
+    selected_org_id = organization_id
+
+    if not session.is_global:
+        if selected_org_id is None:
+            if not session.orgs:
+                raise HTTPException(
+                    status.HTTP_403_FORBIDDEN, "El usuario no pertenece a ninguna organización"
+                )
+            selected_org_id = uuid.UUID(next(iter(session.orgs)))
+        require_admin_or_org(ORG_PORTFOLIOS, session, str(selected_org_id))
+
     return await service.list_accessible_portfolios(session, selected_org_id, is_active)
 
 
@@ -64,13 +64,12 @@ async def upload_csv(
     service: PortfolioCsvServiceDep,
     notification_service: NotificationServiceDep,
     portfolio_name: Annotated[str | None, Query(alias="portfolioName")] = None,
-    tenant_id: Annotated[uuid.UUID | None, Query(alias="tenantId")] = None,
-    country: Annotated[Nationality | None, Query()] = None,
+    organization_id: Annotated[uuid.UUID | None, Query(alias="organizationId")] = None,
     country_id: Annotated[Nationality | None, Query(alias="countryId")] = None,
 ) -> None:
-    logger.info("[portfolio] upload-csv recibido | tenant_id=%s portfolio_name=%s", tenant_id, portfolio_name)
+    logger.info("[portfolio] upload-csv recibido | organization_id=%s portfolio_name=%s", organization_id, portfolio_name)
 
-    selected_org_id = tenant_id or (org.id if org is not None else None)
+    selected_org_id = organization_id or (org.id if org is not None else None)
     if selected_org_id is None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "El usuario no pertenece a ninguna organización")
     if not session.is_global and str(selected_org_id) not in session.orgs:
@@ -91,7 +90,7 @@ async def upload_csv(
         filename=filename,
         organization_id=selected_org_id,
         portfolio_name=(portfolio_name or "").strip() or None,
-        country=country or country_id,
+        country=country_id,
         user_id=session.user_id,
         service=service,
         notification_service=notification_service,

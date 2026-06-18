@@ -16,7 +16,6 @@ from receivables.portfolios.schemas.portfolio_schemas import (
     PortfolioStatsResponse,
     PortfolioUpdateRequest,
 )
-from core.security.permissions import ORG_PORTFOLIOS
 from identity.users.enums.user_enums import UserRole
 from identity.users.schemas.user_session_schema import UserSession
 
@@ -46,29 +45,16 @@ class PortfolioService:
                 )
             return await self.portfolio_repo.list_all(is_active=is_active)
 
-        selected_org_id = organization_id or self._first_session_org_id(session)
-        org_entry = session.orgs.get(str(selected_org_id))
-        if org_entry is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Sin acceso a esta organización",
-            )
-
-        if ORG_PORTFOLIOS not in org_entry.permissions:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tienes permisos para consultar portfolios",
-            )
-
+        org_entry = session.orgs[str(organization_id)]
         if org_entry.role == UserRole.ADMIN:
             return await self.portfolio_repo.list_by_organization_id(
-                selected_org_id,
+                organization_id,
                 is_active=is_active,
             )
 
         return await self.portfolio_repo.list_accessible_by_user_and_org(
             session.user_id,
-            selected_org_id,
+            organization_id,
             is_active=is_active,
         )
 
@@ -163,10 +149,3 @@ class PortfolioService:
         config.updated_by = updated_by
         return await self.daily_counter_repo.update(config)
 
-    def _first_session_org_id(self, session: UserSession) -> uuid.UUID:
-        if not session.orgs:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="El usuario no pertenece a ninguna organización",
-            )
-        return uuid.UUID(next(iter(session.orgs)))

@@ -5,7 +5,8 @@ from fastapi import Query, status
 
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
-from core.security.policies import require_org_access
+from core.security.permissions import ORG_REPORTS
+from core.security.policies import require_admin_or_org
 from receivables.reports.dependencies import ReportServiceDep
 from receivables.reports.schemas.report_schemas import (
     ReportCreateRequest,
@@ -26,7 +27,7 @@ async def create_report(
     service: ReportServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> ReportResponse:
-    require_org_access(session, str(organization_id))
+    require_admin_or_org(ORG_REPORTS, session, str(organization_id))
     report = await service.create(organization_id, body)
     return ReportResponse.model_validate(report)
 
@@ -37,7 +38,7 @@ async def list_reports(
     service: ReportServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> list[ReportResponse]:
-    require_org_access(session, str(organization_id))
+    require_admin_or_org(ORG_REPORTS, session, str(organization_id))
     reports = await service.list_by_org(organization_id)
     return [ReportResponse.model_validate(r) for r in reports]
 
@@ -49,7 +50,7 @@ async def get_report(
     service: ReportServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> ReportResponse:
-    require_org_access(session, str(organization_id))
+    require_admin_or_org(ORG_REPORTS, session, str(organization_id))
     report = await service.get(report_id, organization_id)
     return ReportResponse.model_validate(report)
 
@@ -62,7 +63,7 @@ async def update_report(
     service: ReportServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> ReportResponse:
-    require_org_access(session, str(organization_id))
+    require_admin_or_org(ORG_REPORTS, session, str(organization_id))
     report = await service.update(report_id, organization_id, body)
     return ReportResponse.model_validate(report)
 
@@ -74,7 +75,7 @@ async def delete_report(
     service: ReportServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> None:
-    require_org_access(session, str(organization_id))
+    require_admin_or_org(ORG_REPORTS, session, str(organization_id))
     await service.delete(report_id, organization_id)
 
 
@@ -86,7 +87,7 @@ async def execute_report(
     service: ReportServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> ReportExecuteResponse:
-    require_org_access(session, str(organization_id))
+    require_admin_or_org(ORG_REPORTS, session, str(organization_id))
     result = await service.execute(report_id, organization_id, body, session.user_id)
     return ReportExecuteResponse(**result)
 
@@ -102,6 +103,6 @@ async def list_executions(
     service: ReportServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> list[ReportExecutionResponse]:
-    require_org_access(session, str(organization_id))
+    require_admin_or_org(ORG_REPORTS, session, str(organization_id))
     executions = await service.list_executions(report_id, organization_id)
     return [ReportExecutionResponse.model_validate(e) for e in executions]

@@ -6,7 +6,10 @@ from pydantic import ValidationError as PydanticValidationError
 
 from identity.auth.dependencies import TokenPayload
 from core.security.dependencies import CurrentSession
+from core.security.permissions import ORG_USERS
+from core.security.policies import require_admin_or_org
 from identity.users.dependencies import UserServiceDep
+from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.schemas.user_preferences_schema import UserToursSchema
 from identity.users.schemas.user_schemas import AdminUserDetailSchema, AdminUserSummarySchema, ChatAvailableUserSchema, ProfilePhotoSchema, UpdateUserSchema
 from identity.users.schemas.user_session_schema import UserSession, session_key
@@ -85,7 +88,26 @@ async def get_available_for_chat(session: CurrentSession, service: UserServiceDe
     description="Lista los usuarios accesibles según el rol del solicitante. Soporta filtro por organización.",
 )
 async def list_users(session: CurrentSession, service: UserServiceDep, org_id: str | None = Query(None)):
-    return await service.get_accessible_users(session, org_id=org_id)
+    if session.is_global:
+        org_ids = [uuid.UUID(org_id)] if org_id else None
+        return await service.get_accessible_users(org_ids=org_ids)
+
+    if session.scope != UserScope.ORGANIZATION:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+
+    if org_id:
+        require_admin_or_org(ORG_USERS, session, org_id)
+        org_ids = [uuid.UUID(org_id)]
+    else:
+        allowed_org_ids = [
+            oid for oid, entry in session.orgs.items()
+            if entry.role == UserRole.ADMIN or ORG_USERS in entry.permissions
+        ]
+        if not allowed_org_ids:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+        org_ids = [uuid.UUID(oid) for oid in allowed_org_ids]
+
+    return await service.get_accessible_users(org_ids=org_ids)
 
 
 @router.get("/{user_id}", response_model=AdminUserDetailSchema, summary="Obtener detalle de usuario")
