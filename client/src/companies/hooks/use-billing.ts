@@ -4,10 +4,10 @@ import type {
   CurrentInvoiceResponse,
   Invoice,
   ListInvoicesResponse,
-  PaymentLinkData,
   TenantBillingStatus,
 } from "@/types/billing/billing-types";
 
+/** Resumen de facturación de una organización: factura vigente, listado y estado de bloqueo. */
 export const useBilling = (organizationId: string) => {
   const { apiClient } = useApiClient();
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
@@ -15,7 +15,6 @@ export const useBilling = (organizationId: string) => {
   const [total, setTotal] = useState(0);
   const [status, setStatus] = useState<TenantBillingStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   const fetchAll = useCallback(
     (page = 1, limit = 20) => {
@@ -50,56 +49,13 @@ export const useBilling = (organizationId: string) => {
     fetchAll();
   }, [fetchAll]);
 
-  const getInvoice = useCallback(
-    async (invoiceId: string): Promise<Invoice | null> => {
-      try {
-        return await apiClient(`/billing/invoices/${invoiceId}?organizationId=${organizationId}`, {
-          method: "GET",
-        });
-      } catch {
-        return null;
-      }
-    },
-    [organizationId, apiClient],
-  );
-
-  const createPaymentLink = async (invoiceId: string): Promise<PaymentLinkData | null> => {
-    setSaving(true);
-    try {
-      return await apiClient(`/billing/invoices/${invoiceId}/payment-link?organizationId=${organizationId}`, {
-        method: "POST",
-      });
-    } catch {
-      return null;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const syncInvoice = async (invoiceId: string): Promise<Invoice | null> => {
-    setSaving(true);
-    try {
-      return await apiClient(`/billing/invoices/${invoiceId}/sync?organizationId=${organizationId}`, {
-        method: "POST",
-      });
-    } catch {
-      return null;
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return {
     currentInvoice,
     invoices,
     total,
     status,
     loading,
-    saving,
     fetchPage: fetchAll,
     refetch: fetchAll,
-    getInvoice,
-    createPaymentLink,
-    syncInvoice,
   };
 };

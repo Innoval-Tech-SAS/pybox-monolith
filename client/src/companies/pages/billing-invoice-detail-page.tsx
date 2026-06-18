@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
+import { RefreshCw } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
@@ -9,10 +10,11 @@ import { InvoiceStatusBadge } from "@/billing/components/invoice-status-badge";
 import { BoldPaymentButton } from "@/billing/components/bold-payment-button";
 import { formatCop, formatPeriod, formatUsd } from "@/billing/utils/format-currency";
 import type { AdminInvoice, Invoice, PaymentLinkData } from "@/types/billing/billing-types";
-import { useBilling } from "../hooks/use-billing";
-import { useAdminInvoices } from "@/billing/hooks/use-admin-invoices";
+import { useBillingActions } from "../hooks/use-billing-actions";
+import { useAdminInvoiceActions } from "@/billing/hooks/use-admin-invoice-actions";
 
 const PAYABLE_STATUSES = ["ISSUED", "PAYMENT_PENDING", "OVERDUE", "BLOCKED"];
+const TERMINAL_STATUSES = ["PAID", "CANCELLED"];
 
 export const BillingInvoiceDetailPage: React.FC = () => {
   const { invoiceId = "" } = useParams();
@@ -23,17 +25,18 @@ export const BillingInvoiceDetailPage: React.FC = () => {
   const session = getSession();
   const canPay = !isAdminMode && session?.scope !== "GLOBAL";
 
-  const orgBilling = useBilling(orgId);
-  const adminBilling = useAdminInvoices();
+  const orgActions = useBillingActions(orgId);
+  const adminActions = useAdminInvoiceActions();
 
   const [invoice, setInvoice] = useState<Invoice | AdminInvoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [paymentLink, setPaymentLink] = useState<PaymentLinkData | null>(null);
   const [paying, setPaying] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const load = async () => {
     setLoading(true);
-    const result = isAdminMode ? await adminBilling.getInvoice(invoiceId) : await orgBilling.getInvoice(invoiceId);
+    const result = isAdminMode ? await adminActions.getInvoice(invoiceId) : await orgActions.getInvoice(invoiceId);
     setInvoice(result);
     setLoading(false);
   };
@@ -45,9 +48,21 @@ export const BillingInvoiceDetailPage: React.FC = () => {
 
   const handlePay = async () => {
     setPaying(true);
-    const link = await orgBilling.createPaymentLink(invoiceId);
+    const link = await orgActions.createPaymentLink(invoiceId);
     setPaymentLink(link);
     setPaying(false);
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    const updated = await orgActions.syncInvoice(invoiceId);
+    if (updated) {
+      setInvoice(updated);
+      if (TERMINAL_STATUSES.includes(updated.status)) {
+        setPaymentLink(null);
+      }
+    }
+    setSyncing(false);
   };
 
   if (loading) {
@@ -102,7 +117,19 @@ export const BillingInvoiceDetailPage: React.FC = () => {
                   {formatCop(invoice.taxAmount)}
                 </p>
               </div>
-              <InvoiceStatusBadge status={invoice.status} />
+              <div className="flex items-center gap-3">
+                <InvoiceStatusBadge status={invoice.status} />
+                {!isAdminMode && (
+                  <button
+                    onClick={handleSync}
+                    disabled={syncing}
+                    title="Actualizar estado"
+                    className="rounded-lg border border-gray-200 p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/5"
+                  >
+                    <RefreshCw size={16} className={syncing ? "animate-spin" : ""} />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">

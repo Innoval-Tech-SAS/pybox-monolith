@@ -1,4 +1,4 @@
-﻿from fastapi import status
+﻿from fastapi import HTTPException, status
 
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession

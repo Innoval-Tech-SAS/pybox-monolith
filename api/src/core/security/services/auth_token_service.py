@@ -28,7 +28,7 @@ class AuthTokenService:
 
     def generate_access_token(self, user: UserModel, auth_provider: AuthProvider) -> str:
         from core.config.logger import logger
-        logger.debug("[token] generate_access | user_id=%d provider=%s", user.id, auth_provider.value)
+        logger.debug("[token] generate_access | user_id=%s provider=%s", user.id, auth_provider.value)
         now = datetime.now(timezone.utc)
         token = jwt.encode(
             {

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
-import type { AdminInvoice, AdminListInvoicesResponse } from "@/types/billing/billing-types";
+import type { AdminListInvoicesResponse, AdminInvoice } from "@/types/billing/billing-types";
 
+/** Listado de facturas de todas las organizaciones (solo admin global). */
 export const useAdminInvoices = () => {
   const { apiClient } = useApiClient();
   const [invoices, setInvoices] = useState<AdminInvoice[]>([]);
@@ -26,16 +27,5 @@ export const useAdminInvoices = () => {
     fetchInvoices();
   }, [fetchInvoices]);
 
-  const getInvoice = useCallback(
-    async (invoiceId: string): Promise<AdminInvoice | null> => {
-      try {
-        return await apiClient(`/billing/admin/invoices/${invoiceId}`, { method: "GET" });
-      } catch {
-        return null;
-      }
-    },
-    [apiClient],
-  );
-
-  return { invoices, total, loading, fetchPage: fetchInvoices, getInvoice };
+  return { invoices, total, loading, fetchPage: fetchInvoices };
 };

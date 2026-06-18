@@ -582,7 +582,7 @@ class SupportService:
         memberships = await self._membership_repo.get_by_organization_id(org_id)
         rep = next((m for m in memberships if m.is_legal_representative), None)
 
-        recipient_ids: set[int] = {ticket_created_by}
+        recipient_ids: set[uuid.UUID] = {ticket_created_by}
         if rep is not None:
             recipient_ids.add(rep.user_id)
 
