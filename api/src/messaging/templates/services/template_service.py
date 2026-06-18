@@ -48,6 +48,7 @@ class TemplateService:
             channel=data.channel,
             status=data.status,
             body=data.body,
+            design=data.design,
             subject=data.subject,
             sender_name=data.sender_name,
             sender_email=data.sender_email,

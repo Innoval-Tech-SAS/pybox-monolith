@@ -5,6 +5,7 @@ export interface TemplateEditorFormState {
   channel: TemplateChannel;
   status: TemplateStatus;
   body: string;
+  design: string | null;
   subject: string;
   senderName: string;
   senderEmail: string;

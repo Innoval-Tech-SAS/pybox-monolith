@@ -45,6 +45,8 @@ class TemplateModel(AuditModel):
 
     body: Mapped[str] = mapped_column(Text, nullable=False, name="cuerpo")
 
+    design: Mapped[str | None] = mapped_column(Text, nullable=True, name="diseno")
+
     subject: Mapped[str | None] = mapped_column(
         String(255), nullable=True, name="asunto"
     )

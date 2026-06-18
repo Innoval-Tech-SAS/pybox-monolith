@@ -1,16 +1,10 @@
 import type { Template, TemplatePreviewResponse } from "@/types/templates/template-types";
+import type { TemplateVariableOption } from "@/templates/types/template-variable-option";
 
-export interface PreviewModalProps {
+export interface TemplatePreviewModalProps {
   isOpen: boolean;
   template: Template | null;
+  variableOptions: TemplateVariableOption[];
   onClose: () => void;
   onPreview: (id: string, sub: Record<string, string>) => Promise<TemplatePreviewResponse | null>;
-}
-
-export interface SendModalProps {
-  isOpen: boolean;
-  template: Template | null;
-  saving: boolean;
-  onClose: () => void;
-  onSend: (id: string, to: string, subject: string, sub: Record<string, string>) => Promise<void>;
 }

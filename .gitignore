@@ -21,7 +21,6 @@ test/
 
 .claude/
 
-api/alembic/versions/
 
 .agents/
 .vscode/

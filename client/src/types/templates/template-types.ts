@@ -10,6 +10,7 @@ export interface Template {
   channel: TemplateChannel;
   status: TemplateStatus;
   body: string;
+  design?: string | null;
   subject?: string | null;
   senderName?: string | null;
   senderEmail?: string | null;
@@ -23,6 +24,7 @@ export interface TemplateCreatePayload {
   channel: TemplateChannel;
   status?: TemplateStatus;
   body: string;
+  design?: string | null;
   subject?: string | null;
   senderName?: string | null;
   senderEmail?: string | null;
@@ -33,6 +35,7 @@ export interface TemplateUpdatePayload {
   name?: string;
   status?: TemplateStatus;
   body?: string;
+  design?: string | null;
   subject?: string | null;
   senderName?: string | null;
   senderEmail?: string | null;

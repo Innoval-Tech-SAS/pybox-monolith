@@ -13,6 +13,9 @@ class TemplateCreateRequest(BaseSchema):
     channel: TemplateChannel = Field(description="Canal: EMAIL o SMS")
     status: TemplateStatus = Field(default=TemplateStatus.DRAFT, description="Estado inicial")
     body: str = Field(description="Cuerpo del mensaje (HTML para email, texto para SMS)")
+    design: str | None = Field(
+        default=None, description="Diseño del editor visual de Unlayer en formato JSON (solo EMAIL)"
+    )
     subject: str | None = Field(default=None, description="Asunto del email (requerido para EMAIL)")
     sender_name: str | None = Field(default=None, description="Nombre del remitente")
     sender_email: str | None = Field(default=None, description="Email del remitente (requerido para EMAIL)")
@@ -37,6 +40,9 @@ class TemplateUpdateRequest(BaseSchema):
     name: str | None = Field(default=None, description="Nuevo nombre")
     status: TemplateStatus | None = Field(default=None, description="Nuevo estado")
     body: str | None = Field(default=None, description="Nuevo cuerpo del mensaje")
+    design: str | None = Field(
+        default=None, description="Nuevo diseño del editor visual de Unlayer en formato JSON"
+    )
     subject: str | None = Field(default=None, description="Nuevo asunto")
     sender_name: str | None = Field(default=None, description="Nuevo nombre del remitente")
     sender_email: str | None = Field(default=None, description="Nuevo email del remitente")
@@ -50,6 +56,9 @@ class TemplateResponse(BaseSchema):
     channel: TemplateChannel = Field(description="Canal de envío")
     status: TemplateStatus = Field(description="Estado de la plantilla")
     body: str = Field(description="Cuerpo del mensaje")
+    design: str | None = Field(
+        default=None, description="Diseño del editor visual de Unlayer en formato JSON"
+    )
     subject: str | None = Field(default=None, description="Asunto del email")
     sender_name: str | None = Field(default=None, description="Nombre del remitente")
     sender_email: str | None = Field(default=None, description="Email del remitente")
