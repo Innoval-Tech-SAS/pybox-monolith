@@ -48,7 +48,7 @@ class OrganizationService:
     async def get_all(self) -> Sequence[OrganizationModel]:
         return await self.org_repo.get_all()
 
-    async def get_for_user(self, user_id: int, scope: UserScope) -> Sequence[OrganizationModel]:
+    async def get_for_user(self, user_id: uuid.UUID, scope: UserScope) -> Sequence[OrganizationModel]:
         if scope == UserScope.GLOBAL:
             return await self.org_repo.get_all()
         if scope == UserScope.ORGANIZATION:
@@ -65,7 +65,7 @@ class OrganizationService:
 
     # ── Ownership helper ─────────────────────────────────────────────────────
 
-    async def _assert_admin_of_org(self, user_id: int, org_id: uuid.UUID) -> None:
+    async def _assert_admin_of_org(self, user_id: uuid.UUID, org_id: uuid.UUID) -> None:
         admin_org_ids = await self.role_assignment_repo.get_admin_org_ids(user_id)
         if org_id not in admin_org_ids:
             raise HTTPException(
@@ -78,7 +78,7 @@ class OrganizationService:
     async def create_organization(
         self,
         data: OrganizationCreate,
-        created_by_user_id: int,
+        created_by_user_id: uuid.UUID,
         scope: UserScope,
     ) -> OrganizationModel:
         org = OrganizationModel(**data.model_dump())
@@ -105,7 +105,7 @@ class OrganizationService:
                 )
                 await self.role_assignment_repo.add(assignment)
 
-        logger.info("[org] create | org_id=%s user_id=%d scope=%s", org.id, created_by_user_id, scope.value)
+        logger.info("[org] create | org_id=%s user_id=%s scope=%s", org.id, created_by_user_id, scope.value)
         return org
 
     async def register_with_representative(
@@ -115,7 +115,7 @@ class OrganizationService:
         country: Nationality,
         fiscal_document_number: str | None,
         representative_mode: RepresentativeMode,
-        representative_user_id: int | None,
+        representative_user_id: uuid.UUID | None,
         rep_firstname: str | None,
         rep_lastname: str | None,
         rep_email: str | None,
@@ -127,14 +127,14 @@ class OrganizationService:
         mercantile_file_ext: str,
         representative_file_bytes: bytes,
         representative_file_ext: str,
-        created_by_user_id: int,
+        created_by_user_id: uuid.UUID,
         scope: UserScope,
     ) -> OrganizationModel:
         if self.user_repo is None:
             raise RuntimeError("user_repo is required for register_with_representative")
 
         # 1. Resolve legal representative user_id
-        rep_user_id: int
+        rep_user_id: uuid.UUID
         if representative_mode == RepresentativeMode.SELF:
             rep_user_id = created_by_user_id
         elif representative_mode == RepresentativeMode.SELECT:
@@ -202,7 +202,7 @@ class OrganizationService:
             representative_document_file=rep_file_path,
         )
         org = await self.org_repo.add(org)
-        logger.info("[org] register_with_rep | org_id=%s mode=%s user_id=%d", org.id, representative_mode.value, created_by_user_id)
+        logger.info("[org] register_with_rep | org_id=%s mode=%s user_id=%s", org.id, representative_mode.value, created_by_user_id)
 
         # 6. Membership for legal representative (always with flag)
         rep_membership = OrganizationMembershipModel(
@@ -244,7 +244,7 @@ class OrganizationService:
         self,
         org_id: uuid.UUID,
         data: OrganizationUpdate,
-        requesting_user_id: int,
+        requesting_user_id: uuid.UUID,
         scope: UserScope,
     ) -> OrganizationModel:
         if scope == UserScope.ORGANIZATION:
@@ -258,13 +258,13 @@ class OrganizationService:
             setattr(org, field, value)
 
         updated = await self.org_repo.update(org)
-        logger.info("[org] update | org_id=%s user_id=%d", org_id, requesting_user_id)
+        logger.info("[org] update | org_id=%s user_id=%s", org_id, requesting_user_id)
         return updated
 
     async def delete_organization(
         self,
         org_id: uuid.UUID,
-        requesting_user_id: int,
+        requesting_user_id: uuid.UUID,
         scope: UserScope,
     ) -> None:
         if scope == UserScope.ORGANIZATION:

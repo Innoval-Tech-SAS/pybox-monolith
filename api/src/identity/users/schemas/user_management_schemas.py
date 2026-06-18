@@ -30,7 +30,7 @@ class PermissionCatalogEntry(BaseSchema):
 
 
 class ManagedUserResponse(BaseSchema):
-    id: int = Field(description="ID del usuario")
+    id: uuid.UUID = Field(description="ID del usuario")
     full_name: str = Field(description="Nombre completo")
     email: str = Field(description="Correo electrónico")
     phone_number: str = Field(description="Número de teléfono")

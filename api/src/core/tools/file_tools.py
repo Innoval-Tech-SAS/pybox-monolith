@@ -53,7 +53,7 @@ def _validate_file(file: UploadFile) -> None:
         )
 
 
-async def save_profile_photo_file(file: UploadFile, user_id: int) -> str:
+async def save_profile_photo_file(file: UploadFile, user_id: uuid.UUID) -> str:
     ext = os.path.splitext(file.filename or "")[1].lower()
     content_type_ext = _ALLOWED_PROFILE_PHOTO_CONTENT_TYPES.get(file.content_type or "")
     logger.debug(

@@ -65,7 +65,7 @@ async def require_portfolio_access(
     session: UserSession,
     org_id: str,
     portfolio_id: uuid.UUID,
-    check_access: Callable[[int, uuid.UUID, str], Awaitable[bool]],
+    check_access: Callable[[uuid.UUID, uuid.UUID, str], Awaitable[bool]],
 ) -> None:
     if session.is_global:
         return

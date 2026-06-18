@@ -1,4 +1,5 @@
-﻿from typing import Annotated
+﻿import uuid
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, status
 
@@ -12,7 +13,7 @@ _sse_token_service = AuthTokenService()
 
 
 async def get_session(payload: TokenPayload) -> UserSession:
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(payload["sub"])
     key = session_key(user_id)
     session = await redis_client.get_json(key, UserSession)
     if session is None:
@@ -29,7 +30,7 @@ async def get_sse_session(token: Annotated[str, Query()]) -> UserSession:
         payload = _sse_token_service.verify_token(token)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.")
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(payload["sub"])
     key = session_key(user_id)
     session = await redis_client.get_json(key, UserSession)
     if session is None:
@@ -46,7 +47,7 @@ async def get_ws_session(token: str) -> UserSession:
         payload = _sse_token_service.verify_token(token)
     except ValueError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.")
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(payload["sub"])
     key = session_key(user_id)
     session = await redis_client.get_json(key, UserSession)
     if session is None:

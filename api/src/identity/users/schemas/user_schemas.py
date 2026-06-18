@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 
 from pydantic import Field, field_validator
@@ -11,13 +12,13 @@ from core.security.services.encrypt_service import encrypt_service
 
 
 class UserSummarySchema(BaseSchema):
-    id: int = Field(description="ID del usuario")
+    id: uuid.UUID = Field(description="ID del usuario")
     full_name: str = Field(description="Nombre completo")
     email: str = Field(description="Correo electrónico")
 
 
 class ChatAvailableUserSchema(BaseSchema):
-    id: int = Field(description="ID del usuario")
+    id: uuid.UUID = Field(description="ID del usuario")
     full_name: str = Field(description="Nombre completo")
     profile_photo_url: str | None = Field(default=None, description="URL de la foto de perfil")
     is_online: bool = Field(default=False, description="Indica si el usuario está en línea")
@@ -31,7 +32,7 @@ class RoleEntrySchema(BaseSchema):
 
 
 class AdminUserSummarySchema(BaseSchema):
-    id: int = Field(description="ID del usuario")
+    id: uuid.UUID = Field(description="ID del usuario")
     full_name: str = Field(description="Nombre completo")
     email: str = Field(description="Correo electrónico")
     phone_number: str | None = Field(description="Número de teléfono")
@@ -71,7 +72,7 @@ class ProfilePhotoSchema(BaseSchema):
 
 
 class UserProfile(BaseSchema):
-    id: int = Field(description="ID del usuario")
+    id: uuid.UUID = Field(description="ID del usuario")
     firstname: str = Field(description="Nombre")
     lastname: str = Field(description="Apellido")
     email: str = Field(description="Correo electrónico")

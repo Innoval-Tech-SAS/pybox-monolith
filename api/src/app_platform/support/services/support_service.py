@@ -35,7 +35,7 @@ class SupportService:
         self._notification_service = NotificationService(session)
 
     async def create_org_verification_ticket(
-        self, org_id: uuid.UUID, created_by: int
+        self, org_id: uuid.UUID, created_by: uuid.UUID
     ) -> SupportTicketModel:
         org = await self._org_repo.get_by_id(org_id)
         org_name = org.name if org else "empresa"
@@ -65,7 +65,7 @@ class SupportService:
         return await self._ticket_to_schema(ticket)
 
     async def resolve_ticket(
-        self, ticket_number: int, agent_user_id: int, data: ResolveTicketSchema, f: SupportFilter
+        self, ticket_number: int, agent_user_id: uuid.UUID, data: ResolveTicketSchema, f: SupportFilter
     ) -> SupportTicketSchema:
         if not f.can_resolve:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para resolver tickets.")
@@ -126,7 +126,7 @@ class SupportService:
         orgs = await self._org_repo.get_all()
         return [TicketOrgSchema(id=org.id, name=org.name) for org in orgs]
 
-    async def create_ticket(self, user_id: int, data: CreateTicketSchema, f: SupportFilter) -> SupportTicketSchema:
+    async def create_ticket(self, user_id: uuid.UUID, data: CreateTicketSchema, f: SupportFilter) -> SupportTicketSchema:
         if not f.can_create:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para crear tickets.")
 
@@ -210,7 +210,7 @@ class SupportService:
     _TERMINAL_STATUSES = {SupportTicketStatus.RESOLVED, SupportTicketStatus.CLOSED}
 
     async def update_ticket_status(
-        self, ticket_number: int, user_id: int, data: UpdateTicketStatusSchema, f: SupportFilter
+        self, ticket_number: int, user_id: uuid.UUID, data: UpdateTicketStatusSchema, f: SupportFilter
     ) -> SupportTicketSchema:
         if not f.can_assign:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para mover tickets.")
@@ -229,7 +229,7 @@ class SupportService:
         return await self._ticket_to_schema(updated)
 
     async def update_ticket_priority(
-        self, ticket_number: int, user_id: int, data: UpdateTicketPrioritySchema, f: SupportFilter
+        self, ticket_number: int, user_id: uuid.UUID, data: UpdateTicketPrioritySchema, f: SupportFilter
     ) -> SupportTicketSchema:
         if not f.can_assign:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para cambiar la prioridad.")
@@ -245,7 +245,7 @@ class SupportService:
         return await self._ticket_to_schema(updated)
 
     async def assign_ticket(
-        self, ticket_number: int, actor_id: int, data: AssignTicketSchema, f: SupportFilter
+        self, ticket_number: int, actor_id: uuid.UUID, data: AssignTicketSchema, f: SupportFilter
     ) -> SupportTicketSchema:
         if not f.can_assign:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para asignar tickets.")
@@ -354,7 +354,7 @@ class SupportService:
     async def create_message(
         self,
         ticket_number: int,
-        sender_id: int,
+        sender_id: uuid.UUID,
         data: CreateMessageSchema,
         f: SupportFilter,
     ) -> TicketMessageSchema:
@@ -384,9 +384,9 @@ class SupportService:
         return TicketMessageSchema.model_validate(message)
 
     async def _notify_new_message(
-        self, ticket: SupportTicketModel, sender_id: int, is_internal: bool
+        self, ticket: SupportTicketModel, sender_id: uuid.UUID, is_internal: bool
     ) -> None:
-        recipients: set[int] = set()
+        recipients: set[uuid.UUID] = set()
         if ticket.assigned_to and ticket.assigned_to != sender_id:
             recipients.add(ticket.assigned_to)
         if not is_internal and ticket.created_by != sender_id:
@@ -410,7 +410,7 @@ class SupportService:
     async def _emit_event(
         self,
         ticket: SupportTicketModel,
-        user_id: int,
+        user_id: uuid.UUID,
         event_type: SupportTicketEventType,
         from_value: str | None = None,
         to_value: str | None = None,
@@ -577,12 +577,12 @@ class SupportService:
         return schema.model_copy(update={"organization_name": org_name})
 
     async def _notify_org_verification(
-        self, org_id: uuid.UUID, ticket_created_by: int, approved: bool
+        self, org_id: uuid.UUID, ticket_created_by: uuid.UUID, approved: bool
     ) -> None:
         memberships = await self._membership_repo.get_by_organization_id(org_id)
         rep = next((m for m in memberships if m.is_legal_representative), None)
 
-        recipient_ids: set[int] = {ticket_created_by}
+        recipient_ids: set[uuid.UUID] = {ticket_created_by}
         if rep is not None:
             recipient_ids.add(rep.user_id)
 

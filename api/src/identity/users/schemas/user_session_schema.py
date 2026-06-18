@@ -1,4 +1,5 @@
-﻿from datetime import datetime
+﻿import uuid
+from datetime import datetime
 
 from core.base.schema_base import BaseSchema
 from identity.organizations.enums.organization_enums import VerificationStatus
@@ -7,7 +8,7 @@ from identity.users.enums.user_enums import UserRole, UserScope
 SESSION_KEY_PREFIX = "session:"
 
 
-def session_key(user_id: int) -> str:
+def session_key(user_id: uuid.UUID) -> str:
     return f"{SESSION_KEY_PREFIX}{user_id}"
 
 
@@ -20,7 +21,7 @@ class OrgSessionEntry(BaseSchema):
 
 
 class UserSession(BaseSchema):
-    user_id: int
+    user_id: uuid.UUID
     full_name: str
     email: str
     role: UserRole | None = None

@@ -1,4 +1,6 @@
-﻿from core.config.api_router import APIRouter
+﻿import uuid
+
+from core.config.api_router import APIRouter
 from fastapi import File, HTTPException, Query, UploadFile, status
 
 from identity.auth.dependencies import TokenPayload
@@ -13,7 +15,7 @@ router = APIRouter(prefix="/users", tags=["Usuarios"])
 
 @router.get("/me", response_model=UserSession, summary="Obtener sesión del usuario autenticado")
 async def me(payload: TokenPayload, service: UserServiceDep) -> UserSession:
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(payload["sub"])
     cached = await service.redis.get_json(session_key(user_id), UserSession)
     if cached is not None:
         return cached
@@ -26,7 +28,7 @@ async def me(payload: TokenPayload, service: UserServiceDep) -> UserSession:
     summary="Obtener tours descartados por el usuario",
 )
 async def get_tour_preferences(payload: TokenPayload, service: UserServiceDep) -> UserToursSchema:
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(payload["sub"])
     dismissed = await service.get_dismissed_tours(user_id)
     return UserToursSchema(dismissed_tours=dismissed)
 
@@ -37,7 +39,7 @@ async def get_tour_preferences(payload: TokenPayload, service: UserServiceDep) -
     summary="Descartar un tour de la interfaz",
 )
 async def dismiss_tour(tour_key: str, payload: TokenPayload, service: UserServiceDep) -> UserToursSchema:
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(payload["sub"])
     dismissed = await service.dismiss_tour(user_id, tour_key)
     return UserToursSchema(dismissed_tours=dismissed)
 
@@ -52,7 +54,7 @@ async def update_profile_photo(
     service: UserServiceDep,
     file: UploadFile = File(...),
 ) -> ProfilePhotoSchema:
-    user_id = int(payload["sub"])
+    user_id = uuid.UUID(payload["sub"])
     return await service.update_profile_photo(user_id, file)
 
 
@@ -76,18 +78,18 @@ async def list_users(session: CurrentSession, service: UserServiceDep, org_id: s
 
 
 @router.get("/{user_id}", response_model=AdminUserDetailSchema, summary="Obtener detalle de usuario")
-async def get_user(user_id: int, session: CurrentSession, service: UserServiceDep):
+async def get_user(user_id: uuid.UUID, session: CurrentSession, service: UserServiceDep):
     return await service.get_user_detail(user_id)
 
 
 @router.patch("/{user_id}", response_model=AdminUserDetailSchema, summary="Actualizar datos de usuario")
-async def update_user(user_id: int, data: UpdateUserSchema, session: CurrentSession, service: UserServiceDep):
+async def update_user(user_id: uuid.UUID, data: UpdateUserSchema, session: CurrentSession, service: UserServiceDep):
     return await service.update_user(user_id, data)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar usuario")
-async def delete_user(user_id: int, payload: TokenPayload, service: UserServiceDep):
-    calling_user_id = int(payload["sub"])
+async def delete_user(user_id: uuid.UUID, payload: TokenPayload, service: UserServiceDep):
+    calling_user_id = uuid.UUID(payload["sub"])
     if calling_user_id == user_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No puedes eliminarte a ti mismo.")
     await service.soft_delete_user(user_id)

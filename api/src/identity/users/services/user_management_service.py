@@ -77,10 +77,10 @@ class UserManagementService:
 
         user = await self._create_base_user(data)
         await self.role_assignment_repo.add(
-            RoleAssignmentModel(user_id=cast(int, user.id), role=data.role, scope=UserScope.GLOBAL)
+            RoleAssignmentModel(user_id=user.id, role=data.role, scope=UserScope.GLOBAL)
         )
         return ManagedUserResponse(
-            id=cast(int, user.id),
+            id=user.id,
             full_name=user.full_name,
             email=cast(str, user.email),
             phone_number=cast(str, user.phone_number),
@@ -89,7 +89,7 @@ class UserManagementService:
         )
 
     async def create_org_member(
-        self, actor_id: int, org_id: uuid.UUID, data: ManagedUserCreate
+        self, actor_id: uuid.UUID, org_id: uuid.UUID, data: ManagedUserCreate
     ) -> ManagedUserResponse:
         if data.role not in _ORG_ROLES:
             raise HTTPException(
@@ -102,7 +102,7 @@ class UserManagementService:
         user = await self._create_base_user(data)
         await self.role_assignment_repo.add(
             RoleAssignmentModel(
-                user_id=cast(int, user.id),
+                user_id=user.id,
                 role=data.role,
                 scope=UserScope.ORGANIZATION,
                 organization_id=org_id,
@@ -110,13 +110,13 @@ class UserManagementService:
         )
         await self.membership_repo.add(
             OrganizationMembershipModel(
-                user_id=cast(int, user.id),
+                user_id=user.id,
                 organization_id=org_id,
                 created_by=actor_id,
             )
         )
         return ManagedUserResponse(
-            id=cast(int, user.id),
+            id=user.id,
             full_name=user.full_name,
             email=cast(str, user.email),
             phone_number=cast(str, user.phone_number),
@@ -124,7 +124,7 @@ class UserManagementService:
             scope=UserScope.ORGANIZATION.value,
         )
 
-    async def list_permissions(self, user_id: int, org_id: uuid.UUID) -> PermissionListResponse:
+    async def list_permissions(self, user_id: uuid.UUID, org_id: uuid.UUID) -> PermissionListResponse:
         overrides = await self.permission_assignment_repo.get_overrides_for_user_org(user_id, org_id)
         return PermissionListResponse(
             permissions=[
@@ -134,14 +134,14 @@ class UserManagementService:
         )
 
     async def assign_permission(
-        self, user_id: int, org_id: uuid.UUID, permission_name: str, effect: PermissionEffect
+        self, user_id: uuid.UUID, org_id: uuid.UUID, permission_name: str, effect: PermissionEffect
     ) -> PermissionEntry:
         perm = await self.permission_assignment_repo.get_permission_by_name(permission_name)
         if perm is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Permiso '{permission_name}' no encontrado.")
         await self.permission_assignment_repo.upsert_for_org(
             user_id=user_id,
-            permission_id=cast(int, perm.id),
+            permission_id=perm.id,
             organization_id=org_id,
             effect=effect,
         )
@@ -154,13 +154,13 @@ class UserManagementService:
             for p in permissions
         ]
 
-    async def remove_permission(self, user_id: int, org_id: uuid.UUID, permission_name: str) -> None:
+    async def remove_permission(self, user_id: uuid.UUID, org_id: uuid.UUID, permission_name: str) -> None:
         perm = await self.permission_assignment_repo.get_permission_by_name(permission_name)
         if perm is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Permiso '{permission_name}' no encontrado.")
         deleted = await self.permission_assignment_repo.delete_for_org(
             user_id=user_id,
-            permission_id=cast(int, perm.id),
+            permission_id=perm.id,
             organization_id=org_id,
         )
         if not deleted:
