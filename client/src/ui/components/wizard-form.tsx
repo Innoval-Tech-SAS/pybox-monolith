@@ -23,13 +23,13 @@ export const WizardForm: React.FC<WizardFormProps> = ({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="flex h-full flex-col gap-5">
       <StepIndicator current={step} total={steps.length} />
 
-      <form onSubmit={onSubmit}>
-        {children(step)}
+      <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col gap-5">
+        <div className="min-h-0 flex-1">{children(step)}</div>
 
-        <div className={`mt-6 flex gap-3 ${step > 0 ? "justify-between" : "justify-end"}`}>
+        <div className={`flex gap-3 ${step > 0 ? "justify-between" : "justify-end"}`}>
           {step > 0 && (
             <button
               type="button"

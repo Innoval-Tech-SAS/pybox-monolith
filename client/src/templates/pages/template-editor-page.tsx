@@ -8,6 +8,7 @@ import { Input } from "@/ui/components/input";
 import { Select } from "@/ui/components/inputs/select";
 import { WizardForm } from "@/ui/components/wizard-form";
 import { useApiClient } from "@/hooks/use-api-client";
+import { useTemplateVariables } from "@/templates/hooks/use-template-variables";
 import { TemplateEditor } from "../components/template-editor";
 import { ChannelPicker } from "../components/channel-picker";
 import { PlainTextTemplateDesigner } from "../components/plain-text-template-designer";
@@ -43,6 +44,7 @@ export const TemplateEditorPage: React.FC = () => {
   const [form, setForm] = useState<TemplateEditorFormState>(EMPTY);
   const [loadingTemplate, setLoadingTemplate] = useState(isEditing);
   const [saving, setSaving] = useState(false);
+  const { variables, loading: loadingVariables } = useTemplateVariables(orgId);
 
   const backPath = `/my-companies/templates?org=${orgId}`;
 
@@ -154,7 +156,7 @@ export const TemplateEditorPage: React.FC = () => {
           {(step) => (
             <>
               {step === 0 && (
-                <Card>
+                <Card className="flex h-full flex-col">
                   <CardTitle>Canal de la plantilla</CardTitle>
                   <ChannelPicker
                     value={form.channel}
@@ -165,7 +167,7 @@ export const TemplateEditorPage: React.FC = () => {
               )}
 
               {step === 1 && (
-                <Card>
+                <Card className="flex h-full flex-col">
                   <CardTitle>Información de la plantilla</CardTitle>
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     <div className="lg:col-span-2">
@@ -239,7 +241,7 @@ export const TemplateEditorPage: React.FC = () => {
               )}
 
               {step === 2 && (
-                <Card className="p-4! lg:p-5!">
+                <Card className="flex h-full flex-col p-4! lg:p-5!">
                   <CardTitle>
                     {isEmail ? "Diseño del correo" : "Contenido del mensaje"}
                   </CardTitle>
@@ -259,23 +261,28 @@ export const TemplateEditorPage: React.FC = () => {
                       channel="EMAIL"
                     />
                   ) : (
-                    <PlainTextTemplateDesigner
-                      value={form.body}
-                      onChange={set("body")}
-                      maxChars={charLimit}
-                    />
+                    <div className="min-h-0 flex-1">
+                      <PlainTextTemplateDesigner
+                        value={form.body}
+                        onChange={set("body")}
+                        maxChars={charLimit}
+                        variables={variables}
+                        loadingVariables={loadingVariables}
+                      />
+                    </div>
                   )}
                 </Card>
               )}
 
               {step === 3 && (
-                <Card>
+                <Card className="flex h-full flex-col">
                   <CardTitle>Vista previa</CardTitle>
                   <TemplatePreviewStep
                     channel={form.channel}
                     name={form.name}
                     subject={form.subject}
                     body={form.body}
+                    variables={variables}
                   />
                 </Card>
               )}

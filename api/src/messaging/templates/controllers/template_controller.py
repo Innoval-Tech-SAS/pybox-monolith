@@ -7,7 +7,7 @@ from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from core.security.permissions import ORG_TEMPLATES
 from core.security.policies import require_org_admin, require_permission
-from messaging.templates.dependencies import TemplateServiceDep
+from messaging.templates.dependencies import TemplateServiceDep, TemplateVariableServiceDep
 from messaging.templates.enums.template_enums import TemplateChannel
 from messaging.templates.schemas.template_schemas import (
     TemplateCreateRequest,
@@ -15,6 +15,7 @@ from messaging.templates.schemas.template_schemas import (
     TemplatePreviewResponse,
     TemplateResponse,
     TemplateUpdateRequest,
+    TemplateVariableOption,
 )
 
 router = APIRouter(prefix="/templates", tags=["Plantillas"])
@@ -30,6 +31,20 @@ async def list_templates(
     require_permission(ORG_TEMPLATES, session, str(organization_id))
     templates = await service.list_by_org(organization_id, channel)
     return [TemplateResponse.model_validate(t) for t in templates]
+
+
+@router.get(
+    "/variables",
+    response_model=list[TemplateVariableOption],
+    summary="Listar variables disponibles para construir el contenido de una plantilla",
+)
+async def list_template_variables(
+    session: CurrentSession,
+    service: TemplateVariableServiceDep,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+) -> list[TemplateVariableOption]:
+    require_permission(ORG_TEMPLATES, session, str(organization_id))
+    return await service.list_available_variables()
 
 
 @router.get("/{template_id}", response_model=TemplateResponse, summary="Obtener plantilla por ID")
