@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { useSearchParams } from "react-router";
 import { Check, Copy, ExternalLink, Upload } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
@@ -10,6 +9,7 @@ import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { API_URL } from "@/hooks/use-api-client";
 import { useOrgSettings } from "../hooks/use-org-settings";
+import { useOrgModule } from "../hooks/use-org-module";
 import type { DocType, DocFileRowProps } from "@/companies/types/doc-file-row-props";
 
 const FISCAL_DOC_OPTIONS = [
@@ -140,8 +140,7 @@ const EditIcon = () => (
 );
 
 export const OrgSettingsPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, orgName, buildOrgPath } = useOrgModule();
 
   const { org, loading, saving, updateInfo, uploadDocument, requestVerification } = useOrgSettings(orgId);
 
@@ -190,7 +189,7 @@ export const OrgSettingsPage: React.FC = () => {
         pageTitle="Configuración"
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: org?.name ?? "Empresa", path: `/my-companies?org=${orgId}` }] : []),
+          ...(orgId ? [{ label: orgName || "Empresa", path: buildOrgPath("/my-companies") }] : []),
         ]}
       >
         {loading ? (

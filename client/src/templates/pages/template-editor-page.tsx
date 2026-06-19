@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
@@ -11,14 +11,14 @@ import { StepInfo } from "@/templates/components/template-form/step-info";
 import { StepDesign } from "@/templates/components/template-form/step-design";
 import { TemplatePreviewStep } from "@/templates/components/template-preview-step";
 import { TEMPLATE_WIZARD_STEPS } from "@/templates/constants/template-wizard-options";
+import { useOrgModule } from "@/companies/hooks/use-org-module";
 
 export const TemplateEditorPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, buildOrgPath } = useOrgModule();
   const navigate = useNavigate();
 
-  const backPath = `/my-companies/templates?org=${orgId}`;
+  const backPath = buildOrgPath("/my-companies/templates");
   const { variables, loading: loadingVariables } = useTemplateVariables(orgId);
   const {
     form,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate } from "react-router";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
@@ -9,16 +9,13 @@ import { getSession } from "@/auth/utils/auth-session-utils";
 import { Role } from "@/types/auth/role";
 import { PAYMENT_METHOD_TYPE_LABELS } from "@/constants/payment-methods/payment-method-labels";
 import { usePaymentMethods } from "../hooks/use-payment-methods";
-import { useMyCompanies } from "../hooks/use-my-companies";
+import { useOrgModule } from "../hooks/use-org-module";
 
 export const PaymentMethodsPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, orgName, buildOrgPath } = useOrgModule();
   const navigate = useNavigate();
 
   const { items, loading, saving, remove } = usePaymentMethods(orgId);
-  const { orgs } = useMyCompanies();
-  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
 
   const user = getSession();
   const isAdmin = user?.scope === "GLOBAL" || user?.orgs?.[orgId]?.role === Role.ADMIN;
@@ -37,7 +34,7 @@ export const PaymentMethodsPage: React.FC = () => {
         pageTitle="Métodos de Pago"
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: orgName, path: `/my-companies?org=${orgId}` }] : []),
+          ...(orgId ? [{ label: orgName || "Empresa", path: buildOrgPath("/my-companies") }] : []),
         ]}
       >
         {loading ? (
@@ -47,7 +44,7 @@ export const PaymentMethodsPage: React.FC = () => {
             {isAdmin && (
               <div className="flex justify-end">
                 <button
-                  onClick={() => navigate(`/my-companies/payment-methods/new?org=${orgId}`)}
+                  onClick={() => navigate(buildOrgPath("/my-companies/payment-methods/new"))}
                   className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
                 >
                   <Plus size={16} />
@@ -127,7 +124,7 @@ export const PaymentMethodsPage: React.FC = () => {
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() =>
-                                    navigate(`/my-companies/payment-methods/${item.id}/edit?org=${orgId}`)
+                                    navigate(buildOrgPath(`/my-companies/payment-methods/${item.id}/edit`))
                                   }
                                   className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
                                 >

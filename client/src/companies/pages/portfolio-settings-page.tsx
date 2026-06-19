@@ -10,7 +10,7 @@ import { Input } from "@/ui/components/inputs/input";
 import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { usePortfolioSettings } from "../hooks/use-portfolio-settings";
-import { useMyCompanies } from "../hooks/use-my-companies";
+import { useOrgModule } from "../hooks/use-org-module";
 
 const REACTIVATION_OPTIONS = [
   { value: "FROM_TODAY", label: "Desde hoy" },
@@ -50,13 +50,11 @@ const EditIcon = () => (
 
 export const PortfolioSettingsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
   const portfolioId = searchParams.get("portfolio") ?? "";
+  const { orgId, orgName, buildOrgPath } = useOrgModule();
 
   const { portfolio, config, loading, saving, toggleActive, updateInfo, saveCounterConfig, syncCounterConfig } =
     usePortfolioSettings(portfolioId);
-  const { orgs } = useMyCompanies();
-  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
 
   const [syncDate, setSyncDate] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -88,10 +86,10 @@ export const PortfolioSettingsPage: React.FC = () => {
         pageTitle="Configuración"
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: orgName, path: `/my-companies?org=${orgId}` }] : []),
-          { label: "Portafolios", path: `/my-companies/portfolios?org=${orgId}` },
+          ...(orgId ? [{ label: orgName || "Empresa", path: buildOrgPath("/my-companies") }] : []),
+          { label: "Portafolios", path: buildOrgPath("/my-companies/portfolios") },
           ...(portfolioId
-            ? [{ label: portfolio?.name ?? "Portafolio", path: `/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}` }]
+            ? [{ label: portfolio?.name ?? "Portafolio", path: buildOrgPath("/my-companies/portfolios", { portfolio: portfolioId }) }]
             : []),
         ]}
       >

@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
-import { useMyCompanies } from "@/companies/hooks/use-my-companies";
+import { useOrgModule } from "@/companies/hooks/use-org-module";
 import { usePortfolios } from "@/companies/hooks/use-portfolios";
 import { SegmentsTable } from "@/segments/components/segments-table";
 import { SegmentForm } from "@/segments/components/segment-form/segment-form";
@@ -17,10 +17,9 @@ type View = "list" | "create" | "edit";
 
 export const SegmentsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
   const portfolioId = searchParams.get("portfolio") ?? "";
+  const { orgId, orgName, buildOrgPath } = useOrgModule();
 
-  const { orgs } = useMyCompanies();
   const { portfolios } = usePortfolios(orgId);
   const { segments, loading, refetch, deleteSegment } = useSegments(orgId);
 
@@ -31,15 +30,14 @@ export const SegmentsPage: React.FC = () => {
   const [deleting, setDeleting] = useState<SegmentResponse | null>(null);
   const [deletingInProgress, setDeletingInProgress] = useState(false);
 
-  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
   const portfolioName = portfolios.find((p) => p.id === portfolioId)?.name ?? "Portafolio";
 
   const breadcrumbs = [
     { label: "Mis Empresas", path: "/my-companies" },
-    { label: orgName, path: `/my-companies?org=${orgId}` },
-    { label: "Mis Portafolios", path: `/my-companies/portfolios?org=${orgId}` },
-    { label: portfolioName, path: `/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}` },
-    { label: "Comunicaciones", path: `/my-companies/portfolios/communications?org=${orgId}&portfolio=${portfolioId}` },
+    { label: orgName || "Empresa", path: buildOrgPath("/my-companies") },
+    { label: "Mis Portafolios", path: buildOrgPath("/my-companies/portfolios") },
+    { label: portfolioName, path: buildOrgPath("/my-companies/portfolios", { portfolio: portfolioId }) },
+    { label: "Comunicaciones", path: buildOrgPath("/my-companies/portfolios/communications", { portfolio: portfolioId }) },
   ];
 
   const handleFormSuccess = () => {

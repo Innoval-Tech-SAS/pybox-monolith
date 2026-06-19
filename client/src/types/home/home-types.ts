@@ -26,6 +26,7 @@ export type HomeContext = {
   scope: HomeScope;
   source: HomeContextSource;
   user: SessionUser | null;
+  status: "loading" | "ready";
 };
 
 export type HomeMetric = {

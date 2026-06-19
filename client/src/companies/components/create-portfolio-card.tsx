@@ -1,15 +1,15 @@
 import { ArrowRight, FolderPlus } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate } from "react-router";
+import { useOrgModule } from "../hooks/use-org-module";
 
 export const CreatePortfolioCard: React.FC<{ id?: string }> = ({ id }) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { buildOrgPath } = useOrgModule();
 
   return (
     <button
       id={id}
-      onClick={() => navigate(`/my-companies/add-portfolio?org=${orgId}`)}
+      onClick={() => navigate(buildOrgPath("/my-companies/add-portfolio"))}
       className="group w-full flex flex-col overflow-hidden rounded-3xl border-2 border-dashed border-brand-300 bg-white shadow-lg text-left transition-all duration-300
         hover:border-brand-400 hover:shadow-xl hover:scale-[1.02]
         dark:border-brand-700 dark:bg-gray-900 dark:hover:border-brand-500"

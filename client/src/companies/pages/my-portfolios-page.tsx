@@ -6,7 +6,7 @@ import { ModuleCard } from "../components/module-card";
 import { PortfolioCard } from "../components/portfolio-card";
 import { CreatePortfolioCard } from "../components/create-portfolio-card";
 import { usePortfolios } from "../hooks/use-portfolios";
-import { useMyCompanies } from "../hooks/use-my-companies";
+import { useOrgModule } from "../hooks/use-org-module";
 import { PORTFOLIO_MODULES } from "../constants/portfolio-modules";
 import { filterModules } from "../utils/module-access";
 import { usePortfoliosListTour } from "../hooks/use-portfolios-list-tour";
@@ -23,12 +23,10 @@ const CARD_GRADIENTS = [
 
 export const MyPortfoliosPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
   const portfolioId = searchParams.get("portfolio") ?? "";
+  const { orgId, orgName, orgs, buildOrgPath } = useOrgModule();
   const { portfolios, loading } = usePortfolios(orgId);
-  const { orgs } = useMyCompanies();
   const org = orgs.find((o) => o.id === orgId);
-  const orgName = org?.name ?? "Empresa";
   const isOrgVerified = org?.verificationStatus === "approved";
 
   const selectedPortfolio = portfolios.find((p) => p.id === portfolioId);
@@ -41,8 +39,8 @@ export const MyPortfoliosPage: React.FC = () => {
 
   const breadcrumbItems = [
     { label: "Mis Empresas", path: "/my-companies" },
-    ...(orgId ? [{ label: orgName, path: `/my-companies?org=${orgId}` }] : []),
-    ...(isPortfolioView ? [{ label: "Mis Portafolios", path: `/my-companies/portfolios?org=${orgId}` }] : []),
+    ...(orgId ? [{ label: orgName || "Empresa", path: buildOrgPath("/my-companies") }] : []),
+    ...(isPortfolioView ? [{ label: "Mis Portafolios", path: buildOrgPath("/my-companies/portfolios") }] : []),
   ];
 
   return (

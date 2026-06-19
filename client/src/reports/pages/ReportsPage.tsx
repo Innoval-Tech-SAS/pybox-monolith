@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router";
 import { Plus } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
-import { useMyCompanies } from "@/companies/hooks/use-my-companies";
+import { useOrgModule } from "@/companies/hooks/use-org-module";
 import { ReportsTable } from "@/reports/components/reports-table";
 import { ReportForm } from "@/reports/components/report-form/report-form";
 import { ReportExecuteModal } from "@/reports/components/report-execute-modal";
@@ -15,10 +14,8 @@ import type { ReportResponse } from "@/reports/types/report.types";
 type View = "list" | "create" | "edit";
 
 export const ReportsPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, orgName, buildOrgPath } = useOrgModule();
 
-  const { orgs } = useMyCompanies();
   const { reports, loading, refetch, deleteReport } = useReports(orgId);
 
   const [view, setView] = useState<View>("list");
@@ -28,12 +25,10 @@ export const ReportsPage: React.FC = () => {
   const [deleting, setDeleting] = useState<ReportResponse | null>(null);
   const [deletingInProgress, setDeletingInProgress] = useState(false);
 
-  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
-
   const breadcrumbs = [
     { label: "Mis Empresas", path: "/my-companies" },
-    { label: orgName, path: `/my-companies?org=${orgId}` },
-    { label: "Reportes", path: `/my-companies/reports?org=${orgId}` },
+    { label: orgName || "Empresa", path: buildOrgPath("/my-companies") },
+    { label: "Reportes", path: buildOrgPath("/my-companies/reports") },
   ];
 
   const handleFormSuccess = () => {

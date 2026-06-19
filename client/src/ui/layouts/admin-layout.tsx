@@ -1,32 +1,23 @@
-import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { ChatBubblesContainer } from "../../chat/components/chat-bubbles-container";
 import { useSidebar } from "../../hooks/use-sidebar";
 import { AsideMenu } from "../components/menu/aside-menu";
 import { NavbarMenu } from "../components/menu/navbar-menu";
 import { SidebarProvider } from "../contexts/providers/sidebar-provider";
+import { OrgModuleProvider } from "../../companies/contexts/providers/org-module-provider";
+import { SessionProvider } from "../../auth/contexts/providers/session-provider";
+import { OnboardingGuard } from "../../onboarding/onboarding-guard";
+import { MfaGuard } from "../../auth/components/mfa-guard";
 import { signInNavbarItems, otherSignInItems, supportNavItems } from "../../config/navbar/sign-in-navbar-items";
 import { Backdrop } from "../components/menu/backdrop";
-import { useAuth } from "../../hooks/use-auth";
+import { useSession } from "../../auth/hooks/use-session";
 import { Scope } from "../../types/auth/role";
-import { setSessionUser } from "../../auth/utils/auth-session-utils";
 import { useHasAnyPermission } from "../../auth/hooks/use-has-any-permission";
 
 const LayoutContent: React.FC = () => {
   const location = useLocation();
-  const [, forceUpdate] = useState(0);
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
-  const { getRoleScope, fetchMe } = useAuth();
-
-  useEffect(() => {
-    // Garantiza que la sesión esté actualizada al montar el layout por primera vez
-    fetchMe()
-      .then((me) => { setSessionUser(me); forceUpdate((n) => n + 1); })
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const { scope } = getRoleScope();
+  const { scope } = useSession();
   const hasAnyPermission = useHasAnyPermission;
 
   const isOrgOrGlobal = scope === Scope.ORG || scope === Scope.GLOBAL;
@@ -51,7 +42,13 @@ const LayoutContent: React.FC = () => {
       >
         <NavbarMenu />
         <div className="flex flex-col flex-1 overflow-hidden p-4 mx-auto w-full max-w-(--breakpoint-2xl) md:p-6">
-          <Outlet />
+          <OnboardingGuard>
+            <MfaGuard>
+              <OrgModuleProvider>
+                <Outlet />
+              </OrgModuleProvider>
+            </MfaGuard>
+          </OnboardingGuard>
         </div>
       </div>
       {location.pathname !== "/chats" && <ChatBubblesContainer />}
@@ -62,7 +59,9 @@ const LayoutContent: React.FC = () => {
 export const AdminLayout: React.FC = () => {
   return (
     <SidebarProvider>
-      <LayoutContent />
+      <SessionProvider>
+        <LayoutContent />
+      </SessionProvider>
     </SidebarProvider>
   );
 };

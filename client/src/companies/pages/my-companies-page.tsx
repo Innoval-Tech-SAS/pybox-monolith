@@ -7,16 +7,14 @@ import EmptyState from "@/ui/components/common/empty-state";
 import { OrgCard } from "../components/org-card";
 import { CreateOrgCard } from "../components/create-org-card";
 import { ModuleCard } from "../components/module-card";
-import { useMyCompanies } from "../hooks/use-my-companies";
+import { useOrgModule } from "../hooks/use-org-module";
 import { useOrgTour } from "../hooks/use-org-tour";
 import { ORG_MODULES } from "../constants/org-modules";
 import { filterModules } from "../utils/module-access";
 
 export const MyCompaniesPage: React.FC = () => {
-  const { orgs, loading } = useMyCompanies();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const selectedId = searchParams.get("org");
-  const selectedOrg = orgs.find((o) => o.id === selectedId);
+  const { orgId: selectedId, orgName, orgs, loading } = useOrgModule();
+  const [, setSearchParams] = useSearchParams();
   const isOrgView = !!selectedId;
 
   useOrgTour(isOrgView && !loading);
@@ -24,11 +22,11 @@ export const MyCompaniesPage: React.FC = () => {
   return (
     <>
       <PageMeta
-        title={selectedOrg?.name ?? "Mis Empresas"}
+        title={orgName || "Mis Empresas"}
         description="Gestión de empresas"
       />
       <ModuleBase
-        pageTitle={selectedOrg?.name ?? "Mis Empresas"}
+        pageTitle={orgName || "Mis Empresas"}
         breadcrumbItems={isOrgView ? [{ label: "Mis Empresas", path: "/my-companies" }] : []}
       >
         {loading ? (

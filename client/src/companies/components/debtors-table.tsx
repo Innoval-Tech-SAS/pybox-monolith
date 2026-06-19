@@ -5,10 +5,10 @@ import { Loader } from "@/ui/components/loader/loader";
 import { Badge } from "@/ui/components/badge";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/ui/components/table/table";
 import { DEBTOR_TYPE_COLOR } from "@/constants/companies/debtors-table";
+import { useOrgModule } from "../hooks/use-org-module";
 import type { DebtorsTableProps } from "@/types/props/debtors-table-props";
 
 export const DebtorsTable: React.FC<DebtorsTableProps> = ({
-  orgId,
   portfolioId,
   debtors,
   total,
@@ -20,9 +20,10 @@ export const DebtorsTable: React.FC<DebtorsTableProps> = ({
   onPageChange,
 }) => {
   const navigate = useNavigate();
+  const { buildOrgPath } = useOrgModule();
 
   const goToDebtor = (debtorId: string) => {
-    navigate(`/my-companies/portfolios/debtors/${debtorId}?org=${orgId}&portfolio=${portfolioId}`);
+    navigate(buildOrgPath(`/my-companies/portfolios/debtors/${debtorId}`, { portfolio: portfolioId }));
   };
 
   return (

@@ -133,10 +133,16 @@ class UserService:
                             verification_status=org.verification_status,
                             created_at=org.created_at,
                         )
+                effective_role = (
+                    UserRole.ADMIN
+                    if any(entry.role == UserRole.ADMIN for entry in orgs.values())
+                    else UserRole.USER_ORGANIZATION
+                )
                 session = UserSession(
                     user_id=user_id,
                     full_name=user.full_name,
                     email=user.email,
+                    role=effective_role,
                     document_type=doc_type,
                     document_number=doc_number,
                     scope=UserScope.ORGANIZATION,

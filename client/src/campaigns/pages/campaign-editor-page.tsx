@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
@@ -13,6 +13,7 @@ import { useTemplates } from "@/templates/hooks/use-templates";
 import { useChannels } from "../hooks/use-channels";
 import { useCampaignPeriodicities } from "../hooks/use-campaign-periodicities";
 import { useCampaignWeekdays } from "../hooks/use-campaign-weekdays";
+import { useOrgModule } from "@/companies/hooks/use-org-module";
 import type { Campaign } from "@/types/campaigns/campaign-types";
 import type {
   CampaignEditorFormState,
@@ -39,8 +40,7 @@ const EMPTY: CampaignEditorFormState = {
 
 export const CampaignEditorPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, buildOrgPath } = useOrgModule();
   const navigate = useNavigate();
   const { apiClient } = useApiClient();
   const isEditing = !!id;
@@ -58,7 +58,7 @@ export const CampaignEditorPage: React.FC = () => {
   const [loadingCampaign, setLoadingCampaign] = useState(isEditing);
   const [saving, setSaving] = useState(false);
 
-  const backPath = `/my-companies/campaigns?org=${orgId}`;
+  const backPath = buildOrgPath("/my-companies/campaigns");
 
   const selectedChannel = channels.find((c) => c.id === form.channelId);
   const channelName = selectedChannel?.name;

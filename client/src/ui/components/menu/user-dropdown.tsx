@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { setSessionUser } from "@/auth/utils/auth-session-utils";
+import { useSession } from "@/auth/hooks/use-session";
 import { resolveProfilePhotoUrl } from "@/profile/utils/profile-photo-url";
 import {
   USER_DROPDOWN_ICON_CLASS,
@@ -10,34 +10,12 @@ import { Dropdown } from "../dropdown/dropdown";
 import { DropdownItem } from "../dropdown/dropdown-item";
 
 export const UserDropdown: React.FC = () => {
-  const { user, logout, fetchMe } = useAuth();
+  const { logout } = useAuth();
+  const { user } = useSession();
   const [isOpen, setIsOpen] = useState(false);
-  const [fullName, setFullName] = useState<string | null>(
-    user?.fullName ?? null
-  );
-  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(
-    resolveProfilePhotoUrl(user?.profilePhotoUrl ?? user?.profilePhoto)
-  );
 
-  useEffect(() => {
-    setFullName(user?.fullName ?? null);
-    setProfilePhotoUrl(resolveProfilePhotoUrl(user?.profilePhotoUrl ?? user?.profilePhoto));
-  }, [user?.fullName, user?.profilePhotoUrl, user?.profilePhoto]);
-
-  useEffect(() => {
-    if (fullName && profilePhotoUrl) return;
-    fetchMe()
-      .then((data) => {
-        const name = data.fullName ?? null;
-        const photoUrl = resolveProfilePhotoUrl(data.profilePhotoUrl ?? data.profilePhoto);
-        if (name) {
-          setFullName(name);
-        }
-        setProfilePhotoUrl(photoUrl);
-        setSessionUser({ ...(user ?? {}), ...data });
-      })
-      .catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const fullName = user?.fullName ?? null;
+  const profilePhotoUrl = resolveProfilePhotoUrl(user?.profilePhotoUrl ?? user?.profilePhoto);
 
   const initials = fullName
     ? fullName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()

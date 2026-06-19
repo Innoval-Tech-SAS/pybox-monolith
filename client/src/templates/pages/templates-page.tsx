@@ -6,7 +6,7 @@ import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
 import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
 import { getSession } from "@/auth/utils/auth-session-utils";
-import { useMyCompanies } from "@/companies/hooks/use-my-companies";
+import { useOrgModule } from "@/companies/hooks/use-org-module";
 import { usePortfolios } from "@/companies/hooks/use-portfolios";
 import { useTemplates } from "@/templates/hooks/use-templates";
 import { useTemplateVariables } from "@/templates/hooks/use-template-variables";
@@ -17,13 +17,11 @@ import type { Template } from "@/types/templates/template-types";
 
 export const TemplatesPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
   const portfolioId = searchParams.get("portfolio") ?? "";
   const navigate = useNavigate();
+  const { orgId, orgName, buildOrgPath } = useOrgModule();
 
-  const { orgs } = useMyCompanies();
   const { portfolios } = usePortfolios(orgId);
-  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
   const portfolioName = portfolios.find((p) => p.id === portfolioId)?.name ?? "Portafolio";
 
   const { items, loading, saving, remove, preview, send } = useTemplates(orgId);
@@ -53,12 +51,12 @@ export const TemplatesPage: React.FC = () => {
         pageTitle="Plantillas"
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: orgName, path: `/my-companies?org=${orgId}` }] : []),
+          ...(orgId ? [{ label: orgName || "Empresa", path: buildOrgPath("/my-companies") }] : []),
           ...(portfolioId
             ? [
-                { label: "Mis Portafolios", path: `/my-companies/portfolios?org=${orgId}` },
-                { label: portfolioName, path: `/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}` },
-                { label: "Comunicaciones", path: `/my-companies/portfolios/communications?org=${orgId}&portfolio=${portfolioId}` },
+                { label: "Mis Portafolios", path: buildOrgPath("/my-companies/portfolios") },
+                { label: portfolioName, path: buildOrgPath("/my-companies/portfolios", { portfolio: portfolioId }) },
+                { label: "Comunicaciones", path: buildOrgPath("/my-companies/portfolios/communications", { portfolio: portfolioId }) },
               ]
             : []),
         ]}
@@ -70,7 +68,7 @@ export const TemplatesPage: React.FC = () => {
             {isAdmin && (
               <div className="flex justify-end">
                 <button
-                  onClick={() => navigate(`/my-companies/templates/new?org=${orgId}`)}
+                  onClick={() => navigate(buildOrgPath("/my-companies/templates/new"))}
                   className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
                 >
                   <Plus size={16} />
@@ -84,7 +82,7 @@ export const TemplatesPage: React.FC = () => {
               isAdmin={isAdmin}
               onPreview={setPreviewTarget}
               onSend={setSendTarget}
-              onEdit={(item) => navigate(`/my-companies/templates/${item.id}/edit?org=${orgId}`)}
+              onEdit={(item) => navigate(buildOrgPath(`/my-companies/templates/${item.id}/edit`))}
               onDelete={setDeleting}
             />
           </div>

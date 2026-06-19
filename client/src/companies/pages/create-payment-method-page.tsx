@@ -1,14 +1,14 @@
-import { useNavigate, useSearchParams } from "react-router";
+import { useNavigate } from "react-router";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { PaymentMethodForm } from "../components/payment-method-form";
+import { useOrgModule } from "../hooks/use-org-module";
 
 export const CreatePaymentMethodPage: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, buildOrgPath } = useOrgModule();
 
-  const backPath = `/my-companies/payment-methods?org=${orgId}`;
+  const backPath = buildOrgPath("/my-companies/payment-methods");
 
   return (
     <>

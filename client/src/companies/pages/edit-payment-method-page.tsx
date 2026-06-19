@@ -1,17 +1,17 @@
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { usePaymentMethod } from "../hooks/use-payment-method";
 import { PaymentMethodEditForm } from "../components/payment-method-edit-form";
+import { useOrgModule } from "../hooks/use-org-module";
 
 export const EditPaymentMethodPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, buildOrgPath } = useOrgModule();
   const { item, loading } = usePaymentMethod(id ?? "", orgId);
 
-  const backPath = `/my-companies/payment-methods?org=${orgId}`;
+  const backPath = buildOrgPath("/my-companies/payment-methods");
 
   if (loading) {
     return (

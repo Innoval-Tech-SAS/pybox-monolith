@@ -41,7 +41,8 @@ export const useAuth = () => {
       throw new Error("No se pudo leer la cuenta de Google seleccionada.");
     }
     await oauthRegister({ provider: "GOOGLE", token }, "/auth/oauth/login");
-    setSessionUser({ email: payload.email });
+    const me = await apiClient("/users/me", {}).catch(() => null);
+    setSessionUser(me ?? { email: payload.email });
     navigate("/home", { replace: true });
   };
 

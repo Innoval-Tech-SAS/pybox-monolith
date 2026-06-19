@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "react-router";
+import { useParams } from "react-router";
 import { RefreshCw } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
@@ -12,14 +12,14 @@ import { formatCop, formatPeriod, formatUsd } from "@/billing/utils/format-curre
 import type { AdminInvoice, Invoice, PaymentLinkData } from "@/types/billing/billing-types";
 import { useBillingActions } from "../hooks/use-billing-actions";
 import { useAdminInvoiceActions } from "@/billing/hooks/use-admin-invoice-actions";
+import { useOrgModule } from "../hooks/use-org-module";
 
 const PAYABLE_STATUSES = ["ISSUED", "PAYMENT_PENDING", "OVERDUE", "BLOCKED"];
 const TERMINAL_STATUSES = ["PAID", "CANCELLED"];
 
 export const BillingInvoiceDetailPage: React.FC = () => {
   const { invoiceId = "" } = useParams();
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, buildOrgPath } = useOrgModule();
   const isAdminMode = !orgId;
 
   const session = getSession();
@@ -94,8 +94,8 @@ export const BillingInvoiceDetailPage: React.FC = () => {
             ? [{ label: "Facturación", path: "/billing" }]
             : [
                 { label: "Mis Empresas", path: "/my-companies" },
-                { label: "Empresa", path: `/my-companies?org=${orgId}` },
-                { label: "Facturación", path: `/my-companies/billing?org=${orgId}` },
+                { label: "Empresa", path: buildOrgPath("/my-companies") },
+                { label: "Facturación", path: buildOrgPath("/my-companies/billing") },
               ]
         }
       >

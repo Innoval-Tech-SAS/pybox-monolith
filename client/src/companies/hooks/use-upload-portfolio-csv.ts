@@ -4,6 +4,7 @@ import { useToast } from "@/context/toast-context";
 import { useApiClient, API_URL } from "@/hooks/use-api-client";
 import type { AppNotification } from "@/types/notifications/notification";
 import type { CreatePortfolioResult } from "@/types/companies/company-types";
+import { useOrgModule } from "./use-org-module";
 
 export type CsvUploadMode = "append" | "update";
 
@@ -11,8 +12,8 @@ export const useUploadPortfolioCsv = (mode: CsvUploadMode) => {
   const { error: toastError } = useToast();
   const navigate = useNavigate();
   const { apiClient } = useApiClient();
+  const { orgId, buildOrgPath } = useOrgModule();
   const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
   const portfolioId = searchParams.get("portfolio") ?? "";
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -74,7 +75,7 @@ export const useUploadPortfolioCsv = (mode: CsvUploadMode) => {
         if (notif.category === "portfolio") {
           sessionStorage.removeItem(processingKey);
           setProcessing(false);
-          navigate(`/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}`);
+          navigate(buildOrgPath("/my-companies/portfolios", { portfolio: portfolioId }));
         }
       } catch {
         // malformed event
@@ -82,13 +83,13 @@ export const useUploadPortfolioCsv = (mode: CsvUploadMode) => {
     });
     es.onerror = () => es.close();
     return () => es.close();
-  }, [processing, portfolioId, orgId, processingKey, navigate]);
+  }, [processing, portfolioId, orgId, processingKey, navigate, buildOrgPath]);
 
   const handleDismiss = useCallback(() => {
     sessionStorage.removeItem(processingKey);
     setProcessing(false);
-    navigate(`/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}`);
-  }, [navigate, orgId, portfolioId, processingKey]);
+    navigate(buildOrgPath("/my-companies/portfolios", { portfolio: portfolioId }));
+  }, [navigate, orgId, portfolioId, buildOrgPath, processingKey]);
 
   return {
     orgId,

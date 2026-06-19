@@ -1,4 +1,4 @@
-import { useSearchParams, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
@@ -7,6 +7,7 @@ import { Alert } from "@/ui/components/alert/alert";
 import { InvoiceStatusBadge } from "@/billing/components/invoice-status-badge";
 import { formatCop, formatPeriod } from "@/billing/utils/format-currency";
 import { useBilling } from "../hooks/use-billing";
+import { useOrgModule } from "../hooks/use-org-module";
 
 const LOCK_ALERT_VARIANT: Record<string, "info" | "warning" | "error"> = {
   WARNING: "info",
@@ -15,8 +16,7 @@ const LOCK_ALERT_VARIANT: Record<string, "info" | "warning" | "error"> = {
 };
 
 export const BillingPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, buildOrgPath } = useOrgModule();
   const navigate = useNavigate();
 
   const { currentInvoice, invoices, status, loading } = useBilling(orgId);
@@ -28,7 +28,7 @@ export const BillingPage: React.FC = () => {
         pageTitle="Facturación"
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: "Empresa", path: `/my-companies?org=${orgId}` }] : []),
+          ...(orgId ? [{ label: "Empresa", path: buildOrgPath("/my-companies") }] : []),
         ]}
       >
         {loading ? (
@@ -66,7 +66,7 @@ export const BillingPage: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <InvoiceStatusBadge status={currentInvoice.status} />
                     <button
-                      onClick={() => navigate(`/my-companies/billing/${currentInvoice.id}?org=${orgId}`)}
+                      onClick={() => navigate(buildOrgPath(`/my-companies/billing/${currentInvoice.id}`))}
                       className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
                     >
                       Ver detalle
@@ -113,7 +113,7 @@ export const BillingPage: React.FC = () => {
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <button
-                            onClick={() => navigate(`/my-companies/billing/${inv.id}?org=${orgId}`)}
+                            onClick={() => navigate(buildOrgPath(`/my-companies/billing/${inv.id}`))}
                             className="text-sm font-medium text-brand-500 hover:text-brand-600"
                           >
                             Ver detalle

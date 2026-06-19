@@ -3,7 +3,7 @@ import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
 import { Badge } from "@/ui/components/badge";
-import { useMyCompanies } from "../hooks/use-my-companies";
+import { useOrgModule } from "../hooks/use-org-module";
 import { usePortfolios } from "../hooks/use-portfolios";
 import { useDebtorRelatedContacts, useDebtorCredits } from "../hooks/use-debtor-detail";
 import { DEBTOR_TYPE_COLOR } from "@/constants/companies/debtors-table";
@@ -126,8 +126,8 @@ const CodebtorCard: React.FC<{ codebtor: DebtorDetail }> = ({ codebtor }) => (
 export const DebtorDetailPage: React.FC = () => {
   const { debtorId } = useParams<{ debtorId: string }>();
   const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
   const portfolioId = searchParams.get("portfolio") ?? "";
+  const { orgId, orgName, buildOrgPath } = useOrgModule();
 
   const parsedDebtorId = Number(debtorId);
 
@@ -140,9 +140,7 @@ export const DebtorDetailPage: React.FC = () => {
     portfolioId,
   );
 
-  const { orgs } = useMyCompanies();
   const { portfolios } = usePortfolios(orgId);
-  const orgName = orgs.find((o) => o.id === orgId)?.name ?? "Empresa";
   const portfolioName = portfolios.find((p) => p.id === portfolioId)?.name ?? "Portafolio";
   const debtor = contacts?.debtor;
 
@@ -158,12 +156,12 @@ export const DebtorDetailPage: React.FC = () => {
         pageTitle={debtor?.fullName ?? "Detalle de cliente"}
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
-          ...(orgId ? [{ label: orgName, path: `/my-companies?org=${orgId}` }] : []),
-          { label: "Mis Portafolios", path: `/my-companies/portfolios?org=${orgId}` },
+          ...(orgId ? [{ label: orgName || "Empresa", path: buildOrgPath("/my-companies") }] : []),
+          { label: "Mis Portafolios", path: buildOrgPath("/my-companies/portfolios") },
           ...(portfolioId
-            ? [{ label: portfolioName, path: `/my-companies/portfolios?org=${orgId}&portfolio=${portfolioId}` }]
+            ? [{ label: portfolioName, path: buildOrgPath("/my-companies/portfolios", { portfolio: portfolioId }) }]
             : []),
-          { label: "Clientes", path: `/my-companies/portfolios/debtors?org=${orgId}&portfolio=${portfolioId}` },
+          { label: "Clientes", path: buildOrgPath("/my-companies/portfolios/debtors", { portfolio: portfolioId }) },
         ]}
       >
         {loading ? (

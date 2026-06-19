@@ -6,6 +6,7 @@ from core.config.logger import logger
 
 from fastapi import HTTPException, status
 
+from core.database.redis import redis_client
 from core.tools.file_tools import save_org_document_bytes
 from app_platform.countries.enums.country_enums import (
     Nationality,
@@ -28,6 +29,7 @@ from identity.users.models.role_assignment_model import RoleAssignmentModel
 from identity.users.models.user_model import UserModel
 from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
 from identity.users.repository.user_repository import UserRepository
+from identity.users.schemas.user_session_schema import session_key
 
 
 class OrganizationService:
@@ -104,6 +106,8 @@ class OrganizationService:
                     organization_id=org.id,
                 )
                 await self.role_assignment_repo.add(assignment)
+
+            await redis_client.delete(session_key(created_by_user_id))
 
         logger.info("[org] create | org_id=%s user_id=%s scope=%s", org.id, created_by_user_id, scope.value)
         return org
@@ -237,6 +241,8 @@ class OrganizationService:
                         organization_id=org.id,
                     )
                 )
+
+            await redis_client.delete(session_key(created_by_user_id))
 
         return org
 

@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useToast } from "@/context/toast-context";
 import { useApiClient, API_URL } from "@/hooks/use-api-client";
 import type { AppNotification } from "@/types/notifications/notification";
 import type { CreatePortfolioResult } from "@/types/companies/company-types";
+import { useOrgModule } from "./use-org-module";
 
 export const useCreatePortfolio = () => {
   const { error: toastError } = useToast();
   const navigate = useNavigate();
   const { apiClient } = useApiClient();
-  const [searchParams] = useSearchParams();
-  const orgId = searchParams.get("org") ?? "";
+  const { orgId, buildOrgPath } = useOrgModule();
 
   const [portfolioName, setPortfolioName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -75,7 +75,7 @@ export const useCreatePortfolio = () => {
         const notif: AppNotification = JSON.parse(e.data);
         if (notif.category === "portfolio") {
           sessionStorage.removeItem(processingKey);
-          navigate(`/my-companies/portfolios?org=${orgId}`);
+          navigate(buildOrgPath("/my-companies/portfolios"));
         }
       } catch {
         // malformed event
@@ -83,13 +83,13 @@ export const useCreatePortfolio = () => {
     });
     es.onerror = () => es.close();
     return () => es.close();
-  }, [showSuccessModal, orgId, processingKey, navigate]);
+  }, [showSuccessModal, orgId, processingKey, navigate, buildOrgPath]);
 
   const handleSuccessModalClose = useCallback(() => {
     sessionStorage.removeItem(processingKey);
     setShowSuccessModal(false);
-    navigate(`/my-companies/portfolios?org=${orgId}`);
-  }, [navigate, orgId, processingKey]);
+    navigate(buildOrgPath("/my-companies/portfolios"));
+  }, [navigate, orgId, buildOrgPath, processingKey]);
 
   return {
     showSuccessModal,
