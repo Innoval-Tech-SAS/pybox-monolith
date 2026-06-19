@@ -24,7 +24,7 @@ export const TemplatesPage: React.FC = () => {
   const { portfolios } = usePortfolios(orgId);
   const portfolioName = portfolios.find((p) => p.id === portfolioId)?.name ?? "Portafolio";
 
-  const { items, loading, saving, remove, preview, send } = useTemplates(orgId);
+  const { items, total, page, pages, loading, saving, remove, preview, send, goToPage } = useTemplates(orgId);
   const { variables: variableOptions } = useTemplateVariables(orgId);
 
   const user = getSession();
@@ -64,7 +64,7 @@ export const TemplatesPage: React.FC = () => {
         {loading ? (
           <div className="py-20"><Loader loaderText="Cargando plantillas..." /></div>
         ) : (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-1 min-h-0 flex-col gap-5">
             {isAdmin && (
               <div className="flex justify-end">
                 <button
@@ -80,10 +80,14 @@ export const TemplatesPage: React.FC = () => {
             <TemplatesTable
               items={items}
               isAdmin={isAdmin}
+              total={total}
+              page={page}
+              pages={pages}
               onPreview={setPreviewTarget}
               onSend={setSendTarget}
               onEdit={(item) => navigate(buildOrgPath(`/my-companies/templates/${item.id}/edit`))}
               onDelete={setDeleting}
+              onPageChange={goToPage}
             />
           </div>
         )}

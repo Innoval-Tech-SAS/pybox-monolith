@@ -8,5 +8,5 @@ export interface UsersDataTableProps {
   loading: boolean;
   orgId?: string;
   onToggleStatus: (userId: string, isActive: boolean) => void;
-  onDelete: (userId: string) => void;
+  onDelete: (user: UserSummary) => void;
 }

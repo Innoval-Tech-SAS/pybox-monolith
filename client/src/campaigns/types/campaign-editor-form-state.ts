@@ -16,4 +16,5 @@ export interface CampaignEditorFormState {
   scheduledAt: string;
   timeToSend: string;
   daysOfWeek: number[];
+  dayOfMonth: number | null;
 }

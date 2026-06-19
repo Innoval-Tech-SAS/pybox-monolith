@@ -42,6 +42,13 @@ export interface TemplateUpdatePayload {
   replyTo?: string | null;
 }
 
+export interface TemplateListResponse {
+  items: Template[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface TemplatePreviewRequest {
   sub: Record<string, string>;
 }

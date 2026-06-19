@@ -6,8 +6,12 @@ export interface CampaignsTableProps {
   channels: Channel[];
   isAdmin: boolean;
   saving: boolean;
+  total: number;
+  page: number;
+  pages: number;
   onActivate: (id: string) => void;
   onPause: (id: string) => void;
   onEdit: (item: Campaign) => void;
-  onDelete: (id: string) => void;
+  onDelete: (item: Campaign) => void;
+  onPageChange: (page: number) => void;
 }

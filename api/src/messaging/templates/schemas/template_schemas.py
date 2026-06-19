@@ -67,6 +67,13 @@ class TemplateResponse(BaseSchema):
     updated_at: datetime | None = Field(default=None, description="Fecha de última actualización")
 
 
+class TemplateListResponse(BaseSchema):
+    items: list[TemplateResponse] = Field(description="Plantillas de la página")
+    total: int = Field(description="Total de registros")
+    page: int = Field(description="Página actual")
+    page_size: int = Field(description="Tamaño de página")
+
+
 class TemplatePreviewRequest(BaseSchema):
     sub: dict[str, Any] = Field(default_factory=dict, description="Variables de sustitución")
 

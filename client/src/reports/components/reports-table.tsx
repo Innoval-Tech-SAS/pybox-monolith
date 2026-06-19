@@ -1,6 +1,7 @@
 import { Edit2, Play, Trash2, History } from "lucide-react";
 import { Loader } from "@/ui/components/loader/loader";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/ui/components/table/table";
+import { PaginationWithIcon } from "@/ui/components/table/pagination-with-icon";
 import type { ReportsTableProps, ActionBtnProps } from "@/reports/types/reports-table-props";
 import { ALL_TABLES } from "@/reports/constants/report.constants";
 
@@ -13,14 +14,18 @@ const getMainTableLabel = (reportConfig: Record<string, unknown>): string => {
 export const ReportsTable: React.FC<ReportsTableProps> = ({
   reports,
   loading,
+  total,
+  page,
+  pages,
   onEdit,
   onExecute,
   onHistory,
   onDelete,
+  onPageChange,
 }) => {
   if (loading) {
     return (
-      <div className="py-20">
+      <div className="flex flex-1 min-h-0 items-center justify-center">
         <Loader />
       </div>
     );
@@ -28,7 +33,7 @@ export const ReportsTable: React.FC<ReportsTableProps> = ({
 
   if (reports.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-20 text-center">
+      <div className="flex flex-1 min-h-0 flex-col items-center justify-center gap-3 text-center">
         <span className="text-4xl">📋</span>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           No hay reportes. Crea el primero.
@@ -38,10 +43,10 @@ export const ReportsTable: React.FC<ReportsTableProps> = ({
   }
 
   return (
-    <>
+    <div className="flex flex-1 min-h-0 flex-col">
       {/* Desktop */}
-      <div className="hidden overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 sm:block">
-        <div className="overflow-x-auto custom-scrollbar">
+      <div className="hidden flex-1 min-h-0 flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 sm:flex">
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-white/3">
@@ -87,7 +92,7 @@ export const ReportsTable: React.FC<ReportsTableProps> = ({
       </div>
 
       {/* Mobile */}
-      <div className="flex flex-col gap-3 sm:hidden">
+      <div className="flex flex-1 min-h-0 flex-col gap-3 overflow-y-auto sm:hidden">
         {reports.map((r) => (
           <div
             key={r.id}
@@ -115,7 +120,16 @@ export const ReportsTable: React.FC<ReportsTableProps> = ({
           </div>
         ))}
       </div>
-    </>
+
+      {pages > 1 && (
+        <div className="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Página {page} de {pages} · {total} reporte{total !== 1 ? "s" : ""}
+          </p>
+          <PaginationWithIcon key={page} totalPages={pages} initialPage={page} onPageChange={onPageChange} />
+        </div>
+      )}
+    </div>
   );
 };
 

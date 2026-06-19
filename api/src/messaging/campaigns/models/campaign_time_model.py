@@ -43,6 +43,10 @@ class CampaignTimeModel(AuditModel):
         ARRAY(INTEGER), nullable=True, name="dias_de_la_semana"
     )
 
+    day_of_month: Mapped[int | None] = mapped_column(
+        INTEGER, nullable=True, name="dia_del_mes"
+    )
+
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, name="esta_activo")
 
     is_immediate: Mapped[bool] = mapped_column(Boolean, default=False, name="es_inmediato")

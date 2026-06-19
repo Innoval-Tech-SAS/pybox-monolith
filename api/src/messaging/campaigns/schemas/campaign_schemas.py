@@ -28,8 +28,18 @@ class CampaignResponse(BaseSchema):
     days_of_week: list[int] | None = Field(
         default=None, description="Días de la semana para periodicidad weekly (0=domingo..6=sábado)"
     )
+    day_of_month: int | None = Field(
+        default=None, description="Día del mes (1-31) para periodicidad monthly"
+    )
     created_at: datetime = Field(description="Fecha de creación")
     updated_at: datetime | None = Field(default=None, description="Fecha de última actualización")
+
+
+class CampaignListResponse(BaseSchema):
+    items: list[CampaignResponse] = Field(description="Campañas de la página")
+    total: int = Field(description="Total de registros")
+    page: int = Field(description="Página actual")
+    page_size: int = Field(description="Tamaño de página")
 
 
 class CampaignCreateRequest(BaseSchema):
@@ -51,6 +61,9 @@ class CampaignCreateRequest(BaseSchema):
     days_of_week: list[int] | None = Field(
         default=None, description="Días de la semana para periodicidad weekly (0=domingo..6=sábado)"
     )
+    day_of_month: int | None = Field(
+        default=None, description="Día del mes (1-31) para periodicidad monthly"
+    )
 
 
 class CampaignUpdateRequest(BaseSchema):
@@ -71,4 +84,7 @@ class CampaignUpdateRequest(BaseSchema):
     is_immediate: bool | None = Field(default=None, description="Enviar inmediatamente")
     days_of_week: list[int] | None = Field(
         default=None, description="Días de la semana para periodicidad weekly (0=domingo..6=sábado)"
+    )
+    day_of_month: int | None = Field(
+        default=None, description="Día del mes (1-31) para periodicidad monthly"
     )

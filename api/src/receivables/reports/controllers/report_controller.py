@@ -13,6 +13,7 @@ from receivables.reports.schemas.report_schemas import (
     ReportExecuteRequest,
     ReportExecuteResponse,
     ReportExecutionResponse,
+    ReportListResponse,
     ReportResponse,
     ReportUpdateRequest,
 )
@@ -32,15 +33,22 @@ async def create_report(
     return ReportResponse.model_validate(report)
 
 
-@router.get("/", response_model=list[ReportResponse], summary="Listar reportes de la organización")
+@router.get("/", response_model=ReportListResponse, summary="Listar reportes de la organización")
 async def list_reports(
     session: CurrentSession,
     service: ReportServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
-) -> list[ReportResponse]:
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
+) -> ReportListResponse:
     require_admin_or_org(ORG_REPORTS, session, str(organization_id))
-    reports = await service.list_by_org(organization_id)
-    return [ReportResponse.model_validate(r) for r in reports]
+    reports, total = await service.list_by_org(organization_id, page, page_size)
+    return ReportListResponse(
+        items=[ReportResponse.model_validate(r) for r in reports],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get("/{report_id}", response_model=ReportResponse, summary="Obtener reporte por ID")

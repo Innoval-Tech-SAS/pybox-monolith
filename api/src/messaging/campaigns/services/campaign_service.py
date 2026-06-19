@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Sequence
 
 from fastapi import HTTPException, status
 
@@ -27,8 +26,10 @@ class CampaignService:
         self._ct_repo = ct_repo
         self._billing_status_service = billing_status_service
 
-    async def list_by_org(self, organization_id: uuid.UUID) -> Sequence[CampaignModel]:
-        return await self._repo.list_by_organization(organization_id)
+    async def list_by_org(
+        self, organization_id: uuid.UUID, page: int, page_size: int
+    ) -> tuple[list[CampaignModel], int]:
+        return await self._repo.list_by_organization(organization_id, page, page_size)
 
     async def get_by_id(self, campaign_id: uuid.UUID, organization_id: uuid.UUID) -> CampaignModel:
         campaign = await self._repo.get_by_id_and_org(campaign_id, organization_id)
@@ -40,8 +41,13 @@ class CampaignService:
         if days_of_week and INACTIVE_WEEKDAYS.intersection(days_of_week):
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "No se pueden programar campañas el domingo")
 
+    def _assert_valid_day_of_month(self, day_of_month: int | None) -> None:
+        if day_of_month is not None and not (1 <= day_of_month <= 31):
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "El día del mes debe estar entre 1 y 31")
+
     async def create(self, organization_id: uuid.UUID, data: CampaignCreateRequest) -> CampaignModel:
         self._assert_valid_days_of_week(data.days_of_week)
+        self._assert_valid_day_of_month(data.day_of_month)
         campaign = CampaignModel(
             organization_id=organization_id,
             name=data.name,
@@ -60,6 +66,7 @@ class CampaignService:
             time_to_send=data.time_to_send,
             is_immediate=data.is_immediate,
             days_of_week=data.days_of_week,
+            day_of_month=data.day_of_month,
         )
         return await self._repo.add(campaign)
 
@@ -71,6 +78,7 @@ class CampaignService:
     ) -> CampaignModel:
         campaign = await self.get_by_id(campaign_id, organization_id)
         self._assert_valid_days_of_week(data.days_of_week)
+        self._assert_valid_day_of_month(data.day_of_month)
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(campaign, key, value)
@@ -110,6 +118,7 @@ class CampaignService:
                 time_to_send=campaign.time_to_send,
                 timezone_iana=campaign.timezone,
                 days_of_week=campaign.days_of_week,
+                day_of_month=campaign.day_of_month,
                 from_dt=now,
             )
         else:
@@ -123,6 +132,7 @@ class CampaignService:
             existing_ct.is_immediate = campaign.is_immediate
             existing_ct.time_to_send = campaign.time_to_send
             existing_ct.days_of_week = campaign.days_of_week
+            existing_ct.day_of_month = campaign.day_of_month
             await self._ct_repo.update(existing_ct)
         else:
             ct = CampaignTimeModel(
@@ -134,6 +144,7 @@ class CampaignService:
                 is_immediate=campaign.is_immediate,
                 time_to_send=campaign.time_to_send,
                 days_of_week=campaign.days_of_week,
+                day_of_month=campaign.day_of_month,
             )
             await self._ct_repo.add(ct)
 

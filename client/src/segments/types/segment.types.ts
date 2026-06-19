@@ -96,6 +96,13 @@ export interface SegmentResponse {
   organizationId: string;
 }
 
+export interface SegmentListResponse {
+  items: SegmentResponse[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface SegmentExecuteRequest {
   mode: "preview" | "audit";
   limit?: number;

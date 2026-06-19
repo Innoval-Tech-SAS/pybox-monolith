@@ -1,7 +1,7 @@
 from core.config.api_router import APIRouter
 
 from app_platform.countries.schemas.countries_schemas import NationalityOption
-from app_platform.countries.enums.country_enums import DOCUMENTS_BY_NATIONALITY, NATIONALITY_NAMES, NATIONALITY_PHONE_PREFIX, Nationality
+from app_platform.countries.enums.country_enums import DOCUMENTS_BY_NATIONALITY, NATIONALITY_NAMES, NATIONALITY_PHONE_PREFIX, NATIONALITY_TIMEZONE, Nationality
 
 router = APIRouter(prefix="/countries", tags=["Países"])
 
@@ -20,6 +20,7 @@ async def get_countries() -> list[NationalityOption]:
             flag_url=f"https://flagcdn.com/{n.value.lower()}.svg",
             phone_prefix=NATIONALITY_PHONE_PREFIX[n],
             document_types=[d.value for d in DOCUMENTS_BY_NATIONALITY[n]],
+            timezone=NATIONALITY_TIMEZONE[n],
         )
         for n in Nationality
     ]

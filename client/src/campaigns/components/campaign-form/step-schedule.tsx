@@ -126,6 +126,36 @@ export const StepSchedule: React.FC<StepScheduleProps> = ({ form, recurringPerio
                 </div>
               </div>
             )}
+
+            {form.recurringPeriodicity === "monthly" && (
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                  Día del mes
+                </label>
+                <div className="grid grid-cols-7 gap-2 sm:max-w-md">
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
+                    const checked = form.dayOfMonth === day;
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => set("dayOfMonth")(day)}
+                        className={`h-9 w-9 rounded-lg text-xs font-medium transition ${
+                          checked
+                            ? "bg-brand-500 text-white"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
+                        }`}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                  En meses con menos días (ej. febrero), se envía el último día del mes.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </Card>

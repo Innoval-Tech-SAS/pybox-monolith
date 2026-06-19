@@ -272,9 +272,7 @@ export const UsersDataTable: React.FC<UsersDataTableProps> = ({
                         <IconBtn
                           title="Eliminar"
                           variant="error"
-                          onClick={() => {
-                            if (window.confirm("¿Eliminar este usuario?")) onDelete(user.id);
-                          }}
+                          onClick={() => onDelete(user)}
                         >
                           <TrashIcon />
                         </IconBtn>

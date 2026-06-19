@@ -39,7 +39,7 @@ export const VerticalStepIndicator: React.FC<VerticalStepIndicatorProps> = ({ st
             />
           )}
         </div>
-        <div className="lg:pb-7">
+        <div className="lg:pb-3">
           <p
             className={`text-sm font-semibold ${
               i <= current ? "text-gray-800 dark:text-white/90" : "text-gray-400 dark:text-gray-500"

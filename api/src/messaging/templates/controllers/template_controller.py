@@ -11,6 +11,7 @@ from messaging.templates.dependencies import TemplateServiceDep, TemplateVariabl
 from messaging.templates.enums.template_enums import TemplateChannel
 from messaging.templates.schemas.template_schemas import (
     TemplateCreateRequest,
+    TemplateListResponse,
     TemplatePreviewRequest,
     TemplatePreviewResponse,
     TemplateResponse,
@@ -21,16 +22,23 @@ from messaging.templates.schemas.template_schemas import (
 router = APIRouter(prefix="/templates", tags=["Plantillas"])
 
 
-@router.get("/", response_model=list[TemplateResponse], summary="Listar plantillas de la organización")
+@router.get("/", response_model=TemplateListResponse, summary="Listar plantillas de la organización")
 async def list_templates(
     session: CurrentSession,
     service: TemplateServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
     channel: Annotated[TemplateChannel | None, Query(alias="channel")] = None,
-) -> list[TemplateResponse]:
+) -> TemplateListResponse:
     require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
-    templates = await service.list_by_org(organization_id, channel)
-    return [TemplateResponse.model_validate(t) for t in templates]
+    templates, total = await service.list_by_org(organization_id, page, page_size, channel)
+    return TemplateListResponse(
+        items=[TemplateResponse.model_validate(t) for t in templates],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get(
@@ -45,6 +53,22 @@ async def list_template_variables(
 ) -> list[TemplateVariableOption]:
     require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
     return await service.list_available_variables()
+
+
+@router.get(
+    "/options",
+    response_model=list[TemplateResponse],
+    summary="Listar todas las plantillas de la organización sin paginar (uso en selects)",
+)
+async def list_template_options(
+    session: CurrentSession,
+    service: TemplateServiceDep,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+    channel: Annotated[TemplateChannel | None, Query(alias="channel")] = None,
+) -> list[TemplateResponse]:
+    require_admin_or_org(ORG_TEMPLATES, session, str(organization_id))
+    templates = await service.list_all_by_org(organization_id, channel)
+    return [TemplateResponse.model_validate(t) for t in templates]
 
 
 @router.get("/{template_id}", response_model=TemplateResponse, summary="Obtener plantilla por ID")

@@ -16,7 +16,7 @@ type View = "list" | "create" | "edit";
 export const ReportsPage: React.FC = () => {
   const { orgId, orgName, buildOrgPath } = useOrgModule();
 
-  const { reports, loading, refetch, deleteReport } = useReports(orgId);
+  const { reports, total, page, pages, loading, refetch, deleteReport, goToPage } = useReports(orgId);
 
   const [view, setView] = useState<View>("list");
   const [editing, setEditing] = useState<ReportResponse | undefined>();
@@ -60,10 +60,10 @@ export const ReportsPage: React.FC = () => {
       <PageMeta title="Reportes" description="Genera y consulta reportes de gestión" />
       <ModuleBase pageTitle="Reportes" breadcrumbItems={breadcrumbs}>
         {view === "list" ? (
-          <div className="space-y-4">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {reports.length} reporte{reports.length !== 1 ? "s" : ""}
+                {total} reporte{total !== 1 ? "s" : ""}
               </p>
               <button
                 type="button"
@@ -78,10 +78,14 @@ export const ReportsPage: React.FC = () => {
             <ReportsTable
               reports={reports}
               loading={loading}
+              total={total}
+              page={page}
+              pages={pages}
               onEdit={handleEdit}
               onExecute={(r) => setExecuting(r)}
               onHistory={(r) => setHistory(r)}
               onDelete={handleDelete}
+              onPageChange={goToPage}
             />
           </div>
         ) : (

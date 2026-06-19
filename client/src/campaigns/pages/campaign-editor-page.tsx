@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
 import { WizardForm } from "@/ui/components/wizard-form";
 import { useApiClient } from "@/hooks/use-api-client";
-import { useSegments } from "@/segments/hooks/use-segments";
-import { useTemplates } from "@/templates/hooks/use-templates";
+import { useCountries } from "@/hooks/use-countries";
+import { useSegmentOptions } from "@/segments/hooks/use-segment-options";
+import { useTemplateOptions } from "@/templates/hooks/use-template-options";
 import { useTemplateVariables } from "@/templates/hooks/use-template-variables";
 import { useChannels } from "../hooks/use-channels";
 import { useCampaignPeriodicities } from "../hooks/use-campaign-periodicities";
 import { useCampaignWeekdays } from "../hooks/use-campaign-weekdays";
 import { useOrgModule } from "@/companies/hooks/use-org-module";
+import { usePortfolios } from "@/companies/hooks/use-portfolios";
 import { CAMPAIGN_WIZARD_STEPS } from "../constants/campaign-wizard-options";
 import { StepDetails } from "../components/campaign-form/step-details";
 import { StepMessage } from "../components/campaign-form/step-message";
@@ -38,17 +40,26 @@ const EMPTY: CampaignEditorFormState = {
   scheduledAt: "",
   timeToSend: "",
   daysOfWeek: [],
+  dayOfMonth: null,
 };
 
 export const CampaignEditorPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
-  const { orgId, buildOrgPath } = useOrgModule();
+  const [searchParams] = useSearchParams();
+  const portfolioId = searchParams.get("portfolio") ?? "";
+  const { orgId, orgName, buildOrgPath } = useOrgModule();
   const navigate = useNavigate();
   const { apiClient } = useApiClient();
   const isEditing = !!id;
 
-  const { segments } = useSegments(orgId);
-  const { items: templates } = useTemplates(orgId);
+  const { portfolios } = usePortfolios(orgId);
+  const portfolio = portfolios.find((p) => p.id === portfolioId);
+  const portfolioName = portfolio?.name ?? "Portafolio";
+  const { countries } = useCountries();
+  const portfolioTimezone = countries.find((c) => c.code === portfolio?.country)?.timezone ?? "UTC";
+
+  const { segments } = useSegmentOptions(orgId);
+  const { templates } = useTemplateOptions(orgId);
   const { variables } = useTemplateVariables(orgId);
   const { channels } = useChannels();
   const { periodicities } = useCampaignPeriodicities(orgId);
@@ -61,7 +72,14 @@ export const CampaignEditorPage: React.FC = () => {
   const [loadingCampaign, setLoadingCampaign] = useState(isEditing);
   const [saving, setSaving] = useState(false);
 
-  const backPath = buildOrgPath("/my-companies/campaigns");
+  const backPath = buildOrgPath("/my-companies/campaigns", { portfolio: portfolioId });
+
+  // La campaña usa la zona horaria del país del portfolio donde se crea;
+  // no se le pide al usuario.
+  useEffect(() => {
+    if (!isEditing) setForm((prev) => ({ ...prev, timezone: portfolioTimezone }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing, portfolioTimezone]);
 
   const selectedChannel = channels.find((c) => c.id === form.channelId);
   const channelName = selectedChannel?.name;
@@ -128,6 +146,7 @@ export const CampaignEditorPage: React.FC = () => {
           scheduledAt: c.scheduledAt ? c.scheduledAt.slice(0, 16) : "",
           timeToSend: c.timeToSend ? c.timeToSend.slice(0, 5) : "",
           daysOfWeek: c.daysOfWeek ?? [],
+          dayOfMonth: c.dayOfMonth ?? null,
         });
       })
       .catch(() => navigate(backPath))
@@ -140,7 +159,7 @@ export const CampaignEditorPage: React.FC = () => {
       setForm((prev) => ({ ...prev, [key]: value }));
 
   const detailsValid = form.name.trim() !== "" && !!form.channelId;
-  const messageValid = !!selectedTemplate || form.message.trim() !== "";
+  const messageValid = !!selectedTemplate;
   const scheduleValid =
     form.frequency === "immediate"
       ? true
@@ -148,7 +167,8 @@ export const CampaignEditorPage: React.FC = () => {
         ? !!form.scheduledAt
         : !!form.recurringPeriodicity &&
           !!form.timeToSend &&
-          (form.recurringPeriodicity !== "weekly" || form.daysOfWeek.length > 0);
+          (form.recurringPeriodicity !== "weekly" || form.daysOfWeek.length > 0) &&
+          (form.recurringPeriodicity !== "monthly" || !!form.dayOfMonth);
 
   const canSubmit = detailsValid && messageValid && scheduleValid;
 
@@ -191,6 +211,8 @@ export const CampaignEditorPage: React.FC = () => {
         form.frequency === "periodic" && form.recurringPeriodicity === "weekly" && form.daysOfWeek.length > 0
           ? form.daysOfWeek
           : null,
+      dayOfMonth:
+        form.frequency === "periodic" && form.recurringPeriodicity === "monthly" ? form.dayOfMonth : null,
     };
 
     try {
@@ -230,6 +252,14 @@ export const CampaignEditorPage: React.FC = () => {
         pageTitle={pageTitle}
         breadcrumbItems={[
           { label: "Mis Empresas", path: "/my-companies" },
+          { label: orgName || "Empresa", path: buildOrgPath("/my-companies") },
+          ...(portfolioId
+            ? [
+                { label: "Mis Portafolios", path: buildOrgPath("/my-companies/portfolios") },
+                { label: portfolioName, path: buildOrgPath("/my-companies/portfolios", { portfolio: portfolioId }) },
+                { label: "Comunicaciones", path: buildOrgPath("/my-companies/portfolios/communications", { portfolio: portfolioId }) },
+              ]
+            : []),
           { label: "Campañas", path: backPath },
         ]}
       >

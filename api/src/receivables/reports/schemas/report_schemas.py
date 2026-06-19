@@ -51,6 +51,13 @@ class ReportResponse(BaseSchema):
     created_at: datetime = Field(description="Fecha de creación")
 
 
+class ReportListResponse(BaseSchema):
+    items: list[ReportResponse] = Field(description="Reportes de la página")
+    total: int = Field(description="Total de registros")
+    page: int = Field(description="Página actual")
+    page_size: int = Field(description="Tamaño de página")
+
+
 class ReportExecuteResponse(BaseSchema):
     success: bool = Field(description="Indica si la ejecución fue exitosa")
     rows: int = Field(description="Cantidad de filas retornadas")

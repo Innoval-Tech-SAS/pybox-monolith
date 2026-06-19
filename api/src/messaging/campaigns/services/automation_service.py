@@ -4,7 +4,6 @@ import asyncio
 import json
 import uuid
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -144,18 +143,12 @@ class AutomationService:
             return True
 
         try:
-            try:
-                campaign_tz = ZoneInfo(ct.timezone_iana)
-            except (ZoneInfoNotFoundError, KeyError):
-                campaign_tz = timezone.utc
-            day_in_campaign_tz = now.astimezone(campaign_tz).day
-
             next_dt = calculate_next_execution(
                 periodicity=periodicity.value,
                 time_to_send=campaign.time_to_send,
                 timezone_iana=ct.timezone_iana,
                 days_of_week=ct.days_of_week,
-                day_of_month=day_in_campaign_tz,
+                day_of_month=ct.day_of_month,
                 from_dt=now,
             )
             await self._ct_repo.reschedule(ct, next_dt)

@@ -96,6 +96,13 @@ export interface ReportResponse {
   organizationId: string;
 }
 
+export interface ReportListResponse {
+  items: ReportResponse[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface ReportExecuteRequest {
   mode: "preview" | "audit";
   limit?: number;

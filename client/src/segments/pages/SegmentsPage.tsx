@@ -21,7 +21,7 @@ export const SegmentsPage: React.FC = () => {
   const { orgId, orgName, buildOrgPath } = useOrgModule();
 
   const { portfolios } = usePortfolios(orgId);
-  const { segments, loading, refetch, deleteSegment } = useSegments(orgId);
+  const { segments, total, page, pages, loading, refetch, deleteSegment, goToPage } = useSegments(orgId);
 
   const [view, setView] = useState<View>("list");
   const [editing, setEditing] = useState<SegmentResponse | undefined>();
@@ -69,10 +69,10 @@ export const SegmentsPage: React.FC = () => {
       <PageMeta title="Segmentos" description="Listas dinámicas de deudores" />
       <ModuleBase pageTitle="Segmentos" breadcrumbItems={breadcrumbs}>
         {view === "list" ? (
-          <div className="space-y-4">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {segments.length} segmento{segments.length !== 1 ? "s" : ""}
+                {total} segmento{total !== 1 ? "s" : ""}
               </p>
               <button
                 type="button"
@@ -87,10 +87,14 @@ export const SegmentsPage: React.FC = () => {
             <SegmentsTable
               segments={segments}
               loading={loading}
+              total={total}
+              page={page}
+              pages={pages}
               onEdit={handleEdit}
               onExecute={(s) => setExecuting(s)}
               onHistory={(s) => setHistory(s)}
               onDelete={handleDelete}
+              onPageChange={goToPage}
             />
           </div>
         ) : (

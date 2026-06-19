@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/ui/components/table/table";
+import { PaginationWithIcon } from "@/ui/components/table/pagination-with-icon";
 import type { TemplateStatus } from "@/types/templates/template-types";
 import type { TemplatesTableProps } from "@/templates/types/templates-table-props";
 
@@ -24,21 +25,26 @@ const STATUS_COLORS: Record<TemplateStatus, string> = {
 export const TemplatesTable: React.FC<TemplatesTableProps> = ({
   items,
   isAdmin,
+  total,
+  page,
+  pages,
   onPreview,
   onSend,
   onEdit,
   onDelete,
+  onPageChange,
 }) => {
   if (items.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
-        No hay plantillas registradas.
-      </p>
+      <div className="flex flex-1 min-h-0 items-center justify-center">
+        <p className="text-sm text-gray-400 dark:text-gray-500">No hay plantillas registradas.</p>
+      </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
+    <div className="flex flex-1 min-h-0 flex-col">
+      <div className="flex-1 min-h-0 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-800">
       <Table>
         <TableHeader>
           <TableRow className="border-b border-gray-200 dark:border-gray-800">
@@ -98,6 +104,16 @@ export const TemplatesTable: React.FC<TemplatesTableProps> = ({
           ))}
         </TableBody>
       </Table>
+      </div>
+
+      {pages > 1 && (
+        <div className="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Página {page} de {pages} · {total} plantilla{total !== 1 ? "s" : ""}
+          </p>
+          <PaginationWithIcon key={page} totalPages={pages} initialPage={page} onPageChange={onPageChange} />
+        </div>
+      )}
     </div>
   );
 };

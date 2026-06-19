@@ -5,11 +5,13 @@ import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/ui/components/table/table";
+import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
 import { getSession } from "@/auth/utils/auth-session-utils";
 import { Role } from "@/types/auth/role";
 import { PAYMENT_METHOD_TYPE_LABELS } from "@/constants/payment-methods/payment-method-labels";
 import { usePaymentMethods } from "../hooks/use-payment-methods";
 import { useOrgModule } from "../hooks/use-org-module";
+import type { PaymentMethod } from "@/types/payment-methods/payment-method-types";
 
 export const PaymentMethodsPage: React.FC = () => {
   const { orgId, orgName, buildOrgPath } = useOrgModule();
@@ -20,11 +22,12 @@ export const PaymentMethodsPage: React.FC = () => {
   const user = getSession();
   const isAdmin = user?.scope === "GLOBAL" || user?.orgs?.[orgId]?.role === Role.ADMIN;
 
-  const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<PaymentMethod | null>(null);
 
-  const handleDelete = async (id: string) => {
-    await remove(id);
-    setConfirmId(null);
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    await remove(deleting.id);
+    setDeleting(null);
   };
 
   return (
@@ -103,41 +106,22 @@ export const PaymentMethodsPage: React.FC = () => {
                         </TableCell>
                         {isAdmin && (
                           <TableCell className="px-4 py-3">
-                            {confirmId === item.id ? (
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">¿Eliminar?</span>
-                                <button
-                                  onClick={() => handleDelete(item.id)}
-                                  disabled={saving}
-                                  className="rounded px-2 py-1 text-xs font-medium text-error-600 hover:bg-error-50 disabled:opacity-50 dark:text-error-400 dark:hover:bg-error-500/10"
-                                >
-                                  Sí
-                                </button>
-                                <button
-                                  onClick={() => setConfirmId(null)}
-                                  className="rounded px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-                                >
-                                  No
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() =>
-                                    navigate(buildOrgPath(`/my-companies/payment-methods/${item.id}/edit`))
-                                  }
-                                  className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-                                >
-                                  <Pencil size={14} />
-                                </button>
-                                <button
-                                  onClick={() => setConfirmId(item.id)}
-                                  className="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-500 dark:hover:bg-error-500/10 dark:hover:text-error-400"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            )}
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() =>
+                                  navigate(buildOrgPath(`/my-companies/payment-methods/${item.id}/edit`))
+                                }
+                                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                onClick={() => setDeleting(item)}
+                                className="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-500 dark:hover:bg-error-500/10 dark:hover:text-error-400"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </TableCell>
                         )}
                       </TableRow>
@@ -149,6 +133,15 @@ export const PaymentMethodsPage: React.FC = () => {
           </div>
         )}
       </ModuleBase>
+
+      <ConfirmModal
+        isOpen={!!deleting}
+        onClose={() => setDeleting(null)}
+        onConfirm={confirmDelete}
+        title="Eliminar método de pago"
+        message={`¿Seguro que deseas eliminar el método de pago "${deleting?.name}"? Esta acción no se puede deshacer.`}
+        loading={saving}
+      />
     </>
   );
 };

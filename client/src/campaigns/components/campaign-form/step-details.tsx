@@ -18,12 +18,16 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ form, channels, set })
       </div>
 
       <div className="sm:col-span-2">
-        <Input
-          label="Descripción"
+        <label htmlFor="cmp-description" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+          Descripción
+        </label>
+        <textarea
           id="cmp-description"
+          rows={3}
           value={form.description}
           onChange={(e) => set("description")(e.target.value)}
           placeholder="Una breve descripción"
+          className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
         />
       </div>
 
@@ -35,16 +39,6 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ form, channels, set })
           options={channels.map((c) => ({ value: c.id, label: c.label }))}
           value={form.channelId}
           onChange={(v) => set("channelId")(v)}
-        />
-      </div>
-
-      <div>
-        <Input
-          label="Zona horaria"
-          id="cmp-timezone"
-          value={form.timezone}
-          onChange={(e) => set("timezone")(e.target.value)}
-          placeholder="UTC"
         />
       </div>
     </div>

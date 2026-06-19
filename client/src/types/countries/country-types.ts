@@ -3,4 +3,5 @@ export interface NationalityOption {
   name: string;
   phonePrefix: string;
   documentTypes: string[];
+  timezone: string;
 }

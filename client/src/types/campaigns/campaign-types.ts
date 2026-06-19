@@ -28,6 +28,7 @@ export interface Campaign {
   timeToSend?: string | null;
   isImmediate: boolean;
   daysOfWeek?: number[] | null;
+  dayOfMonth?: number | null;
   createdAt: string;
   updatedAt?: string | null;
 }
@@ -47,6 +48,7 @@ export interface CampaignCreatePayload {
   timeToSend?: string | null;
   isImmediate: boolean;
   daysOfWeek?: number[] | null;
+  dayOfMonth?: number | null;
 }
 
 export interface CampaignUpdatePayload {
@@ -64,6 +66,14 @@ export interface CampaignUpdatePayload {
   timeToSend?: string | null;
   isImmediate?: boolean;
   daysOfWeek?: number[] | null;
+  dayOfMonth?: number | null;
+}
+
+export interface CampaignListResponse {
+  items: Campaign[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface CampaignStatusResponse {

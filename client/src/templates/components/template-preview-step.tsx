@@ -56,10 +56,10 @@ export const TemplatePreviewStep: React.FC<TemplatePreviewStepProps> = ({ channe
           />
         </div>
       ) : (
-        <div className="flex min-h-56 flex-1 items-start rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+        <div className="flex min-h-56 min-w-0 flex-1 items-start rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
           {renderedBody ? (
-            <div className="max-w-[85%] rounded-2xl rounded-bl-none bg-brand-500 p-4 text-white shadow-md">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{renderedBody}</p>
+            <div className="max-w-[85%] min-w-0 rounded-2xl rounded-bl-none bg-brand-500 p-4 text-white shadow-md">
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{renderedBody}</p>
             </div>
           ) : (
             <p className="m-auto text-sm text-gray-400">(sin contenido)</p>

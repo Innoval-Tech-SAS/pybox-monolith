@@ -85,3 +85,7 @@ class CampaignModel(AuditModel):
     days_of_week: Mapped[list[int] | None] = mapped_column(
         ARRAY(Integer), nullable=True, name="dias_semana"
     )
+
+    day_of_month: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, name="dia_del_mes"
+    )

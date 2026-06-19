@@ -32,13 +32,13 @@ export const StepMessage: React.FC<StepMessageProps> = ({
 
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-            Plantilla
+            Plantilla *
           </label>
           <Select
             options={compatibleTemplates.map((t) => ({ value: t.id, label: t.name }))}
             value={form.templateId}
             onChange={(v) => set("templateId")(v)}
-            placeholder="Ninguna (escribir mensaje manual)"
+            placeholder="Selecciona una plantilla"
             disabled={compatibleTemplates.length === 0}
           />
           {compatibleTemplates.length === 0 && (
@@ -73,7 +73,6 @@ export const StepMessage: React.FC<StepMessageProps> = ({
     <Card className="flex min-h-0 flex-1 flex-col">
       {selectedTemplate ? (
         <>
-          <CardTitle>Vista previa de la plantilla</CardTitle>
           <TemplatePreviewStep
             channel={selectedTemplate.channel}
             name={selectedTemplate.name}
@@ -84,15 +83,11 @@ export const StepMessage: React.FC<StepMessageProps> = ({
         </>
       ) : (
         <>
-          <CardTitle>Mensaje *</CardTitle>
-          <textarea
-            id="cmp-message"
-            rows={8}
-            value={form.message}
-            onChange={(e) => set("message")(e.target.value)}
-            placeholder="Contenido del mensaje. Usa {variable} para datos del destinatario."
-            className="w-full flex-1 rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-          />
+          <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-gray-200 p-8 dark:border-gray-700">
+            <p className="text-sm text-gray-400 dark:text-gray-500">
+              Selecciona una plantilla para ver la vista previa del mensaje.
+            </p>
+          </div>
         </>
       )}
     </Card>

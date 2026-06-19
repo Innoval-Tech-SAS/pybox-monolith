@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { ModuleBase } from "@/ui/components/common/module-base";
+import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
 import { UsersDataTable } from "../components/users-data-table";
 import { Dropdown, DropdownItem } from "@/ui/components/dropdown";
 import { useUsers } from "../hooks/use-users";
 import { useUpdateUser } from "../hooks/use-update-user";
 import { useDeleteUser } from "../hooks/use-delete-user";
 import { getSession } from "@/auth/utils/auth-session-utils";
+import type { UserSummary } from "@/types/users/user-types";
 
 type RoleOption = { label: string; role: string };
 
@@ -107,7 +109,9 @@ export const UsersPage: React.FC = () => {
   const orgId = searchParams.get("org") ?? undefined;
   const { users, setUsers, loading, refetch } = useUsers(orgId);
   const { updateUser } = useUpdateUser();
-  const { deleteUser } = useDeleteUser();
+  const { deleteUser, loading: deleting } = useDeleteUser();
+
+  const [userToDelete, setUserToDelete] = useState<UserSummary | null>(null);
 
   const handleToggleStatus = async (userId: string, isActive: boolean) => {
     setUsers((prev) =>
@@ -121,8 +125,10 @@ export const UsersPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (userId: string) => {
-    const ok = await deleteUser(userId);
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+    const ok = await deleteUser(userToDelete.id);
+    setUserToDelete(null);
     if (ok) refetch();
   };
 
@@ -139,7 +145,16 @@ export const UsersPage: React.FC = () => {
         loading={loading}
         orgId={orgId}
         onToggleStatus={handleToggleStatus}
-        onDelete={handleDelete}
+        onDelete={setUserToDelete}
+      />
+
+      <ConfirmModal
+        isOpen={!!userToDelete}
+        onClose={() => setUserToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Eliminar usuario"
+        message={`¿Seguro que deseas eliminar al usuario "${userToDelete?.fullName}"? Esta acción no se puede deshacer.`}
+        loading={deleting}
       />
     </ModuleBase>
   );

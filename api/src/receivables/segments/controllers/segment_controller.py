@@ -12,6 +12,7 @@ from receivables.segments.schemas.segment_schemas import (
     SegmentExecuteRequest,
     SegmentExecuteResponse,
     SegmentExecutionResponse,
+    SegmentListResponse,
     SegmentResponse,
     SegmentUpdateRequest,
 )
@@ -31,14 +32,36 @@ async def create_segment(
     return SegmentResponse.model_validate(segment)
 
 
-@router.get("/", response_model=list[SegmentResponse], summary="Listar segmentos de la organización")
+@router.get("/", response_model=SegmentListResponse, summary="Listar segmentos de la organización")
 async def list_segments(
+    session: CurrentSession,
+    service: SegmentServiceDep,
+    organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
+) -> SegmentListResponse:
+    require_org_access(session, str(organization_id))
+    segments, total = await service.list_by_org(organization_id, page, page_size)
+    return SegmentListResponse(
+        items=[SegmentResponse.model_validate(s) for s in segments],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get(
+    "/options",
+    response_model=list[SegmentResponse],
+    summary="Listar todos los segmentos de la organización sin paginar (uso en selects)",
+)
+async def list_segment_options(
     session: CurrentSession,
     service: SegmentServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> list[SegmentResponse]:
     require_org_access(session, str(organization_id))
-    segments = await service.list_by_org(organization_id)
+    segments = await service.list_all_by_org(organization_id)
     return [SegmentResponse.model_validate(s) for s in segments]
 
 

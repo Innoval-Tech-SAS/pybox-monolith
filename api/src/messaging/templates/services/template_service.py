@@ -1,5 +1,4 @@
 ﻿import uuid
-from typing import Sequence
 
 from fastapi import HTTPException, status
 
@@ -27,9 +26,18 @@ class TemplateService:
     async def list_by_org(
         self,
         organization_id: uuid.UUID,
+        page: int,
+        page_size: int,
         channel: TemplateChannel | None = None,
-    ) -> Sequence[TemplateModel]:
-        return await self._repo.list_by_organization(organization_id, channel)
+    ) -> tuple[list[TemplateModel], int]:
+        return await self._repo.list_by_organization(organization_id, page, page_size, channel)
+
+    async def list_all_by_org(
+        self,
+        organization_id: uuid.UUID,
+        channel: TemplateChannel | None = None,
+    ) -> list[TemplateModel]:
+        return await self._repo.list_all_by_organization(organization_id, channel)
 
     async def get_by_id(
         self, template_id: uuid.UUID, organization_id: uuid.UUID

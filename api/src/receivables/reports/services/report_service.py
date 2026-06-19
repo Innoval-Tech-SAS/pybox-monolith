@@ -38,8 +38,10 @@ class ReportService:
         )
         return await self._report_repo.add(report)
 
-    async def list_by_org(self, organization_id: uuid.UUID) -> Sequence[ReportModel]:
-        return await self._report_repo.get_by_organization_id(organization_id)
+    async def list_by_org(
+        self, organization_id: uuid.UUID, page: int, page_size: int
+    ) -> tuple[list[ReportModel], int]:
+        return await self._report_repo.get_by_organization_id(organization_id, page, page_size)
 
     async def get(self, report_id: uuid.UUID, organization_id: uuid.UUID) -> ReportModel:
         report = await self._report_repo.get_by_id(report_id)

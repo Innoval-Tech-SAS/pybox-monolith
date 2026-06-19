@@ -38,8 +38,13 @@ class SegmentService:
         )
         return await self._segment_repo.add(segment)
 
-    async def list_by_org(self, organization_id: uuid.UUID) -> Sequence[SegmentModel]:
-        return await self._segment_repo.get_by_organization(organization_id)
+    async def list_by_org(
+        self, organization_id: uuid.UUID, page: int, page_size: int
+    ) -> tuple[list[SegmentModel], int]:
+        return await self._segment_repo.get_by_organization(organization_id, page, page_size)
+
+    async def list_all_by_org(self, organization_id: uuid.UUID) -> list[SegmentModel]:
+        return await self._segment_repo.get_all_by_organization(organization_id)
 
     async def get(self, segment_id: uuid.UUID, organization_id: uuid.UUID) -> SegmentModel:
         segment = await self._segment_repo.get_by_id(segment_id)

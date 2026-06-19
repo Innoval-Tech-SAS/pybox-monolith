@@ -1,10 +1,14 @@
 export interface ReportsTableProps {
   reports: import("@/reports/types/report.types").ReportResponse[];
   loading: boolean;
+  total: number;
+  page: number;
+  pages: number;
   onEdit: (report: import("@/reports/types/report.types").ReportResponse) => void;
   onExecute: (report: import("@/reports/types/report.types").ReportResponse) => void;
   onHistory: (report: import("@/reports/types/report.types").ReportResponse) => void;
   onDelete: (report: import("@/reports/types/report.types").ReportResponse) => void;
+  onPageChange: (page: number) => void;
 }
 
 export interface ActionBtnProps {

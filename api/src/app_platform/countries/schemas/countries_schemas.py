@@ -9,3 +9,4 @@ class NationalityOption(BaseSchema):
     flag_url: str = Field(description="URL de la bandera del país")
     phone_prefix: str = Field(description="Prefijo telefónico internacional (+57, +52, etc.)")
     document_types: list[str] = Field(description="Tipos de documento válidos para este país")
+    timezone: str = Field(description="Zona horaria IANA del país (ej. America/Bogota)")

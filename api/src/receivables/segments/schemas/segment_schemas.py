@@ -51,6 +51,13 @@ class SegmentResponse(BaseSchema):
     created_at: datetime = Field(description="Fecha de creación")
 
 
+class SegmentListResponse(BaseSchema):
+    items: list[SegmentResponse] = Field(description="Segmentos de la página")
+    total: int = Field(description="Total de registros")
+    page: int = Field(description="Página actual")
+    page_size: int = Field(description="Tamaño de página")
+
+
 class SegmentExecuteResponse(BaseSchema):
     success: bool = Field(description="Indica si la ejecución fue exitosa")
     rows: int = Field(description="Cantidad de filas retornadas")

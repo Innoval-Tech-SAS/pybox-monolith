@@ -8,6 +8,7 @@ from messaging.campaigns.dependencies import CampaignServiceDep
 from messaging.campaigns.enums.campaign_enums import Periodicity
 from messaging.campaigns.schemas.campaign_schemas import (
     CampaignCreateRequest,
+    CampaignListResponse,
     CampaignResponse,
     CampaignUpdateRequest,
 )
@@ -38,15 +39,22 @@ async def list_weekdays(
     return [{"value": value, "label": label, "active": active} for value, label, active in WEEKDAYS]
 
 
-@router.get("/", response_model=list[CampaignResponse], summary="Listar campañas de la organización")
+@router.get("/", response_model=CampaignListResponse, summary="Listar campañas de la organización")
 async def list_campaigns(
     session: CurrentSession,
     service: CampaignServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
-) -> list[CampaignResponse]:
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
+) -> CampaignListResponse:
     require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
-    campaigns = await service.list_by_org(organization_id)
-    return [CampaignResponse.model_validate(c) for c in campaigns]
+    campaigns, total = await service.list_by_org(organization_id, page, page_size)
+    return CampaignListResponse(
+        items=[CampaignResponse.model_validate(c) for c in campaigns],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.get("/{campaign_id}", response_model=CampaignResponse, summary="Obtener campaña por ID")
