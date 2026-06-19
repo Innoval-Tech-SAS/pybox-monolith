@@ -5,6 +5,7 @@ export interface WizardStep {
 
 export interface WizardFormProps {
   steps: readonly WizardStep[];
+  orientation?: "horizontal" | "vertical";
   canAdvance: (step: number) => boolean;
   canSubmit: boolean;
   onSubmit: (e: React.FormEvent) => void;

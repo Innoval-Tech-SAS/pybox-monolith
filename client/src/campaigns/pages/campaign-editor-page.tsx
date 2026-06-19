@@ -3,17 +3,19 @@ import { useNavigate, useParams } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
-import { Card, CardTitle } from "@/ui/components/card";
-import { Input } from "@/ui/components/input";
-import { Select } from "@/ui/components/inputs/select";
-import { Switch } from "@/ui/components/switch";
+import { WizardForm } from "@/ui/components/wizard-form";
 import { useApiClient } from "@/hooks/use-api-client";
 import { useSegments } from "@/segments/hooks/use-segments";
 import { useTemplates } from "@/templates/hooks/use-templates";
+import { useTemplateVariables } from "@/templates/hooks/use-template-variables";
 import { useChannels } from "../hooks/use-channels";
 import { useCampaignPeriodicities } from "../hooks/use-campaign-periodicities";
 import { useCampaignWeekdays } from "../hooks/use-campaign-weekdays";
 import { useOrgModule } from "@/companies/hooks/use-org-module";
+import { CAMPAIGN_WIZARD_STEPS } from "../constants/campaign-wizard-options";
+import { StepDetails } from "../components/campaign-form/step-details";
+import { StepMessage } from "../components/campaign-form/step-message";
+import { StepSchedule } from "../components/campaign-form/step-schedule";
 import type { Campaign } from "@/types/campaigns/campaign-types";
 import type {
   CampaignEditorFormState,
@@ -47,6 +49,7 @@ export const CampaignEditorPage: React.FC = () => {
 
   const { segments } = useSegments(orgId);
   const { items: templates } = useTemplates(orgId);
+  const { variables } = useTemplateVariables(orgId);
   const { channels } = useChannels();
   const { periodicities } = useCampaignPeriodicities(orgId);
   const { weekdays } = useCampaignWeekdays(orgId);
@@ -66,6 +69,8 @@ export const CampaignEditorPage: React.FC = () => {
   // Plantillas: solo EMAIL/SMS existen hoy; WHATSAPP/CALL no tiene plantillas
   // compatibles todavía (se envía el mensaje libre).
   const compatibleTemplates = templates.filter((t) => t.channel === channelName);
+  const selectedTemplate = templates.find((t) => t.id === form.templateId) ?? null;
+  const showsSubject = channelName === "EMAIL";
 
   useEffect(() => {
     if (form.templateId && !compatibleTemplates.some((t) => t.id === form.templateId)) {
@@ -80,6 +85,20 @@ export const CampaignEditorPage: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channels]);
+
+  // El mensaje siempre refleja el contenido de la plantilla elegida: no se
+  // pide manualmente cuando hay una plantilla seleccionada.
+  useEffect(() => {
+    if (!form.templateId) return;
+    const tpl = templates.find((t) => t.id === form.templateId);
+    if (!tpl) return;
+    setForm((prev) => ({
+      ...prev,
+      message: tpl.body,
+      subject: prev.subject || (tpl.subject ?? ""),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.templateId, templates]);
 
   useEffect(() => {
     if (!isEditing || !orgId) return;
@@ -120,6 +139,25 @@ export const CampaignEditorPage: React.FC = () => {
     (value: CampaignEditorFormState[K]) =>
       setForm((prev) => ({ ...prev, [key]: value }));
 
+  const detailsValid = form.name.trim() !== "" && !!form.channelId;
+  const messageValid = !!selectedTemplate || form.message.trim() !== "";
+  const scheduleValid =
+    form.frequency === "immediate"
+      ? true
+      : form.frequency === "once"
+        ? !!form.scheduledAt
+        : !!form.recurringPeriodicity &&
+          !!form.timeToSend &&
+          (form.recurringPeriodicity !== "weekly" || form.daysOfWeek.length > 0);
+
+  const canSubmit = detailsValid && messageValid && scheduleValid;
+
+  const canAdvance = (step: number) => {
+    if (step === 0) return detailsValid;
+    if (step === 1) return messageValid;
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -131,7 +169,6 @@ export const CampaignEditorPage: React.FC = () => {
         : form.frequency === "once"
           ? "once"
           : form.recurringPeriodicity;
-    const showsSubject = channelName === "EMAIL";
 
     const payload = {
       name: form.name.trim(),
@@ -174,7 +211,6 @@ export const CampaignEditorPage: React.FC = () => {
     }
   };
 
-  const showsSubject = channelName === "EMAIL";
   const pageTitle = isEditing ? "Editar campaña" : "Nueva campaña";
 
   if (loadingCampaign) {
@@ -197,233 +233,43 @@ export const CampaignEditorPage: React.FC = () => {
           { label: "Campañas", path: backPath },
         ]}
       >
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <Card>
-            <CardTitle>Configuración</CardTitle>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="lg:col-span-2">
-                <Input
-                  label="Nombre *"
-                  id="cmp-name"
-                  value={form.name}
-                  onChange={(e) => set("name")(e.target.value)}
-                  placeholder="Ej: Recuperación preventiva"
-                />
-              </div>
+        <WizardForm
+          steps={CAMPAIGN_WIZARD_STEPS}
+          orientation="vertical"
+          canAdvance={canAdvance}
+          canSubmit={canSubmit}
+          onSubmit={handleSubmit}
+          loading={saving}
+          submitLabel={isEditing ? "Guardar cambios" : "Crear campaña"}
+          loadingLabel={isEditing ? "Guardando…" : "Creando…"}
+        >
+          {(step) => (
+            <>
+              {step === 0 && <StepDetails form={form} channels={channels} set={set} />}
 
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Canal
-                </label>
-                <Select
-                  options={channels.map((c) => ({ value: c.id, label: c.label }))}
-                  value={form.channelId}
-                  onChange={(v) => set("channelId")(v)}
+              {step === 1 && (
+                <StepMessage
+                  form={form}
+                  segments={segments}
+                  compatibleTemplates={compatibleTemplates}
+                  selectedTemplate={selectedTemplate}
+                  showsSubject={showsSubject}
+                  variables={variables}
+                  set={set}
                 />
-              </div>
-
-              <div className="sm:col-span-2 lg:col-span-3">
-                <Input
-                  label="Descripción"
-                  id="cmp-description"
-                  value={form.description}
-                  onChange={(e) => set("description")(e.target.value)}
-                  placeholder="Una breve descripción"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Segmento de destinatarios
-                </label>
-                <Select
-                  options={segments.map((s) => ({ value: String(s.id), label: s.name }))}
-                  value={form.segmentId}
-                  onChange={(v) => set("segmentId")(v)}
-                  placeholder="Selecciona un segmento"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Plantilla
-                </label>
-                <Select
-                  options={compatibleTemplates.map((t) => ({ value: t.id, label: t.name }))}
-                  value={form.templateId}
-                  onChange={(v) => set("templateId")(v)}
-                  placeholder="Ninguna (usar mensaje manual)"
-                  disabled={compatibleTemplates.length === 0}
-                />
-                {compatibleTemplates.length === 0 && (
-                  <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
-                    No hay plantillas para este canal.
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Input
-                  label="Zona horaria"
-                  id="cmp-timezone"
-                  value={form.timezone}
-                  onChange={(e) => set("timezone")(e.target.value)}
-                  placeholder="UTC"
-                />
-              </div>
-
-              {showsSubject && (
-                <div className="sm:col-span-2 lg:col-span-2">
-                  <Input
-                    label="Asunto"
-                    id="cmp-subject"
-                    value={form.subject}
-                    onChange={(e) => set("subject")(e.target.value)}
-                    placeholder="Ej: Tu factura {invoice} está lista"
-                  />
-                </div>
               )}
 
-              <div className="flex items-end pb-2.5">
-                <Switch
-                  checked={form.fallback}
-                  onChange={set("fallback")}
-                  label="Usar canal de respaldo si falla el envío"
+              {step === 2 && (
+                <StepSchedule
+                  form={form}
+                  recurringPeriodicities={recurringPeriodicities}
+                  weekdays={weekdays}
+                  set={set}
                 />
-              </div>
-
-              <div className="sm:col-span-2 lg:col-span-3">
-                <label htmlFor="cmp-message" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                  Mensaje *
-                </label>
-                <textarea
-                  id="cmp-message"
-                  rows={5}
-                  value={form.message}
-                  onChange={(e) => set("message")(e.target.value)}
-                  placeholder="Contenido del mensaje. Usa {variable} para datos del destinatario."
-                  className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
-                />
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <CardTitle>Programación</CardTitle>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-wrap gap-2">
-                {([
-                  { value: "immediate", label: "Envío inmediato" },
-                  { value: "once", label: "Envío único" },
-                  { value: "periodic", label: "Envío recurrente" },
-                ] as const).map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => set("frequency")(opt.value)}
-                    className={`rounded-lg px-4 py-2.5 text-sm font-medium ${
-                      form.frequency === opt.value
-                        ? "bg-brand-500 text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              {form.frequency === "once" && (
-                <div className="max-w-xs">
-                  <Input
-                    label="Fecha y hora de envío"
-                    id="cmp-scheduled-at"
-                    type="datetime-local"
-                    value={form.scheduledAt}
-                    onChange={(e) => set("scheduledAt")(e.target.value)}
-                  />
-                </div>
               )}
-
-              {form.frequency === "periodic" && (
-                <div className="flex flex-wrap gap-4">
-                  <div className="w-full max-w-xs">
-                    <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                      Tipo de recurrencia
-                    </label>
-                    <Select
-                      options={recurringPeriodicities.map((p) => ({ value: p.value, label: p.label }))}
-                      value={form.recurringPeriodicity}
-                      onChange={(v) => set("recurringPeriodicity")(v as RecurringPeriodicity)}
-                    />
-                  </div>
-                  <div className="w-full max-w-xs">
-                    <Input
-                      label="Hora de envío"
-                      id="cmp-time-to-send"
-                      type="time"
-                      value={form.timeToSend}
-                      onChange={(e) => set("timeToSend")(e.target.value)}
-                    />
-                  </div>
-
-                  {form.recurringPeriodicity === "weekly" && (
-                    <div className="w-full">
-                      <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                        Días de la semana
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {weekdays.map((day) => {
-                          const checked = form.daysOfWeek.includes(day.value);
-                          return (
-                            <button
-                              key={day.value}
-                              type="button"
-                              disabled={!day.active}
-                              title={day.active ? undefined : "No disponible"}
-                              onClick={() =>
-                                set("daysOfWeek")(
-                                  checked
-                                    ? form.daysOfWeek.filter((d) => d !== day.value)
-                                    : [...form.daysOfWeek, day.value].sort(),
-                                )
-                              }
-                              className={`h-9 w-12 rounded-lg text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40 ${
-                                checked
-                                  ? "bg-brand-500 text-white"
-                                  : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300"
-                              }`}
-                            >
-                              {day.label.slice(0, 3)}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </Card>
-
-          <div className="flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => navigate(backPath)}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={saving || !form.name.trim() || !form.message.trim()}
-              className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
-            >
-              {saving
-                ? isEditing ? "Guardando…" : "Creando…"
-                : isEditing ? "Guardar cambios" : "Crear campaña"}
-            </button>
-          </div>
-        </form>
+            </>
+          )}
+        </WizardForm>
       </ModuleBase>
     </>
   );
