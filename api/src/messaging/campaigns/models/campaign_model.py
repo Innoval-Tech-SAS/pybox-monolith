@@ -37,7 +37,9 @@ class CampaignModel(AuditModel):
 
     subject: Mapped[str | None] = mapped_column(String(255), nullable=True, name="asunto")
 
-    channel: Mapped[str] = mapped_column(String(25), nullable=False, default="auto", name="canal")
+    channel_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("canales.id_canal"), nullable=False, name="id_canal"
+    )
 
     description: Mapped[str | None] = mapped_column(
         String(255), nullable=True, name="descripcion_campania"

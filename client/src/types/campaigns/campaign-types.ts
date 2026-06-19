@@ -9,15 +9,13 @@ export type CampaignStatus =
 
 export type Periodicity = "once" | "immediate" | "daily" | "weekly" | "monthly";
 
-export type CampaignChannel = "SMS" | "EMAIL" | "WHATSAPP" | "CALL";
-
 export interface Campaign {
   id: string;
   organizationId: string;
   name: string;
   message: string;
   subject?: string | null;
-  channel: string;
+  channelId: string;
   description?: string | null;
   status: CampaignStatus;
   totalRecipients: number;
@@ -38,7 +36,7 @@ export interface CampaignCreatePayload {
   name: string;
   message: string;
   subject?: string | null;
-  channel: string;
+  channelId: string;
   description?: string | null;
   scheduledAt?: string | null;
   timezone: string;
@@ -55,7 +53,7 @@ export interface CampaignUpdatePayload {
   name?: string;
   message?: string;
   subject?: string | null;
-  channel?: string;
+  channelId?: string;
   description?: string | null;
   scheduledAt?: string | null;
   timezone?: string;

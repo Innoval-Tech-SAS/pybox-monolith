@@ -57,6 +57,7 @@ import receivables.debtors.models.debtor_model  # noqa: E402, F401
 import receivables.portfolios.models.portfolio_daily_counter_config_model  # noqa: E402, F401
 import receivables.portfolios.models.portfolio_model  # noqa: E402, F401
 import receivables.portfolios.models.portfolio_user_access_model  # noqa: E402, F401
+import receivables.reports.models.report_execution_model  # noqa: E402, F401
 import receivables.reports.models.report_model  # noqa: E402, F401
 import receivables.segments.models.segment_execution_model  # noqa: E402, F401
 import receivables.segments.models.segment_model  # noqa: E402, F401

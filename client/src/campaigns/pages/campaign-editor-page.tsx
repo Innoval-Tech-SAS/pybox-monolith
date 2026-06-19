@@ -23,7 +23,7 @@ import type {
 const EMPTY: CampaignEditorFormState = {
   name: "",
   description: "",
-  channel: "",
+  channelId: "",
   segmentId: "",
   templateId: "",
   message: "",
@@ -60,20 +60,23 @@ export const CampaignEditorPage: React.FC = () => {
 
   const backPath = `/my-companies/campaigns?org=${orgId}`;
 
+  const selectedChannel = channels.find((c) => c.id === form.channelId);
+  const channelName = selectedChannel?.name;
+
   // Plantillas: solo EMAIL/SMS existen hoy; WHATSAPP/CALL no tiene plantillas
   // compatibles todavía (se envía el mensaje libre).
-  const compatibleTemplates = templates.filter((t) => t.channel === form.channel);
+  const compatibleTemplates = templates.filter((t) => t.channel === channelName);
 
   useEffect(() => {
     if (form.templateId && !compatibleTemplates.some((t) => t.id === form.templateId)) {
       setForm((prev) => ({ ...prev, templateId: "" }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.channel, templates]);
+  }, [form.channelId, templates]);
 
   useEffect(() => {
-    if (!isEditing && !form.channel && channels.length > 0) {
-      setForm((prev) => ({ ...prev, channel: channels[0].name }));
+    if (!isEditing && !form.channelId && channels.length > 0) {
+      setForm((prev) => ({ ...prev, channelId: channels[0].id }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channels]);
@@ -94,7 +97,7 @@ export const CampaignEditorPage: React.FC = () => {
         setForm({
           name: c.name,
           description: c.description ?? "",
-          channel: c.channel,
+          channelId: c.channelId,
           segmentId: c.segmentId ?? "",
           templateId: c.templateId ?? "",
           message: c.message,
@@ -128,12 +131,12 @@ export const CampaignEditorPage: React.FC = () => {
         : form.frequency === "once"
           ? "once"
           : form.recurringPeriodicity;
-    const showsSubject = form.channel === "EMAIL";
+    const showsSubject = channelName === "EMAIL";
 
     const payload = {
       name: form.name.trim(),
       description: form.description.trim() || null,
-      channel: form.channel,
+      channelId: form.channelId,
       segmentId: form.segmentId || null,
       templateId: form.templateId || null,
       message: form.message,
@@ -171,7 +174,7 @@ export const CampaignEditorPage: React.FC = () => {
     }
   };
 
-  const showsSubject = form.channel === "EMAIL";
+  const showsSubject = channelName === "EMAIL";
   const pageTitle = isEditing ? "Editar campaña" : "Nueva campaña";
 
   if (loadingCampaign) {
@@ -213,9 +216,9 @@ export const CampaignEditorPage: React.FC = () => {
                   Canal
                 </label>
                 <Select
-                  options={channels.map((c) => ({ value: c.name, label: c.label }))}
-                  value={form.channel}
-                  onChange={(v) => set("channel")(v)}
+                  options={channels.map((c) => ({ value: c.id, label: c.label }))}
+                  value={form.channelId}
+                  onChange={(v) => set("channelId")(v)}
                 />
               </div>
 

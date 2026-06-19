@@ -21,7 +21,6 @@ from messaging.campaigns.repositories.campaign_time_repository import CampaignTi
 from messaging.campaigns.schemas.batch_schemas import BatchStats, SendInput
 from messaging.campaigns.services.batch_sender import BatchSender
 from messaging.campaigns.utils.calculate_next import calculate_next_execution
-from messaging.channels.enums.channel_enums import ChannelName
 from messaging.channels.repositories.channel_repository import ChannelRepository
 from messaging.contacts.repositories.contact_repository import ContactRepository
 from messaging.dispatcher import MessageDispatcher
@@ -198,18 +197,13 @@ class AutomationService:
 
         logger.info("[automation] campaña %s: %d filas del segmento", campaign.id, len(rows))
 
-        snapshot_channel_id: uuid.UUID | None = None
-        snapshot_currency: str | None = None
-        snapshot_unit_price = None
-        try:
-            channel_enum = ChannelName(campaign.channel.upper())
-        except ValueError:
-            channel_enum = None
-        channel_model = await self._channel_repo.get_by_name(channel_enum) if channel_enum else None
-        if channel_model:
-            snapshot_channel_id = channel_model.id if isinstance(channel_model.id, uuid.UUID) else None
-            snapshot_currency = channel_model.currency
-            snapshot_unit_price = channel_model.unit_price
+        channel_model = await self._channel_repo.get_by_id(campaign.channel_id)
+        if channel_model is None:
+            logger.error("[automation] campaña %s: canal %s no encontrado", campaign.id, campaign.channel_id)
+            return
+        snapshot_channel_id = channel_model.id
+        snapshot_currency = channel_model.currency
+        snapshot_unit_price = channel_model.unit_price
 
         send_inputs: list[SendInput] = []
         unique_recipients: set[str] = set()
@@ -248,7 +242,7 @@ class AutomationService:
             logger.warning("[automation] campaña %s: 0 destinatarios válidos", campaign.id)
             return
 
-        stats: BatchStats = await self._batch_sender.process_batch(send_inputs, campaign.channel)
+        stats: BatchStats = await self._batch_sender.process_batch(send_inputs, channel_model.name)
 
         await self._result_repo.create(
             campaign_id=campaign.id,

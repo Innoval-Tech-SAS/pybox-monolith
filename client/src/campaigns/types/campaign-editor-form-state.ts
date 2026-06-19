@@ -4,7 +4,7 @@ export type RecurringPeriodicity = "daily" | "weekly" | "monthly";
 export interface CampaignEditorFormState {
   name: string;
   description: string;
-  channel: string;
+  channelId: string;
   segmentId: string;
   templateId: string;
   message: string;

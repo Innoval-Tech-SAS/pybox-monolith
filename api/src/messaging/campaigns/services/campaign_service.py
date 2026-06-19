@@ -47,7 +47,7 @@ class CampaignService:
             name=data.name,
             message=data.message,
             subject=data.subject,
-            channel=data.channel,
+            channel_id=data.channel_id,
             description=data.description,
             status=data.status,
             total_recipients=data.total_recipients,

@@ -26,7 +26,7 @@ export const COMMUNICATIONS_MODULES: OrgModule[] = [
     description: "Lanza y gestiona campañas masivas de mensajería.",
     icon: <Send size={24} className="text-white" />,
     gradient: "from-indigo-500 to-blue-600",
-    path: null,
+    path: "/my-companies/campaigns",
     requiredPermission: "org.campaigns",
   },
 ];
