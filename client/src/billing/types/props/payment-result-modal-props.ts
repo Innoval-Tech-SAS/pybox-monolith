@@ -1,4 +1,4 @@
-import type { PaymentResultStatus } from "@/billing/constants/payment-result-config";
+import type { PaymentResultStatus } from "@/billing/types/payment-result-types";
 
 export interface PaymentResultModalProps {
   isOpen: boolean;

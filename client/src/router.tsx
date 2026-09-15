@@ -23,8 +23,8 @@ const OrgSettingsPage = lazy(() => import("./companies/pages/org-settings-page")
 const PaymentMethodsPage = lazy(() => import("./companies/pages/payment-methods-page").then((m) => ({ default: m.PaymentMethodsPage })));
 const CreatePaymentMethodPage = lazy(() => import("./companies/pages/create-payment-method-page").then((m) => ({ default: m.CreatePaymentMethodPage })));
 const EditPaymentMethodPage = lazy(() => import("./companies/pages/edit-payment-method-page").then((m) => ({ default: m.EditPaymentMethodPage })));
-const BillingPage = lazy(() => import("./companies/pages/billing-page").then((m) => ({ default: m.BillingPage })));
-const BillingInvoiceDetailPage = lazy(() => import("./companies/pages/billing-invoice-detail-page").then((m) => ({ default: m.BillingInvoiceDetailPage })));
+const BillingPage = lazy(() => import("./billing/pages/billing-page").then((m) => ({ default: m.BillingPage })));
+const BillingInvoiceDetailPage = lazy(() => import("./billing/pages/billing-invoice-detail-page").then((m) => ({ default: m.BillingInvoiceDetailPage })));
 const BillingAdminPage = lazy(() => import("./billing/pages/billing-admin-page").then((m) => ({ default: m.BillingAdminPage })));
 const HomePage = lazy(() => import("./home/pages/home-page").then((m) => ({ default: m.HomePage })));
 const MyCreditsPage = lazy(() => import("./credits/pages/my-credits-page").then((m) => ({ default: m.MyCreditsPage })));
