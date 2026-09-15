@@ -38,3 +38,18 @@ El aislamiento entre organizaciones no depende de un `organization_id` plano por
 ## Desarrollo local
 
 El entorno corre completo en contenedores Podman (`podman compose`) — el host no requiere Python ni Node/npm instalados.
+
+## Puertos
+
+Puertos publicados al host (`127.0.0.1`) por `docker-compose.yaml`:
+
+| Servicio | Puerto host | Puerto interno | Dominio (prod, vía nginx) |
+|---|---|---|---|
+| `api` | 3000 | 5000 | `dev.pybox.co/api/`, `api.pybox.co` |
+| `client` | 3001 | 80 | `dev.pybox.co` |
+| `landing` | 3002 | 80 | `pybox.co`, `www.pybox.co` |
+| `pgadmin` | 3003 | 80 | `db-manager.pybox.co` |
+| `storage` (SeaweedFS, S3 API) | 3004 | 8333 | sin dominio propio; interno vía `storage:8333` |
+| `database` (Postgres) | 5432 | 5432 | interno, sin dominio |
+
+`redis` y `pgbouncer` no publican puerto al host; se accede a ellos solo por red interna de Podman (`redis:6379`, `pgbouncer:5432`).
