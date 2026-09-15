@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "mercadopago": {
+      "type": "http",
+      "url": "https://mcp.mercadopago.com/mcp"
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
+    "Meta Social Technologies": {
+      "url": "https://mcp.facebook.com/devtools",
+      "type": "http"
+    }
+  }
+}
