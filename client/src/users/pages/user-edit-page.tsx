@@ -122,6 +122,7 @@ export const UserEditPage: React.FC = () => {
                 value={form.phoneNumber}
                 onChange={(e) => handleField("phoneNumber", e.target.value)}
                 placeholder="+57 300 000 0000"
+                autoComplete="tel"
               />
               <div>
                 {/* Select no expone `id`, por lo que no puede enlazarse vía htmlFor

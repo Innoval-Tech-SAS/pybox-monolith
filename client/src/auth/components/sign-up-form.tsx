@@ -240,6 +240,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
                     placeholder="300 000 0000"
                     value={manualForm.phoneNumber}
                     onChange={handleManualChange}
+                    autoComplete="tel"
                     required
                   />
                 </div>

@@ -96,6 +96,7 @@ export const CreateUserPage: React.FC = () => {
           <Label htmlFor="phoneNumber">Teléfono <span className="text-error-500">*</span></Label>
           <Input id="phoneNumber" type="text" placeholder="+57 300 000 0000" value={form.phoneNumber}
             onChange={(e) => setForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+            autoComplete="tel"
             required />
         </div>
         <div className="sm:col-span-2">
