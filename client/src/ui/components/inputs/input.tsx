@@ -13,6 +13,7 @@ export const Input: React.FC<InputProps> = ({
   min,
   max,
   step,
+  maxLength,
   disabled = false,
   required = false,
   success = false,
@@ -56,6 +57,7 @@ export const Input: React.FC<InputProps> = ({
         min={min}
         max={max}
         step={step}
+        maxLength={maxLength}
         disabled={disabled}
         required={required}
         autoComplete={autoComplete}
