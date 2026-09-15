@@ -1,9 +1,10 @@
-import { Bell, FolderPlus, UploadCloud } from "lucide-react";
+import { Bell, Download, FolderPlus, UploadCloud } from "lucide-react";
 import { Input } from "@/ui/components/inputs/input";
 import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
 import { Button } from "@/ui/components/button/button";
+import { API_URL } from "@/config/api";
 import { CSV_TYPES } from "../constants/portfolio-file-types";
 import { useCreatePortfolio } from "../hooks/use-create-portfolio";
 
@@ -49,6 +50,14 @@ export const CreatePortfolioForm: React.FC = () => {
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Sube un archivo CSV con los datos de los clientes del portafolio.
         </p>
+        <a
+          href={`${API_URL}/portfolios/upload-csv/template`}
+          download
+          className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-brand-500 hover:text-brand-600"
+        >
+          <Download size={14} />
+          Descargar plantilla CSV
+        </a>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
