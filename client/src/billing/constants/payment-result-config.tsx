@@ -1,20 +1,12 @@
 import { CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
 import type { PaymentAttemptStatus } from "@/types/billing/billing-types";
+import type { PaymentResultConfig, PaymentResultStatus } from "../types/payment-result-types";
 
 /**
  * Resultado visual de un pago, independiente del proveedor. Bold llega por redirect con
  * su `bold-tx-status` (APPROVED/DECLINED/PENDING) y Mercado Pago se resuelve desde el
  * estado del intento; ambos terminan en uno de estos estados para reusar la misma UI.
  */
-export type PaymentResultStatus = "APPROVED" | "DECLINED" | "PENDING" | "ERROR";
-
-export interface PaymentResultConfig {
-  icon: React.ReactNode;
-  title: string;
-  message: string;
-  color: string;
-}
-
 export const PAYMENT_RESULT_CONFIG: Record<PaymentResultStatus, PaymentResultConfig> = {
   APPROVED: {
     icon: <CheckCircle size={56} className="text-success-500" />,
@@ -49,10 +41,8 @@ export const PAYMENT_RESULT_DEFAULT: PaymentResultConfig = {
   color: "text-gray-600 dark:text-gray-400",
 };
 
-export const resolvePaymentResultConfig = (status: string): PaymentResultConfig =>
-  PAYMENT_RESULT_CONFIG[status as PaymentResultStatus] ?? PAYMENT_RESULT_DEFAULT;
-
-const ATTEMPT_STATUS_TO_RESULT: Record<PaymentAttemptStatus, PaymentResultStatus> = {
+/** Mapea el estado del intento de pago (Mercado Pago) al resultado visual. */
+export const ATTEMPT_STATUS_TO_RESULT: Record<PaymentAttemptStatus, PaymentResultStatus> = {
   PAGADO: "APPROVED",
   RECHAZADO: "DECLINED",
   EXPIRADO: "DECLINED",
@@ -60,8 +50,3 @@ const ATTEMPT_STATUS_TO_RESULT: Record<PaymentAttemptStatus, PaymentResultStatus
   PROCESANDO: "PENDING",
   ACTIVO: "PENDING",
 };
-
-/** Mapea el estado del intento de pago (Mercado Pago) al resultado visual. */
-export const attemptStatusToResult = (
-  status: PaymentAttemptStatus | undefined,
-): PaymentResultStatus => (status ? ATTEMPT_STATUS_TO_RESULT[status] : "PENDING");

@@ -1,4 +1,4 @@
-import { resolvePaymentResultConfig } from "@/billing/constants/payment-result-config";
+import { resolvePaymentResultConfig } from "@/billing/utils/payment-result";
 import type { PaymentResultViewProps } from "@/billing/types/props/payment-result-view-props";
 
 /**

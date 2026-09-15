@@ -3,11 +3,12 @@ import { useSearchParams, useNavigate } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { Button } from "@/ui/components/button/button";
 import { PaymentResultView } from "../components/payment-result-view";
+import { BOLD_REDIRECT_COUNTDOWN_SECONDS } from "../constants/bold-payment-result";
 
 export const BoldPaymentResultPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [countdown, setCountdown] = useState(8);
+  const [countdown, setCountdown] = useState(BOLD_REDIRECT_COUNTDOWN_SECONDS);
 
   const orderId = searchParams.get("bold-order-id") ?? "";
   const txStatus = searchParams.get("bold-tx-status") ?? "";
