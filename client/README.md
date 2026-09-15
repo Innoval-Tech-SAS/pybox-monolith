@@ -1,54 +1,71 @@
-# React + TypeScript + Vite
+# Pybox Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend admin de Pybox: React 19 + TypeScript + Vite + Tailwind CSS v4, basado en el template [TailAdmin](https://react-demo.tailadmin.com/). Gestionado con `pnpm`.
 
-Currently, two official plugins are available:
+Ver también el [README del proyecto](../README.md) y las reglas de arquitectura en [CLAUDE.md](../CLAUDE.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Stack
 
-## Expanding the ESLint configuration
+- **React 19 + TypeScript + Vite**, SWC para Fast Refresh.
+- **Tailwind CSS v4**.
+- **React Router 7** — rutas declaradas en `src/router.tsx` (`noAuthRouter` / `authRouter`), todas las páginas cargadas con `lazy()`.
+- **ApexCharts**, **FullCalendar**, **@xyflow/react** (diseñador de flujos IVR y builder de campañas), **react-email-editor** (editor de plantillas), **react-dnd**, **driver.js** (tours de producto).
+- **Vitest** + Testing Library para tests.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Estructura (`src/`)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+Organizado por dominio de negocio, no por tipo de archivo — cada carpeta refleja una sección del producto y agrupa sus propios `components/`, `hooks/`, `pages/`, `types/`, `utils/`:
+
+```
+auth/                 login, sign-up, forgot/change password
+onboarding/           alta de organización, primer acceso
+companies/             organizaciones, portafolios, deudores, pagos, historial, settings, comunicaciones
+credits/               créditos y estados de cuenta del propio usuario (autoservicio)
+billing/               facturación admin (pasarelas, facturas)
+users/                  gestión de usuarios y permisos
+campaigns/, templates/  campañas de mensajería y plantillas
+bulk-send/              envío masivo por CSV
+segments/, reports/     segmentación de cartera y reportería
+ivr/                    diseñador de flujos IVR y monitor/reportes de ejecución
+whatsapp/               chats en vivo de WhatsApp
+chat/                   chat interno (WebSocket)
+databases/              explorador/editor de esquemas de base de datos
+provider-credentials/   credenciales de proveedores por organización
+notifications/, support/, profile/, home/  notificaciones, tickets de soporte, perfil, dashboard
+ui/                     componentes, layouts, íconos y utilidades compartidas entre dominios
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`ui/` es la base común (layout con sidebar/header, componentes de TailAdmin adaptados, iconos, contexts globales) — cualquier UI nueva reutiliza lo que ya existe ahí antes de crear estilos desde cero.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Diseño visual
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+El lenguaje visual sigue **estrictamente** el de TailAdmin: composición, densidad, jerarquía tipográfica, iconografía y estilo de cards/charts/badges se reproducen, no se reinventan, aunque los datos y el dominio sean completamente distintos a los de la demo. Ver skills `tailadmin-react` y `tailadmin-design-language` en [CLAUDE.md](../CLAUDE.md) — obligatorias para cualquier cambio bajo `src/**`. (`frontend-design` es solo para `landing/`, no aplica aquí.)
+
+## Scripts
+
+```bash
+pnpm dev        # servidor de desarrollo (Vite, --host)
+pnpm build      # type-check (tsc -b) + build de producción
+pnpm lint       # eslint
+pnpm test       # vitest run
+pnpm test:watch # vitest en modo watch
 ```
+
+## Desarrollo local (Podman)
+
+El host no requiere Node/npm instalado — todo corre en contenedores. Uso restringido a `podman compose ...` (nunca `podman` a secas).
+
+```bash
+podman compose up -d --build client
+podman compose logs -f client
+```
+
+Tras reconstruir la imagen de `client`, reiniciar `template-nginx` (el DNS interno queda obsoleto y produce 502). En local, la app se sirve en `https://app.pybox.local` (vía `server/nginx`) o directo en `http://127.0.0.1:8083`.
+
+## Tests
+
+```bash
+podman compose exec client pnpm test
+```
+
+Los tests viven en `tests/`, reflejando la ruta de `src/` — nunca junto al código fuente.
