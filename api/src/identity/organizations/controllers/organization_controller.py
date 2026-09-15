@@ -20,7 +20,7 @@ from identity.organizations.schemas.organization_schemas import (
     OrganizationUpdate,
     RepresentativeMode,
 )
-from core.security.dependencies import CurrentSession
+from core.security.dependencies import CurrentSession, PendingMfaSession
 from core.security.policies.security_policies import require_global_admin, require_org_access
 from identity.users.dependencies import UserServiceDep
 from identity.users.enums.user_enums import UserScope
@@ -53,10 +53,10 @@ async def list_organizations(
     "/sectors",
     response_model=list[EntitySectorOption],
     summary="Listar sectores de entidad",
-    description="Catálogo código→etiqueta de sectores, para los selects del front. Debe quedar declarado antes de /{org_id} para que la ruta no se resuelva como un UUID.",
+    description="Catálogo código→etiqueta de sectores, para los selects del front. Debe quedar declarado antes de /{org_id} para que la ruta no se resuelva como un UUID. Usa PendingMfaSession porque el wizard de onboarding (paso 'organization', antes de POST /onboarding/organization) lo consume mientras el MFA todavía puede estar pendiente.",
 )
 async def list_sectors(
-    _: CurrentSession,
+    _: PendingMfaSession,
     service: OrgServiceDep,
 ) -> list[EntitySectorOption]:
     return service.list_sectors()
