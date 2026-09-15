@@ -99,6 +99,7 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({
                   placeholder="300 000 0000"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
+                  autoComplete="tel"
                   required
                 />
               </div>

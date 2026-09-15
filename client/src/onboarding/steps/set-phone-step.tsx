@@ -59,6 +59,7 @@ export const SetPhoneStep: React.FC<SetPhoneStepProps> = ({ onDone }) => {
               placeholder="300 000 0000"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
+              autoComplete="tel"
               required
             />
           </div>

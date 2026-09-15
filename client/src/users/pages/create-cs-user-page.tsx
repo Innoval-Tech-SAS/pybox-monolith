@@ -65,6 +65,7 @@ export const CreateCsUserPage: React.FC = () => {
               value={form.phoneNumber}
               onChange={(e) => handleChange("phoneNumber", e.target.value)}
               placeholder="+57 300 000 0000"
+              autoComplete="tel"
               required
             />
             <div className="sm:col-span-2">
