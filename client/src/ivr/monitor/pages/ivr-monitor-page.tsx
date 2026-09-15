@@ -3,18 +3,17 @@ import { useParams, useSearchParams } from "react-router";
 import { Activity } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
-import { useApiClient } from "@/hooks/use-api-client";
 import { useOrgModule } from "@/companies/hooks/use-org-module";
 import { useBreadcrumb } from "@/companies/hooks/use-breadcrumb";
 import { usePortfolios } from "@/companies/hooks/use-portfolios";
 import { useCallMonitor, type CallEntry } from "../hooks/use-call-monitor";
 import { useIvrExecution } from "../hooks/use-ivr-execution";
+import { useCampaignName } from "../hooks/use-campaign-name";
 import { CallStatsCards } from "../components/call-stats-cards";
 import { ActiveCallsTable } from "../components/active-calls-table";
 import { CallDetailModal } from "../components/call-detail-modal";
 import { ConnectionIndicator } from "../components/connection-indicator";
 import { CampaignControlBar } from "../components/campaign-control-bar";
-import type { Campaign } from "@/types/campaigns/campaign-types";
 
 /**
  * Monitor en vivo de una campaña IVR. Carga el estado con
@@ -27,24 +26,16 @@ export const IvrMonitorPage: React.FC = () => {
   const portfolioId = searchParams.get("portfolio") ?? "";
   const { orgId } = useOrgModule();
   const { build } = useBreadcrumb();
-  const { apiClient } = useApiClient();
 
   const { portfolios } = usePortfolios(orgId);
   const portfolioName = portfolios.find((p) => p.id === portfolioId)?.name ?? "Portafolio";
+  const campaignName = useCampaignName(campaignId, portfolioId);
 
-  const [campaignName, setCampaignName] = useState("");
   const [selected, setSelected] = useState<CallEntry | null>(null);
 
   const { calls, stats, campaignStatus, loading, connected, error, tick, refresh } =
     useCallMonitor(campaignId);
   const execution = useIvrExecution(campaignId);
-
-  useEffect(() => {
-    if (!campaignId || !portfolioId) return;
-    apiClient(`/campaigns/${campaignId}?portfolioId=${portfolioId}`, { method: "GET" })
-      .then((campaign: Campaign) => setCampaignName(campaign?.name ?? ""))
-      .catch(() => setCampaignName(""));
-  }, [apiClient, campaignId, portfolioId]);
 
   // El estado del bulk puede cambiar por fuera de esta pestaña (otro usuario,
   // o la consola de Helena); el stream ya lo refleja en `campaignStatus`, así

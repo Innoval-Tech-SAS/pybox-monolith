@@ -1,20 +1,18 @@
-import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { BarChart3, Download } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Button } from "@/ui/components/button/button";
 import { Loader } from "@/ui/components/loader/loader";
-import { useApiClient } from "@/hooks/use-api-client";
 import { useOrgModule } from "@/companies/hooks/use-org-module";
 import { useBreadcrumb } from "@/companies/hooks/use-breadcrumb";
 import { usePortfolios } from "@/companies/hooks/use-portfolios";
 import { useIvrReport } from "../hooks/use-ivr-report";
+import { useCampaignName } from "../hooks/use-campaign-name";
 import { OutcomeDistribution } from "../components/outcome-distribution";
 import { CallFunnel } from "../components/call-funnel";
 import { BreakdownCard } from "../components/breakdown-card";
 import { AMD_LABELS } from "../constants/call-status-labels";
-import type { Campaign } from "@/types/campaigns/campaign-types";
 
 const formatSeconds = (seconds: number): string => {
   if (!seconds) return "0s";
@@ -29,20 +27,12 @@ export const IvrReportPage: React.FC = () => {
   const portfolioId = searchParams.get("portfolio") ?? "";
   const { orgId } = useOrgModule();
   const { build } = useBreadcrumb();
-  const { apiClient } = useApiClient();
 
   const { portfolios } = usePortfolios(orgId);
   const portfolioName = portfolios.find((p) => p.id === portfolioId)?.name ?? "Portafolio";
+  const campaignName = useCampaignName(campaignId, portfolioId);
 
-  const [campaignName, setCampaignName] = useState("");
   const { report, loading, exporting, exportCsv } = useIvrReport(campaignId);
-
-  useEffect(() => {
-    if (!campaignId || !portfolioId) return;
-    apiClient(`/campaigns/${campaignId}?portfolioId=${portfolioId}`, { method: "GET" })
-      .then((campaign: Campaign) => setCampaignName(campaign?.name ?? ""))
-      .catch(() => setCampaignName(""));
-  }, [apiClient, campaignId, portfolioId]);
 
   return (
     <>
