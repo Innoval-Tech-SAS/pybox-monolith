@@ -36,6 +36,7 @@ export const WhatsAppChatDetailsPanel: React.FC<WhatsAppChatDetailsPanelProps> =
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
           <h3 className="text-base font-semibold text-gray-800 dark:text-white/90">Detalles</h3>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             title="Cerrar"

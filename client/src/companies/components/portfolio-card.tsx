@@ -14,6 +14,7 @@ export const PortfolioCard: React.FC<PortfolioCardProps> = ({ portfolio, onClick
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className="group relative w-full overflow-hidden rounded-2xl border border-gray-200 bg-white text-left transition-colors duration-200
         hover:border-brand-300
@@ -62,6 +63,7 @@ export const PortfolioCard: React.FC<PortfolioCardProps> = ({ portfolio, onClick
               </div>
             </div>
             <button
+              type="button"
               onClick={handleCopy}
               title="Copiar ID"
               className="mt-0.5 shrink-0 rounded-md p-1.5 text-white/70 transition hover:bg-white/20 hover:text-white"

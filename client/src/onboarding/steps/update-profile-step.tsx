@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Input } from "@/ui/components/inputs/input";
+import { Select } from "@/ui/components/inputs/select";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { useUpdateProfile } from "@/hooks/use-update-profile";
 import { useCountries } from "@/hooks/use-countries";
@@ -54,20 +55,15 @@ export const UpdateProfileStep: React.FC<StepDoneProps> = ({ onDone }) => {
           <label htmlFor="onboarding-document-type" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
             Tipo de documento <span className="text-error-500">*</span>
           </label>
-          <select
+          <Select
             id="onboarding-document-type"
             required
-            aria-required="true"
+            options={docTypes.map((dt) => ({ value: dt, label: dt }))}
             value={documentType}
-            onChange={(e) => setDocumentType(e.target.value)}
+            onChange={setDocumentType}
             disabled={!nationality}
-            className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-40"
-          >
-            <option value="">Selecciona el tipo</option>
-            {docTypes.map((dt) => (
-              <option key={dt} value={dt}>{dt}</option>
-            ))}
-          </select>
+            placeholder="Selecciona el tipo"
+          />
         </div>
 
         <div>

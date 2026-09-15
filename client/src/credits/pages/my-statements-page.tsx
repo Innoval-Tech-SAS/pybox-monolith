@@ -4,6 +4,7 @@ import { ModuleBase } from "@/ui/components/common/module-base";
 import { API_URL } from "@/hooks/use-api-client";
 import { useMyStatements } from "@/credits/hooks/use-my-statements";
 import { IdentityVerificationNotice } from "@/credits/components/identity-verification-notice";
+import { Button } from "@/ui/components/button/button";
 
 const dateLabel = (iso: string) =>
   new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso));
@@ -20,12 +21,9 @@ export const MyStatementsPage: React.FC = () => {
       {!loading && !identityPending && error && (
         <div className="flex flex-col items-start gap-3">
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          <button
-            onClick={refetch}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-          >
+          <Button type="button" size="sm" variant="outline" onClick={refetch}>
             Reintentar
-          </button>
+          </Button>
         </div>
       )}
 

@@ -5,6 +5,7 @@ import { CountrySelect } from "../../ui/components/inputs/country-select";
 import { Label } from "../../ui/components/inputs/label";
 import { SuccessModal } from "../../ui/components/modal/success-modal";
 import { ErrorModal } from "../../ui/components/modal/error-modal";
+import { Button } from "../../ui/components/button/button";
 import { useModal } from "../../hooks/use-modal";
 import { useOAuthRegister } from "../../hooks/use-oauth-register";
 import { useCountries } from "../../hooks/use-countries";
@@ -106,13 +107,9 @@ export const CompleteProfileForm: React.FC<CompleteProfileFormProps> = ({
 
           {error && <p className="text-sm text-error-500">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Registrando..." : "Completar registro"}
-          </button>
+          <Button type="submit" size="sm" className="w-full" loading={loading} loadingText="Registrando...">
+            Completar registro
+          </Button>
         </div>
       </form>
 

@@ -9,6 +9,7 @@ import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
 import { Alert } from "@/ui/components/alert/alert";
 import { CreditStatusBadge } from "@/credits/components/credit-status-badge";
+import { Button } from "@/ui/components/button/button";
 
 const RECEIPT_ACCEPT = ".jpg,.jpeg,.png,.pdf,.doc";
 
@@ -134,13 +135,9 @@ export const CreditDetailPage: React.FC = () => {
                 Ya enviaste una solicitud de baja para esta obligación; está en revisión por la entidad.
               </p>
             ) : !showForm ? (
-              <button
-                type="button"
-                onClick={() => setShowForm(true)}
-                className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
-              >
+              <Button type="button" size="sm" onClick={() => setShowForm(true)}>
                 Dar de baja la obligación
-              </button>
+              </Button>
             ) : (
               <div className="flex flex-col gap-3">
                 <label className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -154,22 +151,25 @@ export const CreditDetailPage: React.FC = () => {
                   className="text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 dark:text-gray-300 dark:file:bg-gray-800 dark:file:text-gray-300"
                 />
                 <div className="flex justify-end gap-2">
-                  <button
+                  <Button
                     type="button"
+                    size="sm"
+                    variant="outline"
                     onClick={() => { setShowForm(false); setFiles(null); }}
                     disabled={submitting}
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    size="sm"
                     onClick={submit}
-                    disabled={submitting || !files || files.length === 0}
-                    className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+                    disabled={!files || files.length === 0}
+                    loading={submitting}
+                    loadingText="Enviando..."
                   >
-                    {submitting ? "Enviando..." : "Enviar comprobante"}
-                  </button>
+                    Enviar comprobante
+                  </Button>
                 </div>
               </div>
             )}

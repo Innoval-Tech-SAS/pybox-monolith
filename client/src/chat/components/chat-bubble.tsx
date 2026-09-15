@@ -11,6 +11,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
   return (
     <div className="group relative flex flex-col items-center">
       <button
+        type="button"
         onClick={onExpand}
         aria-label={`Abrir chat con ${window.title}`}
         className="relative w-12 h-12 rounded-full shadow-md overflow-hidden border-2 border-white dark:border-boxdark focus:outline-none hover:scale-105 transition-transform"
@@ -36,6 +37,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
       )}
 
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           onClose();

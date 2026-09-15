@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ShieldCheck, ShieldAlert } from "lucide-react";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
+import { Button } from "@/ui/components/button/button";
 import { getSession } from "@/auth/utils/auth-session-utils";
 import { useSubmitIdentityDocument } from "@/hooks/use-submit-identity-document";
 import type { IdentityVerificationNoticeProps } from "@/credits/types/identity-verification-notice-props";
@@ -58,13 +59,9 @@ export const IdentityVerificationNotice: React.FC<IdentityVerificationNoticeProp
           allowed={["application/pdf", "image/png", "image/jpeg"]}
           hint="PDF, PNG o JPG · máx. 10 MB"
         />
-        <button
-          type="submit"
-          disabled={loading || !file}
-          className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
-        >
-          {loading ? "Enviando..." : "Enviar para validación"}
-        </button>
+        <Button type="submit" className="w-full" disabled={!file} loading={loading} loadingText="Enviando...">
+          Enviar para validación
+        </Button>
       </form>
     </div>
   );

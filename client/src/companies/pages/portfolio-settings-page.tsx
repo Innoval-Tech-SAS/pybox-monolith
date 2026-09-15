@@ -11,6 +11,9 @@ import { Input } from "@/ui/components/inputs/input";
 import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { Select } from "@/ui/components/inputs/select";
+import { Textarea } from "@/ui/components/inputs/textarea";
+import { Switch } from "@/ui/components/switch";
+import { Button } from "@/ui/components/button/button";
 import { InfoRow } from "@/companies/components/info-row";
 import { usePortfolioSettings } from "../hooks/use-portfolio-settings";
 import { useOrgModule } from "../hooks/use-org-module";
@@ -112,31 +115,22 @@ export const PortfolioSettingsPage: React.FC = () => {
                     </div>
                     <div className="sm:col-span-2">
                       <Label htmlFor="portfolio-settings-description">Descripción</Label>
-                      <textarea
+                      <Textarea
                         id="portfolio-settings-description"
                         value={form.description}
                         onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                         placeholder="Descripción opcional"
                         rows={3}
-                        className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                       />
                     </div>
                   </div>
                   <div className="flex items-center justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                    >
+                    <Button type="button" size="sm" variant="outline" onClick={() => setIsEditing(false)}>
                       Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
-                    >
-                      {saving ? "Guardando..." : "Guardar cambios"}
-                    </button>
+                    </Button>
+                    <Button type="submit" size="sm" loading={saving} loadingText="Guardando...">
+                      Guardar cambios
+                    </Button>
                   </div>
                 </form>
               ) : (
@@ -159,6 +153,7 @@ export const PortfolioSettingsPage: React.FC = () => {
                     </p>
                   </div>
                   <button
+                    type="button"
                     onClick={startEdit}
                     className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
                   >
@@ -182,7 +177,7 @@ export const PortfolioSettingsPage: React.FC = () => {
 
               <Card>
                 <CardTitle>Estado del portafolio</CardTitle>
-                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
                   <div>
                     <p className="text-sm font-medium text-gray-800 dark:text-white/90">Portafolio activo</p>
                     <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
@@ -191,15 +186,14 @@ export const PortfolioSettingsPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {saving && <Spinner size="xs" tone="brand" />}
-                    <input
-                      type="checkbox"
+                    <Switch
                       checked={portfolio?.isActive ?? false}
                       disabled={saving}
-                      onChange={(e) => toggleActive(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                      onChange={toggleActive}
+                      ariaLabel="Portafolio activo"
                     />
                   </div>
-                </label>
+                </div>
               </Card>
             </div>
 
@@ -211,7 +205,7 @@ export const PortfolioSettingsPage: React.FC = () => {
               </p>
 
               <div className="space-y-4">
-                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                <div className="flex items-center justify-between gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
                   <div>
                     <p className="text-sm font-medium text-gray-800 dark:text-white/90">Actualización activa</p>
                     {config?.lastSyncedAt && (
@@ -223,17 +217,14 @@ export const PortfolioSettingsPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {saving && <Spinner size="xs" tone="brand" />}
-                    <input
-                      type="checkbox"
+                    <Switch
                       checked={config?.enabled ?? false}
                       disabled={saving}
-                      onChange={(e) =>
-                        saveCounterConfig(e.target.checked, config?.reactivationMode ?? "FROM_TODAY")
-                      }
-                      className="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                      onChange={(v) => saveCounterConfig(v, config?.reactivationMode ?? "FROM_TODAY")}
+                      ariaLabel="Actualización activa"
                     />
                   </div>
-                </label>
+                </div>
 
                 <div>
                   <Label>
@@ -267,13 +258,15 @@ export const PortfolioSettingsPage: React.FC = () => {
                         disabled={saving}
                         className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
                       />
-                      <button
+                      <Button
+                        type="button"
+                        size="sm"
+                        loading={saving}
+                        loadingText="Sincronizando..."
                         onClick={() => syncCounterConfig(syncDate || undefined)}
-                        disabled={saving}
-                        className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
                       >
-                        {saving ? "Sincronizando..." : "Sincronizar"}
-                      </button>
+                        Sincronizar
+                      </Button>
                     </div>
                   </div>
                 )}

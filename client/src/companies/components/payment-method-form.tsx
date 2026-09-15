@@ -1,5 +1,6 @@
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { StepIndicator } from "@/ui/components/step-indicator";
+import { Button } from "@/ui/components/button/button";
 import { PAYMENT_METHOD_TYPE_LABELS } from "@/constants/payment-methods/payment-method-labels";
 import { usePaymentMethodForm, PAYMENT_METHOD_STEPS } from "@/companies/hooks/use-payment-method-form";
 import { usePaymentMethodTypes } from "@/companies/hooks/use-payment-method-types";
@@ -39,43 +40,30 @@ export const PaymentMethodForm: React.FC<PaymentMethodFormProps> = ({ orgId, onS
 
       <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
         {step > 0 ? (
-          <button
-            type="button"
-            onClick={prevStep}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-          >
-            <ChevronLeft size={16} />
+          <Button type="button" size="sm" variant="outline" startIcon={<ChevronLeft size={16} />} onClick={prevStep}>
             Anterior
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-          >
-            <ChevronLeft size={16} />
+          <Button type="button" size="sm" variant="outline" startIcon={<ChevronLeft size={16} />} onClick={onCancel}>
             Cancelar
-          </button>
+          </Button>
         )}
 
         {isLastStep ? (
-          <button
+          <Button
             type="submit"
-            disabled={saving || !form.name.trim() || !form.type}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
+            size="sm"
+            disabled={!form.name.trim() || !form.type}
+            loading={saving}
+            loadingText="Creando..."
+            startIcon={<Check size={16} />}
           >
-            <Check size={16} />
-            {saving ? "Creando..." : "Crear método"}
-          </button>
+            Crear método
+          </Button>
         ) : (
-          <button
-            type="submit"
-            disabled={!canNext}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
-          >
+          <Button type="submit" size="sm" disabled={!canNext} endIcon={<ChevronRight size={16} />}>
             Siguiente
-            <ChevronRight size={16} />
-          </button>
+          </Button>
         )}
       </div>
     </form>

@@ -9,6 +9,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/ui/compone
 import { PaginationWithIcon } from "@/ui/components/table/pagination-with-icon";
 import { Alert } from "@/ui/components/alert/alert";
 import { InvoiceStatusBadge } from "@/billing/components/invoice-status-badge";
+import { Button } from "@/ui/components/button/button";
 import { formatCop, formatPeriod } from "@/billing/utils/format-currency";
 import { useBilling } from "../hooks/use-billing";
 import { useOrgModule } from "../hooks/use-org-module";
@@ -69,12 +70,13 @@ export const BillingPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <InvoiceStatusBadge status={currentInvoice.status} />
-                    <button
+                    <Button
+                      type="button"
+                      size="sm"
                       onClick={() => navigate(buildOrgPath("/my-companies/billing", { invoice: currentInvoice.id }))}
-                      className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
                     >
                       Ver detalle
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -116,6 +118,7 @@ export const BillingPage: React.FC = () => {
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <button
+                              type="button"
                               onClick={() => navigate(buildOrgPath("/my-companies/billing", { invoice: inv.id }))}
                               className="text-sm font-medium text-brand-500 hover:text-brand-600"
                             >

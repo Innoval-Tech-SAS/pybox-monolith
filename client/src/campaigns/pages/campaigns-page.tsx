@@ -4,6 +4,7 @@ import { CalendarDays, List, Plus, Send } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
+import { Button } from "@/ui/components/button/button";
 import { getSession } from "@/auth/utils/auth-session-utils";
 import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
 import { useCampaigns } from "../hooks/use-campaigns";
@@ -80,6 +81,7 @@ export const CampaignsPage: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-white/5">
               <button
+                type="button"
                 onClick={() => setView("table")}
                 className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ${
                   view === "table"
@@ -91,6 +93,7 @@ export const CampaignsPage: React.FC = () => {
                 Tabla
               </button>
               <button
+                type="button"
                 onClick={() => setView("calendar")}
                 className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium ${
                   view === "calendar"
@@ -104,13 +107,14 @@ export const CampaignsPage: React.FC = () => {
             </div>
 
             {isAdmin && (
-              <button
+              <Button
+                type="button"
+                size="sm"
+                startIcon={<Plus size={16} />}
                 onClick={() => navigate(buildOrgPath("/my-companies/campaigns/new", { portfolio: portfolioId }))}
-                className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
               >
-                <Plus size={16} />
                 Nueva campaña
-              </button>
+              </Button>
             )}
           </div>
 

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Loader } from "@/ui/components/loader/loader";
 import { Link } from "react-router";
 import { FileText, Eye, CheckCircle, XCircle } from "lucide-react";
+import { Textarea } from "@/ui/components/inputs/textarea";
+import { Button } from "@/ui/components/button/button";
 import { resolveProfilePhotoUrl } from "@/profile/utils/profile-photo-url";
 import { useTicketOrgDocs } from "@/support/hooks/use-ticket-org-docs";
 import { useResolveTicket } from "@/support/hooks/use-resolve-ticket";
@@ -124,6 +126,7 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
           {!showNotesInput ? (
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={() => handleDecision(true)}
                 className="inline-flex items-center gap-2 rounded-lg bg-success-50 px-4 py-2 text-sm font-medium text-success-700 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20"
               >
@@ -131,6 +134,7 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
                 Aprobar
               </button>
               <button
+                type="button"
                 onClick={() => handleDecision(false)}
                 className="inline-flex items-center gap-2 rounded-lg bg-error-50 px-4 py-2 text-sm font-medium text-error-700 hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20"
               >
@@ -152,18 +156,19 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
                   {pendingApproval ? "Aprobar" : "Rechazar"}
                 </span>
               </p>
-              <textarea
+              <Textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Nota de cierre obligatoria..."
                 rows={3}
-                className="w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-brand-300 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:placeholder-gray-600 dark:focus:border-brand-500"
+                className="resize-none"
               />
               {!notes.trim() && (
                 <p className="mt-1 text-xs text-error-500">La nota de cierre es obligatoria.</p>
               )}
               <div className="mt-3 flex gap-2">
                 <button
+                  type="button"
                   onClick={handleConfirm}
                   disabled={resolving || !notes.trim()}
                   className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60 ${
@@ -174,12 +179,14 @@ export const TicketOrgDocsViewer: React.FC<TicketOrgDocsViewerProps> = ({
                 >
                   {resolving ? "Procesando..." : "Confirmar"}
                 </button>
-                <button
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
                   onClick={() => { setShowNotesInput(false); setPendingApproval(null); setNotes(""); }}
-                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/5"
                 >
                   Cancelar
-                </button>
+                </Button>
               </div>
             </div>
           )}

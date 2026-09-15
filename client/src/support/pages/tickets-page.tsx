@@ -5,6 +5,7 @@ import { Breadcrumb } from "@/ui/components/common/breadcrumb";
 import { Loader } from "@/ui/components/loader/loader";
 import EmptyState from "@/ui/components/common/empty-state";
 import { Select } from "@/ui/components/inputs/select";
+import { Button } from "@/ui/components/button/button";
 import { useTickets } from "@/support/hooks/use-tickets";
 import { useTicketMetrics } from "@/support/hooks/use-ticket-metrics";
 import { useTicketPermissions } from "@/support/hooks/use-ticket-permissions";
@@ -99,13 +100,9 @@ export const TicketsPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <Breadcrumb pageTitle="Tickets" />
         {canCreate && (
-          <button
-            onClick={() => navigate("/cs/tickets/new")}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
-          >
-            <Plus size={15} />
+          <Button type="button" size="sm" startIcon={<Plus size={15} />} onClick={() => navigate("/cs/tickets/new")}>
             Nuevo ticket
-          </button>
+          </Button>
         )}
       </div>
 
@@ -138,7 +135,7 @@ export const TicketsPage: React.FC = () => {
             className="w-full rounded-lg border border-gray-200 bg-white py-1.5 pl-8 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:placeholder:text-gray-600"
           />
           {searchInput && (
-            <button onClick={clearSearch} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button type="button" onClick={clearSearch} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
               <X size={13} />
             </button>
           )}
@@ -164,6 +161,7 @@ export const TicketsPage: React.FC = () => {
 
         {hasActiveFilters && (
           <button
+            type="button"
             onClick={() => { clearSearch(); setFilters({ includeResolved: true }); }}
             className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/5"
           >
@@ -174,6 +172,7 @@ export const TicketsPage: React.FC = () => {
         {/* View mode toggle */}
         <div className="ml-auto flex items-center rounded-lg border border-gray-200 dark:border-gray-700">
           <button
+            type="button"
             onClick={() => setViewMode("list")}
             title="Vista lista"
             className={`rounded-l-lg px-3 py-1.5 transition-colors ${viewMode === "list" ? "bg-brand-500 text-white" : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-white/5"}`}
@@ -181,6 +180,7 @@ export const TicketsPage: React.FC = () => {
             <LayoutList size={15} />
           </button>
           <button
+            type="button"
             onClick={() => setViewMode("kanban")}
             title="Vista kanban"
             className={`rounded-r-lg px-3 py-1.5 transition-colors ${viewMode === "kanban" ? "bg-brand-500 text-white" : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-white/5"}`}

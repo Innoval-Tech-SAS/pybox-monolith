@@ -78,6 +78,7 @@ export const ProfileMetaCard: React.FC<ProfileMetaCardProps> = ({ fullName, role
           </div>
 
           <button
+            type="button"
             onClick={openModal}
             className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3 dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
           >
@@ -107,10 +108,10 @@ export const ProfileMetaCard: React.FC<ProfileMetaCardProps> = ({ fullName, role
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button type="button" size="sm" variant="outline" onClick={closeModal}>
                 Cerrar
               </Button>
-              <Button size="sm" onClick={closeModal}>
+              <Button type="button" size="sm" onClick={closeModal}>
                 Guardar cambios
               </Button>
             </div>

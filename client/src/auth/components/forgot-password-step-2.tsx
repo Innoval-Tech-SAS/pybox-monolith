@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Label } from "@/ui/components/inputs/label";
+import { Button } from "@/ui/components/button/button";
 import { useForgotPassword } from "../hooks/use-forgot-password";
 import type { Channel } from "../hooks/use-forgot-password";
 import type { ForgotPasswordStep2Props } from "@/auth/types/props/forgot-password-step-2-props";
@@ -80,13 +81,9 @@ export const ForgotPasswordStep2: React.FC<ForgotPasswordStep2Props> = ({
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? "Enviando..." : "Enviar código"}
-        </button>
+        <Button type="submit" size="sm" className="w-full" loading={loading} loadingText="Enviando...">
+          Enviar código
+        </Button>
       </div>
     </form>
   );

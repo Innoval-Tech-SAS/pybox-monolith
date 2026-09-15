@@ -46,6 +46,7 @@ export const AddUserButton: React.FC<AddUserButtonProps> = ({ orgId }) => {
     <div className="relative">
       <button
         ref={triggerRef}
+        type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="true"
         aria-expanded={open}

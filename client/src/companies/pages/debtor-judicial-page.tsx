@@ -6,6 +6,7 @@ import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
 import { Badge } from "@/ui/components/badge";
+import { Button } from "@/ui/components/button/button";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/ui/components/table/table";
 import { useHasPermission } from "@/auth/hooks/use-has-permission";
 import { useOrgModule } from "../hooks/use-org-module";
@@ -98,14 +99,9 @@ export const DebtorJudicialPage: React.FC = () => {
                 ))}
               </div>
               {canManage && selectedCreditId && (
-                <button
-                  type="button"
-                  onClick={() => setShowForm(true)}
-                  className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
-                >
-                  <Plus size={16} />
+                <Button type="button" size="sm" startIcon={<Plus size={16} />} onClick={() => setShowForm(true)}>
                   Nueva notificación
-                </button>
+                </Button>
               )}
             </div>
 

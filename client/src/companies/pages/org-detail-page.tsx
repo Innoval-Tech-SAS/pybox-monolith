@@ -28,6 +28,7 @@ export const OrgDetailPage: React.FC = () => {
         ) : (
           <div className="flex flex-col gap-6">
             <button
+              type="button"
               onClick={() => navigate("/my-companies")}
               className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 w-fit"
             >

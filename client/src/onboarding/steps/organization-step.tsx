@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { CheckCircle, User, UserPlus } from "lucide-react";
 import { Input } from "@/ui/components/inputs/input";
 import { PasswordInput } from "@/ui/components/inputs/password-input";
+import { Select } from "@/ui/components/inputs/select";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { WizardForm } from "@/ui/components/wizard-form";
+import { Button } from "@/ui/components/button/button";
 import { useOrganizationOnboarding } from "@/hooks/use-organization-onboarding";
 import { useCountries } from "@/hooks/use-countries";
 import { useEntitySectors } from "@/companies/hooks/use-entity-sectors";
@@ -96,12 +98,9 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
             Te notificaremos cuando sea aprobada.
           </p>
         </div>
-        <button
-          onClick={onDone}
-          className="rounded-lg bg-brand-500 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600"
-        >
+        <Button type="button" onClick={onDone}>
           Entendido
-        </button>
+        </Button>
       </div>
     );
   }
@@ -143,22 +142,15 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
                   <label htmlFor="org-sector" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Sector <span className="text-error-500">*</span>
                   </label>
-                  <select
+                  <Select
                     id="org-sector"
+                    options={sectors}
                     value={sector}
-                    onChange={(e) => setSector(e.target.value)}
+                    onChange={setSector}
                     disabled={loadingSectors}
                     required
-                    aria-required="true"
-                    className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-40"
-                  >
-                    <option value="">
-                      {loadingSectors ? "Cargando sectores..." : "Selecciona el sector"}
-                    </option>
-                    {sectors.map((s) => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
-                    ))}
-                  </select>
+                    placeholder={loadingSectors ? "Cargando sectores..." : "Selecciona el sector"}
+                  />
                 </div>
                 <div>
                   {/* CountrySelect no expone `id`, por lo que no puede enlazarse vía htmlFor
@@ -257,20 +249,15 @@ export const OrganizationStep: React.FC<StepDoneProps> = ({ onDone }) => {
                         <label htmlFor="rep-doc-type" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                           Tipo de documento <span className="text-error-500">*</span>
                         </label>
-                        <select
+                        <Select
                           id="rep-doc-type"
+                          options={repDocTypes.map((dt) => ({ value: dt, label: docTypeLabels[dt] ?? dt }))}
                           value={repDocType}
-                          onChange={(e) => setRepDocType(e.target.value)}
+                          onChange={setRepDocType}
                           disabled={!repDocTypes.length}
                           required
-                          aria-required="true"
-                          className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 disabled:opacity-40"
-                        >
-                          <option value="">Selecciona el tipo</option>
-                          {repDocTypes.map((dt) => (
-                            <option key={dt} value={dt}>{docTypeLabels[dt] ?? dt}</option>
-                          ))}
-                        </select>
+                          placeholder="Selecciona el tipo"
+                        />
                       </div>
                       <div>
                         <label htmlFor="rep-doc-number" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">

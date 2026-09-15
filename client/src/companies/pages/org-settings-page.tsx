@@ -8,6 +8,8 @@ import { Input } from "@/ui/components/inputs/input";
 import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { Select } from "@/ui/components/inputs/select";
+import { Textarea } from "@/ui/components/inputs/textarea";
+import { Button } from "@/ui/components/button/button";
 import { InfoRow } from "@/companies/components/info-row";
 import { DocFileRow } from "@/companies/components/doc-file-row";
 import { LogoUploadCard } from "@/companies/components/logo-upload-card";
@@ -143,13 +145,12 @@ export const OrgSettingsPage: React.FC = () => {
                     </div>
                     <div className="sm:col-span-2">
                       <Label htmlFor="org-settings-description">Descripción</Label>
-                      <textarea
+                      <Textarea
                         id="org-settings-description"
                         value={form.description}
                         onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                         placeholder="Descripción opcional"
                         rows={3}
-                        className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
                       />
                     </div>
                   </div>
@@ -192,20 +193,12 @@ export const OrgSettingsPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(false)}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                    >
+                    <Button type="button" size="sm" variant="outline" onClick={() => setIsEditing(false)}>
                       Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
-                    >
-                      {saving ? "Guardando..." : "Guardar cambios"}
-                    </button>
+                    </Button>
+                    <Button type="submit" size="sm" loading={saving} loadingText="Guardando...">
+                      Guardar cambios
+                    </Button>
                   </div>
                 </form>
               ) : (
@@ -228,6 +221,7 @@ export const OrgSettingsPage: React.FC = () => {
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
                     {org?.verificationStatus === "DENEGADO" && (
                       <button
+                        type="button"
                         onClick={requestVerification}
                         disabled={saving}
                         className="inline-flex items-center justify-center gap-2 rounded-full border border-error-300 bg-error-50 px-4 py-2.5 text-sm font-medium text-error-700 hover:bg-error-100 disabled:opacity-50 dark:border-error-700 dark:bg-error-500/10 dark:text-error-400"
@@ -236,6 +230,7 @@ export const OrgSettingsPage: React.FC = () => {
                       </button>
                     )}
                     <button
+                      type="button"
                       onClick={startEdit}
                       className="inline-flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
                     >

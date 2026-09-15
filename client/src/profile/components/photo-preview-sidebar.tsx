@@ -1,4 +1,5 @@
 import { Camera, RotateCcw, Save, Upload } from "lucide-react";
+import { Button } from "@/ui/components/button/button";
 import { OUTPUT_SIZE, PREVIEW_SIZE, VIEW_SIZE } from "@/profile/constants/photo-cropper";
 import type { PhotoPreviewSidebarProps } from "@/profile/types/photo-preview-sidebar-props";
 
@@ -46,15 +47,16 @@ export const PhotoPreviewSidebar: React.FC<PhotoPreviewSidebarProps> = ({ croppe
       </div>
 
       <div className="mt-6 space-y-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          className="w-full"
+          startIcon={<RotateCcw size={17} />}
           onClick={resetCrop}
           disabled={!sourceImage || loading}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/3"
         >
-          <RotateCcw size={17} />
           Restablecer recorte
-        </button>
+        </Button>
         <button
           id="tour-photo-upload"
           type="button"

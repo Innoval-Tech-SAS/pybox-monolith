@@ -3,13 +3,15 @@ import { useNavigate, useSearchParams, useLocation } from "react-router";
 import { CheckCircle, UserPlus, Settings2, FolderOpen, User, ShieldCheck, PartyPopper } from "lucide-react";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Label } from "@/ui/components/inputs/label";
+import { Input } from "@/ui/components/inputs/input";
 import { PasswordInput } from "@/ui/components/inputs/password-input";
+import { Button } from "@/ui/components/button/button";
 import { useCreateCsUser } from "../hooks/use-create-cs-user";
 import { useCreateOrgMember } from "../hooks/use-create-org-member";
 import { CreateUserStepSidebar } from "../components/create-user-step-sidebar";
 import { CreateUserPermissionCheckboxes } from "../components/create-user-permission-checkboxes";
 import { CreateUserPortfolioCheckboxes } from "../components/create-user-portfolio-checkboxes";
-import { ROLE_LABELS, GLOBAL_ROLE_LABELS, IS_USER_ORG, INPUT_BASE, CREATE_USER_INITIAL_FORM } from "../constants/create-user-constants";
+import { ROLE_LABELS, GLOBAL_ROLE_LABELS, IS_USER_ORG, CREATE_USER_INITIAL_FORM } from "../constants/create-user-constants";
 import type { ManagedUserCreate } from "@/types/users/managed-user-types";
 import type { CreateUserStepDef } from "@/users/types/create-user-step-def";
 
@@ -74,27 +76,27 @@ export const CreateUserPage: React.FC = () => {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div>
           <Label htmlFor="firstname">Nombre <span className="text-error-500">*</span></Label>
-          <input id="firstname" type="text" placeholder="Nombre" value={form.firstname}
+          <Input id="firstname" type="text" placeholder="Nombre" value={form.firstname}
             onChange={(e) => setForm((p) => ({ ...p, firstname: e.target.value }))}
-            required aria-required="true" className={INPUT_BASE} />
+            required />
         </div>
         <div>
           <Label htmlFor="lastname">Apellido <span className="text-error-500">*</span></Label>
-          <input id="lastname" type="text" placeholder="Apellido" value={form.lastname}
+          <Input id="lastname" type="text" placeholder="Apellido" value={form.lastname}
             onChange={(e) => setForm((p) => ({ ...p, lastname: e.target.value }))}
-            required aria-required="true" className={INPUT_BASE} />
+            required />
         </div>
         <div>
           <Label htmlFor="email">Correo electrónico <span className="text-error-500">*</span></Label>
-          <input id="email" type="email" placeholder="correo@ejemplo.com" value={form.email}
+          <Input id="email" type="email" placeholder="correo@ejemplo.com" value={form.email}
             onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-            required aria-required="true" className={INPUT_BASE} />
+            required />
         </div>
         <div>
           <Label htmlFor="phoneNumber">Teléfono <span className="text-error-500">*</span></Label>
-          <input id="phoneNumber" type="text" placeholder="+57 300 000 0000" value={form.phoneNumber}
+          <Input id="phoneNumber" type="text" placeholder="+57 300 000 0000" value={form.phoneNumber}
             onChange={(e) => setForm((p) => ({ ...p, phoneNumber: e.target.value }))}
-            required aria-required="true" className={INPUT_BASE} />
+            required />
         </div>
         <div className="sm:col-span-2">
           <PasswordInput
@@ -113,15 +115,12 @@ export const CreateUserPage: React.FC = () => {
       {error && <p className="text-sm text-error-500">{error}</p>}
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-2">
-        <button type="button" onClick={() => navigate(backPath)}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/3">
+        <Button type="button" variant="outline" onClick={() => navigate(backPath)}>
           Cancelar
-        </button>
-        <button type="submit" disabled={loading}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:opacity-50">
-          <UserPlus size={16} />
-          {loading ? "Creando..." : `Crear ${roleLabel.toLowerCase()}`}
-        </button>
+        </Button>
+        <Button type="submit" startIcon={<UserPlus size={16} />} loading={loading} loadingText="Creando...">
+          {`Crear ${roleLabel.toLowerCase()}`}
+        </Button>
       </div>
     </form>
   );
@@ -153,14 +152,12 @@ export const CreateUserPage: React.FC = () => {
       </div>
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-2">
-        <button type="button" onClick={() => setStep(totalSteps)}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/3">
+        <Button type="button" variant="outline" onClick={() => setStep(totalSteps)}>
           Omitir
-        </button>
-        <button type="button" onClick={() => setStep(totalSteps)}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600">
+        </Button>
+        <Button type="button" onClick={() => setStep(totalSteps)}>
           Finalizar configuración
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -180,10 +177,9 @@ export const CreateUserPage: React.FC = () => {
             La cuenta fue creada exitosamente y ya puede iniciar sesión.
           </p>
         </div>
-        <button type="button" onClick={() => navigate(backPath)}
-          className="w-full rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-600">
+        <Button type="button" className="w-full" onClick={() => navigate(backPath)}>
           Ir a usuarios
-        </button>
+        </Button>
       </div>
     </div>
   );

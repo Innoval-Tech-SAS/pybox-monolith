@@ -2,6 +2,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import esLocale from "@fullcalendar/core/locales/es";
 import { Modal } from "@/ui/components/modal/modal";
+import { Button } from "@/ui/components/button/button";
 import { useCampaignCalendar } from "@/campaigns/hooks/use-campaign-calendar";
 import { CAMPAIGN_PERIODICITY_LABELS, CAMPAIGN_STATUS_META } from "@/campaigns/constants/campaign-calendar-meta";
 import { formatCampaignDateTime, isCampaignScheduleValid } from "@/campaigns/utils/campaign-utils";
@@ -99,22 +100,19 @@ export const CampaignsCalendar: React.FC<CampaignsCalendarProps> = ({ organizati
                     />
                   </div>
                   <div className="mt-6 flex justify-end gap-3">
-                    <button
-                      onClick={handleClose}
-                      type="button"
-                      disabled={saving}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3"
-                    >
+                    <Button type="button" size="sm" variant="outline" disabled={saving} onClick={handleClose}>
                       Cancelar
-                    </button>
-                    <button
-                      onClick={handleSave}
+                    </Button>
+                    <Button
                       type="button"
-                      disabled={saving || !isCampaignScheduleValid(form)}
-                      className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
+                      size="sm"
+                      disabled={!isCampaignScheduleValid(form)}
+                      loading={saving}
+                      loadingText="Guardando…"
+                      onClick={handleSave}
                     >
-                      {saving ? "Guardando…" : "Guardar cambios"}
-                    </button>
+                      Guardar cambios
+                    </Button>
                   </div>
                 </>
               )
@@ -137,13 +135,9 @@ export const CampaignsCalendar: React.FC<CampaignsCalendarProps> = ({ organizati
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end">
-                  <button
-                    onClick={handleClose}
-                    type="button"
-                    className="flex justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3"
-                  >
+                  <Button type="button" size="sm" variant="outline" onClick={handleClose}>
                     Cerrar
-                  </button>
+                  </Button>
                 </div>
               </>
             )}

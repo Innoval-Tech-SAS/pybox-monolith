@@ -96,6 +96,7 @@ export const ChatBubblesContainer: React.FC = () => {
           )}
 
           <button
+              type="button"
               onClick={handleLauncherClick}
               aria-label={showPanel ? "Cerrar panel de chats" : "Abrir panel de chats"}
               className="relative w-14 h-14 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-all focus:outline-none"

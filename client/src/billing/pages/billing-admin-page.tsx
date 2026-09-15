@@ -61,6 +61,7 @@ export const BillingAdminPage: React.FC = () => {
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <button
+                          type="button"
                           onClick={() => navigate(`/billing?invoice=${inv.id}`)}
                           className="text-sm font-medium text-brand-500 hover:text-brand-600"
                         >

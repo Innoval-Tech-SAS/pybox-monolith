@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Paperclip, X } from "lucide-react";
 import { Modal } from "@/ui/components/modal/modal";
+import { Input } from "@/ui/components/inputs/input";
+import { Select } from "@/ui/components/inputs/select";
+import { Textarea } from "@/ui/components/inputs/textarea";
+import { Button } from "@/ui/components/button/button";
 import { useJudicialPriorities } from "@/credits/hooks/use-judicial-priorities";
 import { useUploadJudicialAttachments } from "@/credits/hooks/use-upload-judicial-attachments";
 import type { JudicialNotification, JudicialNotificationCreatePayload } from "@/credits/types/judicial-types";
-
-const INPUT_CLASS =
-  "w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800";
 
 interface JudicialNotificationFormModalProps {
   isOpen: boolean;
@@ -85,26 +86,24 @@ export const JudicialNotificationFormModal: React.FC<JudicialNotificationFormMod
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Título</label>
-          <input
+          <Input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={255}
             required
-            className={INPUT_CLASS}
             placeholder="Ej. Embargo de cuenta bancaria"
           />
         </div>
 
         <div>
           <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Detalle</label>
-          <textarea
+          <Textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={1000}
             required
             rows={4}
-            className={INPUT_CLASS}
             placeholder="Describe el hecho judicial"
           />
         </div>
@@ -112,32 +111,23 @@ export const JudicialNotificationFormModal: React.FC<JudicialNotificationFormMod
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Prioridad</label>
-            <select
+            <Select
+              options={priorities}
               value={priority}
-              onChange={(e) => setPriority(e.target.value)}
+              onChange={setPriority}
               required
               disabled={loadingPriorities}
-              className={INPUT_CLASS}
-            >
-              <option value="" disabled>
-                Selecciona...
-              </option>
-              {priorities.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
+              placeholder="Selecciona..."
+            />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Fecha del hecho
             </label>
-            <input
+            <Input
               type="date"
               value={notifiedAt}
               onChange={(e) => setNotifiedAt(e.target.value)}
-              className={INPUT_CLASS}
             />
           </div>
         </div>
@@ -179,20 +169,12 @@ export const JudicialNotificationFormModal: React.FC<JudicialNotificationFormMod
         </div>
 
         <div className="mt-2 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/5"
-          >
+          <Button type="button" size="sm" variant="outline" onClick={handleClose}>
             Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={submitting || uploading}
-            className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-60"
-          >
-            {submitting || uploading ? "Emitiendo..." : "Emitir notificación"}
-          </button>
+          </Button>
+          <Button type="submit" size="sm" loading={submitting || uploading} loadingText="Emitiendo...">
+            Emitir notificación
+          </Button>
         </div>
       </form>
     </Modal>

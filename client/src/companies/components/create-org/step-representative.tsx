@@ -2,7 +2,9 @@ import { Hash, Mail } from "lucide-react";
 import { Label } from "@/ui/components/inputs/label";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
 import { Select } from "@/ui/components/inputs/select";
+import { Input } from "@/ui/components/inputs/input";
 import { UserPicker } from "@/ui/components/user-picker";
+import { Button } from "@/ui/components/button/button";
 import { useDocumentTypes } from "@/hooks/use-document-types";
 import { REP_MODES } from "@/companies/constants/register-org-form-options";
 import { REPRESENTATIVE_MODE_ICONS } from "@/companies/constants/representative-mode-icons";
@@ -87,7 +89,7 @@ export const StepRepresentative: React.FC<StepRepresentativeProps> = ({
                 <Label htmlFor="create-org-rep-firstname">
                   Nombre <span className="text-error-500" aria-hidden="true">*</span>
                 </Label>
-                <input
+                <Input
                   id="create-org-rep-firstname"
                   type="text"
                   placeholder="Nombre"
@@ -95,15 +97,13 @@ export const StepRepresentative: React.FC<StepRepresentativeProps> = ({
                   onChange={(e) => setRepFirstname(e.target.value)}
                   disabled={isSubmitting}
                   required
-                  aria-required="true"
-                  className={INPUT_BASE}
                 />
               </div>
               <div>
                 <Label htmlFor="create-org-rep-lastname">
                   Apellido <span className="text-error-500" aria-hidden="true">*</span>
                 </Label>
-                <input
+                <Input
                   id="create-org-rep-lastname"
                   type="text"
                   placeholder="Apellido"
@@ -111,8 +111,6 @@ export const StepRepresentative: React.FC<StepRepresentativeProps> = ({
                   onChange={(e) => setRepLastname(e.target.value)}
                   disabled={isSubmitting}
                   required
-                  aria-required="true"
-                  className={INPUT_BASE}
                 />
               </div>
               <div>
@@ -183,21 +181,12 @@ export const StepRepresentative: React.FC<StepRepresentativeProps> = ({
         />
       </div>
       <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/3"
-        >
+        <Button type="button" variant="outline" onClick={onBack} disabled={isSubmitting}>
           Atrás
-        </button>
-        <button
-          type="submit"
-          disabled={!canSubmit || isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:opacity-50"
-        >
-          {isSubmitting ? "Creando empresa..." : "Crear empresa"}
-        </button>
+        </Button>
+        <Button type="submit" disabled={!canSubmit} loading={isSubmitting} loadingText="Creando empresa...">
+          Crear empresa
+        </Button>
       </div>
     </form>
   );

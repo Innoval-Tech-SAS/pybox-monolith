@@ -65,6 +65,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           {win.title}
         </span>
         <button
+          type="button"
           onClick={onMinimize}
           aria-label="Minimizar chat"
           className="text-gray-400 hover:text-gray-600 dark:hover:text-white/70 px-1 text-base leading-none"
@@ -73,6 +74,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           –
         </button>
         <button
+          type="button"
           onClick={onClose}
           aria-label="Cerrar chat"
           className="text-gray-400 hover:text-gray-600 dark:hover:text-white/70 px-1 text-base leading-none"
@@ -93,6 +95,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         )}
         {win.nextCursor && !win.loading && (
           <button
+            type="button"
             onClick={onLoadMore}
             className="text-xs text-brand-500 hover:underline self-center"
           >
@@ -130,6 +133,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           className="flex-1 resize-none bg-transparent text-sm text-gray-800 dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none py-1 max-h-20 overflow-y-auto custom-scrollbar"
         />
         <button
+          type="button"
           onClick={submit}
           disabled={!input.trim()}
           aria-label="Enviar mensaje"

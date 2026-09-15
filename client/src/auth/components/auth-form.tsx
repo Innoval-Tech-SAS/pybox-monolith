@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { Input } from "../../ui/components/inputs/input";
 import { Label } from "../../ui/components/inputs/label";
 import { PasswordInput } from "../../ui/components/inputs/password-input";
+import { Button } from "../../ui/components/button/button";
 import { useAuth } from "../../hooks/use-auth";
 import { GoogleButton } from "./google-button";
 
@@ -67,13 +68,9 @@ export const AuthForm: React.FC = () => {
                 />
 
                 <div>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? "Iniciando..." : "Iniciar Sesión"}
-                  </button>
+                  <Button type="submit" size="sm" className="w-full" loading={isLoading} loadingText="Iniciando...">
+                    Iniciar Sesión
+                  </Button>
                 </div>
               </div>
             </form>

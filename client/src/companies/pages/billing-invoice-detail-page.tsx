@@ -11,6 +11,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/ui/compone
 import { PaginationWithIcon } from "@/ui/components/table/pagination-with-icon";
 import { getSession } from "@/auth/utils/auth-session-utils";
 import { InvoiceStatusBadge } from "@/billing/components/invoice-status-badge";
+import { Button } from "@/ui/components/button/button";
 import { BoldPaymentButton } from "@/billing/components/bold-payment-button";
 import { MercadoPagoCardForm } from "@/billing/components/mercadopago-card-form";
 import { PaymentResultModal } from "@/billing/components/payment-result-modal";
@@ -163,6 +164,7 @@ export const BillingInvoiceDetailPage: React.FC = () => {
                 <InvoiceStatusBadge status={invoice.status} />
                 {!isAdminMode && (
                   <button
+                    type="button"
                     onClick={handleSync}
                     disabled={syncing}
                     title="Actualizar estado"
@@ -204,13 +206,9 @@ export const BillingInvoiceDetailPage: React.FC = () => {
             {isPayable && (
               <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-800">
                 {!paymentLink ? (
-                  <button
-                    onClick={handlePay}
-                    disabled={paying}
-                    className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
-                  >
-                    {paying ? "Generando enlace de pago..." : "Pagar factura"}
-                  </button>
+                  <Button type="button" size="sm" onClick={handlePay} loading={paying} loadingText="Generando enlace de pago...">
+                    Pagar factura
+                  </Button>
                 ) : paymentLink.provider === "MERCADO_PAGO" ? (
                   <MercadoPagoCardForm data={paymentLink} onCharge={handleMercadoPagoCharge} />
                 ) : (

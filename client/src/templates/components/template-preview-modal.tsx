@@ -3,6 +3,7 @@ import { Modal } from "@/ui/components/modal/modal";
 import { Input } from "@/ui/components/inputs/input";
 import { Label } from "@/ui/components/inputs/label";
 import { Loader } from "@/ui/components/loader/loader";
+import { Button } from "@/ui/components/button/button";
 import { extractVariables } from "@/templates/utils/template-variables";
 import type { TemplatePreviewResponse } from "@/types/templates/template-types";
 import type { TemplatePreviewModalProps } from "@/templates/types/template-preview-modal-props";
@@ -80,13 +81,9 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
 
       {!isEmail && (
         <div className="mb-4 flex justify-end">
-          <button
-            onClick={handlePreview}
-            disabled={loading}
-            className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-50"
-          >
-            {loading ? "Renderizando…" : "Renderizar"}
-          </button>
+          <Button type="button" size="sm" onClick={handlePreview} loading={loading} loadingText="Renderizando…">
+            Renderizar
+          </Button>
         </div>
       )}
 

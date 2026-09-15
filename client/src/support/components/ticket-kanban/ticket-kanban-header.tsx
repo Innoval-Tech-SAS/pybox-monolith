@@ -10,6 +10,7 @@ export const TicketKanbanHeader: React.FC<TicketKanbanHeaderProps> = ({
       {groups.map((group) => (
         <button
           key={group.key}
+          type="button"
           onClick={() => onSelectGroup(group.key)}
           className={`inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2.5 text-sm font-medium group hover:text-gray-900 dark:hover:text-white xl:justify-start ${
             selectedGroup === group.key

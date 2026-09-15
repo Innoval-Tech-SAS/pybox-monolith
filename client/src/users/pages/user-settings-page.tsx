@@ -4,6 +4,7 @@ import { ShieldCheck, FolderOpen, ShieldOff } from "lucide-react";
 import { Loader } from "@/ui/components/loader/loader";
 import EmptyState from "@/ui/components/common/empty-state";
 import { ModuleBase } from "@/ui/components/common/module-base";
+import { Button } from "@/ui/components/button/button";
 import { usePermissionsCatalog } from "../hooks/use-permissions-catalog";
 import { useUserPermissions } from "../hooks/use-user-permissions";
 import { useUserPortfolioAccess } from "../hooks/use-user-portfolio-access";
@@ -174,13 +175,9 @@ export const UserSettingsPage: React.FC = () => {
         </div>
 
         <div className="flex justify-end pt-2">
-          <button
-            type="button"
-            onClick={() => navigate(backPath)}
-            className="inline-flex items-center justify-center rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
-          >
+          <Button type="button" onClick={() => navigate(backPath)}>
             Listo
-          </button>
+          </Button>
         </div>
       </div>
     </ModuleBase>

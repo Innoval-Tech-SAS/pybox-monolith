@@ -4,6 +4,7 @@ import { AuthLayout } from "../components/auth-layout";
 import { Label } from "@/ui/components/inputs/label";
 import { OtpInput } from "@/ui/components/inputs/otp-input";
 import { PasswordInput } from "@/ui/components/inputs/password-input";
+import { Button } from "@/ui/components/button/button";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { useForgotPassword } from "../hooks/use-forgot-password";
 
@@ -86,13 +87,16 @@ export const ResetPasswordPage: React.FC = () => {
 
                   {displayError && <p className="text-sm text-error-500">{displayError}</p>}
 
-                  <button
+                  <Button
                     type="submit"
-                    disabled={loading || digits.join("").length < 6 || !newPassword}
-                    className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    size="sm"
+                    className="w-full"
+                    disabled={digits.join("").length < 6 || !newPassword}
+                    loading={loading}
+                    loadingText="Guardando..."
                   >
-                    {loading ? "Guardando..." : "Restablecer contraseña"}
-                  </button>
+                    Restablecer contraseña
+                  </Button>
                 </div>
               </form>
 

@@ -4,6 +4,7 @@ import { Mail, Plus } from "lucide-react";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
+import { Button } from "@/ui/components/button/button";
 import { getSession } from "@/auth/utils/auth-session-utils";
 import { useDeleteWithConfirm } from "@/hooks/use-delete-with-confirm";
 import { useOrgModule } from "@/companies/hooks/use-org-module";
@@ -61,13 +62,14 @@ export const TemplatesPage: React.FC = () => {
         <div className="flex flex-1 min-h-0 flex-col gap-5">
           {isAdmin && (
             <div className="flex justify-end">
-              <button
+              <Button
+                type="button"
+                size="sm"
+                startIcon={<Plus size={16} />}
                 onClick={() => navigate(buildOrgPath("/my-companies/templates/new", { portfolio: portfolioId }))}
-                className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
               >
-                <Plus size={16} />
                 Nueva plantilla
-              </button>
+              </Button>
             </div>
           )}
 

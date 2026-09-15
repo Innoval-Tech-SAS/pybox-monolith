@@ -7,6 +7,7 @@ import { Loader } from "@/ui/components/loader/loader";
 import { Spinner } from "@/ui/components/loader/spinner";
 import EmptyState from "@/ui/components/common/empty-state";
 import { FolderOpen } from "lucide-react";
+import { Button } from "@/ui/components/button/button";
 
 const PortfolioToggle: React.FC<{
   portfolioId: string;
@@ -89,13 +90,9 @@ export const UserPortfoliosPage: React.FC = () => {
           )}
 
           <div className="flex justify-end mt-6 pt-5 border-t border-gray-100 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={() => navigate(backPath)}
-              className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
-            >
+            <Button type="button" size="sm" onClick={() => navigate(backPath)}>
               Listo
-            </button>
+            </Button>
           </div>
         </Card>
       </div>

@@ -5,6 +5,7 @@ import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Card, CardTitle } from "@/ui/components/card";
 import { Select } from "@/ui/components/inputs/select";
+import { Button } from "@/ui/components/button/button";
 import { Loader } from "@/ui/components/loader/loader";
 import EmptyState from "@/ui/components/common/empty-state";
 import { useSchemas } from "@/databases/hooks/use-schemas";
@@ -39,13 +40,9 @@ export const DatabaseExplorerPage: React.FC = () => {
                 disabled={loadingSchemas}
               />
             </div>
-            <button
-              onClick={() => navigate("/databases/tables/new")}
-              className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
-            >
-              <Plus size={16} />
+            <Button type="button" size="sm" startIcon={<Plus size={16} />} onClick={() => navigate("/databases/tables/new")}>
               Nueva tabla
-            </button>
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -60,6 +57,7 @@ export const DatabaseExplorerPage: React.FC = () => {
                   {tables.map((t) => (
                     <button
                       key={t}
+                      type="button"
                       onClick={() => setTable(t)}
                       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
                         t === table
@@ -80,6 +78,7 @@ export const DatabaseExplorerPage: React.FC = () => {
                 <CardTitle>{table ? `Columnas de ${table}` : "Columnas"}</CardTitle>
                 {table && (
                   <button
+                    type="button"
                     onClick={() => navigate(`/databases/tables/alter?schema=${schema}&table=${table}`)}
                     className="flex items-center gap-1.5 text-sm font-medium text-brand-500 hover:text-brand-600"
                   >

@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
  * @property className - Clases CSS adicionales para personalización.
  * @property loading - Muestra un spinner y deshabilita el botón.
  * @property loadingText - Texto opcional a mostrar mientras carga (reemplaza children).
+ * @property type - Atributo HTML type del botón (button o submit). Default: "button".
  */
 export interface ButtonProps {
   children: React.ReactNode;
@@ -24,4 +25,5 @@ export interface ButtonProps {
   className?: string;
   loading?: boolean;
   loadingText?: string;
+  type?: "button" | "submit";
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Input } from "@/ui/components/inputs/input";
 import { Label } from "@/ui/components/inputs/label";
 import { Select } from "@/ui/components/inputs/select";
+import { Button } from "@/ui/components/button/button";
 import { useForgotPassword } from "../hooks/use-forgot-password";
 import { useDocumentTypes } from "@/hooks/use-document-types";
 import type { ForgotPasswordStep1Props } from "@/auth/types/props/forgot-password-step-1-props";
@@ -51,13 +52,16 @@ export const ForgotPasswordStep1: React.FC<ForgotPasswordStep1Props> = ({ onNext
             required
           />
         </div>
-        <button
+        <Button
           type="submit"
-          disabled={loading || !documentNumber}
-          className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          size="sm"
+          className="w-full"
+          disabled={!documentNumber}
+          loading={loading}
+          loadingText="Buscando..."
         >
-          {loading ? "Buscando..." : "Continuar"}
-        </button>
+          Continuar
+        </Button>
       </div>
     </form>
   );

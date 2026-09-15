@@ -13,6 +13,7 @@ import { TicketAttachments } from "./ticket-attachments";
 import { TicketClosureAttachments } from "./ticket-closure-attachments";
 import { TicketConversation } from "./ticket-conversation";
 import { TicketAuditLog } from "./ticket-audit-log";
+import { Button } from "@/ui/components/button/button";
 import {
   formatTicketDetailDate,
   getPriorityBadgeColor,
@@ -161,6 +162,7 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
           <div className="mt-6">
             {!showResolveForm ? (
               <button
+                type="button"
                 onClick={() => setShowResolveForm(true)}
                 className="inline-flex items-center gap-2 rounded-lg bg-success-50 px-4 py-2 text-sm font-medium text-success-700 hover:bg-success-100 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20"
               >
@@ -210,18 +212,21 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
 
                 <div className="mt-3 flex gap-2">
                   <button
+                    type="button"
                     onClick={handleResolve}
                     disabled={resolving || uploading || !resolveNotes.trim()}
                     className="inline-flex items-center gap-2 rounded-lg bg-success-500 px-4 py-2 text-sm font-medium text-white hover:bg-success-600 disabled:opacity-60"
                   >
                     {resolving || uploading ? "Procesando..." : "Confirmar"}
                   </button>
-                  <button
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
                     onClick={() => { setShowResolveForm(false); setResolveNotes(""); setClosureFiles([]); }}
-                    className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/5"
                   >
                     Cancelar
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -310,6 +315,7 @@ export const TicketDetailView: React.FC<TicketDetailViewProps> = ({ ticket, onTi
 
           {canEscalate && !isResolved && (
             <button
+              type="button"
               onClick={handleEscalate}
               disabled={escalating}
               className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-warning-200 bg-warning-50 px-4 py-2.5 text-sm font-medium text-warning-700 hover:bg-warning-100 disabled:opacity-60 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-400 dark:hover:bg-warning-500/20"

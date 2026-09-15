@@ -3,6 +3,7 @@ import { Input } from "@/ui/components/inputs/input";
 import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
+import { Button } from "@/ui/components/button/button";
 import { CSV_TYPES } from "../constants/portfolio-file-types";
 import { useCreatePortfolio } from "../hooks/use-create-portfolio";
 
@@ -33,13 +34,9 @@ export const CreatePortfolioForm: React.FC = () => {
               Tu archivo está siendo procesado. Recibirás una notificación cuando el portafolio esté listo.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleSuccessModalClose}
-            className="w-full rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white hover:bg-brand-600 transition"
-          >
+          <Button type="button" className="w-full" onClick={handleSuccessModalClose}>
             Entendido
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -92,20 +89,12 @@ export const CreatePortfolioForm: React.FC = () => {
       />
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-2">
-        <button
-          type="button"
-          onClick={handleReset}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/3 dark:hover:text-gray-300"
-        >
+        <Button type="button" variant="outline" onClick={handleReset}>
           Limpiar
-        </button>
-        <button
-          type="submit"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
-        >
-          <UploadCloud size={16} />
+        </Button>
+        <Button type="submit" startIcon={<UploadCloud size={16} />}>
           Crear portafolio
-        </button>
+        </Button>
       </div>
     </form>
   );

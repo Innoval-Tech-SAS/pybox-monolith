@@ -1,7 +1,7 @@
 import { FileText, Image, Paperclip, X, type LucideIcon } from "lucide-react";
 import { Select } from "@/ui/components/inputs/select";
+import { Textarea } from "@/ui/components/inputs/textarea";
 import { TICKET_CATEGORY_ICON_MAP } from "@/support/constants/ticket-category-icons";
-import { INPUT_BASE } from "@/support/constants/create-ticket-styles";
 import { IMAGE_ATTACHMENT_EXTENSIONS } from "@/support/constants/ticket-attachment-types";
 import type { StepDetailsProps } from "@/support/types/step-details-props";
 
@@ -93,12 +93,12 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
           Descripción <span className="text-error-500">*</span>
         </label>
-        <textarea
+        <Textarea
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
           placeholder="Describe el problema con el mayor detalle posible: pasos para reproducirlo, mensajes de error, capturas de pantalla relevantes..."
           rows={5}
-          className={`${INPUT_BASE} resize-none`}
+          className="resize-none"
         />
       </div>
 

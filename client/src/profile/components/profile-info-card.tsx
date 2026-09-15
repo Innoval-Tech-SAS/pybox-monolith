@@ -40,7 +40,7 @@ export const ProfileInfoCard: React.FC<ProfileInfoCardProps> = ({
               )}
             </div>
           </div>
-          <button className="shrink-0 flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3">
+          <button type="button" className="shrink-0 flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3">
             <EditIcon />
             Editar
           </button>

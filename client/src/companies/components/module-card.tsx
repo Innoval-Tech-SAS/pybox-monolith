@@ -15,6 +15,7 @@ export const ModuleCard: React.FC<ModuleCardProps> = ({ module, orgId, portfolio
   return (
   <button
     id={id}
+    type="button"
     onClick={handleClick}
     disabled={!module.path}
     className="group w-full text-left cursor-pointer overflow-hidden rounded-2xl border border-gray-200 bg-white transition-colors duration-200 min-h-56 flex flex-col gap-5 p-5 sm:p-6

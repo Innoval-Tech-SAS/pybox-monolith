@@ -1,3 +1,5 @@
+import { Input } from "@/ui/components/inputs/input";
+import { Textarea } from "@/ui/components/inputs/textarea";
 import type { StepBasicInfoProps } from "@/query-builder/types/step-basic-info-props";
 
 export const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ state, update, config }) => (
@@ -6,12 +8,11 @@ export const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ state, update, con
       <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
         Nombre *
       </label>
-      <input
+      <Input
         type="text"
         value={state.name}
         onChange={(e) => update({ name: e.target.value })}
         placeholder={config.copy.namePlaceholder}
-        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:placeholder-gray-500"
       />
     </div>
 
@@ -19,12 +20,12 @@ export const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ state, update, con
       <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
         Descripción
       </label>
-      <textarea
+      <Textarea
         rows={2}
         value={state.description}
         onChange={(e) => update({ description: e.target.value })}
         placeholder={config.copy.descriptionPlaceholder}
-        className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:placeholder-gray-500"
+        className="resize-none"
       />
     </div>
 

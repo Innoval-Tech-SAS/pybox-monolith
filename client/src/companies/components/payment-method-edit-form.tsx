@@ -3,6 +3,7 @@ import { useEditPaymentMethodForm } from "@/companies/hooks/use-edit-payment-met
 import { usePaymentMethodTypes } from "@/companies/hooks/use-payment-method-types";
 import { PaymentMethodEditGeneral } from "./payment-method-edit-general";
 import { PaymentMethodEditBank } from "./payment-method-edit-bank";
+import { Button } from "@/ui/components/button/button";
 import type { PaymentMethodEditFormProps } from "@/companies/types/payment-method-edit-form-props";
 
 export const PaymentMethodEditForm: React.FC<PaymentMethodEditFormProps> = ({
@@ -35,20 +36,12 @@ export const PaymentMethodEditForm: React.FC<PaymentMethodEditFormProps> = ({
       </div>
 
       <div className="mt-5 flex items-center justify-end gap-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-        >
+        <Button type="button" size="sm" variant="outline" onClick={onCancel}>
           Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
-        >
-          {saving ? "Guardando..." : "Guardar cambios"}
-        </button>
+        </Button>
+        <Button type="submit" size="sm" loading={saving} loadingText="Guardando...">
+          Guardar cambios
+        </Button>
       </div>
     </form>
   );

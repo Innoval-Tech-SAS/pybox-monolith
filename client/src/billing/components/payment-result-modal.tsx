@@ -1,4 +1,5 @@
 import { Modal } from "@/ui/components/modal/modal";
+import { Button } from "@/ui/components/button/button";
 import { PaymentResultView } from "./payment-result-view";
 import type { PaymentResultModalProps } from "@/billing/types/props/payment-result-modal-props";
 
@@ -20,19 +21,13 @@ export const PaymentResultModal: React.FC<PaymentResultModalProps> = ({
       <PaymentResultView status={status} reference={reference}>
         <div className="mt-2 flex flex-col gap-2">
           {canRetry && (
-            <button
-              onClick={onRetry}
-              className="w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
-            >
+            <Button type="button" size="sm" className="w-full" onClick={onRetry}>
               Intentar de nuevo
-            </button>
+            </Button>
           )}
-          <button
-            onClick={onClose}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
+          <Button type="button" size="sm" variant="outline" className="w-full" onClick={onClose}>
             Cerrar
-          </button>
+          </Button>
         </div>
       </PaymentResultView>
     </Modal>

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/context/toast-context";
-import { Spinner } from "@/ui/components/loader/spinner";
 import { Select } from "@/ui/components/inputs/select";
+import { Input } from "@/ui/components/inputs/input";
+import { Button } from "@/ui/components/button/button";
 import type { MercadoPagoProviderPayload } from "@/types/billing/billing-types";
 import type { IdentificationType, MercadoPagoInstance } from "@/types/billing/mercadopago-sdk-types";
 import type { MercadoPagoCardFormProps } from "@/types/props/mercadopago-card-form-props";
@@ -130,8 +131,6 @@ export const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({ data, 
     }
   };
 
-  const inputClass =
-    "w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white/90";
   const secureFieldClass =
     "h-[42px] w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 dark:border-gray-700 dark:bg-gray-800";
 
@@ -156,11 +155,10 @@ export const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({ data, 
           <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">
             Nombre del titular
           </label>
-          <input
+          <Input
             type="text"
             value={cardholderName}
             onChange={(e) => setCardholderName(e.target.value)}
-            className={inputClass}
             placeholder="Como aparece en la tarjeta"
           />
         </div>
@@ -180,25 +178,25 @@ export const MercadoPagoCardForm: React.FC<MercadoPagoCardFormProps> = ({ data, 
               <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">
                 Número de documento
               </label>
-              <input
+              <Input
                 type="text"
                 value={identificationNumber}
                 onChange={(e) => setIdentificationNumber(e.target.value)}
-                className={inputClass}
               />
             </div>
           </>
         )}
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={!ready || submitting}
-        className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
+        size="sm"
+        disabled={!ready}
+        loading={submitting}
+        loadingText="Procesando pago..."
       >
-        {submitting && <Spinner size="xs" tone="white" />}
-        {submitting ? "Procesando pago..." : "Pagar con tarjeta"}
-      </button>
+        Pagar con tarjeta
+      </Button>
     </form>
   );
 };

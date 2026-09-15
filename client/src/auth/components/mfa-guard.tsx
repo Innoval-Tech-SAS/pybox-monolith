@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { OtpInput } from "@/ui/components/inputs/otp-input";
 import { useVerifyOtp } from "@/hooks/use-verify-otp";
 import { Modal } from "@/ui/components/modal/modal";
+import { Button } from "@/ui/components/button/button";
 import type { MfaGuardProps } from "@/auth/types/mfa-guard-props";
 import type { VerificationChannel } from "@/types/onboarding/onboarding-types";
 
@@ -104,14 +105,16 @@ export const MfaGuard: React.FC<MfaGuardProps> = ({ children }) => {
 
           {!codeSent ? (
             <div className="flex flex-col gap-3">
-              <button
+              <Button
                 type="button"
-                disabled={loading}
+                size="sm"
+                className="w-full"
                 onClick={() => handleRequest("EMAIL")}
-                className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
+                loading={loading}
+                loadingText="Enviando..."
               >
-                {loading ? "Enviando..." : "Enviar código por correo"}
-              </button>
+                Enviar código por correo
+              </Button>
               <button
                 type="button"
                 disabled={loading}
@@ -134,14 +137,17 @@ export const MfaGuard: React.FC<MfaGuardProps> = ({ children }) => {
                 {error && <p className="text-xs text-error-500">{error}</p>}
               </div>
               <div className="flex flex-col gap-2">
-                <button
+                <Button
                   type="button"
-                  disabled={loading || digits.join("").length < 6}
+                  size="sm"
+                  className="w-full"
+                  disabled={digits.join("").length < 6}
                   onClick={handleVerify}
-                  className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
+                  loading={loading}
+                  loadingText="Verificando..."
                 >
-                  {loading ? "Verificando..." : "Verificar"}
-                </button>
+                  Verificar
+                </Button>
                 <button
                   type="button"
                   disabled={loading}

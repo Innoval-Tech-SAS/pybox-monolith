@@ -63,20 +63,20 @@ export const TemplatesTable: React.FC<TemplatesTableProps> = ({
 
   const rowActions = (item: TemplatesTableProps["items"][number]) => (
     <div className="flex items-center gap-1">
-      <button onClick={() => onPreview(item)} title="Vista previa" aria-label="Vista previa" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-gray-800">
+      <button type="button" onClick={() => onPreview(item)} title="Vista previa" aria-label="Vista previa" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-gray-800">
         <Eye size={14} />
       </button>
       {item.channel === "EMAIL" && item.status === "ACTIVA" && (
-        <button onClick={() => onSend(item)} title="Enviar" aria-label="Enviar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-gray-800">
+        <button type="button" onClick={() => onSend(item)} title="Enviar" aria-label="Enviar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-gray-800">
           <Mail size={14} />
         </button>
       )}
       {isAdmin && (
         <>
-          <button onClick={() => onEdit(item)} title="Editar" aria-label="Editar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800">
+          <button type="button" onClick={() => onEdit(item)} title="Editar" aria-label="Editar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800">
             <Pencil size={14} />
           </button>
-          <button onClick={() => onDelete(item)} title="Eliminar" aria-label="Eliminar" className="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-500">
+          <button type="button" onClick={() => onDelete(item)} title="Eliminar" aria-label="Eliminar" className="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-500">
             <Trash2 size={14} />
           </button>
         </>

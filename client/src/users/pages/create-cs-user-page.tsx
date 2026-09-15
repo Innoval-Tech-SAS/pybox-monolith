@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Card, CardTitle } from "@/ui/components/card";
 import { Input } from "@/ui/components/inputs/input";
+import { Button } from "@/ui/components/button/button";
 import { useCreateCsUser } from "../hooks/use-create-cs-user";
 import { CREATE_USER_INITIAL_FORM } from "../constants/create-user-constants";
 
@@ -82,20 +83,12 @@ export const CreateCsUserPage: React.FC = () => {
           {error && <p className="mt-4 text-sm text-error-500">{error}</p>}
 
           <div className="flex items-center justify-end gap-3 mt-6 pt-5 border-t border-gray-100 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={() => navigate("/my-users")}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-            >
+            <Button type="button" size="sm" variant="outline" onClick={() => navigate("/my-users")}>
               Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
-            >
-              {loading ? "Creando..." : "Crear agente"}
-            </button>
+            </Button>
+            <Button type="submit" size="sm" loading={loading} loadingText="Creando...">
+              Crear agente
+            </Button>
           </div>
         </Card>
       </form>

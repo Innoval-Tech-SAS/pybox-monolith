@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PasswordInput } from "@/ui/components/inputs/password-input";
+import { Button } from "@/ui/components/button/button";
 import { useToast } from "@/context/toast-context";
 import { useForgotPassword } from "../hooks/use-forgot-password";
 import type { ForgotPasswordStep4Props } from "@/auth/types/props/forgot-password-step-4-props";
@@ -48,13 +49,16 @@ export const ForgotPasswordStep4: React.FC<ForgotPasswordStep4Props> = ({
           required
           autoComplete="new-password"
         />
-        <button
+        <Button
           type="submit"
-          disabled={loading || !newPassword}
-          className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          size="sm"
+          className="w-full"
+          disabled={!newPassword}
+          loading={loading}
+          loadingText="Guardando..."
         >
-          {loading ? "Guardando..." : "Restablecer contraseña"}
-        </button>
+          Restablecer contraseña
+        </Button>
       </div>
     </form>
   );

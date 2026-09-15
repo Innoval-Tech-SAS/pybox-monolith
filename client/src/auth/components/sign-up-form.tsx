@@ -7,6 +7,7 @@ import { Label } from "../../ui/components/inputs/label";
 import { PasswordInput } from "../../ui/components/inputs/password-input";
 import { SuccessModal } from "../../ui/components/modal/success-modal";
 import { ErrorModal } from "../../ui/components/modal/error-modal";
+import { Button } from "../../ui/components/button/button";
 import { useModal } from "../../hooks/use-modal";
 import { useRegister } from "../../hooks/use-register";
 import { useOAuthRegister } from "../../hooks/use-oauth-register";
@@ -247,13 +248,9 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
 
             {error && <p className="text-sm text-error-500">{error}</p>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Registrando..." : "Crear cuenta"}
-            </button>
+            <Button type="submit" size="sm" className="w-full" loading={loading} loadingText="Registrando...">
+              Crear cuenta
+            </Button>
           </div>
         </form>
 

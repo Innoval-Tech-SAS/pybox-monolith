@@ -72,32 +72,32 @@ export const CampaignsTable: React.FC<CampaignsTableProps> = ({
   const rowActions = (item: CampaignsTableProps["items"][number]) => (
     <div className="flex items-center gap-1">
       {isAdmin && (item.status === "BORRADOR" || item.status === "PAUSADA") && (
-        <button onClick={() => onActivate(item.id)} disabled={saving} title="Activar" aria-label="Activar" className="rounded p-1.5 text-gray-400 hover:bg-success-50 hover:text-success-600 disabled:opacity-50">
+        <button type="button" onClick={() => onActivate(item.id)} disabled={saving} title="Activar" aria-label="Activar" className="rounded p-1.5 text-gray-400 hover:bg-success-50 hover:text-success-600 disabled:opacity-50">
           <Play size={14} />
         </button>
       )}
       {isAdmin && item.status === "PROGRAMADA" && (
-        <button onClick={() => onPause(item.id)} disabled={saving} title="Pausar" aria-label="Pausar" className="rounded p-1.5 text-gray-400 hover:bg-orange-50 hover:text-orange-600 disabled:opacity-50">
+        <button type="button" onClick={() => onPause(item.id)} disabled={saving} title="Pausar" aria-label="Pausar" className="rounded p-1.5 text-gray-400 hover:bg-orange-50 hover:text-orange-600 disabled:opacity-50">
           <Pause size={14} />
         </button>
       )}
       {callChannelIds.has(item.channelId) && (
-        <button onClick={() => onMonitor(item)} title="Monitor en vivo" aria-label="Monitor en vivo" className="rounded p-1.5 text-gray-400 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-500/15">
+        <button type="button" onClick={() => onMonitor(item)} title="Monitor en vivo" aria-label="Monitor en vivo" className="rounded p-1.5 text-gray-400 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-500/15">
           <Activity size={14} />
         </button>
       )}
       {callChannelIds.has(item.channelId) && (
-        <button onClick={() => onResults(item)} title="Resultados" aria-label="Resultados" className="rounded p-1.5 text-gray-400 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-500/15">
+        <button type="button" onClick={() => onResults(item)} title="Resultados" aria-label="Resultados" className="rounded p-1.5 text-gray-400 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-500/15">
           <BarChart3 size={14} />
         </button>
       )}
       {isAdmin && (item.status === "BORRADOR" || item.status === "PAUSADA") && (
-        <button onClick={() => onEdit(item)} title="Editar" aria-label="Editar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800">
+        <button type="button" onClick={() => onEdit(item)} title="Editar" aria-label="Editar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800">
           <Pencil size={14} />
         </button>
       )}
       {isAdmin && (
-        <button onClick={() => onDelete(item)} title="Eliminar" aria-label="Eliminar" className="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-500">
+        <button type="button" onClick={() => onDelete(item)} title="Eliminar" aria-label="Eliminar" className="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-500">
           <Trash2 size={14} />
         </button>
       )}

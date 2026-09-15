@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Label } from "@/ui/components/inputs/label";
 import { OtpInput } from "@/ui/components/inputs/otp-input";
+import { Button } from "@/ui/components/button/button";
 import { useForgotPassword } from "../hooks/use-forgot-password";
 import type { ForgotPasswordStep3Props } from "@/auth/types/props/forgot-password-step-3-props";
 
@@ -30,13 +31,16 @@ export const ForgotPasswordStep3: React.FC<ForgotPasswordStep3Props> = ({
           </Label>
           <OtpInput value={digits} onChange={setDigits} disabled={loading} />
         </div>
-        <button
+        <Button
           type="submit"
-          disabled={loading || digits.join("").length < 6}
-          className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          size="sm"
+          className="w-full"
+          disabled={digits.join("").length < 6}
+          loading={loading}
+          loadingText="Verificando..."
         >
-          {loading ? "Verificando..." : "Verificar código"}
-        </button>
+          Verificar código
+        </Button>
       </div>
     </form>
   );

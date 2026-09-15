@@ -1,6 +1,7 @@
 import { Card } from "@/ui/components/card";
 import { Input } from "@/ui/components/inputs/input";
 import { Select } from "@/ui/components/inputs/select";
+import { Textarea } from "@/ui/components/inputs/textarea";
 import type { PaymentMethodStepGeneralProps } from "@/companies/types/payment-method-form-props";
 
 export const PaymentMethodStepGeneral: React.FC<PaymentMethodStepGeneralProps> = ({
@@ -40,13 +41,13 @@ export const PaymentMethodStepGeneral: React.FC<PaymentMethodStepGeneralProps> =
         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
           Instrucciones
         </label>
-        <textarea
+        <Textarea
           id="instructions"
           rows={3}
           value={form.instructions}
           onChange={field("instructions")}
           placeholder="Instrucciones de pago"
-          className="w-full resize-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+          className="resize-none"
         />
       </div>
     </div>

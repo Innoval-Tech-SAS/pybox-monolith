@@ -1,5 +1,7 @@
 import { Link, useNavigate } from "react-router";
+import { ArrowLeft } from "lucide-react";
 import { Card, CardTitle } from "@/ui/components/card";
+import { Button } from "@/ui/components/button/button";
 import { timeAgo } from "@/ui/utils/time-utils";
 import type { NotificationDetailViewProps } from "@/notifications/types/notification-detail-view-props";
 import { NotifIcon } from "./notif-icon";
@@ -93,16 +95,9 @@ export const NotificationDetailView: React.FC<NotificationDetailViewProps> = ({ 
             Ver
           </Link>
         ) : (
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
+          <Button type="button" size="sm" variant="outline" startIcon={<ArrowLeft size={15} />} onClick={() => navigate(-1)}>
             Volver
-          </button>
+          </Button>
         )}
       </div>
     </div>

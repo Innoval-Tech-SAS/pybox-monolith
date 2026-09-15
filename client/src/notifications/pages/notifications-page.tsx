@@ -41,6 +41,7 @@ export const NotificationsPage: React.FC = () => {
             </div>
             {unreadCount > 0 && (
               <button
+                type="button"
                 onClick={markAllRead}
                 className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/5"
               >
@@ -54,6 +55,7 @@ export const NotificationsPage: React.FC = () => {
             {FILTERS.map((f) => (
               <button
                 key={f.key}
+                type="button"
                 onClick={() => setFilter(f.key)}
                 className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                   filter === f.key
@@ -98,6 +100,7 @@ export const NotificationsPage: React.FC = () => {
           {selected ? (
             <>
               <button
+                type="button"
                 onClick={() => setSelectedId(null)}
                 className="mb-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 lg:hidden"
               >

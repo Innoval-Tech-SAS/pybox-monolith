@@ -6,7 +6,9 @@ import { ModuleBase } from "@/ui/components/common/module-base";
 import { Card, CardTitle } from "@/ui/components/card";
 import { Select } from "@/ui/components/inputs/select";
 import { Input } from "@/ui/components/inputs/input";
+import { Textarea } from "@/ui/components/inputs/textarea";
 import { DropZone } from "@/ui/components/inputs/drop-zone";
+import { Switch } from "@/ui/components/switch";
 import { WizardForm } from "@/ui/components/wizard-form";
 import { useOrgModule } from "@/companies/hooks/use-org-module";
 import { useBreadcrumb } from "@/companies/hooks/use-breadcrumb";
@@ -161,15 +163,11 @@ export const BulkSendPage: React.FC = () => {
 
                         {channelId && !isWhatsApp && (
                           <div>
-                            <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-gray-700 dark:text-gray-300">
-                              <input
-                                type="checkbox"
-                                checked={useTemplate}
-                                onChange={(e) => { setUseTemplate(e.target.checked); setTemplateId(""); setBody(""); }}
-                                className="h-4 w-4 rounded border-gray-300 accent-brand-500"
-                              />
-                              Usar plantilla guardada
-                            </label>
+                            <Switch
+                              checked={useTemplate}
+                              onChange={(v) => { setUseTemplate(v); setTemplateId(""); setBody(""); }}
+                              label="Usar plantilla guardada"
+                            />
                           </div>
                         )}
                       </div>
@@ -199,12 +197,12 @@ export const BulkSendPage: React.FC = () => {
                               Contenido del mensaje *
                               <span className="ml-1 font-normal text-gray-400">— usa {"{nombre_columna}"} para variables</span>
                             </label>
-                            <textarea
+                            <Textarea
                               value={body}
                               onChange={(e) => setBody(e.target.value)}
                               rows={4}
                               placeholder="Hola {nombre}, tu saldo es {saldo}..."
-                              className="w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 resize-none"
+                              className="resize-none"
                             />
                           </div>
                         )}

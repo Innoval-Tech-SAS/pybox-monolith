@@ -4,6 +4,7 @@ import { ModuleBase } from "@/ui/components/common/module-base";
 import { Card, CardTitle } from "@/ui/components/card";
 import { Input } from "@/ui/components/inputs/input";
 import { Select } from "@/ui/components/inputs/select";
+import { Button } from "@/ui/components/button/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useUser } from "@/users/hooks/use-user";
 import { useUpdateUser } from "@/users/hooks/use-update-user";
@@ -128,20 +129,12 @@ export const ProfileEditPage: React.FC = () => {
         {error && <p className="mt-4 text-sm text-error-500">{error}</p>}
 
         <div className="flex items-center justify-end gap-3 mt-5">
-          <button
-            type="button"
-            onClick={() => navigate("/profile")}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
-          >
+          <Button type="button" size="sm" variant="outline" onClick={() => navigate("/profile")}>
             Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600 disabled:opacity-50"
-          >
-            {saving ? "Guardando..." : "Guardar cambios"}
-          </button>
+          </Button>
+          <Button type="submit" size="sm" loading={saving} loadingText="Guardando...">
+            Guardar cambios
+          </Button>
         </div>
       </form>
     </ModuleBase>

@@ -6,6 +6,7 @@ export const CreateOrgCard: React.FC = () => {
 
   return (
     <button
+      type="button"
       onClick={() => navigate("/my-companies/add")}
       className="group w-full text-left cursor-pointer overflow-hidden rounded-2xl border border-gray-200 bg-white transition-colors duration-200 min-h-56 flex flex-col gap-5 p-5 sm:p-6 hover:border-brand-300 dark:border-gray-800 dark:bg-white/3 dark:hover:border-brand-700"
     >

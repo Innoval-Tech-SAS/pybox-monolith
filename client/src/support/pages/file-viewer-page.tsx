@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router";
 import { ExternalLink, FileX, RefreshCw } from "lucide-react";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Spinner } from "@/ui/components/loader/spinner";
+import { Button } from "@/ui/components/button/button";
 import { getTicketDisplayId } from "@/support/utils/ticket-kanban-utils";
 import { useFileAvailability } from "@/support/hooks/use-file-availability";
 import type { SupportCaseType } from "@/types/support/support-types";
@@ -71,14 +72,9 @@ export const FileViewerPage: React.FC = () => {
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               {url && (
                 <>
-                  <button
-                    type="button"
-                    onClick={retry}
-                    className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
-                  >
-                    <RefreshCw size={15} />
+                  <Button type="button" size="sm" startIcon={<RefreshCw size={15} />} onClick={retry}>
                     Reintentar
-                  </button>
+                  </Button>
                   <a
                     href={url}
                     target="_blank"

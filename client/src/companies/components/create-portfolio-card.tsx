@@ -9,6 +9,7 @@ export const CreatePortfolioCard: React.FC<{ id?: string }> = ({ id }) => {
   return (
     <button
       id={id}
+      type="button"
       onClick={() => navigate(buildOrgPath("/my-companies/add-portfolio"))}
       className="group w-full flex flex-col overflow-hidden rounded-3xl border-2 border-dashed border-brand-300 bg-white shadow-lg text-left transition-all duration-300
         hover:border-brand-400 hover:shadow-xl hover:scale-[1.02]

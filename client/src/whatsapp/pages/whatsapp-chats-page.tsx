@@ -96,6 +96,7 @@ export const WhatsAppChatsPage: React.FC = () => {
               return (
                 <button
                   key={chat.id}
+                  type="button"
                   onClick={() => openChat(chat)}
                   className={`flex items-center gap-3 w-full px-4 py-3 text-left border-b border-gray-200 dark:border-gray-800 transition-colors ${
                     selected?.chatId === chat.id
@@ -145,6 +146,7 @@ export const WhatsAppChatsPage: React.FC = () => {
               </div>
               <div className="relative">
                 <button
+                  type="button"
                   onClick={() => setMenuOpen((v) => !v)}
                   aria-label="Más opciones"
                   className="dropdown-toggle text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -196,6 +198,7 @@ export const WhatsAppChatsPage: React.FC = () => {
                   className="flex-1 resize-none bg-gray-50 dark:bg-gray-900 rounded-xl px-4 py-2 text-sm text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:outline-none max-h-28 overflow-y-auto custom-scrollbar disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 <button
+                  type="button"
                   onClick={submit}
                   disabled={!input.trim() || !canSend}
                   aria-label="Enviar mensaje"

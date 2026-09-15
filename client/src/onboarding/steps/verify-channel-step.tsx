@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { OtpInput } from "@/ui/components/inputs/otp-input";
+import { Button } from "@/ui/components/button/button";
 import type { VerifyChannelStepProps } from "@/types/props/onboarding-props";
 
 export const VerifyChannelStep: React.FC<VerifyChannelStepProps> = ({
@@ -38,14 +39,9 @@ export const VerifyChannelStep: React.FC<VerifyChannelStepProps> = ({
 
       {!codeSent ? (
         <>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={handleRequestOtp}
-            className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
-          >
-            {loading ? "Enviando..." : "Enviar código"}
-          </button>
+          <Button type="button" className="w-full" onClick={handleRequestOtp} loading={loading} loadingText="Enviando...">
+            Enviar código
+          </Button>
         </>
       ) : (
         <>
@@ -58,14 +54,16 @@ export const VerifyChannelStep: React.FC<VerifyChannelStepProps> = ({
             {error && <p className="text-xs text-error-500">{error}</p>}
           </div>
           <div className="flex flex-col gap-2">
-            <button
+            <Button
               type="button"
-              disabled={loading || digits.join("").length < 6}
+              className="w-full"
+              disabled={digits.join("").length < 6}
               onClick={handleVerify}
-              className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
+              loading={loading}
+              loadingText="Verificando..."
             >
-              {loading ? "Verificando..." : "Verificar"}
-            </button>
+              Verificar
+            </Button>
             <button
               type="button"
               disabled={loading}

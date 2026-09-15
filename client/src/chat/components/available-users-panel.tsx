@@ -59,6 +59,7 @@ export const AvailableUsersPanel: React.FC<AvailableUsersPanelProps> = ({
             {sortedChats.map((chat) => (
               <button
                 key={chat.id}
+                type="button"
                 onClick={() => onOpenChat(chat.id, chat.title, chat.peerAvatar)}
                 className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
               >
@@ -103,6 +104,7 @@ export const AvailableUsersPanel: React.FC<AvailableUsersPanelProps> = ({
           filtered.map((user) => (
             <button
               key={user.id}
+              type="button"
               onClick={() => onSelect(user)}
               className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
             >

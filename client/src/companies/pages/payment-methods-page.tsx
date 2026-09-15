@@ -8,6 +8,7 @@ import { Loader } from "@/ui/components/loader/loader";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/ui/components/table/table";
 import { PaginationWithIcon } from "@/ui/components/table/pagination-with-icon";
 import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
+import { Button } from "@/ui/components/button/button";
 
 const PAGE_SIZE = 10;
 import { getSession } from "@/auth/utils/auth-session-utils";
@@ -49,13 +50,14 @@ export const PaymentMethodsPage: React.FC = () => {
           <div className="flex flex-col gap-5">
             {isAdmin && (
               <div className="flex justify-end">
-                <button
+                <Button
+                  type="button"
+                  size="sm"
+                  startIcon={<Plus size={16} />}
                   onClick={() => navigate(buildOrgPath("/my-companies/payment-methods/new"))}
-                  className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
                 >
-                  <Plus size={16} />
                   Nuevo método
-                </button>
+                </Button>
               </div>
             )}
 
@@ -110,6 +112,7 @@ export const PaymentMethodsPage: React.FC = () => {
                             <TableCell className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <button
+                                  type="button"
                                   onClick={() =>
                                     navigate(buildOrgPath(`/my-companies/payment-methods/${item.id}/edit`))
                                   }
@@ -118,6 +121,7 @@ export const PaymentMethodsPage: React.FC = () => {
                                   <Pencil size={14} />
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => setDeleting(item)}
                                   className="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-500 dark:hover:bg-error-500/10 dark:hover:text-error-400"
                                 >

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import { PageMeta } from "@/ui/pages/page-meta";
+import { Button } from "@/ui/components/button/button";
 import { PaymentResultView } from "../components/payment-result-view";
 
 export const BoldPaymentResultPage: React.FC = () => {
@@ -29,12 +30,14 @@ export const BoldPaymentResultPage: React.FC = () => {
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
         <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-lg dark:border-gray-800 dark:bg-gray-900">
           <PaymentResultView status={txStatus} reference={orderId}>
-            <button
+            <Button
+              type="button"
+              size="sm"
+              className="mb-3 w-full"
               onClick={() => navigate("/my-companies", { replace: true })}
-              className="mb-3 w-full rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
             >
               Ir a mis empresas
-            </button>
+            </Button>
 
             <p className="text-xs text-gray-400 dark:text-gray-500">
               Serás redirigido automáticamente en {countdown}s…

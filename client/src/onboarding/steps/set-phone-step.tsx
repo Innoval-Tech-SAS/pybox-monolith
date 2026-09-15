@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Input } from "@/ui/components/inputs/input";
 import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
+import { Button } from "@/ui/components/button/button";
 import { useCountries } from "@/hooks/use-countries";
 import { useSetPhone } from "@/hooks/use-set-phone";
 import type { SetPhoneStepProps } from "@/onboarding/types/set-phone-step-props";
@@ -66,13 +67,15 @@ export const SetPhoneStep: React.FC<SetPhoneStepProps> = ({ onDone }) => {
 
       {error && <p className="text-sm text-error-500">{error}</p>}
 
-      <button
+      <Button
         type="submit"
-        disabled={loading || !phoneNumber || !phonePrefix}
-        className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-brand-600 disabled:opacity-50"
+        className="w-full"
+        disabled={!phoneNumber || !phonePrefix}
+        loading={loading}
+        loadingText="Guardando..."
       >
-        {loading ? "Guardando..." : "Continuar"}
-      </button>
+        Continuar
+      </Button>
     </form>
   );
 };

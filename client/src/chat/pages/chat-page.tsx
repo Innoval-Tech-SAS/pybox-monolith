@@ -71,6 +71,7 @@ export const ChatPage: React.FC = () => {
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">Chats</h2>
           <button
+            type="button"
             onClick={() => {
               setShowNewChat(true);
               loadAvailableUsers();
@@ -103,6 +104,7 @@ export const ChatPage: React.FC = () => {
               availableUsers.map((u) => (
                 <button
                   key={u.id}
+                  type="button"
                   onClick={() => openNewChat(u.id)}
                   className="flex items-center gap-2 w-full py-1.5 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg px-2 text-left transition-colors"
                 >
@@ -130,6 +132,7 @@ export const ChatPage: React.FC = () => {
             filteredChats.map((chat) => (
               <button
                 key={chat.id}
+                type="button"
                 onClick={() => selectChat(chat.id)}
                 className={`flex items-center gap-3 w-full px-4 py-3 text-left border-b border-gray-200 dark:border-gray-800 transition-colors ${
                   selected?.chatId === chat.id
@@ -176,6 +179,7 @@ export const ChatPage: React.FC = () => {
             {/* Panel header */}
             <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-200 dark:border-gray-800">
               <button
+                type="button"
                 onClick={closeConversation}
                 aria-label="Volver a la lista de chats"
                 className="md:hidden shrink-0 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white/80 transition-colors"
@@ -205,6 +209,7 @@ export const ChatPage: React.FC = () => {
               )}
               {selected.nextCursor && !selected.loading && (
                 <button
+                  type="button"
                   onClick={loadMore}
                   className="text-xs text-brand-500 hover:underline self-center"
                 >
@@ -238,6 +243,7 @@ export const ChatPage: React.FC = () => {
                 className="flex-1 resize-none bg-gray-50 dark:bg-gray-900 rounded-xl px-4 py-2 text-sm text-gray-800 dark:text-white/90 placeholder:text-gray-400 focus:outline-none max-h-28 overflow-y-auto custom-scrollbar"
               />
               <button
+                type="button"
                 onClick={submit}
                 disabled={!input.trim()}
                 aria-label="Enviar mensaje"

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router";
-import { Download, FileStack, Loader2 } from "lucide-react";
+import { Download, FileStack } from "lucide-react";
 import EmptyState from "@/ui/components/common/empty-state";
 import { PageMeta } from "@/ui/pages/page-meta";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { Loader } from "@/ui/components/loader/loader";
+import { Button } from "@/ui/components/button/button";
 import { API_URL } from "@/hooks/use-api-client";
 import { useOrgModule } from "../hooks/use-org-module";
 import { useBreadcrumb } from "../hooks/use-breadcrumb";
@@ -58,15 +59,9 @@ export const DebtorStatementsPage: React.FC = () => {
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            disabled={generating}
-            onClick={handleGenerate}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600 disabled:opacity-60"
-          >
-            {generating && <Loader2 size={14} className="animate-spin" />}
+          <Button type="button" size="sm" loading={generating} onClick={handleGenerate}>
             Generar extracto
-          </button>
+          </Button>
           {generateError && <p className="w-full text-sm text-error-600 dark:text-error-400">{generateError}</p>}
         </div>
 

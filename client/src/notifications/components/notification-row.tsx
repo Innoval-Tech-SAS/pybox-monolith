@@ -4,6 +4,7 @@ import type { NotificationRowProps } from "@/types/props/notification-row-props"
 
 export const NotificationRow: React.FC<NotificationRowProps> = ({ notification: n, isSelected, onClick }) => (
   <button
+    type="button"
     onClick={onClick}
     className={`w-full flex items-start gap-4 rounded-xl border px-5 py-4 text-left transition-colors ${
       isSelected

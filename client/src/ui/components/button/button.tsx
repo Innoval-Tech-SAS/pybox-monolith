@@ -16,11 +16,13 @@ export const Button: React.FC<ButtonProps> = ({
   disabled = false,
   loading = false,
   loadingText,
+  type = "button",
 }) => {
   const isDisabled = disabled || loading;
   const spinnerTone = variant === "primary" ? "white" : "current";
   return (
     <button
+      type={type}
       className={`inline-flex items-center justify-center gap-2 rounded-lg transition ${className} ${
         sizeClasses[size]
       } ${variantClasses[variant]} ${

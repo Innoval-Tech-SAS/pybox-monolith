@@ -1,4 +1,5 @@
 import { DropZone } from "@/ui/components/inputs/drop-zone";
+import { Button } from "@/ui/components/button/button";
 import type { StepDocumentsProps } from "@/companies/types/step-documents-props";
 
 export const StepDocuments: React.FC<StepDocumentsProps> = ({
@@ -39,21 +40,12 @@ export const StepDocuments: React.FC<StepDocumentsProps> = ({
         />
       </div>
       <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/3"
-        >
+        <Button type="button" variant="outline" onClick={onBack}>
           Atrás
-        </button>
-        <button
-          type="button"
-          onClick={onNext}
-          disabled={!canGoNext}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:opacity-50"
-        >
+        </Button>
+        <Button type="button" onClick={onNext} disabled={!canGoNext}>
           Siguiente
-        </button>
+        </Button>
       </div>
     </div>
   );
