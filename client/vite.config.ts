@@ -1,8 +1,5 @@
 import path from "path";
 import svgr from "vite-plugin-svgr";
-// `vitest/config` reexporta `defineConfig` de vite con el campo `test` tipado --
-// mismo archivo sirve para `vite build/dev` y para `vitest`, sin cambiar nada del
-// comportamiento normal de Vite.
 import { defineConfig } from "vitest/config";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
