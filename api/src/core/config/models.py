@@ -1,3 +1,4 @@
+import app_platform.branding.models.platform_branding_model  # noqa: F401
 import app_platform.countries.models.country_model  # noqa: F401
 import app_platform.countries.models.document_type_model  # noqa: F401
 import app_platform.countries.models.country_document_type_model  # noqa: F401

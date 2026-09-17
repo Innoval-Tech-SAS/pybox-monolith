@@ -3,7 +3,7 @@ import { Building2, Upload } from "lucide-react";
 import type { LogoUploadCardProps } from "@/companies/types/logo-upload-card-props";
 import { resolveFileUrl } from "@/companies/utils/resolve-doc-file-url";
 
-export const LogoUploadCard: React.FC<LogoUploadCardProps> = ({ logoUrl, saving, onUpload }) => {
+export const LogoUploadCard: React.FC<LogoUploadCardProps> = ({ logoUrl, saving, onUpload, label = "Logo de la empresa" }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const resolved = resolveFileUrl(logoUrl);
 
@@ -11,13 +11,13 @@ export const LogoUploadCard: React.FC<LogoUploadCardProps> = ({ logoUrl, saving,
     <div className="flex items-center gap-4 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
       <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
         {resolved ? (
-          <img src={resolved} alt="Logo de la empresa" className="size-full object-contain" />
+          <img src={resolved} alt={label} className="size-full object-contain" />
         ) : (
           <Building2 size={24} className="text-gray-300 dark:text-gray-600" />
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-gray-800 dark:text-white/90">Logo de la empresa</p>
+        <p className="text-sm font-medium text-gray-800 dark:text-white/90">{label}</p>
         <p className="text-xs text-gray-400 dark:text-gray-500">PNG, JPG o WebP · máx. 10 MB</p>
       </div>
       <input

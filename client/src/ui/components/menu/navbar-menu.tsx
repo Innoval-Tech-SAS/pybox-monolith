@@ -5,8 +5,10 @@ import { useSidebar } from "../../../hooks/use-sidebar";
 import { UserDropdown } from "./user-dropdown";
 import { ThemeToggleButton } from "./theme-toggle-button";
 import { NotificationDropdown } from "./notification-dropdown";
+import { SidebarLogo } from "./sidebar-logo";
+import type { NavbarMenuProps } from "@/types/props/navbar-menu-props";
 
-export const NavbarMenu: React.FC = () => {
+export const NavbarMenu: React.FC<NavbarMenuProps> = ({ logoUrl }) => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
@@ -83,12 +85,7 @@ export const NavbarMenu: React.FC = () => {
           </button>
 
           <Link to="/" className="lg:hidden">
-            <img className="dark:hidden" src="/images/logo.png" alt="Logo" />
-            <img
-              className="hidden dark:block"
-              src="/images/logo.png"
-              alt="Logo"
-            />
+            <SidebarLogo logoUrl={logoUrl} variant="compact" />
           </Link>
 
           <button

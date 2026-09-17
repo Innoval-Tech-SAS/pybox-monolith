@@ -6,4 +6,5 @@ export interface AsideMenuProps {
   othersLabel?: string;
   supportItems?: NavItem[];
   supportLabel?: string;
+  logoUrl?: string | null;
 }

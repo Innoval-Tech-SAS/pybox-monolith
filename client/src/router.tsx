@@ -63,6 +63,7 @@ const DatabaseExplorerPage = lazy(() => import("./databases/pages/database-explo
 const CreateTablePage = lazy(() => import("./databases/pages/create-table-page").then((m) => ({ default: m.CreateTablePage })));
 const AlterTablePage = lazy(() => import("./databases/pages/alter-table-page").then((m) => ({ default: m.AlterTablePage })));
 const ProviderCredentialsPage = lazy(() => import("./provider-credentials/pages/provider-credentials-page").then((m) => ({ default: m.ProviderCredentialsPage })));
+const PlatformBrandingPage = lazy(() => import("./companies/pages/platform-branding-page").then((m) => ({ default: m.PlatformBrandingPage })));
 const NotFound = lazy(() => import("./ui/pages/not-found").then((m) => ({ default: m.NotFound })));
 
 const DebtorsRoute: React.FC = () => {
@@ -347,5 +348,9 @@ export const authRouter = [
   {
     path: "/provider-credentials",
     element: <ProviderCredentialsPage />,
+  },
+  {
+    path: "/platform/branding",
+    element: <PlatformBrandingPage />,
   },
 ];

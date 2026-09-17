@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app_platform.branding.controllers.platform_branding_controller import router as platform_branding_router
 from app_platform.dashboard.controllers.dashboard_controller import router as dashboard_router
 from app_platform.documents.controllers.admin_document_controller import router as admin_documents_router
 from billing.billing_dashboard.controllers.billing_dashboard_controller import router as billing_dashboard_router
@@ -64,6 +65,7 @@ API_PREFIX = "/api/v1"
 
 def register_routers(app: FastAPI) -> None:
     app.include_router(auth_router, prefix=API_PREFIX)
+    app.include_router(platform_branding_router, prefix=API_PREFIX)
     app.include_router(invoices_router, prefix=API_PREFIX)
     app.include_router(dashboard_router, prefix=API_PREFIX)
     app.include_router(billing_dashboard_router, prefix=API_PREFIX)

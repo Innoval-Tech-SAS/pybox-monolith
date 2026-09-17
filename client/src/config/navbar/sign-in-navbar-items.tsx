@@ -1,4 +1,4 @@
-import { Building2, CreditCard, Database, FileStack, FileText, Home, KeyRound, MessageCircle, TicketCheck, Users } from "lucide-react";
+import { Building2, CreditCard, Database, FileStack, FileText, Home, Image, KeyRound, MessageCircle, TicketCheck, Users } from "lucide-react";
 
 interface NavbarItem {
   name: string;
@@ -75,6 +75,13 @@ export const otherSignInItems: NavbarItem[] = [
     icon: <MessageCircle size={20} />,
     path: "/my-companies/whatsapp/chats",
     permission: "org.manage_whatsapp_chats",
+  },
+  {
+    name: "Marca de la plataforma",
+    icon: <Image size={20} />,
+    path: "/platform/branding",
+    // El logo global de fallback lo administra solo un admin global.
+    adminGlobalOnly: true,
   },
 ];
 

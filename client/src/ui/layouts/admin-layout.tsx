@@ -13,11 +13,13 @@ import { Backdrop } from "../components/menu/backdrop";
 import { useSession } from "../../auth/hooks/use-session";
 import { Role, Scope } from "../../types/auth/role";
 import { useHasAnyPermission } from "../../auth/hooks/use-has-any-permission";
+import { useSidebarLogo } from "../../companies/hooks/use-sidebar-logo";
 
 const LayoutContent: React.FC = () => {
   const location = useLocation();
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
   const { role, scope } = useSession();
+  const { logoUrl } = useSidebarLogo();
   const hasAnyPermission = useHasAnyPermission;
 
   const isOrgOrGlobal = scope === Scope.ORG || scope === Scope.GLOBAL;
@@ -36,7 +38,7 @@ const LayoutContent: React.FC = () => {
       <MfaGuard>
         <div className="h-screen overflow-hidden flex flex-col xl:flex-row">
           <div>
-            <AsideMenu navItems={navItems} othersItems={othersItems} othersLabel="Administración" supportItems={supportNavItems} supportLabel="Soporte" />
+            <AsideMenu navItems={navItems} othersItems={othersItems} othersLabel="Administración" supportItems={supportNavItems} supportLabel="Soporte" logoUrl={logoUrl} />
             <Backdrop />
           </div>
           <div
@@ -44,7 +46,7 @@ const LayoutContent: React.FC = () => {
               isExpanded || isHovered ? "lg:ml-72.5" : "lg:ml-22.5"
             } ${isMobileOpen ? "ml-0" : ""}`}
           >
-            <NavbarMenu />
+            <NavbarMenu logoUrl={logoUrl} />
             <main
               id="main-content"
               className="flex flex-col flex-1 overflow-hidden p-4 mx-auto w-full max-w-(--breakpoint-2xl) md:p-6"
