@@ -7,6 +7,10 @@ interface NavbarItem {
   permission?: string;
   globalOnly?: boolean;
   adminGlobalOnly?: boolean;
+  // Visible para un admin de organización con `permission`, y para el admin
+  // global -- pero no para Atención al Cliente con scope GLOBAL (que de otra
+  // forma pasaría cualquier `permission` por el bypass de useHasAnyPermission).
+  hiddenForGlobalCs?: boolean;
 }
 
 export const signInNavbarItems = [
@@ -50,10 +54,9 @@ export const otherSignInItems: NavbarItem[] = [
     name: "Facturación",
     icon: <CreditCard size={20} />,
     path: "/billing",
-    // Vista cruzada de TODAS las organizaciones: solo administradores globales.
-    // No usa `permission` porque ese check deja pasar a cualquier org-miembro
-    // con org.billing, lo cual mostraria una pagina admin-only equivocada.
-    globalOnly: true,
+    // Vista cruzada de TODAS las organizaciones: solo administradores globales,
+    // no cualquier usuario con scope GLOBAL (ej. Atención al Cliente).
+    adminGlobalOnly: true,
   },
   {
     name: "Bases de datos",
@@ -75,6 +78,9 @@ export const otherSignInItems: NavbarItem[] = [
     icon: <MessageCircle size={20} />,
     path: "/my-companies/whatsapp/chats",
     permission: "org.manage_whatsapp_chats",
+    // Sin esto, un CS con scope GLOBAL lo vería igual: useHasAnyPermission
+    // devuelve true para cualquier scope GLOBAL sin mirar el permiso real.
+    hiddenForGlobalCs: true,
   },
 ];
 

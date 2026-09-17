@@ -27,6 +27,7 @@ const LayoutContent: React.FC = () => {
     ? otherSignInItems.filter((item) => {
         if (item.adminGlobalOnly) return scope === Scope.GLOBAL && role === Role.ADMIN;
         if (item.globalOnly) return scope === Scope.GLOBAL;
+        if (item.hiddenForGlobalCs && scope === Scope.GLOBAL && role === Role.CS) return false;
         return !item.permission || hasAnyPermission(item.permission);
       })
     : [];
