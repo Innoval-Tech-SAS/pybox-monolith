@@ -2,7 +2,6 @@
 .github/copilot-instructions.md
 
 server/
-.vscode/
 
 # Python-generated files
 __pycache__/
