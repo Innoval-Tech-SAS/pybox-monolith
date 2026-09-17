@@ -87,10 +87,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="overflow-x-auto border-t border-gray-200 dark:border-white/5">
-        <div
-          className="flex min-w-max divide-x divide-gray-200 dark:divide-white/5"
-          style={{ minWidth: `${visibleColumns.length * 260}px` }}
-        >
+        <div className="flex w-full divide-x divide-gray-200 dark:divide-white/5">
           {visibleColumns.map((column) => (
             <TicketKanbanColumn
               key={column.status}

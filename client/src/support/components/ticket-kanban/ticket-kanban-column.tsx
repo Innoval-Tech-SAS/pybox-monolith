@@ -34,7 +34,7 @@ export const TicketKanbanColumn: React.FC<TicketKanbanColumnProps> = ({
   const closeDropdown = () => setIsOpen(false);
 
   return (
-    <div ref={columnRef} className="flex flex-col gap-5 p-4 swim-lane xl:p-6">
+    <div ref={columnRef} className="flex flex-1 min-w-45 flex-col gap-5 p-4 swim-lane xl:p-6">
       <div className="mb-1 flex items-center justify-between">
         <h3 className="flex items-center gap-3 text-base font-medium text-gray-800 dark:text-white/90">
           {title}
