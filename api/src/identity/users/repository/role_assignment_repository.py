@@ -46,6 +46,18 @@ class RoleAssignmentRepository(SoftDeleteRepositoryBase[RoleAssignmentModel]):
         )
         return list(result.scalars().all())
 
+    async def get_global_user_ids(self, user_ids: list[uuid.UUID]) -> set[uuid.UUID]:
+        if not user_ids:
+            return set()
+        result = await self.session.execute(
+            select(RoleAssignmentModel.user_id).where(
+                RoleAssignmentModel.user_id.in_(user_ids),
+                RoleAssignmentModel.scope == UserScope.GLOBAL,
+                RoleAssignmentModel.deleted_at.is_(None),
+            )
+        )
+        return set(result.scalars().all())
+
     async def get_admin_org_ids(self, user_id: uuid.UUID) -> list[uuid.UUID]:
         result = await self.session.execute(
             select(RoleAssignmentModel.organization_id).where(

@@ -30,6 +30,17 @@ class OrganizationMembershipRepository(SoftDeleteRepositoryBase[OrganizationMemb
         )
         return list(result.scalars().all())
 
+    async def get_by_user_ids(self, user_ids: list[uuid.UUID]) -> list[OrganizationMembershipModel]:
+        if not user_ids:
+            return []
+        result = await self.session.execute(
+            select(OrganizationMembershipModel).where(
+                OrganizationMembershipModel.user_id.in_(user_ids),
+                OrganizationMembershipModel.deleted_at.is_(None),
+            )
+        )
+        return list(result.scalars().all())
+
     async def get_by_organization_id(self, org_id: uuid.UUID) -> list[OrganizationMembershipModel]:
         result = await self.session.execute(
             select(OrganizationMembershipModel).where(

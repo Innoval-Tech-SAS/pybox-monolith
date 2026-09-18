@@ -98,6 +98,62 @@ async def chat_ws(ws: WebSocket, service: ChatServiceDep, token: str | None = Qu
                         for uid in other_ids:
                             await ws_manager.send_to_user(uid, "read", read_data)
 
+                elif event == "create_group_chat":
+                    title = data.get("title", "")
+                    member_ids_raw = data.get("memberIds", [])
+                    member_ids = [uuid.UUID(str(mid)) for mid in member_ids_raw]
+                    chat = await service.create_group_chat(session, title, member_ids)
+                    await reply("chat", json.loads(chat.model_dump_json(by_alias=True)))
+
+                elif event == "list_group_members":
+                    chat_id_raw = data.get("chatId")
+                    if chat_id_raw:
+                        chat_id = uuid.UUID(str(chat_id_raw))
+                        members = await service.list_members(chat_id, session.user_id)
+                        await reply(
+                            "group_members",
+                            {
+                                "chatId": str(chat_id),
+                                "members": [
+                                    json.loads(m.model_dump_json(by_alias=True)) for m in members
+                                ],
+                            },
+                        )
+
+                elif event == "add_group_member":
+                    chat_id_raw = data.get("chatId")
+                    candidate_id_raw = data.get("userId")
+                    if chat_id_raw and candidate_id_raw:
+                        chat_id = uuid.UUID(str(chat_id_raw))
+                        candidate_id = uuid.UUID(str(candidate_id_raw))
+                        chat, other_ids = await service.add_member(session, chat_id, candidate_id)
+                        chat_data = json.loads(chat.model_dump_json(by_alias=True))
+                        await reply("chat", chat_data)
+                        candidate_summary = await service.get_chat_summary_for(chat_id, candidate_id)
+                        await ws_manager.send_to_user(
+                            candidate_id, "chat", json.loads(candidate_summary.model_dump_json(by_alias=True))
+                        )
+                        update_data = {"chatId": str(chat_id), "memberCount": chat_data["memberCount"]}
+                        for uid in other_ids:
+                            if uid != session.user_id:
+                                await ws_manager.send_to_user(uid, "group_updated", update_data)
+
+                elif event == "remove_group_member":
+                    chat_id_raw = data.get("chatId")
+                    target_id_raw = data.get("userId")
+                    if chat_id_raw and target_id_raw:
+                        chat_id = uuid.UUID(str(chat_id_raw))
+                        target_id = uuid.UUID(str(target_id_raw))
+                        recipient_ids = await service.remove_member(session, chat_id, target_id)
+                        await reply("member_removed", {"chatId": str(chat_id), "userId": str(target_id)})
+                        await ws_manager.send_to_user(
+                            target_id, "member_removed", {"chatId": str(chat_id), "userId": str(target_id)}
+                        )
+                        update_data = {"chatId": str(chat_id), "memberCount": len(recipient_ids)}
+                        for uid in recipient_ids:
+                            if uid != session.user_id:
+                                await ws_manager.send_to_user(uid, "group_updated", update_data)
+
                 elif event == "read_all":
                     chat_id_raw = data.get("chatId")
                     if chat_id_raw:
