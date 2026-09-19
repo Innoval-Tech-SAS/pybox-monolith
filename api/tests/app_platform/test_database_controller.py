@@ -5,6 +5,7 @@ import pytest
 from identity.organizations.enums.organization_enums import VerificationStatus
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.schemas.user_session_schema import OrgSessionEntry
+from receivables.debtors.enums.debtor_enums import DebtorType
 
 BASE = "/api/v1/databases"
 
@@ -71,6 +72,21 @@ class TestListTableFields:
         authed = auth_as(make_user_session_factory(role=UserRole.USER, scope=UserScope.SELF))
         resp = await authed.get(f"{BASE}/schemas/public/tables/paises/fields")
         assert resp.status_code == 403
+
+    async def test_enum_column_exposes_values_in_declaration_order(self, auth_as, make_user_session_factory):
+        authed = auth_as(org_scoped_session(make_user_session_factory))
+        resp = await authed.get(f"{BASE}/schemas/public/tables/deudores/fields")
+        assert resp.status_code == 200
+        fields = {f["name"]: f for f in resp.json()}
+        assert fields["tipo_deudor"]["type"] == "USER-DEFINED"
+        assert fields["tipo_deudor"]["enumValues"] == [m.value for m in DebtorType]
+
+    async def test_non_enum_column_has_null_enum_values(self, auth_as, make_user_session_factory):
+        authed = auth_as(org_scoped_session(make_user_session_factory))
+        resp = await authed.get(f"{BASE}/schemas/public/tables/deudores/fields")
+        fields = {f["name"]: f for f in resp.json()}
+        assert fields["nombre_completo"]["enumValues"] is None
+        assert fields["id"]["enumValues"] is None
 
 
 class TestExecuteQuery:

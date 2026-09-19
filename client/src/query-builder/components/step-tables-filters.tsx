@@ -5,12 +5,14 @@ import { Dropdown } from "@/ui/components/dropdown/dropdown";
 import { DropdownItem } from "@/ui/components/dropdown/dropdown-item";
 import { Select } from "@/ui/components/inputs/select";
 import { useEntityFields } from "@/query-builder/hooks/use-entity-fields";
+import { EnumValueInput } from "@/query-builder/components/enum-value-input";
 import {
-  FILTER_OPS,
+  ENUM_UNSUPPORTED_OPS,
   OPS_WITHOUT_VALUE,
   OPS_WITH_MULTIPLE_VALUES,
   SQL_TYPE_LABELS as TYPE_LABELS,
 } from "@/query-builder/constants/query-builder-constants";
+import { getFilterOpsForField, isEnumField } from "@/query-builder/utils/enum-filter";
 import {
   RELATIVE_VALUE_OPTIONS,
   buildOffsetToken,
@@ -270,8 +272,20 @@ const FilterRow: React.FC<FilterRowProps> = ({ filter, fields, onChange, onRemov
   const multiValue = OPS_WITH_MULTIPLE_VALUES.includes(filter.op);
   const selectedField = fields.find((f) => f.name === filter.column);
   const isDateField = !!selectedField && isDateLikeType(selectedField.type);
+  const enumOptions = isEnumField(selectedField) ? selectedField.enumValues : null;
   const { mode, days } = detectRelativeMode(filter.op, filter.value);
   const rangeForced = mode === "this_week" || mode === "this_month";
+
+  // El valor previo (texto libre o de otro enum) no es válido para la nueva columna
+  // cuando alguna de las dos es un enum, así que se descarta; si no, se conserva.
+  const handleColumnChange = (column: string) => {
+    const next = fields.find((f) => f.name === column);
+    if (!isEnumField(next) && !enumOptions) return onChange({ column });
+
+    const op = isEnumField(next) && ENUM_UNSUPPORTED_OPS.includes(filter.op) ? "=" : filter.op;
+    const value = OPS_WITHOUT_VALUE.includes(op) ? null : OPS_WITH_MULTIPLE_VALUES.includes(op) ? [] : "";
+    onChange({ column, op, value });
+  };
 
   const handleOpChange = (op: FilterOp) => {
     const patch: Partial<TableFilter> = { op };
@@ -299,7 +313,7 @@ const FilterRow: React.FC<FilterRowProps> = ({ filter, fields, onChange, onRemov
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)_auto] sm:items-center">
       <Select
         value={filter.column}
-        onChange={(v) => onChange({ column: v })}
+        onChange={handleColumnChange}
         options={fields.map((f) => ({ value: f.name, label: f.name }))}
       />
 
@@ -307,7 +321,7 @@ const FilterRow: React.FC<FilterRowProps> = ({ filter, fields, onChange, onRemov
         value={filter.op}
         onChange={(v) => handleOpChange(v as FilterOp)}
         disabled={rangeForced}
-        options={FILTER_OPS.map((op) => ({ value: op.value, label: op.label }))}
+        options={getFilterOpsForField(selectedField).map((op) => ({ value: op.value, label: op.label }))}
       />
 
       {noValue ? (
@@ -356,6 +370,15 @@ const FilterRow: React.FC<FilterRowProps> = ({ filter, fields, onChange, onRemov
               se calcula al ejecutar
             </span>
           )}
+        </div>
+      ) : enumOptions ? (
+        <div className="col-span-2 sm:col-span-1">
+          <EnumValueInput
+            options={enumOptions}
+            op={filter.op}
+            value={filter.value}
+            onChange={(v) => onChange({ value: v })}
+          />
         </div>
       ) : multiValue ? (
         <MultiValueInput
