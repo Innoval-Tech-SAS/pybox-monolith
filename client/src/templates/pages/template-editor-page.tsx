@@ -10,6 +10,9 @@ import { useTemplateEditorForm } from "@/templates/hooks/use-template-editor-for
 import { StepChannel } from "@/templates/components/template-form/step-channel";
 import { StepInfo } from "@/templates/components/template-form/step-info";
 import { StepDesign } from "@/templates/components/template-form/step-design";
+import { StepWhatsAppInfo } from "@/templates/components/template-form/step-whatsapp-info";
+import { StepWhatsAppDesign } from "@/templates/components/template-form/step-whatsapp-design";
+import { StepWhatsAppPreview } from "@/templates/components/template-form/step-whatsapp-preview";
 import { TemplatePreviewStep } from "@/templates/components/template-preview-step";
 import { TEMPLATE_WIZARD_STEPS } from "@/templates/constants/template-wizard-options";
 import { useOrgModule } from "@/companies/hooks/use-org-module";
@@ -41,12 +44,14 @@ export const TemplateEditorPage: React.FC = () => {
     loadingTemplate,
     saving,
     isEmail,
+    isWhatsApp,
+    whatsapp,
     isUnavailable,
     charLimit,
     isDesignValid,
     canAdvance,
     handleSubmit,
-  } = useTemplateEditorForm(portfolioId, id, () => navigate(backPath), () => navigate(backPath));
+  } = useTemplateEditorForm(portfolioId, id, () => navigate(backPath), () => navigate(backPath), variables);
 
   const pageTitle = isEditing ? "Editar plantilla" : "Nueva plantilla";
 
@@ -74,8 +79,8 @@ export const TemplateEditorPage: React.FC = () => {
           canSubmit={isDesignValid}
           onSubmit={handleSubmit}
           loading={saving}
-          submitLabel={isEditing ? "Guardar cambios" : "Crear plantilla"}
-          loadingLabel={isEditing ? "Guardando…" : "Creando…"}
+          submitLabel={isEditing ? "Guardar cambios" : isWhatsApp ? "Crear y enviar a Meta" : "Crear plantilla"}
+          loadingLabel={isEditing ? "Guardando…" : isWhatsApp ? "Enviando a Meta…" : "Creando…"}
         >
           {(step) => (
             <>
@@ -83,9 +88,29 @@ export const TemplateEditorPage: React.FC = () => {
                 <StepChannel channel={form.channel} disabled={isEditing} onChange={set("channel")} />
               )}
 
-              {step === 1 && <StepInfo form={form} isEmail={isEmail} set={set} />}
+              {step === 1 && isWhatsApp && (
+                <StepWhatsAppInfo
+                  name={form.name}
+                  whatsappForm={whatsapp.form}
+                  onNameChange={set("name")}
+                  onWhatsAppChange={whatsapp.set}
+                />
+              )}
+              {step === 1 && !isWhatsApp && <StepInfo form={form} isEmail={isEmail} set={set} />}
 
-              {step === 2 && (
+              {step === 2 && isWhatsApp && (
+                <StepWhatsAppDesign
+                  form={whatsapp.form}
+                  issues={whatsapp.issues}
+                  variables={variables}
+                  loadingVariables={loadingVariables}
+                  onHeaderChange={whatsapp.set("headerText")}
+                  onBodyChange={whatsapp.set("bodyText")}
+                  onFooterChange={whatsapp.set("footerText")}
+                />
+              )}
+
+              {step === 2 && !isWhatsApp && (
                 <StepDesign
                   isEmail={isEmail}
                   isUnavailable={isUnavailable}
@@ -102,7 +127,11 @@ export const TemplateEditorPage: React.FC = () => {
                 />
               )}
 
-              {step === 3 && (
+              {step === 3 && isWhatsApp && (
+                <StepWhatsAppPreview name={form.name} whatsappForm={whatsapp.form} variables={variables} />
+              )}
+
+              {step === 3 && !isWhatsApp && (
                 <Card className="flex h-full flex-col">
                   <CardTitle>Vista previa</CardTitle>
                   <TemplatePreviewStep
