@@ -62,7 +62,10 @@ async def list_table_fields(
     # permite a cualquier usuario con acceso a una organización.
     require_org_or_global(session)
     raw = await service.get_table_fields(schema_name, table_name)
-    return [FieldInfo(name=col["name"], type=str(col["type"])) for col in raw]
+    return [
+        FieldInfo(name=col["name"], type=str(col["type"]), enum_values=col["enum_values"])
+        for col in raw
+    ]
 
 
 # ------------------------------------------------------------------

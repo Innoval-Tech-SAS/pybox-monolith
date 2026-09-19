@@ -74,6 +74,8 @@ export interface EntityFormState {
 export interface FieldInfo {
   name: string;
   type: string;
+  // Valores del enum de PostgreSQL en orden de declaración; null si la columna no es un enum.
+  enumValues: string[] | null;
 }
 
 // API types — el campo con la configuración de la query (tables/joins/agregación) se

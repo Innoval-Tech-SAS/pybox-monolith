@@ -111,6 +111,10 @@ class DynamicQueryResponse(BaseSchema):
 class FieldInfo(BaseSchema):
     name: str = Field(description="Nombre de la columna")
     type: str = Field(description="Tipo de dato de la columna en la base de datos")
+    enum_values: list[str] | None = Field(
+        default=None,
+        description="Valores permitidos, en orden de declaración, si la columna es un enum de PostgreSQL; null en cualquier otro caso",
+    )
 
 
 class CreateDatabaseRequest(BaseSchema):
