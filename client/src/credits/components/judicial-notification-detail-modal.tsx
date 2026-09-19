@@ -24,7 +24,7 @@ export const JudicialNotificationDetailModal: React.FC<JudicialNotificationDetai
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg p-6 lg:p-8">
-      <div className="flex items-start justify-between gap-3 pr-8">
+      <div className="flex items-start justify-between gap-3 pr-12 sm:pr-14">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">{notification.title}</h3>
         <Badge
           variant="light"
