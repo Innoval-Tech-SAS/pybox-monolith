@@ -1,7 +1,7 @@
 """add_platform_branding
 
 Revision ID: 98ae961d8224
-Revises: 4822ccda7e9b
+Revises: a1b2c3d4e5f6
 Create Date: 2026-09-16 23:30:00.000000
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision: str = '98ae961d8224'
-down_revision: Union[str, None] = '4822ccda7e9b'
+down_revision: Union[str, None] = 'a1b2c3d4e5f6'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
