@@ -96,6 +96,7 @@ export const useChat = () => {
             title: msg.senderName,
             peerId: msg.senderId,
             peerAvatar: msg.senderAvatar,
+            memberCount: 2,
             lastMessage: msg.body,
             lastMessageAt: msg.createdAt,
             unreadCount: 1,

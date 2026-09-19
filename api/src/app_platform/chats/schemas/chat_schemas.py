@@ -19,13 +19,21 @@ class MessageSchema(BaseSchema):
 
 class ChatSummarySchema(BaseSchema):
     id: uuid.UUID = Field(description="ID del chat")
-    type: int = Field(description="Tipo de chat (1=directo)")
+    type: int = Field(description="Tipo de chat (0=directo, 1=grupal)")
     title: str = Field(description="Título o nombre del chat")
     peer_id: uuid.UUID | None = Field(default=None, description="ID del otro participante en chats directos")
     peer_avatar: str | None = Field(default=None, description="Avatar del otro participante")
+    member_count: int = Field(default=0, description="Cantidad de miembros activos (chats grupales)")
     last_message: str | None = Field(default=None, description="Último mensaje enviado")
     last_message_at: datetime | None = Field(default=None, description="Fecha del último mensaje")
     unread_count: int = Field(default=0, description="Cantidad de mensajes no leídos")
+
+
+class ChatMemberSchema(BaseSchema):
+    user_id: uuid.UUID = Field(description="ID del usuario miembro")
+    full_name: str = Field(description="Nombre completo del miembro")
+    profile_photo_url: str | None = Field(default=None, description="Avatar del miembro")
+    role: int = Field(description="Rol dentro del grupo (0=miembro, 1=admin, 2=owner)")
 
 
 class MessagesPageSchema(BaseSchema):

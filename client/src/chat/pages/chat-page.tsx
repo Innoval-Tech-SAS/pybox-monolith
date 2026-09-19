@@ -1,9 +1,11 @@
 import React, { KeyboardEvent, useEffect, useRef, useState } from "react";
-import { ArrowLeft, MessageSquare, Users } from "lucide-react";
+import { ArrowLeft, MessageSquare, UsersRound, Users } from "lucide-react";
 import { Loader } from "@/ui/components/loader/loader";
 import { MessageBubble } from "@/ui/components/chat/message-bubble";
 import { useChatPage } from "../hooks/use-chat-page";
-import { useAuth } from "../../hooks/use-auth";
+import { NewGroupModal } from "../components/new-group-modal";
+import { GroupMembersPanel } from "../components/group-members-panel";
+import { CHAT_TYPE_GROUP } from "@/types/chat/chat-types";
 import EmptyState from "@/ui/components/common/empty-state";
 
 export const ChatPage: React.FC = () => {
@@ -13,26 +15,36 @@ export const ChatPage: React.FC = () => {
     selected,
     availableUsers,
     showNewChat,
+    showNewGroup,
+    groupMembers,
+    currentUserId,
     setShowNewChat,
+    setShowNewGroup,
     selectChat,
     loadMore,
     sendMessage,
     openNewChat,
+    createGroupChat,
+    loadGroupMembers,
+    addGroupMember,
+    removeGroupMember,
     loadAvailableUsers,
     closeConversation,
   } = useChatPage();
 
-  const { getSession } = useAuth();
-  const currentUserId = getSession()?.userId ?? "";
-
   const [input, setInput] = useState("");
   const [search, setSearch] = useState("");
+  const [showMembers, setShowMembers] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selected?.messages.length]);
+
+  useEffect(() => {
+    setShowMembers(false);
+  }, [selected?.chatId]);
 
   const handleScroll = () => {
     const el = scrollRef.current;
@@ -70,18 +82,32 @@ export const ChatPage: React.FC = () => {
         {/* Sidebar header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-base font-semibold text-gray-800 dark:text-white/90">Chats</h2>
-          <button
-            type="button"
-            onClick={() => {
-              setShowNewChat(true);
-              loadAvailableUsers();
-            }}
-            aria-label="Nuevo chat"
-            className="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center hover:bg-brand-600 transition-colors text-lg leading-none"
-            title="Nuevo chat"
-          >
-            +
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowNewGroup(true);
+                loadAvailableUsers();
+              }}
+              aria-label="Nuevo grupo"
+              title="Nuevo grupo"
+              className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition-colors dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+            >
+              <UsersRound size={16} />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowNewChat(true);
+                loadAvailableUsers();
+              }}
+              aria-label="Nuevo chat"
+              className="w-8 h-8 rounded-full bg-brand-500 text-white flex items-center justify-center hover:bg-brand-600 transition-colors text-lg leading-none"
+              title="Nuevo chat"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         {/* Search */}
@@ -177,7 +203,7 @@ export const ChatPage: React.FC = () => {
         ) : (
           <>
             {/* Panel header */}
-            <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-200 dark:border-gray-800">
+            <div className="relative flex items-center gap-3 px-5 py-3 border-b border-gray-200 dark:border-gray-800">
               <button
                 type="button"
                 onClick={closeConversation}
@@ -193,9 +219,40 @@ export const ChatPage: React.FC = () => {
                   {(selectedSummary?.title ?? "?").charAt(0).toUpperCase()}
                 </span>
               )}
-              <span className="text-sm font-semibold text-gray-800 dark:text-white/90">
-                {selectedSummary?.title ?? ""}
-              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 dark:text-white/90 truncate">
+                  {selectedSummary?.title ?? ""}
+                </p>
+                {selectedSummary?.type === CHAT_TYPE_GROUP && (
+                  <p className="text-xs text-gray-400">{selectedSummary.memberCount} miembros</p>
+                )}
+              </div>
+              {selectedSummary?.type === CHAT_TYPE_GROUP && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMembers((prev) => !prev);
+                    loadGroupMembers(selectedSummary.id);
+                    loadAvailableUsers();
+                  }}
+                  aria-label="Ver miembros del grupo"
+                  title="Miembros"
+                  className="shrink-0 w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition-colors dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                >
+                  <Users size={16} />
+                </button>
+              )}
+              {showMembers && selectedSummary?.type === CHAT_TYPE_GROUP && (
+                <GroupMembersPanel
+                  isOpen={showMembers}
+                  onClose={() => setShowMembers(false)}
+                  members={groupMembers}
+                  availableUsers={availableUsers}
+                  currentUserId={currentUserId}
+                  onAddMember={(userId) => addGroupMember(selectedSummary.id, userId)}
+                  onRemoveMember={(userId) => removeGroupMember(selectedSummary.id, userId)}
+                />
+              )}
             </div>
 
             {/* Messages */}
@@ -257,6 +314,13 @@ export const ChatPage: React.FC = () => {
           </>
         )}
       </div>
+
+      <NewGroupModal
+        isOpen={showNewGroup}
+        onClose={() => setShowNewGroup(false)}
+        availableUsers={availableUsers}
+        onCreate={createGroupChat}
+      />
     </div>
   );
 };

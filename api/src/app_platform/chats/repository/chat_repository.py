@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -71,3 +72,19 @@ class ChatRepository(RepositoryBase[ChatModel]):
         for member in result.scalars().all():
             out.setdefault(member.chat_id, []).append(member)
         return out
+
+    async def set_member_left(self, chat_id: uuid.UUID, user_id: uuid.UUID, when: datetime) -> None:
+        member = await self.get_member(chat_id, user_id)
+        if member is not None:
+            member.left_at = when
+            await self.session.flush()
+
+    async def reactivate_member(
+        self, chat_id: uuid.UUID, user_id: uuid.UUID, when: datetime
+    ) -> ChatMemberModel:
+        member = await self.get_member(chat_id, user_id)
+        member.left_at = None
+        member.joined_at = when
+        await self.session.flush()
+        await self.session.refresh(member)
+        return member

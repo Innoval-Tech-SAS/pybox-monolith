@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useApiClient } from "../../hooks/use-api-client";
+import { getSession } from "@/auth/utils/auth-session-utils";
 import { playMessageSound } from "../utils/chat-sound";
 import type {
   ChatAvailableUser,
+  ChatMember,
   ChatMessage,
   ChatSummary,
   MessagesPage,
@@ -24,7 +26,10 @@ export const useChatPage = () => {
   const [selected, setSelected] = useState<ConversationState | null>(null);
   const [availableUsers, setAvailableUsers] = useState<ChatAvailableUser[]>([]);
   const [showNewChat, setShowNewChat] = useState(false);
+  const [showNewGroup, setShowNewGroup] = useState(false);
+  const [groupMembers, setGroupMembers] = useState<ChatMember[]>([]);
   const loadedRef = useRef(false);
+  const currentUserId = getSession()?.userId ?? "";
 
   const loadAvailableUsers = useCallback(async () => {
     try {
@@ -73,9 +78,26 @@ export const useChatPage = () => {
               }
             : prev,
         );
+      } else if (event.event === "chat") {
+        const summary = event.data;
+        setChats((prev) => {
+          const exists = prev.find((c) => c.id === summary.id);
+          return exists ? prev.map((c) => (c.id === summary.id ? summary : c)) : [summary, ...prev];
+        });
+      } else if (event.event === "group_updated") {
+        const { chatId, memberCount } = event.data;
+        setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, memberCount } : c)));
+      } else if (event.event === "member_removed") {
+        const { chatId, userId } = event.data;
+        if (userId === currentUserId) {
+          setChats((prev) => prev.filter((c) => c.id !== chatId));
+          setSelected((prev) => (prev?.chatId === chatId ? null : prev));
+        } else {
+          setGroupMembers((prev) => prev.filter((m) => m.userId !== userId));
+        }
       }
     },
-    [selected?.chatId],
+    [selected?.chatId, currentUserId],
   );
 
   const { send, request } = useChatWebSocket(handleWsEvent);
@@ -178,6 +200,47 @@ export const useChatPage = () => {
     [request, selectChat],
   );
 
+  const createGroupChat = useCallback(
+    async (title: string, memberIds: string[]) => {
+      setShowNewGroup(false);
+      const summary = await request<ChatSummary>("create_group_chat", { title, memberIds });
+      setChats((prev) => [summary, ...prev]);
+      await selectChat(summary.id);
+    },
+    [request, selectChat],
+  );
+
+  const loadGroupMembers = useCallback(
+    async (chatId: string) => {
+      const page = await request<{ chatId: string; members: ChatMember[] }>("list_group_members", {
+        chatId,
+      });
+      setGroupMembers(page.members ?? []);
+    },
+    [request],
+  );
+
+  const addGroupMember = useCallback(
+    async (chatId: string, userId: string) => {
+      const summary = await request<ChatSummary>("add_group_member", { chatId, userId });
+      setChats((prev) => prev.map((c) => (c.id === chatId ? summary : c)));
+      await loadGroupMembers(chatId);
+    },
+    [request, loadGroupMembers],
+  );
+
+  const removeGroupMember = useCallback(
+    async (chatId: string, userId: string) => {
+      await request("remove_group_member", { chatId, userId });
+      setGroupMembers((prev) => prev.filter((m) => m.userId !== userId));
+      if (userId === currentUserId) {
+        setChats((prev) => prev.filter((c) => c.id !== chatId));
+        setSelected((prev) => (prev?.chatId === chatId ? null : prev));
+      }
+    },
+    [request, currentUserId],
+  );
+
   /** Limpia la conversación seleccionada — usado por el botón "Volver" del layout mobile. */
   const closeConversation = useCallback(() => setSelected(null), []);
 
@@ -189,12 +252,20 @@ export const useChatPage = () => {
     selected,
     availableUsers,
     showNewChat,
+    showNewGroup,
+    groupMembers,
+    currentUserId,
     totalUnread,
     setShowNewChat,
+    setShowNewGroup,
     selectChat,
     loadMore,
     sendMessage,
     openNewChat,
+    createGroupChat,
+    loadGroupMembers,
+    addGroupMember,
+    removeGroupMember,
     loadAvailableUsers,
     closeConversation,
   };
