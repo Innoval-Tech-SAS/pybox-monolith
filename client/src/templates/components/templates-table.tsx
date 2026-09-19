@@ -1,4 +1,4 @@
-import { Eye, Mail, Pencil, Trash2, FileText, Search } from "lucide-react";
+import { Eye, Mail, Pencil, Trash2, FileText, Search, RefreshCw } from "lucide-react";
 import EmptyState from "@/ui/components/common/empty-state";
 import { Loader } from "@/ui/components/loader/loader";
 import { Badge } from "@/ui/components/badge";
@@ -17,6 +17,10 @@ import type { TemplatesTableProps } from "@/templates/types/templates-table-prop
 import type { TemplateSortKey } from "@/templates/hooks/use-templates";
 import { TEMPLATE_STATUS_LABELS as STATUS_LABELS, TEMPLATE_STATUS_COLORS as STATUS_COLORS } from "../constants/template-status-labels";
 import { PAGE_SIZE_OPTIONS } from "@/campaigns/constants/table-pagination";
+import {
+  WHATSAPP_META_STATUS_COLORS,
+  WHATSAPP_META_STATUS_LABELS,
+} from "@/templates/constants/whatsapp-template-options";
 
 export const TemplatesTable: React.FC<TemplatesTableProps> = ({
   items,
@@ -29,6 +33,8 @@ export const TemplatesTable: React.FC<TemplatesTableProps> = ({
   pageSize,
   sortKey,
   sortOrder,
+  whatsappData,
+  refreshingId,
   onSearch,
   onPageSizeChange,
   onSort,
@@ -36,6 +42,7 @@ export const TemplatesTable: React.FC<TemplatesTableProps> = ({
   onSend,
   onEdit,
   onDelete,
+  onRefreshStatus,
   onPageChange,
 }) => {
   const startIndex = (page - 1) * pageSize + 1;
@@ -61,28 +68,61 @@ export const TemplatesTable: React.FC<TemplatesTableProps> = ({
     </TableCell>
   );
 
-  const rowActions = (item: TemplatesTableProps["items"][number]) => (
-    <div className="flex items-center gap-1">
-      <button type="button" onClick={() => onPreview(item)} title="Vista previa" aria-label="Vista previa" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-gray-800">
-        <Eye size={14} />
-      </button>
-      {item.channel === "EMAIL" && item.status === "ACTIVA" && (
-        <button type="button" onClick={() => onSend(item)} title="Enviar" aria-label="Enviar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-gray-800">
-          <Mail size={14} />
-        </button>
-      )}
-      {isAdmin && (
-        <>
-          <button type="button" onClick={() => onEdit(item)} title="Editar" aria-label="Editar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800">
-            <Pencil size={14} />
+  // El estado de una plantilla de WhatsApp es el que reporta Meta; hasta que se cargue
+  // (o si falta la fila de datos) se cae al estado local como el resto de canales.
+  const renderStatus = (item: TemplatesTableProps["items"][number]) => {
+    const meta = item.channel === "WHATSAPP" ? whatsappData[item.id] : undefined;
+    if (meta) {
+      return (
+        <Badge size="sm" color={WHATSAPP_META_STATUS_COLORS[meta.metaStatus] ?? "light"}>
+          {WHATSAPP_META_STATUS_LABELS[meta.metaStatus] ?? meta.metaStatus}
+        </Badge>
+      );
+    }
+    return <Badge size="sm" color={STATUS_COLORS[item.status]}>{STATUS_LABELS[item.status]}</Badge>;
+  };
+
+  const rowActions = (item: TemplatesTableProps["items"][number]) => {
+    const isWhatsApp = item.channel === "WHATSAPP";
+    return (
+      <div className="flex items-center gap-1">
+        {!isWhatsApp && (
+          <button type="button" onClick={() => onPreview(item)} title="Vista previa" aria-label="Vista previa" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-gray-800">
+            <Eye size={14} />
           </button>
-          <button type="button" onClick={() => onDelete(item)} title="Eliminar" aria-label="Eliminar" className="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-500">
-            <Trash2 size={14} />
+        )}
+        {isWhatsApp && (
+          <button
+            type="button"
+            onClick={() => onRefreshStatus(item)}
+            disabled={refreshingId === item.id}
+            title="Refrescar estado en Meta"
+            aria-label="Refrescar estado en Meta"
+            className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500 disabled:opacity-50 dark:hover:bg-gray-800"
+          >
+            <RefreshCw size={14} className={refreshingId === item.id ? "animate-spin" : ""} />
           </button>
-        </>
-      )}
-    </div>
-  );
+        )}
+        {item.channel === "EMAIL" && item.status === "ACTIVA" && (
+          <button type="button" onClick={() => onSend(item)} title="Enviar" aria-label="Enviar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-brand-500 dark:hover:bg-gray-800">
+            <Mail size={14} />
+          </button>
+        )}
+        {isAdmin && (
+          <>
+            {!isWhatsApp && (
+              <button type="button" onClick={() => onEdit(item)} title="Editar" aria-label="Editar" className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800">
+                <Pencil size={14} />
+              </button>
+            )}
+            <button type="button" onClick={() => onDelete(item)} title="Eliminar" aria-label="Eliminar" className="rounded p-1.5 text-gray-400 hover:bg-error-50 hover:text-error-500">
+              <Trash2 size={14} />
+            </button>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-1 min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/5 dark:bg-white/3">
@@ -148,7 +188,7 @@ export const TemplatesTable: React.FC<TemplatesTableProps> = ({
                     <ChannelBadge label={item.channel} />
                   </TableCell>
                   <TableCell className="px-4 py-3">
-                    <Badge size="sm" color={STATUS_COLORS[item.status]}>{STATUS_LABELS[item.status]}</Badge>
+                    {renderStatus(item)}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                     {item.subject ?? "—"}
@@ -182,7 +222,7 @@ export const TemplatesTable: React.FC<TemplatesTableProps> = ({
               <div className="flex items-start justify-between gap-2">
                 <p className="min-w-0 truncate font-medium text-gray-800 dark:text-white/90">{item.name}</p>
                 <div className="shrink-0">
-                  <Badge size="sm" color={STATUS_COLORS[item.status]}>{STATUS_LABELS[item.status]}</Badge>
+                  {renderStatus(item)}
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-gray-400">

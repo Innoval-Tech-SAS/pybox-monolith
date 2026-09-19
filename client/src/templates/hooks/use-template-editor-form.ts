@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import { useToast } from "@/context/toast-context";
 import { CHANNEL_CHAR_LIMITS, UNAVAILABLE_CHANNELS } from "@/templates/constants/template-wizard-options";
+import { useWhatsAppTemplateForm } from "@/templates/hooks/use-whatsapp-template-form";
 import type { Template } from "@/types/templates/template-types";
 import type { TemplateEditorFormState } from "@/templates/types/template-editor-form-state";
+import type { TemplateVariableOption } from "@/templates/types/template-variable-option";
 
 const EMPTY: TemplateEditorFormState = {
   name: "",
@@ -22,20 +24,28 @@ export const useTemplateEditorForm = (
   id: string | undefined,
   onSaved: () => void,
   onLoadError: () => void,
+  variables: TemplateVariableOption[],
 ) => {
   const { apiClient } = useApiClient();
-  const { success } = useToast();
+  const { success, error } = useToast();
   const isEditing = !!id;
 
   const [form, setForm] = useState<TemplateEditorFormState>(EMPTY);
   const [loadingTemplate, setLoadingTemplate] = useState(isEditing);
   const [saving, setSaving] = useState(false);
+  const whatsapp = useWhatsAppTemplateForm(portfolioId, variables);
 
   // En modo edición, cargar la plantilla existente
   useEffect(() => {
     if (!isEditing || !portfolioId) return;
     apiClient(`/templates/${id}?portfolioId=${portfolioId}`, { method: "GET" })
       .then((t: Template) => {
+        // El contenido de una plantilla de WhatsApp vive en Meta: no se edita desde acá.
+        if (t.channel === "WHATSAPP") {
+          error("Plantilla de WhatsApp", "No se puede editar. Elimínala y crea una nueva.");
+          onLoadError();
+          return;
+        }
         setForm({
           name: t.name,
           channel: t.channel,
@@ -58,13 +68,17 @@ export const useTemplateEditorForm = (
       setForm((prev) => ({ ...prev, [key]: value }));
 
   const isEmail = form.channel === "EMAIL";
+  const isWhatsApp = form.channel === "WHATSAPP";
   const isUnavailable = UNAVAILABLE_CHANNELS.includes(form.channel);
   const charLimit = CHANNEL_CHAR_LIMITS[form.channel];
   const withinCharLimit = charLimit === undefined || form.body.length <= charLimit;
 
-  const isDesignValid = !isUnavailable && form.body.trim() !== "" && withinCharLimit;
+  const isDesignValid = isWhatsApp
+    ? whatsapp.isDesignValid
+    : !isUnavailable && form.body.trim() !== "" && withinCharLimit;
 
   const canAdvance = (step: number) => {
+    if (isWhatsApp) return whatsapp.canAdvance(step, form.name);
     if (step === 0) return true;
     if (step === 1) {
       if (!form.name.trim()) return false;
@@ -77,6 +91,10 @@ export const useTemplateEditorForm = (
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isWhatsApp) {
+      await whatsapp.submit(form.name, onSaved);
+      return;
+    }
     setSaving(true);
     const payload = {
       name: form.name.trim(),
@@ -113,8 +131,10 @@ export const useTemplateEditorForm = (
     set,
     isEditing,
     loadingTemplate,
-    saving,
+    saving: saving || whatsapp.saving,
     isEmail,
+    isWhatsApp,
+    whatsapp,
     isUnavailable,
     charLimit,
     isDesignValid,

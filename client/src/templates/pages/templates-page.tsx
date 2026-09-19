@@ -12,6 +12,7 @@ import { useBreadcrumb } from "@/companies/hooks/use-breadcrumb";
 import { usePortfolios } from "@/companies/hooks/use-portfolios";
 import { useTemplates } from "@/templates/hooks/use-templates";
 import { useTemplateVariables } from "@/templates/hooks/use-template-variables";
+import { useWhatsAppTemplates } from "@/templates/hooks/use-whatsapp-templates";
 import { TemplatesTable } from "@/templates/components/templates-table";
 import { TemplatePreviewModal } from "@/templates/components/template-preview-modal";
 import { TemplateSendModal } from "@/templates/components/template-send-modal";
@@ -32,16 +33,35 @@ export const TemplatesPage: React.FC = () => {
     search, setSearch,
     pageSize, setPageSize,
     sortKey, sortOrder, handleSort,
-    remove, preview, send, goToPage,
+    remove, preview, send, goToPage, refetch,
   } = useTemplates(portfolioId);
   const { variables: variableOptions } = useTemplateVariables(orgId);
+  const {
+    dataByTemplateId: whatsappData,
+    refreshingId,
+    refreshStatus: refreshWhatsAppStatus,
+    remove: removeWhatsApp,
+  } = useWhatsAppTemplates(portfolioId);
 
   const user = getSession();
   const isAdmin = user?.scope === "GLOBAL" || user?.orgs?.[orgId]?.role === "ADMINISTRADOR";
 
   const [previewTarget, setPreviewTarget] = useState<Template | null>(null);
   const [sendTarget, setSendTarget] = useState<Template | null>(null);
-  const { deleting, setDeleting, confirmDelete, deletingInProgress } = useDeleteWithConfirm<Template>(remove);
+
+  // Las plantillas de WhatsApp se borran por su propio flujo: elimina también en Meta.
+  const removeTemplate = async (id: string) => {
+    if (items.find((t) => t.id === id)?.channel !== "WHATSAPP") return remove(id);
+    const removed = await removeWhatsApp(id);
+    if (removed) goToPage(items.length === 1 && page > 1 ? page - 1 : page);
+    return removed;
+  };
+  const { deleting, setDeleting, confirmDelete, deletingInProgress } = useDeleteWithConfirm<Template>(removeTemplate);
+
+  const handleRefreshStatus = async (template: Template) => {
+    const updated = await refreshWhatsAppStatus(template.id);
+    if (updated) refetch();
+  };
 
   const handleSend = async (id: string, to: string, subject: string, sub: Record<string, string>) => {
     const result = await send(id, { to, subject: subject || null, sub });
@@ -50,7 +70,7 @@ export const TemplatesPage: React.FC = () => {
 
   return (
     <>
-      <PageMeta title="Plantillas" description="Gestión de plantillas de correo y SMS" />
+      <PageMeta title="Plantillas" description="Gestión de plantillas de correo, SMS y WhatsApp" />
       <ModuleBase
         pageTitle="Plantillas"
         pageIcon={Mail}
@@ -84,6 +104,8 @@ export const TemplatesPage: React.FC = () => {
             pageSize={pageSize}
             sortKey={sortKey}
             sortOrder={sortOrder}
+            whatsappData={whatsappData}
+            refreshingId={refreshingId}
             onSearch={setSearch}
             onPageSizeChange={setPageSize}
             onSort={handleSort}
@@ -91,6 +113,7 @@ export const TemplatesPage: React.FC = () => {
             onSend={setSendTarget}
             onEdit={(item) => navigate(buildOrgPath(`/my-companies/templates/${item.id}/edit`, { portfolio: portfolioId }))}
             onDelete={setDeleting}
+            onRefreshStatus={handleRefreshStatus}
             onPageChange={goToPage}
           />
         </div>
@@ -117,7 +140,11 @@ export const TemplatesPage: React.FC = () => {
         onClose={() => setDeleting(null)}
         onConfirm={confirmDelete}
         title="Eliminar plantilla"
-        message={`¿Seguro que deseas eliminar la plantilla "${deleting?.name}"? Esta acción no se puede deshacer.`}
+        message={
+          deleting?.channel === "WHATSAPP"
+            ? `¿Seguro que deseas eliminar la plantilla "${deleting.name}"? También se eliminará en Meta y no se puede deshacer.`
+            : `¿Seguro que deseas eliminar la plantilla "${deleting?.name}"? Esta acción no se puede deshacer.`
+        }
         loading={deletingInProgress}
       />
     </>
