@@ -1,8 +1,10 @@
 import { Building2, Hash, Info } from "lucide-react";
 import { Label } from "@/ui/components/inputs/label";
 import { CountrySelect } from "@/ui/components/inputs/country-select";
+import { Select } from "@/ui/components/inputs/select";
 import { Button } from "@/ui/components/button/button";
 import { INPUT_BASE } from "@/companies/constants/create-org-styles";
+import { useEntitySectors } from "@/companies/hooks/use-entity-sectors";
 import type { StepCompanyInfoProps } from "@/companies/types/step-company-info-props";
 
 export const StepCompanyInfo: React.FC<StepCompanyInfoProps> = ({
@@ -16,12 +18,14 @@ export const StepCompanyInfo: React.FC<StepCompanyInfoProps> = ({
   const {
     isSubmitting,
     name, setName,
+    sector, setSector,
     country, setCountry,
     fiscalDocNumber, setFiscalDocNumber,
     description, setDescription,
     setRepDocType,
   } = form;
   const { countries, loading: loadingCountries } = countriesData;
+  const { sectors, loading: loadingSectors } = useEntitySectors();
 
   return (
     <div className="space-y-8">
@@ -54,6 +58,20 @@ export const StepCompanyInfo: React.FC<StepCompanyInfoProps> = ({
               className={`${INPUT_BASE} pl-11`}
             />
           </div>
+        </div>
+        <div>
+          <Label>
+            <span className="mb-1.5 block">
+              Sector <span className="text-error-500" aria-hidden="true">*</span>
+            </span>
+            <Select
+              options={sectors}
+              value={sector}
+              onChange={setSector}
+              disabled={isSubmitting || loadingSectors}
+              placeholder={loadingSectors ? "Cargando sectores..." : "Selecciona el sector"}
+            />
+          </Label>
         </div>
         <div>
           <Label>
