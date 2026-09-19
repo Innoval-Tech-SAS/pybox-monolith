@@ -9,6 +9,7 @@ que `list_variables`/`refresh_status` toleren una plantilla sin `meta_template_i
 import uuid
 from unittest.mock import AsyncMock, MagicMock
 
+import httpx
 import pytest
 from fastapi import HTTPException
 
@@ -286,3 +287,112 @@ class TestDelete:
         mocks["client"].delete_template.assert_awaited_once_with("tpl_meta_name")
         mocks["data_repo"].delete.assert_awaited_once_with(whatsapp_data)
         mocks["template_repo"].delete.assert_awaited_once_with(template)
+
+
+def _meta_http_error(status_code: int, body: dict) -> httpx.HTTPStatusError:
+    request = httpx.Request("POST", "https://graph.facebook.com/x")
+    response = httpx.Response(status_code=status_code, json=body, request=request)
+    return httpx.HTTPStatusError("meta error", request=request, response=response)
+
+
+class TestMetaErrorTranslation:
+    """Un fallo de la Graph API debe llegar al usuario como HTTPException en español,
+    no como un 500 genérico, y sin dejar filas locales a medio crear."""
+
+    async def test_create_with_rejected_token_raises_502_and_does_not_persist_data_row(self):
+        portfolio_id = uuid.uuid4()
+        service, mocks = build_service()
+        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
+        mocks["template_repo"].add = AsyncMock(
+            return_value=TemplateModel(id=uuid.uuid4(), portfolio_id=portfolio_id, name="X")
+        )
+        mocks["client"].create_template = AsyncMock(
+            side_effect=_meta_http_error(401, {"error": {"message": "Invalid OAuth access token.", "code": 190}})
+        )
+        mocks["data_repo"].add = AsyncMock()
+
+        request = WhatsAppTemplateCreateRequest(
+            name="X", language="es", category=WhatsAppTemplateCategory.UTILITY, components=[]
+        )
+        with pytest.raises(HTTPException) as exc_info:
+            await service.create(portfolio_id, request, ADMIN_SESSION)
+
+        assert exc_info.value.status_code == 502
+        assert "token de acceso" in exc_info.value.detail
+        mocks["data_repo"].add.assert_not_called()
+
+    async def test_create_with_meta_validation_error_surfaces_meta_detail_as_400(self):
+        portfolio_id = uuid.uuid4()
+        service, mocks = build_service()
+        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
+        mocks["template_repo"].add = AsyncMock(
+            return_value=TemplateModel(id=uuid.uuid4(), portfolio_id=portfolio_id, name="X")
+        )
+        mocks["client"].create_template = AsyncMock(
+            side_effect=_meta_http_error(
+                400,
+                {"error": {"message": "Invalid parameter", "code": 100, "error_user_msg": "El cuerpo es demasiado largo."}},
+            )
+        )
+
+        request = WhatsAppTemplateCreateRequest(
+            name="X", language="es", category=WhatsAppTemplateCategory.UTILITY, components=[]
+        )
+        with pytest.raises(HTTPException) as exc_info:
+            await service.create(portfolio_id, request, ADMIN_SESSION)
+
+        assert exc_info.value.status_code == 400
+        assert "El cuerpo es demasiado largo." in exc_info.value.detail
+
+    async def test_refresh_status_with_network_failure_raises_502(self):
+        from messaging.channels.enums.channel_enums import ChannelName
+
+        service, mocks = build_service()
+        template = TemplateModel(id=uuid.uuid4(), portfolio_id=uuid.uuid4(), name="X", channel=ChannelName.WHATSAPP)
+        whatsapp_data = WhatsAppTemplateDataModel(
+            id=uuid.uuid4(),
+            template_id=template.id,
+            meta_template_id="meta-1",
+            meta_name="tpl",
+            language="es",
+            category=WhatsAppTemplateCategory.UTILITY,
+        )
+        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
+        mocks["client"].get_template = AsyncMock(side_effect=httpx.ConnectTimeout("timeout"))
+
+        with pytest.raises(HTTPException) as exc_info:
+            await service.refresh_status(template.id, template.portfolio_id, ADMIN_SESSION)
+
+        assert exc_info.value.status_code == 502
+        assert "No fue posible comunicarse con Meta" in exc_info.value.detail
+
+    async def test_delete_keeps_local_rows_when_meta_rejects(self):
+        from messaging.channels.enums.channel_enums import ChannelName
+
+        service, mocks = build_service()
+        template = TemplateModel(id=uuid.uuid4(), portfolio_id=uuid.uuid4(), name="X", channel=ChannelName.WHATSAPP)
+        whatsapp_data = WhatsAppTemplateDataModel(
+            id=uuid.uuid4(),
+            template_id=template.id,
+            meta_template_id="meta-1",
+            meta_name="tpl",
+            language="es",
+            category=WhatsAppTemplateCategory.UTILITY,
+        )
+        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
+        mocks["client"].delete_template = AsyncMock(
+            side_effect=_meta_http_error(403, {"error": {"message": "Permissions error", "code": 200}})
+        )
+        mocks["data_repo"].delete = AsyncMock()
+        mocks["template_repo"].delete = AsyncMock()
+
+        with pytest.raises(HTTPException) as exc_info:
+            await service.delete(template.id, template.portfolio_id, ADMIN_SESSION)
+
+        assert exc_info.value.status_code == 502
+        mocks["data_repo"].delete.assert_not_called()
+        mocks["template_repo"].delete.assert_not_called()
