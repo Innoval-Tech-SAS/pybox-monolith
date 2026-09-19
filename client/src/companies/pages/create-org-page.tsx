@@ -21,6 +21,7 @@ export const CreateOrgPage: React.FC = () => {
   const form = useRegisterOrg();
   const {
     name,
+    sector,
     country,
     fiscalFile, fiscalError,
     mercantileFile, mercantileError,
@@ -42,7 +43,7 @@ export const CreateOrgPage: React.FC = () => {
     { label: "Representante", description: "Persona legal", icon: <User size={14} /> },
   ];
 
-  const canGoStep2 = !!name.trim() && !!country;
+  const canGoStep2 = !!name.trim() && !!sector && !!country;
   const canGoStep3 =
     !!fiscalFile && !fiscalError && !!mercantileFile && !mercantileError;
   const repModeValid =
