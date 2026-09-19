@@ -34,7 +34,7 @@ def resolve_relative_token(token: str) -> datetime | date:
     match = _OFFSET_RE.match(token)
     if match:
         return now + timedelta(days=int(match.group(1)))
-    raise ValueError(f"Unknown relative date token: {token}")
+    raise ValueError(f"Token de fecha relativa desconocido: '{token}'.")
 
 
 def resolve_filter_value(value: Any) -> Any:

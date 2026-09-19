@@ -8,12 +8,16 @@ inválido se rechaza antes de llegar a componerse en SQL.
 """
 
 import pytest
+from cryptography.exceptions import InvalidTag
 
 from app_platform.schema_manager.utils.query_utils import (
     build_sql_condition,
     build_table_alias_map,
     build_tenant_scope_condition,
     build_where_clauses,
+    decrypt_sensitive_value,
+    encrypted_group_outputs,
+    encrypted_output_columns,
     is_aggregate_mode,
     normalize_aggregate_specs,
     normalize_operator,
@@ -23,6 +27,7 @@ from app_platform.schema_manager.utils.query_utils import (
     sanitize_table_name,
     sql_literal,
 )
+from core.security.services.encrypt_service import encrypt_service
 
 
 class TestSanitizeIdentifier:
@@ -30,11 +35,11 @@ class TestSanitizeIdentifier:
         assert sanitize_identifier("nombre_columna", label="column") == "nombre_columna"
 
     def test_empty_raises(self):
-        with pytest.raises(ValueError, match="required"):
+        with pytest.raises(ValueError, match="Falta indicar"):
             sanitize_identifier("", label="column")
 
     def test_none_raises(self):
-        with pytest.raises(ValueError, match="required"):
+        with pytest.raises(ValueError, match="Falta indicar"):
             sanitize_identifier(None, label="column")
 
     @pytest.mark.parametrize(
@@ -49,7 +54,7 @@ class TestSanitizeIdentifier:
         ],
     )
     def test_invalid_identifier_rejected(self, bad):
-        with pytest.raises(ValueError, match="Invalid"):
+        with pytest.raises(ValueError, match="Valor inválido"):
             sanitize_identifier(bad, label="column")
 
 
@@ -67,6 +72,46 @@ class TestSanitizeTableName:
     def test_invalid_schema_rejected(self):
         with pytest.raises(ValueError):
             sanitize_table_name("bad schema!.creditos")
+
+
+class TestEncryptedOutputColumns:
+    def test_single_table_uses_bare_column_name(self):
+        assert encrypted_output_columns([{"name": "deudores"}], prefixed=False) == {"numero_documento"}
+
+    def test_join_uses_alias_prefixed_name_too(self):
+        outputs = encrypted_output_columns(
+            [{"name": "deudores", "alias": "d"}, {"name": "creditos"}], prefixed=True
+        )
+        assert outputs == {"numero_documento", "d_numero_documento"}
+
+    def test_tables_without_encrypted_columns_yield_nothing(self):
+        assert encrypted_output_columns([{"name": "creditos"}, {"name": "pagos"}], prefixed=True) == set()
+
+    def test_group_by_output_alias_of_encrypted_column(self):
+        alias_map = {"public.deudores": "d", "public.creditos": "c"}
+        group_by = [
+            {"table_alias": "d", "column": "numero_documento", "output_alias": "documento"},
+            {"table_alias": "d", "column": "nombre_completo", "output_alias": "nombre_completo"},
+            {"table_alias": "c", "column": "numero_documento", "output_alias": "otro"},
+        ]
+        assert encrypted_group_outputs(alias_map, group_by) == {"documento"}
+
+
+class TestDecryptSensitiveValue:
+    def test_decrypts_a_token(self):
+        token = encrypt_service.encrypt_to_str("6168564922")
+        assert decrypt_sensitive_value(token) == "6168564922"
+
+    def test_plain_text_passes_through(self):
+        assert decrypt_sensitive_value("6168564922") == "6168564922"
+
+    def test_non_string_passes_through(self):
+        assert decrypt_sensitive_value(None) is None
+        assert decrypt_sensitive_value(42) == 42
+
+    def test_corrupted_token_raises(self):
+        with pytest.raises((ValueError, InvalidTag)):
+            decrypt_sensitive_value("v1:no-es:un-token:valido")
 
 
 class TestSqlLiteral:
@@ -100,7 +145,7 @@ class TestBuildSqlCondition:
         assert build_sql_condition("t.col", "in", "CO") == "t.col IN ('CO')"
 
     def test_in_operator_empty_list_raises(self):
-        with pytest.raises(ValueError, match="IN operator"):
+        with pytest.raises(ValueError, match="operador IN"):
             build_sql_condition("t.col", "in", [])
 
     def test_not_in_operator(self):
@@ -111,7 +156,7 @@ class TestBuildSqlCondition:
         assert cond == "t.fecha BETWEEN '2024-01-01' AND '2024-12-31'"
 
     def test_between_requires_exactly_two_values(self):
-        with pytest.raises(ValueError, match="two values"):
+        with pytest.raises(ValueError, match="dos valores"):
             build_sql_condition("t.fecha", "between", ["2024-01-01"])
 
     def test_like_contains(self):
@@ -163,6 +208,45 @@ class TestBuildWhereClauses:
         clause = build_where_clauses([{"column": "codigo", "op": "in", "value": ["CO", "MX"]}], "t")
         assert clause == "t.codigo IN ('CO', 'MX')"
 
+    def test_numeric_looking_string_stays_quoted(self):
+        # Regresión: "6168564922" se volvía int vía json.loads y `varchar = bigint` reventaba.
+        clause = build_where_clauses([{"column": "numero_documento", "op": "=", "value": "6168564922"}], "t")
+        assert clause == "t.numero_documento = '6168564922'"
+
+    def test_json_list_string_is_still_parsed_for_in(self):
+        clause = build_where_clauses([{"column": "codigo", "op": "in", "value": '["CO", "MX"]'}], "t")
+        assert clause == "t.codigo IN ('CO', 'MX')"
+
+    def test_debtor_document_filter_uses_hash_column(self):
+        # numero_documento va cifrado con nonce aleatorio: solo se puede buscar por el hash.
+        clause = build_where_clauses(
+            [{"column": "numero_documento", "op": "=", "value": "6168564922"}], "d", "public.deudores"
+        )
+        assert clause == f"d.numero_documento_hash = '{encrypt_service.hash_document('6168564922')}'"
+
+    def test_debtor_document_filter_in_hashes_every_value(self):
+        clause = build_where_clauses(
+            [{"column": "numero_documento", "op": "in", "value": ["111", " 222 "]}], "d", "public.deudores"
+        )
+        expected = ", ".join(f"'{encrypt_service.hash_document(v)}'" for v in ("111", "222"))
+        assert clause == f"d.numero_documento_hash IN ({expected})"
+
+    def test_debtor_document_filter_rejects_pattern_operators(self):
+        with pytest.raises(ValueError, match="solo se puede filtrar por igualdad"):
+            build_where_clauses(
+                [{"column": "numero_documento", "op": "like", "value": "616%"}], "d", "public.deudores"
+            )
+
+    def test_debtor_document_filter_rejects_empty_value(self):
+        with pytest.raises(ValueError, match="requiere un valor"):
+            build_where_clauses([{"column": "numero_documento", "op": "=", "value": ""}], "d", "public.deudores")
+
+    def test_same_column_name_on_other_table_is_not_rewritten(self):
+        clause = build_where_clauses(
+            [{"column": "numero_documento", "op": "=", "value": "123"}], "c", "public.contactos"
+        )
+        assert clause == "c.numero_documento = '123'"
+
     def test_between_filter_date_range(self):
         clause = build_where_clauses(
             [{"column": "fecha", "op": "between", "value": ["2024-01-01", "2024-12-31"]}], "t"
@@ -178,7 +262,7 @@ class TestBuildWhereClauses:
             build_where_clauses([{"column": "bad col!", "op": "=", "value": 1}], "t")
 
     def test_invalid_operator_rejected(self):
-        with pytest.raises(ValueError, match="Invalid operator"):
+        with pytest.raises(ValueError, match="Operador inválido"):
             build_where_clauses([{"column": "codigo", "op": "; DROP TABLE x", "value": 1}], "t")
 
 
@@ -215,7 +299,7 @@ class TestBuildTableAliasMap:
         assert alias_map == {"public.creditos": "c"}
 
     def test_duplicate_alias_rejected(self):
-        with pytest.raises(ValueError, match="Duplicate table alias"):
+        with pytest.raises(ValueError, match="está repetido"):
             build_table_alias_map(
                 [{"name": "creditos", "alias": "x"}, {"name": "deudores", "alias": "x"}]
             )
@@ -228,7 +312,7 @@ class TestResolveAlias:
 
     def test_multiple_tables_requires_ref(self):
         tables = [{"name": "creditos"}, {"name": "deudores"}]
-        with pytest.raises(ValueError, match="required"):
+        with pytest.raises(ValueError, match="varias tablas"):
             resolve_alias(tables, None)
 
     def test_resolve_by_alias(self):
@@ -237,7 +321,7 @@ class TestResolveAlias:
 
     def test_unknown_reference_rejected(self):
         tables = [{"name": "creditos"}]
-        with pytest.raises(ValueError, match="Unknown table reference"):
+        with pytest.raises(ValueError, match="tabla desconocida"):
             resolve_alias(tables, "does_not_exist")
 
 
@@ -279,17 +363,17 @@ class TestNormalizeAggregateSpecs:
 
     def test_star_with_non_count_function_rejected(self):
         tables = [{"name": "creditos", "alias": "c"}]
-        with pytest.raises(ValueError, match="Only COUNT"):
+        with pytest.raises(ValueError, match="Solo COUNT"):
             normalize_aggregate_specs(tables, [], [{"function": "sum", "column": "*"}], [], [])
 
     def test_no_aggregations_rejected(self):
         tables = [{"name": "creditos", "alias": "c"}]
-        with pytest.raises(ValueError, match="At least one aggregation"):
+        with pytest.raises(ValueError, match="al menos una agregación"):
             normalize_aggregate_specs(tables, [], [], [], [])
 
     def test_having_references_unknown_metric_rejected(self):
         tables = [{"name": "creditos", "alias": "c"}]
-        with pytest.raises(ValueError, match="Unknown metric alias"):
+        with pytest.raises(ValueError, match="del HAVING no existe"):
             normalize_aggregate_specs(
                 tables,
                 [],
@@ -300,7 +384,7 @@ class TestNormalizeAggregateSpecs:
 
     def test_order_by_must_reference_group_or_metric_alias(self):
         tables = [{"name": "creditos", "alias": "c"}]
-        with pytest.raises(ValueError, match="order_by field"):
+        with pytest.raises(ValueError, match="campo de ordenamiento"):
             normalize_aggregate_specs(
                 tables,
                 [],
@@ -311,7 +395,7 @@ class TestNormalizeAggregateSpecs:
 
     def test_duplicated_output_alias_rejected(self):
         tables = [{"name": "creditos", "alias": "c"}]
-        with pytest.raises(ValueError, match="Duplicated output alias"):
+        with pytest.raises(ValueError, match="Alias de salida repetido"):
             normalize_aggregate_specs(
                 tables,
                 [{"column": "estado", "alias": "same"}],
