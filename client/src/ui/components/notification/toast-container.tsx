@@ -21,7 +21,7 @@ export const ToastContainer: React.FC = () => {
 
   return (
     <div
-      className="fixed bottom-5 right-5 z-9999 w-80"
+      className="fixed bottom-5 right-5 z-100000 w-80"
       style={{ height: expanded ? "auto" : collapsedHeight }}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
