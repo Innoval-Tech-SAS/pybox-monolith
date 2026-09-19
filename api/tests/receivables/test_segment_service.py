@@ -13,7 +13,7 @@ import pytest
 from fastapi import HTTPException
 
 from app_platform.schema_manager.services.dml_service import DmlService
-from core.security.constants.permissions import PORTFOLIO_COMMUNICATIONS
+from core.security.constants.permissions import PORTFOLIO_CLIENTS, PORTFOLIO_COMMUNICATIONS
 from identity.organizations.enums.organization_enums import VerificationStatus
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.schemas.user_session_schema import OrgSessionEntry, UserSession
@@ -39,7 +39,13 @@ def build_service(db_session, dml_mock=None) -> SegmentService:
     )
 
 
-def org_session(make_user_session_factory, org_id: uuid.UUID, *, role: UserRole = UserRole.USER) -> UserSession:
+def org_session(
+    make_user_session_factory,
+    org_id: uuid.UUID,
+    *,
+    role: UserRole = UserRole.USER,
+    permissions: frozenset[str] = frozenset({PORTFOLIO_COMMUNICATIONS}),
+) -> UserSession:
     return make_user_session_factory(
         role=role,
         scope=UserScope.ORGANIZATION,
@@ -48,7 +54,7 @@ def org_session(make_user_session_factory, org_id: uuid.UUID, *, role: UserRole 
                 role=role,
                 org_name="Org",
                 verification_status=VerificationStatus.APPROVED,
-                permissions=frozenset({PORTFOLIO_COMMUNICATIONS}),
+                permissions=permissions,
             )
         },
     )
@@ -273,6 +279,79 @@ class TestExecute:
         with pytest.raises(HTTPException) as exc_info:
             await service.execute(segment.id, portfolio.id, SegmentExecuteRequest(mode="preview"), uuid.uuid4(), session)
         assert exc_info.value.status_code == 500
+
+    async def test_invalid_query_config_raises_422_with_dml_message(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
+        org, portfolio = org_and_portfolio
+        dml_mock = AsyncMock(spec=DmlService)
+        dml_mock.execute_query.return_value = {
+            "success": False,
+            "error": "Una de las columnas configuradas no existe en su tabla.",
+            "status_code": 422,
+        }
+        service = build_service(db_session, dml_mock)
+        session = org_session(make_user_session_factory, org.id)
+        segment = await service.create(
+            portfolio.id, SegmentCreateRequest(name="Config mala", filter_criteria=query_config()), session
+        )
+
+        with pytest.raises(HTTPException) as exc_info:
+            await service.execute(segment.id, portfolio.id, SegmentExecuteRequest(mode="preview"), uuid.uuid4(), session)
+        assert exc_info.value.status_code == 422
+        assert exc_info.value.detail == "Una de las columnas configuradas no existe en su tabla."
+
+    async def _execute_and_get_dml_kwargs(self, db_session, org_and_portfolio, make_user_session_factory, **session_kwargs):
+        org, portfolio = org_and_portfolio
+        dml_mock = AsyncMock(spec=DmlService)
+        dml_mock.execute_query.return_value = self._ok_result([])
+        service = build_service(db_session, dml_mock)
+        creator = org_session(make_user_session_factory, org.id)
+        segment = await service.create(
+            portfolio.id, SegmentCreateRequest(name="Documentos", filter_criteria=query_config()), creator
+        )
+        session = (
+            org_session(make_user_session_factory, org.id, **session_kwargs)
+            if session_kwargs
+            else creator
+        )
+        await service.execute(segment.id, portfolio.id, SegmentExecuteRequest(mode="preview"), uuid.uuid4(), session)
+        _, kwargs = dml_mock.execute_query.call_args
+        return kwargs
+
+    async def test_document_is_decrypted_with_clients_permission(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
+        kwargs = await self._execute_and_get_dml_kwargs(
+            db_session,
+            org_and_portfolio,
+            make_user_session_factory,
+            permissions=frozenset({PORTFOLIO_COMMUNICATIONS, PORTFOLIO_CLIENTS}),
+        )
+        assert kwargs["decrypt_sensitive"] is True
+
+    async def test_document_stays_encrypted_with_communications_only(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
+        # Ejecutar un segmento solo exige comunicaciones: sin `portfolio.clients` el
+        # usuario no debe poder leer documentos que DebtorService no le mostraría.
+        kwargs = await self._execute_and_get_dml_kwargs(db_session, org_and_portfolio, make_user_session_factory)
+        assert kwargs["decrypt_sensitive"] is False
+
+    async def test_document_is_decrypted_for_global_session(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
+        _, portfolio = org_and_portfolio
+        dml_mock = AsyncMock(spec=DmlService)
+        dml_mock.execute_query.return_value = self._ok_result([])
+        service = build_service(db_session, dml_mock)
+        session = make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        segment = await service.create(
+            portfolio.id, SegmentCreateRequest(name="Global", filter_criteria=query_config()), session
+        )
+        await service.execute(segment.id, portfolio.id, SegmentExecuteRequest(mode="preview"), uuid.uuid4(), session)
+        _, kwargs = dml_mock.execute_query.call_args
+        assert kwargs["decrypt_sensitive"] is True
 
     async def test_execute_passes_portfolio_scoping_to_dml(
         self, db_session, make_user_session_factory, org_and_portfolio

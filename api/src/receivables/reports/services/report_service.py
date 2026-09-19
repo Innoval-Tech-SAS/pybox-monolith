@@ -106,7 +106,7 @@ class ReportService:
 
         if not result["success"]:
             logger.error("[ReportService] Error ejecutando reporte %s: %s", report_id, result["error"])
-            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, result["error"])
+            raise HTTPException(result.get("status_code", status.HTTP_500_INTERNAL_SERVER_ERROR), result["error"])
 
         df = self._to_dataframe(result)
         file_name: str | None = None

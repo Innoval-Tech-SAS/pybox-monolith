@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from core.security.policies.security_policies import (
     check_portfolio_org_access,
     get_self_identity,
+    has_permission,
     require_admin_or_org,
     require_global,
     require_global_admin,
@@ -132,6 +133,35 @@ class TestRequirePermission:
         session = _session(scope=UserScope.ORGANIZATION, orgs={})
         with pytest.raises(HTTPException):
             require_permission("orgs.users", session, str(uuid.uuid4()))
+
+
+class TestHasPermission:
+    def test_global_has_every_permission(self):
+        assert has_permission("any.perm", _session(scope=UserScope.GLOBAL), str(uuid.uuid4())) is True
+
+    def test_org_member_with_permission(self):
+        org_id = str(uuid.uuid4())
+        session = _session(
+            scope=UserScope.ORGANIZATION,
+            orgs={org_id: OrgSessionEntry(role=UserRole.USER, org_name="Org", permissions=frozenset({"portfolio.clients"}))},
+        )
+        assert has_permission("portfolio.clients", session, org_id) is True
+
+    def test_org_member_without_permission(self):
+        org_id = str(uuid.uuid4())
+        session = _session(
+            scope=UserScope.ORGANIZATION,
+            orgs={org_id: OrgSessionEntry(role=UserRole.USER, org_name="Org", permissions=frozenset({"portfolio.communications"}))},
+        )
+        assert has_permission("portfolio.clients", session, org_id) is False
+
+    def test_permission_in_another_org_does_not_count(self):
+        own_org, other_org = str(uuid.uuid4()), str(uuid.uuid4())
+        session = _session(
+            scope=UserScope.ORGANIZATION,
+            orgs={own_org: OrgSessionEntry(role=UserRole.USER, org_name="Org", permissions=frozenset({"portfolio.clients"}))},
+        )
+        assert has_permission("portfolio.clients", session, other_org) is False
 
 
 class TestRequireAdminOrOrg:
