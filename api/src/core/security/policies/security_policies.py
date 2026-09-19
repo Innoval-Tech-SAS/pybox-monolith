@@ -55,6 +55,15 @@ def require_permission(perm: str, session: UserSession, org_id: str) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No tienes permisos para esta acción")
 
 
+def has_permission(perm: str, session: UserSession, org_id: str) -> bool:
+    """Versión booleana de `require_permission` (mismo criterio) para decidir qué datos
+    mostrar en una operación que el usuario ya está autorizado a hacer, sin cortarla."""
+    if session.is_global:
+        return True
+    ctx = session.orgs.get(org_id)
+    return ctx is not None and perm in ctx.permissions
+
+
 def require_admin_or_org(perm: str, session: UserSession, org_id: str) -> None:
     """Permite el acceso si el usuario es global, admin de la organización, o tiene el permiso indicado."""
     if session.is_global:

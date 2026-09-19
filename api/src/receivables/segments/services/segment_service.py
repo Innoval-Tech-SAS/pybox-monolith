@@ -17,8 +17,8 @@ from receivables.portfolios.repository.portfolio_document_repository import (
     PORTFOLIO_DOCUMENT_STORAGE_DOMAIN,
     PortfolioDocumentRepository,
 )
-from core.security.constants.permissions import PORTFOLIO_COMMUNICATIONS
-from core.security.policies.security_policies import check_portfolio_org_access
+from core.security.constants.permissions import PORTFOLIO_CLIENTS, PORTFOLIO_COMMUNICATIONS
+from core.security.policies.security_policies import check_portfolio_org_access, has_permission
 from app_platform.schema_manager.services.dml_service import DmlService
 from identity.users.schemas.user_session_schema import UserSession
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
@@ -135,6 +135,11 @@ class SegmentService:
 
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)
         organization_ids = [portfolio.organization_id] if portfolio else []
+        # El documento del deudor se ve con portfolio.clients (DebtorService); ejecutar un
+        # segmento solo exige portfolio.communications, así que sin aquel permiso sale cifrado.
+        can_view_documents = portfolio is not None and has_permission(
+            PORTFOLIO_CLIENTS, user_session, str(portfolio.organization_id)
+        )
 
         result = await self._dml.execute_query(
             tables=criteria.get("tables", []),
@@ -147,11 +152,12 @@ class SegmentService:
             order_by=criteria.get("order_by", []),
             portfolio_ids=[portfolio_id],
             organization_ids=organization_ids,
+            decrypt_sensitive=can_view_documents,
         )
 
         if not result["success"]:
             logger.error("[SegmentService] Error ejecutando segmento %s: %s", segment_id, result["error"])
-            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, result["error"])
+            raise HTTPException(result.get("status_code", status.HTTP_500_INTERNAL_SERVER_ERROR), result["error"])
 
         df = self._to_dataframe(result)
         file_name: str | None = None
