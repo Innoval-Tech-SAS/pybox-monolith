@@ -1,6 +1,9 @@
 import re
 import uuid
+from collections.abc import Awaitable
+from typing import TypeVar
 
+import httpx
 from fastapi import HTTPException, status
 
 from core.security.constants.permissions import PORTFOLIO_COMMUNICATIONS
@@ -16,12 +19,15 @@ from messaging.whatsapp.schemas.whatsapp_template_data_schemas import (
     WhatsAppTemplateVariableSlotResponse,
 )
 from messaging.whatsapp.services.whatsapp_client import WhatsAppCloudClient
+from messaging.whatsapp.utils.whatsapp_error_utils import meta_error_to_http_exception
 from messaging.whatsapp.utils.whatsapp_template_parser import extract_variable_slots
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 
 _APPROVED = "APPROVED"
 _INACTIVE_STATUSES = {"REJECTED", "PAUSED", "DISABLED"}
 _SLUG_PATTERN = re.compile(r"[^a-z0-9_]+")
+
+T = TypeVar("T")
 
 
 def _meta_name(portfolio_id: uuid.UUID, name: str) -> str:
@@ -46,6 +52,15 @@ class WhatsAppTemplateService:
         self._portfolio_repo = portfolio_repo
         self._client = client
 
+    @staticmethod
+    async def _call_meta(call: Awaitable[T]) -> T:
+        """Ejecuta una llamada a la Graph API y traduce sus fallos a un `HTTPException`
+        con mensaje en español; sin esto un 401/4xx de Meta salía como 500 genérico."""
+        try:
+            return await call
+        except httpx.HTTPError as exc:
+            raise meta_error_to_http_exception(exc) from exc
+
     async def _check_access(self, user_session: UserSession, portfolio_id: uuid.UUID) -> None:
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)
         await check_portfolio_org_access(user_session, portfolio, PORTFOLIO_COMMUNICATIONS)
@@ -69,8 +84,10 @@ class WhatsAppTemplateService:
         )
 
         meta_name = _meta_name(portfolio_id, data.name)
-        response = await self._client.create_template(
-            name=meta_name, category=data.category.value, language=data.language, components=data.components
+        response = await self._call_meta(
+            self._client.create_template(
+                name=meta_name, category=data.category.value, language=data.language, components=data.components
+            )
         )
 
         whatsapp_data = await self._data_repo.add(
@@ -115,7 +132,7 @@ class WhatsAppTemplateService:
         if whatsapp_data.meta_template_id is None:
             return template, whatsapp_data
 
-        response = await self._client.get_template(whatsapp_data.meta_template_id)
+        response = await self._call_meta(self._client.get_template(whatsapp_data.meta_template_id))
         new_status = response.get("status", whatsapp_data.meta_status)
         whatsapp_data.meta_status = new_status
         whatsapp_data = await self._data_repo.update(whatsapp_data)
@@ -134,7 +151,7 @@ class WhatsAppTemplateService:
         _, whatsapp_data = await self._get_with_data(template_id, portfolio_id, user_session)
         if whatsapp_data.meta_template_id is None:
             return []
-        response = await self._client.get_template(whatsapp_data.meta_template_id)
+        response = await self._call_meta(self._client.get_template(whatsapp_data.meta_template_id))
         slots = extract_variable_slots(response.get("components", []))
         return [
             WhatsAppTemplateVariableSlotResponse(component=slot.component, name=slot.name, example=slot.example)
@@ -143,7 +160,7 @@ class WhatsAppTemplateService:
 
     async def delete(self, template_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession) -> None:
         template, whatsapp_data = await self._get_with_data(template_id, portfolio_id, user_session)
-        await self._client.delete_template(whatsapp_data.meta_name)
+        await self._call_meta(self._client.delete_template(whatsapp_data.meta_name))
         await self._data_repo.delete(whatsapp_data)
         await self._template_repo.delete(template)
 
