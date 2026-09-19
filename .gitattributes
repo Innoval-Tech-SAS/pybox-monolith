@@ -1,0 +1,7 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Scripts que corren dentro de contenedores Linux (shebang) deben mantener LF
+# sin importar el OS donde se haga checkout; CRLF rompe el shebang (#!/bin/sh\r
+# -> "not found") al construir la imagen en Windows.
+*.sh text eol=lf

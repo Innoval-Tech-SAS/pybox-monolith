@@ -1,0 +1,16 @@
+export const DOCUMENT_TYPE_OPTIONS = [
+  { value: "CC", label: "CC – Cédula de Ciudadanía" },
+  { value: "CE", label: "CE – Cédula de Extranjería" },
+  { value: "NIT", label: "NIT" },
+  { value: "PEP", label: "PEP" },
+  { value: "CURP", label: "CURP" },
+  { value: "INE", label: "INE" },
+  { value: "RFC", label: "RFC" },
+  { value: "DNI", label: "DNI" },
+  { value: "CUIL", label: "CUIL" },
+  { value: "CUIT", label: "CUIT" },
+  { value: "RUC", label: "RUC" },
+  { value: "CI", label: "CI – Cédula de Identidad" },
+  { value: "RIF", label: "RIF" },
+  { value: "PASAPORTE", label: "Pasaporte" },
+];

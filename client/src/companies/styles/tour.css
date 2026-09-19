@@ -1,0 +1,156 @@
+/* ── Cover header during tour ───────────────────────────────────────── */
+body.driver-active header {
+  z-index: 1 !important;
+}
+
+/* ── Reset driver.js defaults ─────────────────────────────────────── */
+.driver-popover.driverjs-theme {
+  background-color: #ffffff !important;
+  border: 1px solid #e4e7ec !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 40px -8px rgba(16, 24, 40, 0.14),
+    0 8px 16px -4px rgba(16, 24, 40, 0.08) !important;
+  padding: 20px !important;
+  font-family: "Outfit", sans-serif !important;
+  min-width: 300px !important;
+  max-width: 360px !important;
+  color: #1d2939 !important;
+}
+
+/* Dark mode — keep popover light (like modals in this template) */
+.dark .driver-popover.driverjs-theme {
+  background-color: #1d2939 !important;
+  border-color: #344054 !important;
+  color: #f9fafb !important;
+}
+
+/* ── Title ──────────────────────────────────────────────────────────── */
+.driver-popover.driverjs-theme .driver-popover-title {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #465fff !important;
+  margin-bottom: 6px !important;
+  line-height: 1.4 !important;
+  font-family: "Outfit", sans-serif !important;
+}
+
+.dark .driver-popover.driverjs-theme .driver-popover-title {
+  color: #7592ff !important;
+}
+
+/* ── Description ────────────────────────────────────────────────────── */
+.driver-popover.driverjs-theme .driver-popover-description {
+  font-size: 13px !important;
+  color: #667085 !important;
+  line-height: 1.6 !important;
+  font-family: "Outfit", sans-serif !important;
+}
+
+.dark .driver-popover.driverjs-theme .driver-popover-description {
+  color: #98a2b3 !important;
+}
+
+/* Kill any link color inside description */
+.driver-popover.driverjs-theme .driver-popover-description a,
+.driver-popover.driverjs-theme .driver-popover-description span {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────── */
+.driver-popover.driverjs-theme .driver-popover-footer {
+  margin-top: 16px !important;
+  padding-top: 14px !important;
+  border-top: 1px solid #f2f4f7 !important;
+  gap: 8px !important;
+}
+
+.dark .driver-popover.driverjs-theme .driver-popover-footer {
+  border-top-color: #344054 !important;
+}
+
+/* ── Progress text ──────────────────────────────────────────────────── */
+.driver-popover.driverjs-theme .driver-popover-progress-text {
+  font-size: 12px !important;
+  color: #98a2b3 !important;
+  font-family: "Outfit", sans-serif !important;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+.driver-popover.driverjs-theme button {
+  font-family: "Outfit", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  padding: 7px 14px !important;
+  cursor: pointer !important;
+  border: none !important;
+  line-height: 1 !important;
+  transition: background 0.15s !important;
+  text-shadow: none !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn,
+.driver-popover.driverjs-theme .driver-popover-done-btn {
+  background: #465fff !important;
+  color: #ffffff !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-next-btn:hover,
+.driver-popover.driverjs-theme .driver-popover-done-btn:hover {
+  background: #3641f5 !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-prev-btn {
+  background: #465fff !important;
+  color: #ffffff !important;
+}
+
+.dark .driver-popover.driverjs-theme .driver-popover-prev-btn {
+  background: #465fff !important;
+  color: #ffffff !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-prev-btn:hover {
+  background: #3641f5 !important;
+}
+
+/* ── Close button ───────────────────────────────────────────────────── */
+.driver-popover.driverjs-theme .driver-popover-close-btn {
+  color: #98a2b3 !important;
+  background: transparent !important;
+  border: none !important;
+  font-size: 18px !important;
+  transition: color 0.15s !important;
+}
+
+.driver-popover.driverjs-theme .driver-popover-close-btn:hover {
+  color: #344054 !important;
+}
+
+/* ── Arrow ──────────────────────────────────────────────────────────── */
+.driver-popover.driverjs-theme.driver-popover-arrow-side-left .driver-popover-arrow {
+  border-right-color: #ffffff !important;
+}
+.driver-popover.driverjs-theme.driver-popover-arrow-side-right .driver-popover-arrow {
+  border-left-color: #ffffff !important;
+}
+.driver-popover.driverjs-theme.driver-popover-arrow-side-top .driver-popover-arrow {
+  border-bottom-color: #ffffff !important;
+}
+.driver-popover.driverjs-theme.driver-popover-arrow-side-bottom .driver-popover-arrow {
+  border-top-color: #ffffff !important;
+}
+
+.dark .driver-popover.driverjs-theme.driver-popover-arrow-side-left .driver-popover-arrow {
+  border-right-color: #1d2939 !important;
+}
+.dark .driver-popover.driverjs-theme.driver-popover-arrow-side-right .driver-popover-arrow {
+  border-left-color: #1d2939 !important;
+}
+.dark .driver-popover.driverjs-theme.driver-popover-arrow-side-top .driver-popover-arrow {
+  border-bottom-color: #1d2939 !important;
+}
+.dark .driver-popover.driverjs-theme.driver-popover-arrow-side-bottom .driver-popover-arrow {
+  border-top-color: #1d2939 !important;
+}
