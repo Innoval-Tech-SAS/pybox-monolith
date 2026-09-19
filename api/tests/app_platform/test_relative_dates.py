@@ -57,7 +57,7 @@ class TestResolveRelativeToken:
         assert (now - result).days == 15
 
     def test_unknown_token_raises(self):
-        with pytest.raises(ValueError, match="Unknown relative date token"):
+        with pytest.raises(ValueError, match="Token de fecha relativa desconocido"):
             resolve_relative_token("@bogus_token")
 
     def test_malformed_offset_raises(self):
