@@ -1,6 +1,8 @@
 # Copilot
 .github/copilot-instructions.md
 
+resources/
+
 server/
 .vscode/
 public/
