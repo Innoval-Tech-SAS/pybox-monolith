@@ -4,11 +4,11 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from app_platform.support.models.support_ticket_message_model import SupportTicketMessageModel
 
 
-class SupportMessageRepository(RepositoryBase[SupportTicketMessageModel]):
+class SupportMessageRepository(SoftDeleteRepositoryBase[SupportTicketMessageModel]):
     model_class = SupportTicketMessageModel
 
     def __init__(self, session: AsyncSession):

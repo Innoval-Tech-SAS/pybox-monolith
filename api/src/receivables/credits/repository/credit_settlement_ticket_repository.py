@@ -3,13 +3,13 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from app_platform.support.enums.support_enums import SupportTicketStatus
 from app_platform.support.models.support_ticket_model import SupportTicketModel
 from receivables.credits.models.credit_settlement_ticket_model import CreditSettlementTicketModel
 
 
-class CreditSettlementTicketRepository(RepositoryBase[CreditSettlementTicketModel]):
+class CreditSettlementTicketRepository(SoftDeleteRepositoryBase[CreditSettlementTicketModel]):
     model_class = CreditSettlementTicketModel
 
     def __init__(self, session: AsyncSession):

@@ -3,11 +3,11 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.payments.models.payment_ticket_model import PaymentTicketModel
 
 
-class PaymentTicketRepository(RepositoryBase[PaymentTicketModel]):
+class PaymentTicketRepository(SoftDeleteRepositoryBase[PaymentTicketModel]):
     model_class = PaymentTicketModel
 
     def __init__(self, session: AsyncSession):

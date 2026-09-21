@@ -6,7 +6,7 @@ from typing import Sequence
 
 from sqlalchemy import func, select, update
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.campaigns.models.campaign_model import CampaignModel
 from messaging.channels.enums.channel_enums import ChannelName
 from messaging.channels.models.channel_model import ChannelModel
@@ -25,7 +25,7 @@ class CampaignUsageRow:
     subtotal: Decimal
 
 
-class ContactRepository(RepositoryBase[ContactModel]):
+class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
     model_class = ContactModel
 
     async def get_billing_usage(

@@ -4,11 +4,11 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.segments.models.segment_execution_model import SegmentExecutionModel
 
 
-class SegmentExecutionRepository(RepositoryBase[SegmentExecutionModel]):
+class SegmentExecutionRepository(SoftDeleteRepositoryBase[SegmentExecutionModel]):
     model_class = SegmentExecutionModel
 
     def __init__(self, session: AsyncSession):

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from identity.auth.models.verification_code_model import VerificationCodeModel
 from identity.auth.enums.notification_enums import VerificationChannel
 from identity.auth.exceptions import (
@@ -14,7 +14,7 @@ from identity.auth.exceptions import (
 )
 
 
-class VerificationCodeRepository(RepositoryBase[VerificationCodeModel]):
+class VerificationCodeRepository(SoftDeleteRepositoryBase[VerificationCodeModel]):
     model_class = VerificationCodeModel
 
     def __init__(self, session: AsyncSession):

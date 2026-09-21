@@ -4,11 +4,11 @@ from typing import Sequence
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from app_platform.notifications.models.notification_model import NotificationModel
 
 
-class NotificationRepository(RepositoryBase[NotificationModel]):
+class NotificationRepository(SoftDeleteRepositoryBase[NotificationModel]):
     model_class = NotificationModel
 
     def __init__(self, session: AsyncSession):

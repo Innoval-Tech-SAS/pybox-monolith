@@ -4,12 +4,12 @@ from typing import Any, Sequence
 
 from sqlalchemy import func, or_, select, update
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.ivr.enums.ivr_enums import TERMINAL_CALL_STATUSES, IvrCallStatus
 from messaging.ivr.models.ivr_interaction_model import IvrInteractionModel
 
 
-class IvrInteractionRepository(RepositoryBase[IvrInteractionModel]):
+class IvrInteractionRepository(SoftDeleteRepositoryBase[IvrInteractionModel]):
     model_class = IvrInteractionModel
 
     async def get_by_interaction_id(self, interaction_id: str) -> IvrInteractionModel | None:

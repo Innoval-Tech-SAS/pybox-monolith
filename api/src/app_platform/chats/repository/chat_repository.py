@@ -4,12 +4,12 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from app_platform.chats.models.chat_member_model import ChatMemberModel
 from app_platform.chats.models.chat_model import ChatModel
 
 
-class ChatRepository(RepositoryBase[ChatModel]):
+class ChatRepository(SoftDeleteRepositoryBase[ChatModel]):
     model_class = ChatModel
 
     def __init__(self, session: AsyncSession):
