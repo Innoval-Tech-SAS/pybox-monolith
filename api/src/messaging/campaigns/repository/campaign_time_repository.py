@@ -5,12 +5,12 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.campaigns.models.campaign_model import CampaignModel
 from messaging.campaigns.models.campaign_time_model import CampaignTimeModel
 
 
-class CampaignTimeRepository(RepositoryBase[CampaignTimeModel]):
+class CampaignTimeRepository(SoftDeleteRepositoryBase[CampaignTimeModel]):
     model_class = CampaignTimeModel
 
     def __init__(self, session: AsyncSession) -> None:

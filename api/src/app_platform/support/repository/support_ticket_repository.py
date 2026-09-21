@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Sequence
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from app_platform.support.enums.support_enums import SupportTicketStatus
 from app_platform.support.models.support_ticket_model import SupportTicketModel
 from identity.users.enums.user_enums import UserRole, UserScope
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 _TERMINAL = (SupportTicketStatus.RESOLVED, SupportTicketStatus.CLOSED)
 
 
-class SupportTicketRepository(RepositoryBase[SupportTicketModel]):
+class SupportTicketRepository(SoftDeleteRepositoryBase[SupportTicketModel]):
     model_class = SupportTicketModel
 
     def __init__(self, session: AsyncSession):

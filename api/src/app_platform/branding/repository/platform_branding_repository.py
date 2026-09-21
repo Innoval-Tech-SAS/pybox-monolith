@@ -3,10 +3,10 @@ from typing import Optional
 from sqlalchemy import select
 
 from app_platform.branding.models.platform_branding_model import PlatformBrandingModel
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 
 
-class PlatformBrandingRepository(RepositoryBase[PlatformBrandingModel]):
+class PlatformBrandingRepository(SoftDeleteRepositoryBase[PlatformBrandingModel]):
     model_class = PlatformBrandingModel
 
     async def get_singleton(self) -> Optional[PlatformBrandingModel]:

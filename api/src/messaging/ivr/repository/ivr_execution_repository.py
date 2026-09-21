@@ -3,11 +3,11 @@ from typing import Sequence
 
 from sqlalchemy import select
 
-from core.base.repository_base import RepositoryBase
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.ivr.models.ivr_execution_model import IvrExecutionModel
 
 
-class IvrExecutionRepository(RepositoryBase[IvrExecutionModel]):
+class IvrExecutionRepository(SoftDeleteRepositoryBase[IvrExecutionModel]):
     model_class = IvrExecutionModel
 
     async def get_by_bulk_id(self, bulk_id: str) -> IvrExecutionModel | None:
