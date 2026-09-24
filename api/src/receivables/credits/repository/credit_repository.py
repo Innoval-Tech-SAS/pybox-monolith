@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, datetime, timezone
-from typing import NamedTuple
+from typing import NamedTuple, Sequence
 
 from sqlalchemy import case, cast, func, or_, select, union, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -342,3 +342,14 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
             .order_by(CreditModel.debtor_id, CreditModel.disbursed_date.desc())
         )
         return list(result.scalars().all())
+
+    async def soft_delete_by_portfolios(self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime) -> None:
+        """Baja en cascada de los créditos vivos de esos portafolios (mismo sello que el
+        portafolio, para poder restaurarlos juntos sin resucitar créditos dados de baja
+        antes por otra vía, p. ej. la recarga del CSV en modo update)."""
+        if portfolio_ids:
+            await self.soft_delete_where(CreditModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at)
+
+    async def restore_by_portfolios(self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime) -> None:
+        if portfolio_ids:
+            await self.restore_where(CreditModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at)

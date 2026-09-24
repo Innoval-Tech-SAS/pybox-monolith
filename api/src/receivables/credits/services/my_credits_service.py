@@ -69,6 +69,11 @@ class MyCreditsService:
         )
         portfolios = await self._portfolio_repo.get_by_ids(portfolio_ids)
         portfolio_map = {p.id: p for p in portfolios}
+        # Un portafolio dado de baja no aparece en `get_by_ids`: sus créditos ya no se
+        # muestran al titular (antes esto reventaba con KeyError más abajo).
+        all_credits = [(c, role) for c, role in all_credits if c.portfolio_id in portfolio_map]
+        if not all_credits:
+            return []
 
         org_ids: list[uuid.UUID] = list(
             {p.organization_id for p in portfolio_map.values()}

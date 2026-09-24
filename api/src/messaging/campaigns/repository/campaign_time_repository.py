@@ -35,11 +35,15 @@ class CampaignTimeRepository(SoftDeleteRepositoryBase[CampaignTimeModel]):
     async def find_due_active(
         self, now: datetime, limit: int = 300, after_id: uuid.UUID | None = None
     ) -> Sequence[CampaignTimeModel]:
+        # La campaña debe seguir viva: al eliminar su portafolio (o la organización) la
+        # campaña cae en cascada, y su programación no debe seguir disparando envíos.
         stmt = (
             select(CampaignTimeModel)
+            .join(CampaignModel, CampaignModel.id == CampaignTimeModel.campaign_id)
             .where(
                 CampaignTimeModel.is_active.is_(True),
                 CampaignTimeModel.next_execution <= now,
+                CampaignModel.deleted_at.is_(None),
             )
             .order_by(CampaignTimeModel.id)
             .limit(limit)
