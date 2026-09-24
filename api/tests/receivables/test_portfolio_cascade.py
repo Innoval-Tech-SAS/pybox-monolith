@@ -55,6 +55,7 @@ class TestDeletePortfolioCascade:
         _, portfolio, credit, campaign = await _portfolio_with_credit_and_campaign(db_session)
 
         await build_service(db_session).delete_portfolio(portfolio.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await PortfolioRepository(db_session).get_by_id(portfolio.id) is None
         assert await CreditRepository(db_session).get_by_id(credit.id) is None
@@ -71,6 +72,7 @@ class TestDeletePortfolioCascade:
         await db_session.flush()
 
         await build_service(db_session).delete_portfolio(portfolio.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await CreditRepository(db_session).get_by_id(other_credit.id) is not None
 
@@ -83,6 +85,7 @@ class TestDeletePortfolioCascade:
         assert [d.id for d in await CampaignTimeRepository(db_session).find_due_active(now)] == [ct.id]
 
         await build_service(db_session).delete_portfolio(portfolio.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await CampaignTimeRepository(db_session).find_due_active(now) == []
 
@@ -92,8 +95,10 @@ class TestRestorePortfolioCascade:
         _, portfolio, credit, campaign = await _portfolio_with_credit_and_campaign(db_session)
         service = build_service(db_session)
         await service.delete_portfolio(portfolio.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         await service.restore_portfolio(portfolio.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await PortfolioRepository(db_session).get_by_id(portfolio.id) is not None
         assert await CreditRepository(db_session).get_by_id(credit.id) is not None
@@ -112,7 +117,9 @@ class TestRestorePortfolioCascade:
 
         service = build_service(db_session)
         await service.delete_portfolio(portfolio.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
         await service.restore_portfolio(portfolio.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await credit_repo.get_by_id(credit.id) is not None
         assert await credit_repo.get_by_id(old_credit.id) is None
@@ -121,6 +128,7 @@ class TestRestorePortfolioCascade:
         org, portfolio, _, _ = await _portfolio_with_credit_and_campaign(db_session)
         service = build_service(db_session)
         await service.delete_portfolio(portfolio.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
         await OrganizationRepository(db_session).delete(org)
 
         with pytest.raises(HTTPException) as exc_info:

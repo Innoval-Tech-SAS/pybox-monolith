@@ -57,6 +57,7 @@ class TestSoftDeleteOrganizationCascade:
         org, portfolio, credit, campaign = await _organization_with_everything(db_session, real_admin_user_id)
 
         await build_service(db_session).soft_delete_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await OrganizationRepository(db_session).get_by_id(org.id) is None
         assert await OrganizationMembershipRepository(db_session).get_by_organization_id(org.id) == []
@@ -69,6 +70,7 @@ class TestSoftDeleteOrganizationCascade:
         org, *_ = await _organization_with_everything(db_session, real_admin_user_id)
 
         await build_service(db_session).soft_delete_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await UserRepository(db_session).get_by_id(real_admin_user_id) is not None
         assert await OrganizationMembershipRepository(db_session).get_by_user_id(real_admin_user_id) == []
@@ -79,8 +81,10 @@ class TestRestoreOrganizationCascade:
         org, portfolio, credit, campaign = await _organization_with_everything(db_session, real_admin_user_id)
         service = build_service(db_session)
         await service.soft_delete_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         await service.restore_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await OrganizationRepository(db_session).get_by_id(org.id) is not None
         assert len(await OrganizationMembershipRepository(db_session).get_by_organization_id(org.id)) == 1
@@ -101,6 +105,8 @@ class TestRestoreOrganizationCascade:
 
         service = build_service(db_session)
         await service.soft_delete_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
         await service.restore_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await portfolio_repo.get_by_id(old_portfolio.id) is None
