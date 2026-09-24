@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, Query, Request, WebSocket, status
+from fastapi import Depends, Header, HTTPException, Request, WebSocket, status
 from pydantic import ValidationError as PydanticValidationError
 
 from identity.auth.dependencies import TokenPayload
@@ -15,12 +15,15 @@ from identity.users.schemas.user_session_schema import UserSession, mfa_verified
 _sse_token_service = AuthTokenService()
 
 
-def _resolve_stream_token(connection: Request | WebSocket, token: str | None) -> str:
-    cookie_token = connection.cookies.get(ACCESS_TOKEN_COOKIE)
-    resolved = cookie_token or token
-    if not resolved:
+def _resolve_stream_token(connection: Request | WebSocket) -> str:
+    """El token de acceso de un stream (SSE/WebSocket) sale SOLO de la cookie httpOnly.
+
+    Aceptarlo también por query string (`?token=`) lo dejaría en logs de acceso, proxies e
+    historial del navegador; `EventSource` y `WebSocket` adjuntan la cookie solos."""
+    token = connection.cookies.get(ACCESS_TOKEN_COOKIE)
+    if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.")
-    return resolved
+    return token
 
 
 def _subject_to_uuid(payload: TokenPayload) -> uuid.UUID:
@@ -81,8 +84,8 @@ async def get_pending_mfa_session(payload: TokenPayload) -> UserSession:
     return await _load_session(_subject_to_uuid(payload))
 
 
-async def get_sse_session(request: Request, token: Annotated[str | None, Query()] = None) -> UserSession:
-    resolved_token = _resolve_stream_token(request, token)
+async def get_sse_session(request: Request) -> UserSession:
+    resolved_token = _resolve_stream_token(request)
     try:
         payload = _sse_token_service.verify_token(resolved_token)
     except ValueError:
@@ -91,8 +94,8 @@ async def get_sse_session(request: Request, token: Annotated[str | None, Query()
     return await _require_mfa_verified(session)
 
 
-async def get_ws_session(websocket: WebSocket, token: str | None = None) -> UserSession:
-    resolved_token = _resolve_stream_token(websocket, token)
+async def get_ws_session(websocket: WebSocket) -> UserSession:
+    resolved_token = _resolve_stream_token(websocket)
     try:
         payload = _sse_token_service.verify_token(resolved_token)
     except ValueError:
