@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Sequence
 
 from sqlalchemy import select
@@ -6,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.reports.models.report_execution_model import ReportExecutionModel
+from receivables.reports.models.report_model import ReportModel
 
 # Prefijo del dominio en la clave del objeto (`<dominio>/<dueno>/<uuid><ext>`). El dueño
 # del CSV de auditoría es la entidad que ejecutó el reporte; reemplaza a
@@ -38,3 +40,15 @@ class ReportExecutionRepository(SoftDeleteRepositoryBase[ReportExecutionModel]):
             .order_by(ReportExecutionModel.created_at.desc())
         )
         return result.scalars().all()
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de las ejecuciones de los reportes de la organización con el sello de la organización."""
+        await self.soft_delete_where(
+            ReportExecutionModel.report_id.in_(select(ReportModel.id).where(ReportModel.organization_id == organization_id)), deleted_at=deleted_at
+        )
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(
+            ReportExecutionModel.report_id.in_(select(ReportModel.id).where(ReportModel.organization_id == organization_id)), deleted_at=deleted_at
+        )

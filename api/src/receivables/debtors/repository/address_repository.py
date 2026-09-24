@@ -1,10 +1,12 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.debtors.models.address_model import AddressModel
+from receivables.debtors.models.debtor_model import DebtorModel
 
 
 class AddressRepository(SoftDeleteRepositoryBase[AddressModel]):
@@ -21,3 +23,15 @@ class AddressRepository(SoftDeleteRepositoryBase[AddressModel]):
             )
         )
         return list(result.scalars().all())
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de las direcciones de los deudores de la organización con el sello de la organización."""
+        await self.soft_delete_where(
+            AddressModel.debtor_id.in_(select(DebtorModel.id).where(DebtorModel.organization_id == organization_id)), deleted_at=deleted_at
+        )
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(
+            AddressModel.debtor_id.in_(select(DebtorModel.id).where(DebtorModel.organization_id == organization_id)), deleted_at=deleted_at
+        )

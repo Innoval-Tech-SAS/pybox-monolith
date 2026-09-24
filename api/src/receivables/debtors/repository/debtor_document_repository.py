@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Optional, Sequence
 
 from sqlalchemy import select
@@ -8,6 +9,7 @@ from app_platform.documents.models.document_model import DocumentModel
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.debtors.enums.debtor_document_enums import DebtorDocumentCategory
 from receivables.debtors.models.debtor_document_model import DebtorDocumentModel
+from receivables.debtors.models.debtor_model import DebtorModel
 
 # Prefijo del dominio en la clave del objeto (`<dominio>/<dueno>/<uuid><ext>`).
 # Lo aporta el dominio dueño del documento; reemplaza a `DocumentOwnerScope.DEBTOR`, que
@@ -81,4 +83,16 @@ class DebtorDocumentRepository(SoftDeleteRepositoryBase[DebtorDocumentModel]):
                 DocumentModel.checksum == checksum,
                 DebtorDocumentModel.deleted_at.is_(None),
             )
+        )
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de los documentos de los deudores de la organización con el sello de la organización."""
+        await self.soft_delete_where(
+            DebtorDocumentModel.debtor_id.in_(select(DebtorModel.id).where(DebtorModel.organization_id == organization_id)), deleted_at=deleted_at
+        )
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(
+            DebtorDocumentModel.debtor_id.in_(select(DebtorModel.id).where(DebtorModel.organization_id == organization_id)), deleted_at=deleted_at
         )

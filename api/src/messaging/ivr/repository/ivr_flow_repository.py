@@ -1,9 +1,11 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.ivr.models.ivr_flow_model import IvrFlowModel
+from receivables.portfolios.models.portfolio_model import PortfolioModel
 
 
 class IvrFlowRepository(SoftDeleteRepositoryBase[IvrFlowModel]):
@@ -31,3 +33,15 @@ class IvrFlowRepository(SoftDeleteRepositoryBase[IvrFlowModel]):
             )
         )
         return result.scalar_one_or_none()
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de los flujos IVR de los portafolios de la organización con el sello de la organización."""
+        await self.soft_delete_where(
+            IvrFlowModel.portfolio_id.in_(select(PortfolioModel.id).where(PortfolioModel.organization_id == organization_id)), deleted_at=deleted_at
+        )
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(
+            IvrFlowModel.portfolio_id.in_(select(PortfolioModel.id).where(PortfolioModel.organization_id == organization_id)), deleted_at=deleted_at
+        )

@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,3 +45,11 @@ class ReportRepository(SoftDeleteRepositoryBase[ReportModel]):
             )
         )
         return list(result.scalars().all())
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de los reportes de la organización con el sello de la organización."""
+        await self.soft_delete_where(ReportModel.organization_id == organization_id, deleted_at=deleted_at)
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(ReportModel.organization_id == organization_id, deleted_at=deleted_at)

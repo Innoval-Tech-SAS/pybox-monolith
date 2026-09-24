@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -96,3 +97,11 @@ class WhatsAppChatRepository(SoftDeleteRepositoryBase[WhatsAppChatModel]):
         )
         counts = dict(result.all())
         return min(sorted(candidate_user_ids, key=str), key=lambda uid: counts.get(uid, 0))
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de los chats de WhatsApp de la organización con el sello de la organización."""
+        await self.soft_delete_where(WhatsAppChatModel.organization_id == organization_id, deleted_at=deleted_at)
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(WhatsAppChatModel.organization_id == organization_id, deleted_at=deleted_at)
