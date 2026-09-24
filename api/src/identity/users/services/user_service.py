@@ -14,6 +14,7 @@ from identity.organizations.repository.organization_repository import Organizati
 from identity.organizations.services.organization_service import OrganizationService
 from core.security.constants.permissions import ORG_USERS
 from core.security.constants.role_permissions_catalog import get_base_permissions
+from core.security.services.auth_token_service import AuthTokenService
 from core.security.services.encrypt_service import encrypt_service
 from core.config.logger import logger
 from identity.users.constants.tour_keys import TOUR_KEYS
@@ -34,7 +35,7 @@ from identity.users.schemas.user_schemas import (
     RoleEntrySchema,
     UpdateUserSchema,
 )
-from identity.users.schemas.user_session_schema import OrgSessionEntry, UserSession, session_key
+from identity.users.schemas.user_session_schema import OrgSessionEntry, UserSession, mfa_verified_key, session_key
 
 
 class UserService:
@@ -179,6 +180,14 @@ class UserService:
     async def soft_delete_user(self, session: UserSession, user_id: uuid.UUID) -> None:
         await self._assert_can_manage_user(session, user_id)
         admin_org_ids = await self.role_assignment_repo.get_admin_org_ids(user_id)
+        if admin_org_ids and not session.is_global:
+            # Dar de baja a quien administra una organización arrastra la organización
+            # completa (deudores, portafolios, reportes...): no es un poder de admin de
+            # organización ni de quien solo gestiona usuarios.
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Solo un administrador global puede eliminar a quien administra una organización.",
+            )
 
         for org_id in admin_org_ids:
             await self._org_service.soft_delete_organization(org_id)
@@ -190,6 +199,7 @@ class UserService:
         user = await self.user_repo.get_by_id(user_id)
         if user is not None:
             await self.user_repo.delete(user)
+        await self._revoke_sessions(user_id)
 
     async def _build_role_entries(self, assignments: list[RoleAssignmentModel]) -> list[RoleEntrySchema]:
         org_ids = [a.organization_id for a in assignments if a.organization_id]
@@ -244,23 +254,41 @@ class UserService:
         users = list(await self.user_repo.get_accessible(org_ids=org_ids, include_deleted=include_deleted))
         return await self._enrich_users(users)
 
+    async def _revoke_sessions(self, user_id: uuid.UUID) -> None:
+        """Cierra la sesión cacheada y el refresh token del usuario: la sesión vive en Redis
+        (3 h renovables) sin volver a consultar la base, así que sin esto un usuario dado de
+        baja, desactivado o con permisos cambiados conserva lo que tenía."""
+        await AuthTokenService().revoke_refresh_token(user_id)
+        await self.redis.delete(session_key(user_id))
+        await self.redis.delete(mfa_verified_key(user_id))
+
     async def _assert_can_manage_user(self, session: UserSession, target_user_id: uuid.UUID) -> None:
-        """El caller puede ver/editar/eliminar target_user_id si: es global, es el propio
-        usuario, o es admin/ORG_USERS de alguna organización a la que target_user_id pertenece."""
+        """El caller puede ver/editar/eliminar target_user_id si es global, es el propio
+        usuario, o gestiona a ese usuario en TODAS las organizaciones donde este figura:
+        siendo admin de la organización, o con ORG_USERS cuando el objetivo no es admin de ella.
+
+        Un usuario que además pertenece a organizaciones que el caller no gestiona, o que es
+        personal global, no se toca desde una organización: los cambios sobre su cuenta
+        (correo, MFA, estado) afectarían a otros tenants."""
         if session.is_global or session.user_id == target_user_id:
             return
+        denied = HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
         if session.scope != UserScope.ORGANIZATION:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+            raise denied
+        if await self.role_assignment_repo.get_global_user_ids([target_user_id]):
+            raise denied
         memberships = await self.membership_repo.get_by_user_id(target_user_id)
         target_org_ids = {str(m.organization_id) for m in memberships}
-        shared_org_ids = [oid for oid in session.orgs if oid in target_org_ids]
-        allowed = any(
-            session.orgs[oid].role == UserRole.ADMIN or ORG_USERS in session.orgs[oid].permissions
-            for oid in shared_org_ids
-        )
-        if not allowed:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
-
+        if not target_org_ids or not target_org_ids <= set(session.orgs):
+            raise denied
+        target_admin_org_ids = {str(o) for o in await self.role_assignment_repo.get_admin_org_ids(target_user_id)}
+        for org_id in target_org_ids:
+            entry = session.orgs[org_id]
+            manages = entry.role == UserRole.ADMIN or (
+                ORG_USERS in entry.permissions and org_id not in target_admin_org_ids
+            )
+            if not manages:
+                raise denied
     async def get_user_detail(self, session: UserSession, user_id: uuid.UUID) -> AdminUserDetailSchema:
         await self._assert_can_manage_user(session, user_id)
         user = await self.user_repo.get_by_id(user_id)
@@ -321,6 +349,10 @@ class UserService:
         if data.mfa_enabled is not None:
             user.mfa_enabled = data.mfa_enabled
         await self.user_repo.update(user)
+        if user_id != session.user_id:
+            # Correo, documento, MFA o estado cambian lo que la sesión cacheada afirma
+            # (o si el usuario puede seguir entrando): se obliga a reconstruirla.
+            await self._revoke_sessions(user_id)
         return await self.get_user_detail(session, user_id)
 
     async def update_profile_photo(self, user_id: uuid.UUID, file: UploadFile) -> ProfilePhotoSchema:

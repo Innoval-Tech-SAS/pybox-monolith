@@ -204,7 +204,7 @@ class AuthService:
             raise ValueError("Sesión inválida o ya cerrada.")
 
         user = await self.user_repository.get_by_id(user_id)
-        if not user:
+        if not user or not user.is_active:
             raise ValueError("Usuario no encontrado.")
 
         logger.info("[auth] token_refresh | user_id=%s", user_id)
