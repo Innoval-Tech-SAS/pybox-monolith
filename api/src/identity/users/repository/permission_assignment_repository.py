@@ -1,4 +1,5 @@
 ﻿import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -100,3 +101,14 @@ class PermissionAssignmentRepository(SoftDeleteRepositoryBase[PermissionAssignme
             )
         )
         return list(result.scalars().all())
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja de los permisos por usuario otorgados/revocados dentro de la organización."""
+        await self.soft_delete_where(
+            PermissionAssignmentModel.organization_id == organization_id, deleted_at=deleted_at
+        )
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        await self.restore_where(
+            PermissionAssignmentModel.organization_id == organization_id, deleted_at=deleted_at
+        )

@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Sequence
 
@@ -34,9 +35,17 @@ from core.security.services.encrypt_service import encrypt_service
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.models.role_assignment_model import RoleAssignmentModel
 from identity.users.models.user_model import UserModel
+from identity.users.repository.permission_assignment_repository import PermissionAssignmentRepository
 from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
 from identity.users.repository.user_repository import UserRepository
 from identity.users.schemas.user_session_schema import UserSession, session_key
+from messaging.campaigns.repository.campaign_repository import CampaignRepository
+from messaging.contacts.repository.contact_repository import ContactRepository
+from receivables.credits.repository.credit_repository import CreditRepository
+from receivables.portfolios.repository.portfolio_daily_counter_config_repository import PortfolioDailyCounterConfigRepository
+from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
+from receivables.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
+from receivables.portfolios.services.portfolio_service import PortfolioService
 
 
 class OrganizationService:
@@ -55,6 +64,17 @@ class OrganizationService:
         self._country_service = CountryService(self._country_repo)
         self._document_service = DocumentService(org_repo.session)
         self._document_repo = DocumentRepository(org_repo.session)
+        self._permission_assignment_repo = PermissionAssignmentRepository(org_repo.session)
+        # Dar de baja una organización arrastra sus portafolios (y con ellos créditos y
+        # campañas): esa cascada la conoce el dominio dueño de los portafolios.
+        self._portfolio_service = PortfolioService(
+            PortfolioRepository(org_repo.session),
+            PortfolioDailyCounterConfigRepository(org_repo.session),
+            CreditRepository(org_repo.session),
+            CampaignRepository(org_repo.session),
+            ContactRepository(org_repo.session),
+            PortfolioUserAccessRepository(org_repo.session),
+        )
 
     # ── Queries ──────────────────────────────────────────────────────────────
 
@@ -445,32 +465,54 @@ class OrganizationService:
             await self._assert_admin_of_org(requesting_user_id, org_id)
 
         await self.get_by_id(org_id)  # raises 404 if not found
+        await self.soft_delete_organization(org_id)
+        logger.info("[org] delete | org_id=%s user_id=%s", org_id, requesting_user_id)
 
-        memberships = await self.membership_repo.get_by_organization_id(org_id)
-        await self.membership_repo.delete_many(memberships)
-
-        org = await self.org_repo.get_by_id(org_id)
-        await self.org_repo.delete(org)
-
-    # ── Soft-delete cascade (called from UserService) ─────────────────────────
+    # ── Soft-delete cascade (also called from UserService) ───────────────────
 
     async def soft_delete_organization(self, org_id: uuid.UUID) -> None:
-        memberships = await self.membership_repo.get_by_organization_id(org_id)
-        await self.membership_repo.delete_many(memberships)
+        """Baja lógica de la organización y, en cascada, de todo lo que le pertenece:
+        membresías, roles y permisos de sus usuarios, portafolios (con sus créditos y
+        campañas).
 
+        Los usuarios NO se eliminan: quedan sin organización (los que no tengan otra
+        vuelven a la sesión sin roles, la del titular). Toda la cascada lleva el mismo
+        `deleted_at` que la organización para que `restore_organization` revierta solo
+        lo que cayó con ella, no lo que ya estaba dado de baja antes.
+        """
         org = await self.org_repo.get_by_id(org_id)
-        if org is not None:
-            await self.org_repo.delete(org)
+        if org is None:
+            return
+
+        deleted = await self.org_repo.delete(org)
+        deleted_at = deleted.deleted_at
+        assert deleted_at is not None
+
+        user_ids = await self.membership_repo.soft_delete_by_organization(org_id, deleted_at)
+        await self.role_assignment_repo.soft_delete_by_organization(org_id, deleted_at)
+        await self._permission_assignment_repo.soft_delete_by_organization(org_id, deleted_at)
+        await self._portfolio_service.delete_for_organization(org_id, deleted_at)
+        await self._invalidate_sessions(user_ids)
 
     async def restore_organization(self, org_id: uuid.UUID) -> OrganizationModel | None:
         org = await self.org_repo.get_by_id_including_deleted(org_id)
         if org is None or org.deleted_at is None:
             return org
 
+        deleted_at: datetime = org.deleted_at
         await self.org_repo.restore(org)
 
-        memberships = await self.membership_repo.get_by_organization_id_including_deleted(org_id)
-        deleted_memberships = [m for m in memberships if m.deleted_at is not None]
-        await self.membership_repo.restore_many(deleted_memberships)
+        user_ids = await self.membership_repo.restore_by_organization(org_id, deleted_at)
+        await self.role_assignment_repo.restore_by_organization(org_id, deleted_at)
+        await self._permission_assignment_repo.restore_by_organization(org_id, deleted_at)
+        await self._portfolio_service.restore_for_organization(org_id, deleted_at)
+        await self._invalidate_sessions(user_ids)
 
         return org
+
+    @staticmethod
+    async def _invalidate_sessions(user_ids: list[uuid.UUID]) -> None:
+        """La sesión cacheada en Redis lista las organizaciones del usuario: sin esto
+        seguiría viendo (o sin ver) la organización hasta que expire."""
+        for user_id in user_ids:
+            await redis_client.delete(session_key(user_id))

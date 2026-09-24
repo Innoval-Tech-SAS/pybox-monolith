@@ -7,6 +7,7 @@ from pydantic import TypeAdapter
 from app_platform.dashboard.schemas.dashboard_schemas import MonthlySendsPoint, MonthlySendsResponse, SendStatusCountItem, SendStatusCountsResponse
 from app_platform.dashboard.utils.dashboard_utils import last_n_months
 from core.cache.cache_service import cache_service
+from identity.organizations.repository.organization_repository import OrganizationRepository
 from messaging.campaigns.repository.campaign_repository import CampaignRepository
 from messaging.contacts.repository.contact_repository import ContactRepository
 from receivables.credits.repository.credit_repository import CreditRepository
@@ -150,14 +151,63 @@ class PortfolioService:
         return await self.portfolio_repo.update(portfolio)
 
     async def delete_portfolio(self, portfolio_id: uuid.UUID) -> None:
+        """Baja lógica del portafolio y, en cascada, de sus créditos y campañas.
+
+        Todo lleva el mismo `deleted_at` que el portafolio: es lo que permite que
+        `restore_portfolio` revierta exactamente esta cascada sin resucitar créditos o
+        campañas que ya estaban dados de baja por otra vía."""
         portfolio = await self.get_by_id(portfolio_id)
-        await self.portfolio_repo.delete(portfolio)
+        deleted = await self.portfolio_repo.delete(portfolio)
+        await self._cascade_delete([portfolio_id], deleted.deleted_at)  # type: ignore[arg-type]
 
     async def restore_portfolio(self, portfolio_id: uuid.UUID) -> PortfolioModel:
         portfolio = await self.portfolio_repo.get_by_id_including_deleted(portfolio_id)
         if portfolio is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Portafolio no encontrado")
-        return await self.portfolio_repo.restore(portfolio)
+        if portfolio.deleted_at is None:
+            return portfolio
+
+        # Un portafolio vivo bajo una organización eliminada quedaría accesible por
+        # id sin dueño: primero se restaura la organización (que arrastra sus portafolios).
+        organization = await OrganizationRepository(self.portfolio_repo.session).get_by_id(portfolio.organization_id)
+        if organization is None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="La organización de este portafolio está eliminada; restáurala primero",
+            )
+
+        deleted_at = portfolio.deleted_at
+        restored = await self.portfolio_repo.restore(portfolio)
+        await self._cascade_restore([portfolio_id], deleted_at)
+        return restored
+
+    async def delete_for_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Cascada de la baja de una organización: sus portafolios vivos caen con el sello
+        de la organización, y con ellos sus créditos y campañas."""
+        portfolio_ids = await self.portfolio_repo.soft_delete_by_organization(organization_id, deleted_at)
+        await self._cascade_delete(portfolio_ids, deleted_at)
+
+    async def restore_for_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        portfolio_ids = await self.portfolio_repo.restore_by_organization(organization_id, deleted_at)
+        await self._cascade_restore(portfolio_ids, deleted_at)
+
+    async def _cascade_delete(self, portfolio_ids: list[uuid.UUID], deleted_at: datetime) -> None:
+        await self._credit_repo.soft_delete_by_portfolios(portfolio_ids, deleted_at)
+        await self._campaign_repo.soft_delete_by_portfolios(portfolio_ids, deleted_at)
+        await self._bust_portfolio_caches(portfolio_ids)
+
+    async def _cascade_restore(self, portfolio_ids: list[uuid.UUID], deleted_at: datetime) -> None:
+        await self._credit_repo.restore_by_portfolios(portfolio_ids, deleted_at)
+        await self._campaign_repo.restore_by_portfolios(portfolio_ids, deleted_at)
+        await self._bust_portfolio_caches(portfolio_ids)
+
+    @staticmethod
+    async def _bust_portfolio_caches(portfolio_ids: list[uuid.UUID]) -> None:
+        """Las estadísticas cacheadas (2-5 min) seguirían mostrando el portafolio como si
+        conservara sus créditos justo después de darlo de baja o restaurarlo."""
+        for portfolio_id in portfolio_ids:
+            await cache_service.bust(f"portfolio:stats:{portfolio_id}", f"portfolio:send-status:{portfolio_id}")
+            await cache_service.bust_prefix(f"portfolio:monthly-sends:{portfolio_id}")
 
     async def get_daily_counter_config(
         self, portfolio_id: uuid.UUID

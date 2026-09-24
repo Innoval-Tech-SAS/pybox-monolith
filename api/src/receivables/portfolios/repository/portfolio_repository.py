@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -108,3 +109,30 @@ class PortfolioRepository(SoftDeleteRepositoryBase[PortfolioModel]):
             .order_by(PortfolioModel.id.asc())
         )
         return list(result.scalars().unique().all())
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> list[uuid.UUID]:
+        """Baja en cascada de los portafolios vivos de la organización con el sello de la
+        organización. Devuelve los ids afectados para que el service propague la cascada
+        a lo que cuelga de ellos (créditos, campañas)."""
+        result = await self.session.execute(
+            select(PortfolioModel.id).where(
+                PortfolioModel.organization_id == organization_id,
+                PortfolioModel.deleted_at.is_(None),
+            )
+        )
+        portfolio_ids = list(result.scalars().all())
+        await self.soft_delete_where(PortfolioModel.id.in_(portfolio_ids), deleted_at=deleted_at)
+        return portfolio_ids
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> list[uuid.UUID]:
+        """Inverso de ``soft_delete_by_organization``: solo los portafolios que cayeron con
+        esa organización (mismo sello), no los que ya estaban eliminados antes."""
+        result = await self.session.execute(
+            select(PortfolioModel.id).where(
+                PortfolioModel.organization_id == organization_id,
+                PortfolioModel.deleted_at == deleted_at,
+            )
+        )
+        portfolio_ids = list(result.scalars().all())
+        await self.restore_where(PortfolioModel.id.in_(portfolio_ids), deleted_at=deleted_at)
+        return portfolio_ids

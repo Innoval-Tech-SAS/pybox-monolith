@@ -62,6 +62,30 @@ class SoftDeleteRepositoryBase(RepositoryBase[T]):
         )
         await self.session.flush()
 
+    async def soft_delete_where(self, *conditions, deleted_at: datetime) -> None:
+        """Baja en cascada de las filas VIVAS que cumplen ``conditions``, todas con el
+        mismo ``deleted_at``.
+
+        Ese sello compartido es lo que permite deshacer la cascada sin resucitar lo que
+        ya estaba dado de baja antes: ``restore_where`` solo revive las filas marcadas con
+        exactamente ese instante (el del padre que se eliminó/restaura)."""
+        await self.session.execute(
+            update(self.model_class)
+            .where(self.model_class.deleted_at.is_(None), *conditions)  # type: ignore[union-attr]
+            .values(deleted_at=deleted_at)
+        )
+        await self.session.flush()
+
+    async def restore_where(self, *conditions, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_where``: revive solo las filas dadas de baja en esa
+        cascada (mismo ``deleted_at``), no las que ya estaban eliminadas antes."""
+        await self.session.execute(
+            update(self.model_class)
+            .where(self.model_class.deleted_at == deleted_at, *conditions)  # type: ignore[union-attr]
+            .values(deleted_at=None)
+        )
+        await self.session.flush()
+
     async def get_by_id_including_deleted(self, id: object) -> Optional[T]:
         return await self.session.get(self.model_class, id)
 

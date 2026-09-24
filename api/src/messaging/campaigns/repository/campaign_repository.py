@@ -1,4 +1,6 @@
 import uuid
+from datetime import datetime
+from typing import Sequence
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -116,3 +118,13 @@ class CampaignRepository(SoftDeleteRepositoryBase[CampaignModel]):
             )
         )
         return result.scalar_one_or_none()
+
+    async def soft_delete_by_portfolios(self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime) -> None:
+        """Baja en cascada de las campañas vivas de esos portafolios (mismo sello que el
+        portafolio: se restauran juntas sin resucitar campañas eliminadas antes)."""
+        if portfolio_ids:
+            await self.soft_delete_where(CampaignModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at)
+
+    async def restore_by_portfolios(self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime) -> None:
+        if portfolio_ids:
+            await self.restore_where(CampaignModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at)

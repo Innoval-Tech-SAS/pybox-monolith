@@ -1,4 +1,5 @@
 ﻿import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,3 +58,33 @@ class OrganizationMembershipRepository(SoftDeleteRepositoryBase[OrganizationMemb
             )
         )
         return list(result.scalars().all())
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> list[uuid.UUID]:
+        """Baja de las membresías vivas de la organización con el sello de la organización.
+        Devuelve los ids de usuario afectados (para invalidar sus sesiones cacheadas)."""
+        result = await self.session.execute(
+            select(OrganizationMembershipModel.user_id).where(
+                OrganizationMembershipModel.organization_id == organization_id,
+                OrganizationMembershipModel.deleted_at.is_(None),
+            )
+        )
+        user_ids = list(result.scalars().all())
+        await self.soft_delete_where(
+            OrganizationMembershipModel.organization_id == organization_id, deleted_at=deleted_at
+        )
+        return user_ids
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> list[uuid.UUID]:
+        """Inverso de ``soft_delete_by_organization``: solo las membresías que cayeron con la
+        organización, no las de miembros que ya habían sido removidos antes."""
+        result = await self.session.execute(
+            select(OrganizationMembershipModel.user_id).where(
+                OrganizationMembershipModel.organization_id == organization_id,
+                OrganizationMembershipModel.deleted_at == deleted_at,
+            )
+        )
+        user_ids = list(result.scalars().all())
+        await self.restore_where(
+            OrganizationMembershipModel.organization_id == organization_id, deleted_at=deleted_at
+        )
+        return user_ids

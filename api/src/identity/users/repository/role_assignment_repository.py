@@ -1,4 +1,5 @@
 ﻿import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,3 +70,11 @@ class RoleAssignmentRepository(SoftDeleteRepositoryBase[RoleAssignmentModel]):
             )
         )
         return list(result.scalars().all())
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja de los roles que los usuarios tenían en la organización (misma cascada que
+        sus membresías): quien no tenga otro rol queda sin organización."""
+        await self.soft_delete_where(RoleAssignmentModel.organization_id == organization_id, deleted_at=deleted_at)
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        await self.restore_where(RoleAssignmentModel.organization_id == organization_id, deleted_at=deleted_at)
