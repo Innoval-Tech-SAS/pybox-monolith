@@ -67,7 +67,7 @@ async def org_portfolio_credit(db_session):
     db_session.add(portfolio)
     await db_session.flush()
     doc_number = "800111222"
-    debtor = build_debtor(document_number_plain=doc_number)
+    debtor = build_debtor(org.id, document_number_plain=doc_number)
     db_session.add(debtor)
     await db_session.flush()
     credit = build_credit(portfolio.id, debtor.id)
@@ -360,7 +360,7 @@ class TestGetAttachmentContent:
         document_id = uploaded.attachments[0].id
 
         other_doc = "999888777"
-        other_debtor = build_debtor(document_number_plain=other_doc)
+        other_debtor = build_debtor(org.id, document_number_plain=other_doc)
         db_session.add(other_debtor)
         await db_session.flush()
 
@@ -448,7 +448,7 @@ class TestSelfServiceInbox:
         )
 
         other_doc = "999888777"
-        other_debtor = build_debtor(document_number_plain=other_doc)
+        other_debtor = build_debtor(org.id, document_number_plain=other_doc)
         db_session.add(other_debtor)
         await db_session.flush()
         other_credit = build_credit(portfolio.id, other_debtor.id)

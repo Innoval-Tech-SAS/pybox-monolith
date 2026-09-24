@@ -62,8 +62,11 @@ class DebtorDocumentService:
     async def list_mine(
         self, session: UserSession, category: Optional[DebtorDocumentCategory] = None
     ) -> DebtorDocumentListResponse:
-        debtor = await self._require_self_debtor(session)
-        rows = await self._repo.list_by_debtor(debtor.id, category)
+        debtors = await self._require_self_debtors(session)
+        rows: list[tuple[DebtorDocumentModel, DocumentModel]] = []
+        for debtor in debtors:
+            rows.extend(await self._repo.list_by_debtor(debtor.id, category))
+        rows.sort(key=lambda row: row[1].created_at, reverse=True)
         return self.to_list_response(rows)
 
     async def upload_mine(
@@ -74,9 +77,11 @@ class DebtorDocumentService:
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
                 "No puedes subir documentos de esa categoría",
             )
-        debtor = await self._require_self_debtor(session)
+        # Los documentos del titular (p. ej. su identidad) son suyos, no de una empresa:
+        # se guardan en su fila de deudor más antigua y se leen desde cualquiera de ellas.
+        debtors = await self._require_self_debtors(session)
         link, document = await self.store_for_debtor(
-            debtor_id=debtor.id,
+            debtor_id=debtors[0].id,
             file=file,
             category=category,
             uploaded_by=session.user_id,
@@ -84,13 +89,13 @@ class DebtorDocumentService:
         return self.to_response(link, document)
 
     async def get_mine_content(self, session: UserSession, document_id: uuid.UUID) -> Response:
-        debtor = await self._require_self_debtor(session)
-        _, document = await self.require_owned(debtor.id, document_id)
+        debtors = await self._require_self_debtors(session)
+        _, document = await self._require_owned_by_any(debtors, document_id)
         return await self._document_service.to_content_response(document, session.user_id)
 
     async def delete_mine(self, session: UserSession, document_id: uuid.UUID) -> None:
-        debtor = await self._require_self_debtor(session)
-        link, document = await self.require_owned(debtor.id, document_id)
+        debtors = await self._require_self_debtors(session)
+        link, document = await self._require_owned_by_any(debtors, document_id)
         await self.delete(link, document)
 
     # ── API para otros Services del dominio (ya autorizados) ─────────────────
@@ -167,21 +172,32 @@ class DebtorDocumentService:
 
     # ── Internos ─────────────────────────────────────────────────────────────
 
-    async def _require_self_debtor(self, session: UserSession) -> DebtorModel:
-        """Resuelve el deudor detrás de la sesión SELF. El documento de identidad va
-        cifrado en la tabla, así que la búsqueda es por hash."""
+    async def _require_owned_by_any(
+        self, debtors: Sequence[DebtorModel], document_id: uuid.UUID
+    ) -> tuple[DebtorDocumentModel, DocumentModel]:
+        """Documento acotado a alguna de las filas de deudor del titular; 404 si ninguna
+        lo tiene (no se confirma que exista)."""
+        for debtor in debtors:
+            row = await self._repo.get_owned(debtor.id, document_id)
+            if row is not None:
+                return row
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Documento no encontrado")
+
+    async def _require_self_debtors(self, session: UserSession) -> list[DebtorModel]:
+        """Resuelve las filas de deudor (una por empresa) detrás de la sesión SELF. El
+        documento de identidad va cifrado en la tabla, así que la búsqueda es por hash."""
         document_type, document_number = get_self_identity(session)
         try:
             doc_type = UserDocumentType(document_type)
         except ValueError:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Tipo de documento no reconocido")
 
-        debtor = await self._debtor_repo.get_by_document(
+        debtors = await self._debtor_repo.list_by_document(
             doc_type, encrypt_service.hash_document(document_number)
         )
-        if debtor is None:
+        if not debtors:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "No encontramos obligaciones a tu nombre")
-        return debtor
+        return debtors
 
     # ── Mapeo a schema ───────────────────────────────────────────────────────
 

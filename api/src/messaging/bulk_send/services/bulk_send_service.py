@@ -222,7 +222,7 @@ class BulkSendService:
         }
         debtors_by_hash = {
             debtor.document_number_hash: debtor
-            for debtor in await self._debtor_repo.get_by_document_hashes(list(doc_hashes))
+            for debtor in await self._debtor_repo.get_by_document_hashes(organization_id, list(doc_hashes))
         }
 
         # Mismo prefetch en batch para el gate de consentimiento de WhatsApp: evita un

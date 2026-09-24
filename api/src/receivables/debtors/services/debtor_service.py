@@ -33,7 +33,7 @@ from receivables.debtors.schemas.debtor_schemas import (
 from receivables.payments.repository.payment_repository import PaymentRepository
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 from core.security.constants.permissions import PORTFOLIO_CLIENTS
-from core.security.policies.security_policies import check_portfolio_org_access, require_org_or_global
+from core.security.policies.security_policies import check_portfolio_org_access, require_permission
 from core.security.services.encrypt_service import encrypt_service
 from identity.users.schemas.user_session_schema import UserSession
 
@@ -223,14 +223,18 @@ class DebtorService:
         return await self._document_service.to_content_response(row[1], user_session.user_id)
 
     async def create_debtor(self, data: CreateDebtorRequest, user_session: UserSession) -> DebtorModel:
-        require_org_or_global(user_session)
+        # El deudor es de una sola empresa: se exige el permiso sobre la organización
+        # indicada (el global pasa por `require_permission`). El chequeo de duplicado va
+        # acotado a esa organización, así un 409 nunca revela deudores de otra empresa.
+        require_permission(PORTFOLIO_CLIENTS, user_session, str(data.organization_id))
         doc_hash = encrypt_service.hash_document(data.document_number)
-        existing = await self.debtor_repo.get_by_document_number(doc_hash)
+        existing = await self.debtor_repo.get_by_document_number(data.organization_id, doc_hash)
         if existing:
             raise HTTPException(status.HTTP_409_CONFLICT, "El deudor ya existe")
-        logger.info("[debtor] creando deudor | doc_type=%s", data.document_type)
+        logger.info("[debtor] creando deudor | org=%s doc_type=%s", data.organization_id, data.document_type)
         return await self.debtor_repo.add(
             DebtorModel(
+                organization_id=data.organization_id,
                 full_name=data.full_name,
                 debtor_type=data.debtor_type,
                 document_type=data.document_type,

@@ -56,6 +56,7 @@ class RelatedContactsResponse(BaseSchema):
 
 
 class CreateDebtorRequest(BaseSchema):
+    organization_id: uuid.UUID = Field(description="Organización dueña del deudor")
     full_name: str = Field(description="Nombre completo del deudor")
     debtor_type: DebtorType = Field(description="Tipo: Titular o Co-deudor")
     document_type: UserDocumentType = Field(description="Tipo de documento de identidad")

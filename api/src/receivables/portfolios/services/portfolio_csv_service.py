@@ -146,7 +146,9 @@ class PortfolioCsvService:
         }
 
         phone_prefix = await self.country_repo.get_phone_prefix(portfolio.country)
-        processed, errors = await self._process_rows(file_data.rows, portfolio.id, phone_prefix, on_progress)
+        processed, errors = await self._process_rows(
+            file_data.rows, portfolio.id, portfolio.organization_id, phone_prefix, on_progress
+        )
 
         failed = len(file_data.rows) - processed
         result = CsvProcessResult(
@@ -168,14 +170,19 @@ class PortfolioCsvService:
     # ------------------------------------------------------------------
 
     async def _process_row(
-        self, row: PortfolioRowData, portfolio_id: uuid.UUID, row_number: int, phone_prefix: str | None = None
+        self,
+        row: PortfolioRowData,
+        portfolio_id: uuid.UUID,
+        organization_id: uuid.UUID,
+        row_number: int,
+        phone_prefix: str | None = None,
     ) -> str | None:
         logger.debug("[_process_row] START | fila=%d", row_number)
         try:
             async with self.session.begin_nested():
-                debtor = await self._upsert_debtor(row.debtor)
+                debtor = await self._upsert_debtor(organization_id, row.debtor)
                 codebtor = (
-                    await self._upsert_debtor(row.codebtor) if row.codebtor else None
+                    await self._upsert_debtor(organization_id, row.codebtor) if row.codebtor else None
                 )
                 await self._upsert_address(debtor.id, row.primary_address)
                 if row.secondary_address:
@@ -214,17 +221,19 @@ class PortfolioCsvService:
         self,
         rows: list[PortfolioRowData],
         portfolio_id: uuid.UUID,
+        organization_id: uuid.UUID,
         phone_prefix: str | None,
         on_progress: Callable[[int, int], Awaitable[None]] | None,
     ) -> tuple[int, list[str]]:
         if self._bulk_upsert_enabled():
-            return await self._process_rows_bulk(rows, portfolio_id, phone_prefix, on_progress)
-        return await self._process_rows_sequential(rows, portfolio_id, phone_prefix, on_progress)
+            return await self._process_rows_bulk(rows, portfolio_id, organization_id, phone_prefix, on_progress)
+        return await self._process_rows_sequential(rows, portfolio_id, organization_id, phone_prefix, on_progress)
 
     async def _process_rows_sequential(
         self,
         rows: list[PortfolioRowData],
         portfolio_id: uuid.UUID,
+        organization_id: uuid.UUID,
         phone_prefix: str | None,
         on_progress: Callable[[int, int], Awaitable[None]] | None,
     ) -> tuple[int, list[str]]:
@@ -233,7 +242,7 @@ class PortfolioCsvService:
         errors: list[str] = []
         total_to_process = len(rows)
         for idx, row in enumerate(rows, start=1):
-            error = await self._process_row(row, portfolio_id, idx, phone_prefix)
+            error = await self._process_row(row, portfolio_id, organization_id, idx, phone_prefix)
             if error:
                 if len(errors) < MAX_ERRORS:
                     errors.append(error)
@@ -247,6 +256,7 @@ class PortfolioCsvService:
         self,
         rows: list[PortfolioRowData],
         portfolio_id: uuid.UUID,
+        organization_id: uuid.UUID,
         phone_prefix: str | None,
         on_progress: Callable[[int, int], Awaitable[None]] | None,
     ) -> tuple[int, list[str]]:
@@ -275,7 +285,7 @@ class PortfolioCsvService:
             credit_id_by_number: dict[str, uuid.UUID] | None = None
             try:
                 async with self.session.begin_nested():
-                    debtor_id_by_hash = await self._bulk_upsert_debtors_chunk(chunk)
+                    debtor_id_by_hash = await self._bulk_upsert_debtors_chunk(organization_id, chunk)
                     credit_id_by_number = await self._bulk_upsert_credits_chunk(
                         chunk, portfolio_id, debtor_id_by_hash
                     )
@@ -289,7 +299,7 @@ class PortfolioCsvService:
             if debtor_id_by_hash is None:
                 for offset, row in enumerate(chunk):
                     idx = first_row_number + offset
-                    error = await self._process_row(row, portfolio_id, idx, phone_prefix)
+                    error = await self._process_row(row, portfolio_id, organization_id, idx, phone_prefix)
                     if error:
                         if len(errors) < MAX_ERRORS:
                             errors.append(error)
@@ -314,7 +324,9 @@ class PortfolioCsvService:
 
         return processed, errors
 
-    async def _bulk_upsert_debtors_chunk(self, chunk: list[PortfolioRowData]) -> dict[str, uuid.UUID]:
+    async def _bulk_upsert_debtors_chunk(
+        self, organization_id: uuid.UUID, chunk: list[PortfolioRowData]
+    ) -> dict[str, uuid.UUID]:
         """Prepara los datos (titulares + codeudores del chunk) y delega el upsert en
         sí a `DebtorRepository.bulk_upsert_by_document_hash` -- el SQL vive en el
         repository, no en el service. Si un mismo documento aparece varias veces
@@ -332,7 +344,9 @@ class PortfolioCsvService:
                     "document_type": debtor_data.document_type,
                     "debtor_type": debtor_data.debtor_type,
                 }
-        return await self.debtor_repo.bulk_upsert_by_document_hash(list(debtors_by_hash.values()))
+        return await self.debtor_repo.bulk_upsert_by_document_hash(
+            organization_id, list(debtors_by_hash.values())
+        )
 
     async def _bulk_upsert_credits_chunk(
         self,
@@ -427,10 +441,10 @@ class PortfolioCsvService:
     # Upsert helpers
     # ------------------------------------------------------------------
 
-    async def _upsert_debtor(self, data: DebtorRowData) -> DebtorModel:
+    async def _upsert_debtor(self, organization_id: uuid.UUID, data: DebtorRowData) -> DebtorModel:
         logger.debug("[_upsert_debtor] START")
         doc_hash = encrypt_service.hash_document(data.document_number)
-        existing = await self.debtor_repo.get_by_document_number(doc_hash)
+        existing = await self.debtor_repo.get_by_document_number(organization_id, doc_hash)
         if existing:
             existing.full_name = data.full_name
             existing.document_type = data.document_type
@@ -439,6 +453,7 @@ class PortfolioCsvService:
             return result
         result = await self.debtor_repo.add(
             DebtorModel(
+                organization_id=organization_id,
                 document_number=encrypt_service.encrypt_to_str(data.document_number),
                 document_number_hash=doc_hash,
                 full_name=data.full_name,
@@ -635,7 +650,9 @@ class PortfolioCsvService:
         total_rows = len(file_data.rows) + file_data.total_skipped
 
         phone_prefix = await self.country_repo.get_phone_prefix(portfolio.country)
-        processed, errors = await self._process_rows(file_data.rows, portfolio.id, phone_prefix, on_progress)
+        processed, errors = await self._process_rows(
+            file_data.rows, portfolio.id, portfolio.organization_id, phone_prefix, on_progress
+        )
 
         failed = len(file_data.rows) - processed
         result = CsvProcessResult(
@@ -694,7 +711,9 @@ class PortfolioCsvService:
         total_rows = len(file_data.rows) + file_data.total_skipped
 
         phone_prefix = await self.country_repo.get_phone_prefix(portfolio.country)
-        processed, errors = await self._process_rows(file_data.rows, portfolio.id, phone_prefix, on_progress)
+        processed, errors = await self._process_rows(
+            file_data.rows, portfolio.id, portfolio.organization_id, phone_prefix, on_progress
+        )
 
         failed = len(file_data.rows) - processed
         result = CsvProcessResult(

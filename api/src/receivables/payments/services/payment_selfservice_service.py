@@ -123,9 +123,11 @@ class PaymentSelfServiceService:
         except ValueError:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Documento de identidad inválido.")
 
-        debtor = await self._debtor_repo.get_by_document(doc_type, doc_number_hash)
-        if debtor is None:
+        # Una fila de deudor por empresa: el crédito es del titular si lo es en cualquiera.
+        debtors = await self._debtor_repo.list_by_document(doc_type, doc_number_hash)
+        if not debtors:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "No se encontró tu registro de deudor.")
+        debtor_ids = {d.id for d in debtors}
 
         payment = await self._payment_repo.get_by_id(payment_id)
         if payment is None:
@@ -135,7 +137,7 @@ class PaymentSelfServiceService:
         # 404 genérico también cuando el pago existe pero el crédito no es del
         # titular: un 403 distinto de "no encontrado" deja adivinar por fuerza
         # bruta qué IDs de pago existen en el sistema, aunque sean de otro deudor.
-        if credit is None or debtor.id not in (credit.debtor_id, credit.codebtor_id):
+        if credit is None or not ({credit.debtor_id, credit.codebtor_id} & debtor_ids):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Pago no encontrado.")
 
         if payment.status != PaymentStatus.PENDING:

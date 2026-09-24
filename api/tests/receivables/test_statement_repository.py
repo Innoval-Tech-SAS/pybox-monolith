@@ -34,7 +34,7 @@ async def _setup(db_session):
     portfolio = build_portfolio(org.id)
     db_session.add(portfolio)
     await db_session.flush()
-    debtor = build_debtor()
+    debtor = build_debtor(org.id)
     db_session.add(debtor)
     await db_session.flush()
     credit = build_credit(portfolio.id, debtor.id)
@@ -127,15 +127,15 @@ class TestListByDebtor:
         await db_session.flush()
 
         repo = StatementRepository(db_session)
-        result = await repo.list_by_debtor(debtor.id)
+        result = await repo.list_by_debtor([debtor.id])
 
         assert {s.id for s in result} == {stmt_a.id, stmt_b.id}
 
 
 class TestGetOwnedByDebtorAndPortfolio:
     async def test_get_owned_by_debtor_rejects_other_debtor(self, db_session):
-        _, portfolio, debtor, _ = await _setup(db_session)
-        other_debtor = build_debtor()
+        org, portfolio, debtor, _ = await _setup(db_session)
+        other_debtor = build_debtor(org.id)
         db_session.add(other_debtor)
         await db_session.flush()
 
@@ -147,8 +147,8 @@ class TestGetOwnedByDebtorAndPortfolio:
         await db_session.flush()
 
         repo = StatementRepository(db_session)
-        assert await repo.get_owned_by_debtor(statement.id, other_debtor.id) is None
-        assert await repo.get_owned_by_debtor(statement.id, debtor.id) is not None
+        assert await repo.get_owned_by_debtor(statement.id, [other_debtor.id]) is None
+        assert await repo.get_owned_by_debtor(statement.id, [debtor.id]) is not None
 
     async def test_get_by_id_and_portfolio_rejects_other_portfolio(self, db_session):
         org, portfolio, debtor, _ = await _setup(db_session)

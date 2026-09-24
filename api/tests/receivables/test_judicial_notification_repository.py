@@ -21,8 +21,8 @@ async def _setup_with_codebtor(db_session):
     portfolio = build_portfolio(org.id)
     db_session.add(portfolio)
     await db_session.flush()
-    titular = build_debtor()
-    codebtor = build_debtor()
+    titular = build_debtor(org.id)
+    codebtor = build_debtor(org.id)
     db_session.add_all([titular, codebtor])
     await db_session.flush()
     credit = build_credit(portfolio.id, titular.id, codebtor_id=codebtor.id)
@@ -41,8 +41,8 @@ class TestGetInboxByDebtorId:
         await db_session.flush()
 
         repo = JudicialNotificationRepository(db_session)
-        titular_inbox = await repo.get_inbox_by_debtor_id(titular.id)
-        codebtor_inbox = await repo.get_inbox_by_debtor_id(codebtor.id)
+        titular_inbox = await repo.get_inbox_by_debtor_ids([titular.id])
+        codebtor_inbox = await repo.get_inbox_by_debtor_ids([codebtor.id])
 
         assert len(titular_inbox) == 1
         assert len(codebtor_inbox) == 1
@@ -61,7 +61,7 @@ class TestGetInboxByDebtorId:
         await db_session.flush()
 
         repo = JudicialNotificationRepository(db_session)
-        inbox = await repo.get_inbox_by_debtor_id(titular.id)
+        inbox = await repo.get_inbox_by_debtor_ids([titular.id])
 
         assert [row.notification.id for row in inbox] == [active.id]
 
@@ -82,14 +82,14 @@ class TestCountUnreadByDebtorId:
         await db_session.flush()
 
         repo = JudicialNotificationRepository(db_session)
-        assert await repo.count_unread_by_debtor_id(titular.id) == 1
-        assert await repo.count_unread_by_debtor_id(codebtor.id) == 1
+        assert await repo.count_unread_by_debtor_ids([titular.id]) == 1
+        assert await repo.count_unread_by_debtor_ids([codebtor.id]) == 1
 
 
 class TestMarkAllReadByDebtorId:
     async def test_only_marks_notifications_of_that_debtors_credits(self, db_session, real_admin_user_id):
         org, portfolio, titular, codebtor, credit = await _setup_with_codebtor(db_session)
-        other_debtor = build_debtor()
+        other_debtor = build_debtor(org.id)
         db_session.add(other_debtor)
         await db_session.flush()
         other_credit = build_credit(portfolio.id, other_debtor.id)
@@ -108,7 +108,7 @@ class TestMarkAllReadByDebtorId:
         await db_session.flush()
 
         repo = JudicialNotificationRepository(db_session)
-        await repo.mark_all_read_by_debtor_id(titular.id)
+        await repo.mark_all_read_by_debtor_ids([titular.id])
 
         await db_session.refresh(mine)
         await db_session.refresh(others)
@@ -132,7 +132,7 @@ class TestGetCreditRecipients:
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
-        titular = build_debtor()
+        titular = build_debtor(org.id)
         db_session.add(titular)
         await db_session.flush()
         credit = build_credit(portfolio.id, titular.id)

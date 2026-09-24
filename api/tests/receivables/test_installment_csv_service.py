@@ -46,7 +46,7 @@ async def portfolio_with_credit(db_session):
     portfolio = build_portfolio(org.id)
     db_session.add(portfolio)
     await db_session.flush()
-    debtor = build_debtor()
+    debtor = build_debtor(org.id)
     db_session.add(debtor)
     await db_session.flush()
     credit = build_credit(portfolio.id, debtor.id, credit_number="CR-0001")
@@ -176,7 +176,7 @@ class TestUploadCharacterizationGolden:
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
-        debtor = build_debtor()
+        debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
 
@@ -271,7 +271,7 @@ class TestUploadCharacterizationGolden:
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
-        debtor = build_debtor()
+        debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
 

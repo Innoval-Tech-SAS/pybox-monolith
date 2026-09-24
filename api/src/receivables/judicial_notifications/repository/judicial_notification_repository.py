@@ -1,5 +1,5 @@
 import uuid
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Sequence
 
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,9 +28,10 @@ class JudicialNotificationRepository(SoftDeleteRepositoryBase[JudicialNotificati
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    def _debtor_filter(self, debtor_id: uuid.UUID):
-        """El titular ve las notificaciones de sus créditos, sea como deudor o codeudor."""
-        return or_(CreditModel.debtor_id == debtor_id, CreditModel.codebtor_id == debtor_id)
+    def _debtor_filter(self, debtor_ids: Sequence[uuid.UUID]):
+        """El titular ve las notificaciones de sus créditos, sea como deudor o codeudor,
+        en cualquiera de sus filas de deudor (una por empresa)."""
+        return or_(CreditModel.debtor_id.in_(debtor_ids), CreditModel.codebtor_id.in_(debtor_ids))
 
     def _with_credit_and_entity(self):
         return (
@@ -46,30 +47,30 @@ class JudicialNotificationRepository(SoftDeleteRepositoryBase[JudicialNotificati
             .where(JudicialNotificationModel.deleted_at.is_(None))
         )
 
-    async def get_inbox_by_debtor_id(self, debtor_id: uuid.UUID) -> list[JudicialNotificationRow]:
+    async def get_inbox_by_debtor_ids(self, debtor_ids: Sequence[uuid.UUID]) -> list[JudicialNotificationRow]:
         result = await self.session.execute(
             self._with_credit_and_entity()
-            .where(self._debtor_filter(debtor_id))
+            .where(self._debtor_filter(debtor_ids))
             .order_by(JudicialNotificationModel.notified_at.desc())
         )
         return [JudicialNotificationRow(*row) for row in result.all()]
 
-    async def count_unread_by_debtor_id(self, debtor_id: uuid.UUID) -> int:
+    async def count_unread_by_debtor_ids(self, debtor_ids: Sequence[uuid.UUID]) -> int:
         count = await self.session.scalar(
             select(func.count(JudicialNotificationModel.id))
             .join(CreditModel, CreditModel.id == JudicialNotificationModel.credit_id)
             .where(
                 JudicialNotificationModel.deleted_at.is_(None),
                 JudicialNotificationModel.is_read.is_(False),
-                self._debtor_filter(debtor_id),
+                self._debtor_filter(debtor_ids),
             )
         )
         return count or 0
 
     async def get_owned_by_debtor(
-        self, notification_id: uuid.UUID, debtor_id: uuid.UUID
+        self, notification_id: uuid.UUID, debtor_ids: Sequence[uuid.UUID]
     ) -> Optional[JudicialNotificationModel]:
-        """Devuelve la notificación solo si pertenece a un crédito del deudor indicado.
+        """Devuelve la notificación solo si pertenece a un crédito del titular indicado.
 
         Es el filtro que hace cumplir el ownership: si no es suya, el service ve None y
         responde 404 en vez de revelar que existe.
@@ -80,12 +81,12 @@ class JudicialNotificationRepository(SoftDeleteRepositoryBase[JudicialNotificati
             .where(
                 JudicialNotificationModel.id == notification_id,
                 JudicialNotificationModel.deleted_at.is_(None),
-                self._debtor_filter(debtor_id),
+                self._debtor_filter(debtor_ids),
             )
         )
 
-    async def mark_all_read_by_debtor_id(self, debtor_id: uuid.UUID) -> None:
-        credit_ids = select(CreditModel.id).where(self._debtor_filter(debtor_id))
+    async def mark_all_read_by_debtor_ids(self, debtor_ids: Sequence[uuid.UUID]) -> None:
+        credit_ids = select(CreditModel.id).where(self._debtor_filter(debtor_ids))
         await self.session.execute(
             update(JudicialNotificationModel)
             .where(

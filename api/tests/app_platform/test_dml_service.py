@@ -215,7 +215,7 @@ class TestExecuteQueryDecryptSensitive:
         await db_session.flush()
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
-        debtor = build_debtor(document_number_plain=document)
+        debtor = build_debtor(org.id, document_number_plain=document)
         db_session.add(debtor)
         await db_session.flush()
         db_session.add(build_credit(portfolio.id, debtor.id))

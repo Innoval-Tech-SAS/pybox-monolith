@@ -17,44 +17,62 @@ class DebtorRepository(SoftDeleteRepositoryBase[DebtorModel]):
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def get_by_document(
+    async def list_by_document(
         self, document_type: UserDocumentType, document_number_hash: str
-    ) -> DebtorModel | None:
+    ) -> list[DebtorModel]:
+        """Todas las filas de deudor de una persona (una por empresa donde figura).
+
+        Solo para el autoservicio (scope SELF): el titular ve sus obligaciones en todas
+        las empresas. El lado empresa nunca debe usar esto: resuelve por
+        ``get_by_document_number`` acotado a su organización.
+        """
         result = await self.session.execute(
-            select(DebtorModel).where(
+            select(DebtorModel)
+            .where(
                 DebtorModel.document_type == document_type,
                 DebtorModel.document_number_hash == document_number_hash,
                 DebtorModel.deleted_at.is_(None),
             )
+            .order_by(DebtorModel.created_at.asc(), DebtorModel.id.asc())
         )
-        return result.scalars().first()
+        return list(result.scalars().all())
 
-    async def get_by_document_hashes(self, document_number_hashes: list[str]) -> list[DebtorModel]:
+    async def get_by_document_hashes(
+        self, organization_id: uuid.UUID, document_number_hashes: list[str]
+    ) -> list[DebtorModel]:
         if not document_number_hashes:
             return []
         result = await self.session.execute(
             select(DebtorModel).where(
+                DebtorModel.organization_id == organization_id,
                 DebtorModel.document_number_hash.in_(document_number_hashes),
                 DebtorModel.deleted_at.is_(None),
             )
         )
         return list(result.scalars().all())
 
-    async def get_by_document_number(self, document_number_hash: str) -> DebtorModel | None:
+    async def get_by_document_number(
+        self, organization_id: uuid.UUID, document_number_hash: str
+    ) -> DebtorModel | None:
         result = await self.session.execute(
             select(DebtorModel).where(
+                DebtorModel.organization_id == organization_id,
                 DebtorModel.document_number_hash == document_number_hash,
                 DebtorModel.deleted_at.is_(None),
             )
         )
         return result.scalars().first()
 
-    async def bulk_upsert_by_document_hash(self, debtors: list[dict]) -> dict[str, uuid.UUID]:
+    async def bulk_upsert_by_document_hash(
+        self, organization_id: uuid.UUID, debtors: list[dict]
+    ) -> dict[str, uuid.UUID]:
         """Un solo `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` para varios deudores
         a la vez (Fase 4 de la auditoría: N+1 en carga de portafolio), en vez de un
         SELECT+INSERT/UPDATE por cada uno. ``debtors``: dicts con
         document_number/document_number_hash/full_name/document_type/debtor_type
-        (nombres de atributo del modelo). Devuelve ``{document_number_hash: id}``.
+        (nombres de atributo del modelo), todos de la ``organization_id`` dada: el conflicto
+        se resuelve por (organización, hash), así una carga nunca toca al deudor de otra
+        empresa. Devuelve ``{document_number_hash: id}``.
         Mismo criterio de update que la carga fila por fila: solo full_name y
         document_type se sobrescriben en conflicto -- document_number/debtor_type no,
         para no voltear la identidad del deudor."""
@@ -64,6 +82,7 @@ class DebtorRepository(SoftDeleteRepositoryBase[DebtorModel]):
         table = self.model_class.__table__
         values = [
             {
+                "id_organizacion": organization_id,
                 "numero_documento": d["document_number"],
                 "numero_documento_hash": d["document_number_hash"],
                 "nombre_completo": d["full_name"],
@@ -74,7 +93,7 @@ class DebtorRepository(SoftDeleteRepositoryBase[DebtorModel]):
         ]
         stmt = pg_insert(table).values(values)
         stmt = stmt.on_conflict_do_update(
-            index_elements=[table.c.numero_documento_hash],
+            index_elements=[table.c.id_organizacion, table.c.numero_documento_hash],
             set_={
                 "nombre_completo": stmt.excluded.nombre_completo,
                 "tipo_documento": stmt.excluded.tipo_documento,

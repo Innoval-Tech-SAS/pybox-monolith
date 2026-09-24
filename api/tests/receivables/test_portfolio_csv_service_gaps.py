@@ -156,7 +156,7 @@ class TestProcessCsvCharacterizationGolden:
         # debe tomar el camino "update" (mismo id, nombre actualizado), no crear
         # un segundo registro para el mismo documento.
         existing_doc = unique_document_number()
-        existing_debtor = build_debtor(document_number_plain=existing_doc, full_name="Nombre Viejo")
+        existing_debtor = build_debtor(org.id, document_number_plain=existing_doc, full_name="Nombre Viejo")
         db_session.add(existing_debtor)
         await db_session.flush()
         existing_debtor_id = existing_debtor.id
@@ -228,8 +228,8 @@ class TestProcessCsvCharacterizationGolden:
         assert await credit_repo.get_by_credit_number("CR-GOLDEN-3-INVALID", result.portfolio_id) is None
 
         # Deudor pre-existente: mismo id, nombre actualizado por la fila del CSV.
-        doc_hash = build_debtor(document_number_plain=existing_doc).document_number_hash
-        updated_debtor = await debtor_repo.get_by_document_number(doc_hash)
+        doc_hash = build_debtor(org.id, document_number_plain=existing_doc).document_number_hash
+        updated_debtor = await debtor_repo.get_by_document_number(org.id, doc_hash)
         assert updated_debtor.id == existing_debtor_id
         assert updated_debtor.full_name == "Nombre Nuevo Desde El CSV"
 
@@ -281,9 +281,9 @@ class TestProcessCsvBulkUpsertPath:
         await db_session.flush()
 
         existing_doc_seq = unique_document_number()
-        db_session.add(build_debtor(document_number_plain=existing_doc_seq, full_name="Nombre Viejo"))
+        db_session.add(build_debtor(org.id, document_number_plain=existing_doc_seq, full_name="Nombre Viejo"))
         existing_doc_bulk = unique_document_number()
-        db_session.add(build_debtor(document_number_plain=existing_doc_bulk, full_name="Nombre Viejo"))
+        db_session.add(build_debtor(org.id, document_number_plain=existing_doc_bulk, full_name="Nombre Viejo"))
         await db_session.flush()
 
         service = PortfolioCsvService(db_session)
@@ -332,8 +332,8 @@ class TestProcessCsvBulkUpsertPath:
         assert await credit_repo.get_by_credit_number(f"{bulk_debtor_doc}-CR-5", bulk_result.portfolio_id) is not None
 
         # Deudor pre-existente actualizado, mismo criterio que el camino secuencial.
-        doc_hash = build_debtor(document_number_plain=existing_doc_bulk).document_number_hash
-        updated_debtor = await debtor_repo.get_by_document_number(doc_hash)
+        doc_hash = build_debtor(org.id, document_number_plain=existing_doc_bulk).document_number_hash
+        updated_debtor = await debtor_repo.get_by_document_number(org.id, doc_hash)
         assert updated_debtor.full_name == "Nombre Nuevo Desde El CSV"
 
     async def test_bulk_path_chunk_fallback_isolates_only_the_bad_chunk(self, db_session, monkeypatch):

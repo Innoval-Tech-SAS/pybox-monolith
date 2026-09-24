@@ -163,13 +163,13 @@ class StatementService:
     # ── Lado titular (scope SELF) ────────────────────────────────────────────
 
     async def list_mine(self, user_session: UserSession) -> StatementListResponse:
-        debtor = await self._require_self_debtor(user_session)
-        statements = await self._statement_repo.list_by_debtor(debtor.id)
+        debtors = await self._require_self_debtors(user_session)
+        statements = await self._statement_repo.list_by_debtor([d.id for d in debtors])
         return await self._to_list_response(statements)
 
     async def get_content_mine(self, statement_id: uuid.UUID, user_session: UserSession) -> Response:
-        debtor = await self._require_self_debtor(user_session)
-        statement = await self._statement_repo.get_owned_by_debtor(statement_id, debtor.id)
+        debtors = await self._require_self_debtors(user_session)
+        statement = await self._statement_repo.get_owned_by_debtor(statement_id, [d.id for d in debtors])
         if statement is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Extracto no encontrado")
         # Igual que en el lado entidad: el extracto ya se resolvió contra el deudor de la
@@ -237,14 +237,15 @@ class StatementService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Deudor no encontrado")
         return debtor
 
-    async def _require_self_debtor(self, user_session: UserSession) -> DebtorModel:
+    async def _require_self_debtors(self, user_session: UserSession) -> list[DebtorModel]:
         document_type, document_number_hash = get_self_identity(user_session)
         try:
             doc_type = UserDocumentType(document_type)
         except ValueError:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Tipo de documento no reconocido")
-        debtor = await self._debtor_repo.get_by_document(doc_type, document_number_hash)
-        if debtor is None:
+        # Una fila de deudor por empresa: el titular ve los extractos de todas.
+        debtors = await self._debtor_repo.list_by_document(doc_type, document_number_hash)
+        if not debtors:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "No encontramos obligaciones a tu nombre")
         # Ser deudor conocido no basta: conocer tipo+número de documento de alguien no
         # es secreto, así que antes de mostrar su información crediticia se exige que el
@@ -255,7 +256,7 @@ class StatementService:
                 status.HTTP_403_FORBIDDEN,
                 "Verificación de identidad pendiente. Sube tu documento de identidad para acceder a tu información crediticia.",
             )
-        return debtor
+        return debtors
 
     async def _to_list_response(self, statements: list[StatementModel]) -> StatementListResponse:
         if not statements:

@@ -87,8 +87,8 @@ async def two_orgs(db_session):
 async def debtor_only_in_portfolio_a(db_session, two_orgs):
     """Deudor titular de un crédito EXCLUSIVAMENTE en el portafolio A (org 1) -- no
     tiene ningún crédito (ni como titular ni como codeudor) en el portafolio B."""
-    _, _, portfolio_a, _ = two_orgs
-    debtor = build_debtor()
+    org1, _, portfolio_a, _ = two_orgs
+    debtor = build_debtor(org1.id)
     db_session.add(debtor)
     await db_session.flush()
     credit = build_credit(portfolio_a.id, debtor.id)
@@ -190,8 +190,8 @@ class TestCodebtorResolvesInPortfolio:
 
     async def test_get_debtor_as_codebtor_resolves(self, db_session, make_user_session_factory, two_orgs):
         org1, _, portfolio_a, _ = two_orgs
-        titular = build_debtor()
-        codebtor = build_debtor()
+        titular = build_debtor(org1.id)
+        codebtor = build_debtor(org1.id)
         db_session.add_all([titular, codebtor])
         await db_session.flush()
         credit = build_credit(portfolio_a.id, titular.id, codebtor_id=codebtor.id)
@@ -255,9 +255,9 @@ class TestRelatedContactsScopedToPortfolio:
         db_session.add(portfolio_a2)
         await db_session.flush()
 
-        titular = build_debtor()
-        codebtor_in_a = build_debtor()
-        codebtor_in_a2 = build_debtor()
+        titular = build_debtor(org1.id)
+        codebtor_in_a = build_debtor(org1.id)
+        codebtor_in_a2 = build_debtor(org1.id)
         db_session.add_all([titular, codebtor_in_a, codebtor_in_a2])
         await db_session.flush()
 
