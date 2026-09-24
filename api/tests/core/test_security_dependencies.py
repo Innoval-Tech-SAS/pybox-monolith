@@ -75,12 +75,12 @@ class TestStreamSessionDependencies:
     """Cubre las ramas de error de get_sse_session/get_ws_session (85-90): token
     inválido/ausente sobre la conexión de streaming debe rechazar con 401."""
 
-    async def test_sse_session_invalid_token_raises_401(self):
+    async def test_sse_session_invalid_cookie_raises_401(self):
         class _FakeRequest:
-            cookies: dict = {}
+            cookies: dict = {"access_token": "not-a-real-jwt"}
 
         with pytest.raises(HTTPException) as exc:
-            await get_sse_session(_FakeRequest(), token="not-a-real-jwt")
+            await get_sse_session(_FakeRequest())
         assert exc.value.status_code == 401
 
     async def test_sse_session_missing_token_raises_401(self):
@@ -88,13 +88,24 @@ class TestStreamSessionDependencies:
             cookies: dict = {}
 
         with pytest.raises(HTTPException) as exc:
-            await get_sse_session(_FakeRequest(), token=None)
+            await get_sse_session(_FakeRequest())
         assert exc.value.status_code == 401
 
-    async def test_ws_session_invalid_token_raises_401(self):
+    async def test_ws_session_invalid_cookie_raises_401(self):
         class _FakeWebSocket:
-            cookies: dict = {}
+            cookies: dict = {"access_token": "not-a-real-jwt"}
 
         with pytest.raises(HTTPException) as exc:
-            await get_ws_session(_FakeWebSocket(), token="not-a-real-jwt")
+            await get_ws_session(_FakeWebSocket())
+        assert exc.value.status_code == 401
+
+    async def test_token_in_the_query_string_is_not_accepted(self):
+        """El token solo se acepta por cookie: por query string quedaría en logs y proxies."""
+
+        class _FakeRequest:
+            cookies: dict = {}
+            query_params: dict = {"token": "anything"}
+
+        with pytest.raises(HTTPException) as exc:
+            await get_sse_session(_FakeRequest())
         assert exc.value.status_code == 401
