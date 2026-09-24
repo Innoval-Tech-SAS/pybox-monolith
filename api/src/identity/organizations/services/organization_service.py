@@ -477,7 +477,7 @@ class OrganizationService:
         """Baja lógica de la organización y, en cascada, de todo lo que le pertenece:
         membresías, roles y permisos de sus usuarios, portafolios (con sus créditos y
         campañas), deudores (con sus contactos, direcciones y documentos), extractos,
-        notificaciones judiciales, chats de WhatsApp, IVR, resultados de campañas,
+        notificaciones judiciales, chats y credenciales de WhatsApp, IVR, resultados de campañas,
         reportes, documentos y accesos a portafolios. Facturas y tickets de soporte no
         se tocan.
 

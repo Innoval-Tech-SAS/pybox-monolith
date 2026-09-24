@@ -11,6 +11,7 @@ from messaging.ivr.repository.ivr_flow_repository import IvrFlowRepository
 from messaging.ivr.repository.ivr_interaction_repository import IvrInteractionRepository
 from messaging.whatsapp.repository.whatsapp_chat_repository import WhatsAppChatRepository
 from messaging.whatsapp.repository.whatsapp_message_repository import WhatsAppMessageRepository
+from messaging.whatsapp.repository.whatsapp_org_credentials_repository import WhatsAppOrgCredentialsRepository
 from receivables.contact_methods.repository.contact_method_repository import ContactMethodRepository
 from receivables.debtors.repository.address_repository import AddressRepository
 from receivables.debtors.repository.debtor_document_repository import DebtorDocumentRepository
@@ -30,8 +31,8 @@ from receivables.statements.repository.statement_repository import StatementRepo
 
 class OrganizationCascadeService:
     """Baja lógica (y su reversa) de los datos de una organización que no son
-    membresías, roles ni portafolios: deudores y lo que cuelga de ellos, chats de
-    WhatsApp, IVR, resultados de campañas, reportes, documentos y accesos a portafolios.
+    membresías, roles ni portafolios: deudores y lo que cuelga de ellos, chats y
+    credenciales de WhatsApp, IVR, resultados de campañas, reportes, documentos y accesos a portafolios.
 
     Todo lleva el mismo `deleted_at` que la organización, así `restore` revierte solo lo
     que cayó con ella y no resucita filas eliminadas antes por otra vía. Quedan fuera a
@@ -49,6 +50,7 @@ class OrganizationCascadeService:
         self._judicial_notification_document_repo = JudicialNotificationDocumentRepository(session)
         self._whatsapp_chat_repo = WhatsAppChatRepository(session)
         self._whatsapp_message_repo = WhatsAppMessageRepository(session)
+        self._whatsapp_credentials_repo = WhatsAppOrgCredentialsRepository(session)
         self._ivr_flow_repo = IvrFlowRepository(session)
         self._ivr_execution_repo = IvrExecutionRepository(session)
         self._ivr_interaction_repo = IvrInteractionRepository(session)
@@ -79,6 +81,7 @@ class OrganizationCascadeService:
             self._judicial_notification_document_repo,
             self._whatsapp_chat_repo,
             self._whatsapp_message_repo,
+            self._whatsapp_credentials_repo,
             self._ivr_flow_repo,
             self._ivr_execution_repo,
             self._ivr_interaction_repo,
