@@ -43,8 +43,11 @@ class SelfServiceContactService:
         if not contact_value:
             return False
 
-        debtor = await self._debtor_repo.get_by_document(document_type, document_number_hash)
-        if debtor is None:
+        # El titular puede figurar como deudor en varias empresas (una fila por empresa):
+        # el contacto verificado se registra en cada una, porque cada empresa tiene su
+        # propia copia de los datos de contacto.
+        debtors = await self._debtor_repo.list_by_document(document_type, document_number_hash)
+        if not debtors:
             return False
 
         country_prefix = (
@@ -56,24 +59,27 @@ class SelfServiceContactService:
         if not normalized:
             return False
 
-        existing = {
-            normalize_contact_value(contact_type, c.contact_value, country_prefix)
-            for c in await self._contact_repo.get_by_debtor_id(debtor.id)
-            if c.contact_type == contact_type
-        }
-        if normalized in existing:
-            return False
+        created = False
+        for debtor in debtors:
+            existing = {
+                normalize_contact_value(contact_type, c.contact_value, country_prefix)
+                for c in await self._contact_repo.get_by_debtor_id(debtor.id)
+                if c.contact_type == contact_type
+            }
+            if normalized in existing:
+                continue
 
-        await self._contact_repo.add(
-            ContactMethodModel(
-                debtor_id=debtor.id,
-                contact_type=contact_type,
-                contact_value=normalized,
+            await self._contact_repo.add(
+                ContactMethodModel(
+                    debtor_id=debtor.id,
+                    contact_type=contact_type,
+                    contact_value=normalized,
+                )
             )
-        )
-        logger.info(
-            "[self_service_contact] contacto verificado registrado | debtor_id=%s tipo=%s",
-            debtor.id,
-            contact_type.value,
-        )
-        return True
+            logger.info(
+                "[self_service_contact] contacto verificado registrado | debtor_id=%s tipo=%s",
+                debtor.id,
+                contact_type.value,
+            )
+            created = True
+        return created

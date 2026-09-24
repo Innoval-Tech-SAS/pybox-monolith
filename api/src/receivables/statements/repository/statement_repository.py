@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Optional, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,22 +30,23 @@ class StatementRepository(SoftDeleteRepositoryBase[StatementModel]):
         )
         return list(result.scalars().all())
 
-    async def list_by_debtor(self, debtor_id: uuid.UUID) -> list[StatementModel]:
-        """Extractos del deudor cruzando organizaciones — para el portal del titular."""
+    async def list_by_debtor(self, debtor_ids: Sequence[uuid.UUID]) -> list[StatementModel]:
+        """Extractos de las filas de deudor del titular (una por empresa) — para el
+        portal del titular."""
         result = await self.session.execute(
             self._visible()
-            .where(StatementModel.debtor_id == debtor_id)
+            .where(StatementModel.debtor_id.in_(debtor_ids))
             .order_by(StatementModel.created_at.desc())
         )
         return list(result.scalars().all())
 
     async def get_owned_by_debtor(
-        self, statement_id: uuid.UUID, debtor_id: uuid.UUID
+        self, statement_id: uuid.UUID, debtor_ids: Sequence[uuid.UUID]
     ) -> Optional[StatementModel]:
         return await self.session.scalar(
             self._visible().where(
                 StatementModel.id == statement_id,
-                StatementModel.debtor_id == debtor_id,
+                StatementModel.debtor_id.in_(debtor_ids),
             )
         )
 

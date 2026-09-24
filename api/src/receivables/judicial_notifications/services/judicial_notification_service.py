@@ -82,9 +82,9 @@ class JudicialNotificationService:
     # ── Buzón del titular ────────────────────────────────────────────────────
 
     async def get_my_inbox(self, session: UserSession) -> JudicialInboxResponse:
-        debtor = await self._require_debtor(session)
-        rows = await self._repo.get_inbox_by_debtor_id(debtor.id)
-        unread = await self._repo.count_unread_by_debtor_id(debtor.id)
+        debtor_ids = [d.id for d in await self._require_debtors(session)]
+        rows = await self._repo.get_inbox_by_debtor_ids(debtor_ids)
+        unread = await self._repo.count_unread_by_debtor_ids(debtor_ids)
         attachments_by_notification = await self._get_attachments_by_notification(rows)
         return JudicialInboxResponse(
             items=[
@@ -95,21 +95,21 @@ class JudicialNotificationService:
         )
 
     async def mark_read(self, session: UserSession, notification_id: uuid.UUID) -> None:
-        debtor = await self._require_debtor(session)
+        debtors = await self._require_debtors(session)
         # El repo filtra por deudor: si la notificación no es suya vuelve None y
         # respondemos 404, sin confirmarle que existe.
-        notification = await self._repo.get_owned_by_debtor(notification_id, debtor.id)
+        notification = await self._repo.get_owned_by_debtor(notification_id, [d.id for d in debtors])
         if notification is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Notificación no encontrada")
         if notification.is_read:
             return
         notification.is_read = True
         await self._repo.update(notification)
-        await self._notify_creator_viewed(notification, debtor)
+        await self._notify_creator_viewed(notification, debtors[0])
 
     async def mark_all_read(self, session: UserSession) -> None:
-        debtor = await self._require_debtor(session)
-        await self._repo.mark_all_read_by_debtor_id(debtor.id)
+        debtors = await self._require_debtors(session)
+        await self._repo.mark_all_read_by_debtor_ids([d.id for d in debtors])
 
     # ── Emisión desde el panel de la entidad ─────────────────────────────────
 
@@ -199,10 +199,10 @@ class JudicialNotificationService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Notificación no encontrada")
 
         if session.is_self:
-            debtor = await self._require_debtor(session)
+            debtors = await self._require_debtors(session)
             # El repo filtra por deudor: si la notificación no es suya vuelve None y
             # respondemos 404, sin confirmarle a quien pregunta que existe.
-            owned = await self._repo.get_owned_by_debtor(notification_id, debtor.id)
+            owned = await self._repo.get_owned_by_debtor(notification_id, [d.id for d in debtors])
             if owned is None:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "Notificación no encontrada")
         else:
@@ -290,19 +290,19 @@ class JudicialNotificationService:
             },
         )
 
-    async def _require_debtor(self, session: UserSession) -> DebtorModel:
-        """Resuelve el deudor detrás de la sesión SELF. El documento va cifrado en la
-        tabla, así que la búsqueda es por hash."""
+    async def _require_debtors(self, session: UserSession) -> list[DebtorModel]:
+        """Resuelve las filas de deudor (una por empresa) detrás de la sesión SELF. El
+        documento va cifrado en la tabla, así que la búsqueda es por hash."""
         document_type, document_number_hash = get_self_identity(session)
         try:
             doc_type = UserDocumentType(document_type)
         except ValueError:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Tipo de documento no reconocido")
 
-        debtor = await self._debtor_repo.get_by_document(doc_type, document_number_hash)
-        if debtor is None:
+        debtors = await self._debtor_repo.list_by_document(doc_type, document_number_hash)
+        if not debtors:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "No encontramos obligaciones a tu nombre")
-        # Ver StatementService._require_self_debtor: conocer tipo+número de documento de
+        # Ver StatementService._require_self_debtors: conocer tipo+número de documento de
         # alguien no es secreto, así que además de ser deudor conocido se exige identidad
         # verificada (documento subido + aprobado por Atención al Cliente).
         if session.identity_verification_status != IdentityVerificationStatus.APPROVED:
@@ -310,7 +310,7 @@ class JudicialNotificationService:
                 status.HTTP_403_FORBIDDEN,
                 "Verificación de identidad pendiente. Sube tu documento de identidad para acceder a tu información crediticia.",
             )
-        return debtor
+        return debtors
 
     @staticmethod
     def _to_response(

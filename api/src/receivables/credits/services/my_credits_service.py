@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app_platform.countries.enums.country_enums import UserDocumentType
 from identity.users.enums.user_enums import IdentityVerificationStatus
 from app_platform.countries.repository.country_repository import CountryRepository
+from receivables.credits.models.credit_model import CreditModel
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.credits.repository.credit_settlement_ticket_repository import CreditSettlementTicketRepository
 from receivables.credits.schemas.my_credits_schemas import CreditWithPayments, PaymentMethodSummary, PaymentSummary
@@ -40,10 +41,11 @@ class MyCreditsService:
         except ValueError:
             return []
 
-        debtor = await self._debtor_repo.get_by_document(doc_type, document_number_hash)
-        if debtor is None:
+        # Una fila de deudor por empresa: el titular ve sus créditos de todas.
+        debtors = await self._debtor_repo.list_by_document(doc_type, document_number_hash)
+        if not debtors:
             return []
-        # Ver StatementService._require_self_debtor: conocer tipo+número de documento de
+        # Ver StatementService._require_self_debtors: conocer tipo+número de documento de
         # alguien no es secreto, así que además de ser deudor conocido se exige identidad
         # verificada (documento subido + aprobado por Atención al Cliente).
         if identity_verification_status != IdentityVerificationStatus.APPROVED:
@@ -52,12 +54,12 @@ class MyCreditsService:
                 "Verificación de identidad pendiente. Sube tu documento de identidad para acceder a tu información crediticia.",
             )
 
-        primary = await self._credit_repo.get_by_debtor_id(debtor.id)
-        codebtor = await self._credit_repo.get_by_codebtor_id(debtor.id)
-
-        all_credits = [(c, DebtorType.DEBTOR) for c in primary] + [
-            (c, DebtorType.CO_DEBTOR) for c in codebtor
-        ]
+        all_credits: list[tuple[CreditModel, DebtorType]] = []
+        for debtor in debtors:
+            all_credits.extend((c, DebtorType.DEBTOR) for c in await self._credit_repo.get_by_debtor_id(debtor.id))
+            all_credits.extend(
+                (c, DebtorType.CO_DEBTOR) for c in await self._credit_repo.get_by_codebtor_id(debtor.id)
+            )
 
         if not all_credits:
             return []
