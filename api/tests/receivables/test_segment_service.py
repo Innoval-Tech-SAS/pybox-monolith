@@ -96,14 +96,14 @@ class TestCreate:
         assert result.portfolio_id == portfolio.id
         assert result.filter_criteria["tables"][0]["name"] == "deudores"
 
-    async def test_create_without_permission_raises_403(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_create_from_an_unrelated_org_raises_404(self, db_session, make_user_session_factory, org_and_portfolio):
         _, portfolio = org_and_portfolio
         service = build_service(db_session)
         session = no_access_session(make_user_session_factory)
 
         with pytest.raises(HTTPException) as exc_info:
             await service.create(portfolio.id, SegmentCreateRequest(name="X", filter_criteria=query_config()), session)
-        assert exc_info.value.status_code == 403
+        assert exc_info.value.status_code == 404
 
     async def test_create_unknown_portfolio_raises_404(self, db_session, make_user_session_factory):
         service = build_service(db_session)

@@ -134,4 +134,4 @@ async def revoke_portfolio_access(
     access_service: PortfolioUserAccessServiceDep,
 ) -> None:
     require_org_admin(session, str(org_id))
-    await access_service.revoke_access(user_id, portfolio_id)
+    await access_service.revoke_access(user_id, portfolio_id, org_id)

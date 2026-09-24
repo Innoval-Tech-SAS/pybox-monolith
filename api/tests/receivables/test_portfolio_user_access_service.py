@@ -9,6 +9,7 @@ registrado de verdad -- de ahí el helper `create_user`.
 import pytest
 from fastapi import HTTPException
 
+from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
 from receivables.portfolios.services.portfolio_user_access_service import PortfolioUserAccessService
 from tests.factories import get_user_by_email, register_payload
 from tests.receivables.conftest import build_organization, build_portfolio
@@ -23,6 +24,15 @@ async def create_user(client, db_session):
     return await get_user_by_email(db_session, payload["email"])
 
 
+async def create_member(client, db_session, org_id):
+    """Usuario real que además es miembro de `org_id`: los accesos solo se conceden a
+    miembros de la organización."""
+    user = await create_user(client, db_session)
+    db_session.add(OrganizationMembershipModel(user_id=user.id, organization_id=org_id, created_by=user.id))
+    await db_session.flush()
+    return user
+
+
 class TestGrantAccess:
     async def test_grant_creates_a_new_active_access(self, client, db_session):
         org = build_organization()
@@ -31,7 +41,7 @@ class TestGrantAccess:
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
-        user = await create_user(client, db_session)
+        user = await create_member(client, db_session, org.id)
         granter = await create_user(client, db_session)
 
         service = PortfolioUserAccessService(db_session)
@@ -48,7 +58,7 @@ class TestGrantAccess:
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
-        user = await create_user(client, db_session)
+        user = await create_member(client, db_session, org.id)
         granter_1 = await create_user(client, db_session)
         granter_2 = await create_user(client, db_session)
 
@@ -66,13 +76,13 @@ class TestGrantAccess:
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
-        user = await create_user(client, db_session)
+        user = await create_member(client, db_session, org.id)
         first_granter = await create_user(client, db_session)
         new_granter = await create_user(client, db_session)
 
         service = PortfolioUserAccessService(db_session)
         await service.grant_access(user.id, portfolio.id, org.id, first_granter.id)
-        await service.revoke_access(user.id, portfolio.id)
+        await service.revoke_access(user.id, portfolio.id, org.id)
         reactivated = await service.grant_access(user.id, portfolio.id, org.id, new_granter.id)
 
         assert reactivated.is_active is True
@@ -95,7 +105,7 @@ class TestGrantAccessCrossOrgIdor:
         portfolio_b = build_portfolio(org_b.id)
         db_session.add(portfolio_b)
         await db_session.flush()
-        user = await create_user(client, db_session)
+        user = await create_member(client, db_session, org_a.id)
         granter = await create_user(client, db_session)
 
         service = PortfolioUserAccessService(db_session)
@@ -112,28 +122,28 @@ class TestRevokeAccess:
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
-        user = await create_user(client, db_session)
+        user = await create_member(client, db_session, org.id)
         granter = await create_user(client, db_session)
 
         service = PortfolioUserAccessService(db_session)
         await service.grant_access(user.id, portfolio.id, org.id, granter.id)
-        await service.revoke_access(user.id, portfolio.id)
+        await service.revoke_access(user.id, portfolio.id, org.id)
 
         accesses = await service.get_user_portfolios(user.id, org.id)
         assert accesses == []
 
     async def test_revoke_without_existing_access_is_a_noop(self, client, db_session):
-        user = await create_user(client, db_session)
         org = build_organization()
         db_session.add(org)
         await db_session.flush()
+        user = await create_member(client, db_session, org.id)
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
 
         service = PortfolioUserAccessService(db_session)
         # No debe lanzar excepción aunque no exista el acceso.
-        await service.revoke_access(user.id, portfolio.id)
+        await service.revoke_access(user.id, portfolio.id, org.id)
 
 
 class TestRevokeAllForUserInOrg:
@@ -145,7 +155,7 @@ class TestRevokeAllForUserInOrg:
         portfolio_b = build_portfolio(org.id)
         db_session.add_all([portfolio_a, portfolio_b])
         await db_session.flush()
-        user = await create_user(client, db_session)
+        user = await create_member(client, db_session, org.id)
         granter = await create_user(client, db_session)
 
         service = PortfolioUserAccessService(db_session)
@@ -166,7 +176,7 @@ class TestListOrgPortfoliosWithAccessStatus:
         portfolio_b = build_portfolio(org.id)
         db_session.add_all([portfolio_a, portfolio_b])
         await db_session.flush()
-        user = await create_user(client, db_session)
+        user = await create_member(client, db_session, org.id)
         granter = await create_user(client, db_session)
 
         service = PortfolioUserAccessService(db_session)
@@ -187,8 +197,8 @@ class TestReplaceAccess:
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
-        user_a = await create_user(client, db_session)
-        user_b = await create_user(client, db_session)
+        user_a = await create_member(client, db_session, org.id)
+        user_b = await create_member(client, db_session, org.id)
         granter = await create_user(client, db_session)
 
         service = PortfolioUserAccessService(db_session)

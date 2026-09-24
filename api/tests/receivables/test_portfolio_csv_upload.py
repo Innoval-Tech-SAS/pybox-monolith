@@ -11,12 +11,18 @@ from tests.receivables.conftest import build_organization, build_portfolio, buil
 BASE = "/api/v1/portfolios"
 
 
-def org_member_session(make_user_session_factory, user_id, org_id, role=UserRole.USER):
+def org_member_session(
+    make_user_session_factory, user_id, org_id, role=UserRole.USER, permissions=frozenset({"portfolio.upload_new"})
+):
     return make_user_session_factory(
         user_id=user_id,
         role=role,
         scope=UserScope.ORGANIZATION,
-        orgs={org_id: OrgSessionEntry(role=role, org_name="Org", verification_status=VerificationStatus.APPROVED)},
+        orgs={
+            org_id: OrgSessionEntry(
+                role=role, org_name="Org", verification_status=VerificationStatus.APPROVED, permissions=permissions
+            )
+        },
     )
 
 
@@ -120,10 +126,10 @@ class TestUploadCsvAppend:
         org_id = str(real_portfolio.organization_id)
         session = make_user_session_factory(
             user_id=real_admin_user_id,
-            role=UserRole.USER,
+            role=UserRole.ADMIN,
             scope=UserScope.ORGANIZATION,
             orgs={org_id: OrgSessionEntry(
-                role=UserRole.USER, org_name="Org",
+                role=UserRole.ADMIN, org_name="Org",
                 verification_status=VerificationStatus.APPROVED,
                 permissions=frozenset({"portfolio.upload_new", "portfolio.upload_update"}),
             )},
@@ -213,7 +219,7 @@ class TestUploadCsvUpdate:
         # el update reemplaza: el crédito original desapareció, el nuevo del CSV quedó.
         assert stats.json()["creditos"] == 1
 
-    async def test_without_org_admin_returns_403(
+    async def test_from_an_unrelated_org_returns_404(
         self, auth_as, make_user_session_factory, real_credit, real_admin_user_id
     ):
         org_id = str(real_credit.portfolio_id)
@@ -230,7 +236,8 @@ class TestUploadCsvUpdate:
             params={"portfolioId": str(real_credit.portfolio_id)},
             files={"file": ("cartera.csv", csv_bytes, "text/csv")},
         )
-        assert resp.status_code == 403
+        # No pertenece a la organización dueña: 404, igual que un portafolio inexistente.
+        assert resp.status_code == 404
 
     async def test_unverified_org_returns_403(self, db_session, auth_as, make_user_session_factory):
         """Regresión para la Fase 3c: `upload_csv_update` también pasó a usar

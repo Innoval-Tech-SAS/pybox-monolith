@@ -25,11 +25,13 @@ from receivables.portfolios.schemas.portfolio_schemas import (
 )
 from receivables.portfolios.utils.file_utils import validate_portfolio_file
 from core.security.dependencies import CurrentSession
-from core.security.constants.permissions import ORG_PORTFOLIOS, PORTFOLIO_UPLOAD_UPDATE
+from core.security.constants.permissions import ORG_PORTFOLIOS, PORTFOLIO_UPLOAD_NEW, PORTFOLIO_UPLOAD_UPDATE
 from core.security.policies.security_policies import (
     require_admin_or_org,
     require_global_admin,
     require_org_admin,
+    require_org_visibility,
+    require_permission,
     require_portfolio_access,
 )
 from core.security.rate_limit import rate_limit
@@ -80,8 +82,7 @@ async def upload_csv(
     selected_org_id = organization_id or (org.id if org is not None else None)
     if selected_org_id is None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "El usuario no pertenece a ninguna organización")
-    if not session.is_global and str(selected_org_id) not in session.orgs:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a esta organización")
+    require_permission(PORTFOLIO_UPLOAD_NEW, session, str(selected_org_id))
     await org_service.ensure_verified(selected_org_id)
 
     filename = validate_portfolio_file(file)
@@ -112,17 +113,16 @@ async def upload_csv_append(
     session: CurrentSession,
     portfolio_service: PortfolioServiceDep,
     org_service: OrgServiceDep,
+    access_service: PortfolioUserAccessServiceDep,
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
 ) -> None:
     portfolio = await portfolio_service.get_by_id(portfolio_id)
     org_id_str = str(portfolio.organization_id)
 
-    if not session.is_global:
-        org_entry = session.orgs.get(org_id_str)
-        if org_entry is None:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin acceso a esta organización")
-        if PORTFOLIO_UPLOAD_UPDATE not in org_entry.permissions:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Sin permiso para agregar datos al portafolio")
+    require_org_visibility(session, org_id_str, "Portafolio no encontrado")
+    require_permission(PORTFOLIO_UPLOAD_UPDATE, session, org_id_str)
+    # Además del permiso: un miembro con acceso restringido solo toca sus portafolios.
+    await require_portfolio_access(session, org_id_str, portfolio_id, access_service.check_access)
     await org_service.ensure_verified(portfolio.organization_id)
 
     filename = validate_portfolio_file(file)
@@ -156,6 +156,7 @@ async def upload_csv_update(
     portfolio = await portfolio_service.get_by_id(portfolio_id)
     org_id_str = str(portfolio.organization_id)
 
+    require_org_visibility(session, org_id_str, "Portafolio no encontrado")
     require_org_admin(session, org_id_str)
 
     if not session.is_global:
@@ -191,6 +192,7 @@ async def get_portfolio(
     access_service: PortfolioUserAccessServiceDep,
 ) -> PortfolioModel:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     await require_portfolio_access(
         session,
         str(portfolio.organization_id),
@@ -208,6 +210,7 @@ async def update_portfolio(
     service: PortfolioServiceDep,
 ) -> PortfolioModel:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     require_org_admin(session, str(portfolio.organization_id))
     return await service.update_portfolio(portfolio_id, data)
 
@@ -219,6 +222,7 @@ async def delete_portfolio(
     service: PortfolioServiceDep,
 ) -> None:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     require_org_admin(session, str(portfolio.organization_id))
     await service.delete_portfolio(portfolio_id)
 
@@ -247,6 +251,7 @@ async def get_portfolio_stats(
     access_service: PortfolioUserAccessServiceDep,
 ) -> PortfolioStatsResponse:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     await require_portfolio_access(
         session,
         str(portfolio.organization_id),
@@ -269,6 +274,7 @@ async def get_portfolio_monthly_sends(
     campaign_id: Annotated[uuid.UUID, Query(alias="campaignId")],
 ) -> MonthlySendsResponse:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     await require_portfolio_access(
         session,
         str(portfolio.organization_id),
@@ -290,6 +296,7 @@ async def get_portfolio_send_status_counts(
     access_service: PortfolioUserAccessServiceDep,
 ) -> SendStatusCountsResponse:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     await require_portfolio_access(
         session,
         str(portfolio.organization_id),
@@ -307,6 +314,7 @@ async def list_portfolio_access(
     access_service: PortfolioUserAccessServiceDep,
 ) -> list:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     require_org_admin(session, str(portfolio.organization_id))
     return await access_service.list_portfolio_access(portfolio_id)
 
@@ -320,6 +328,7 @@ async def replace_portfolio_access(
     access_service: PortfolioUserAccessServiceDep,
 ) -> list:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     require_org_admin(session, str(portfolio.organization_id))
     return await access_service.replace_access(
         portfolio_id,
@@ -337,6 +346,7 @@ async def get_daily_counter_config(
     access_service: PortfolioUserAccessServiceDep,
 ) -> PortfolioDailyCounterConfigModel | None:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     await require_portfolio_access(
         session,
         str(portfolio.organization_id),
@@ -354,6 +364,7 @@ async def update_daily_counter_config(
     service: PortfolioServiceDep,
 ) -> PortfolioDailyCounterConfigModel:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     require_org_admin(session, str(portfolio.organization_id))
     return await service.update_daily_counter_config(portfolio_id, data, session.user_id)
 
@@ -366,5 +377,6 @@ async def sync_daily_counter_config(
     service: PortfolioServiceDep,
 ) -> PortfolioDailyCounterConfigModel:
     portfolio = await service.get_by_id(portfolio_id)
+    require_org_visibility(session, str(portfolio.organization_id), "Portafolio no encontrado")
     require_org_admin(session, str(portfolio.organization_id))
     return await service.sync_daily_counter_config(portfolio_id, data, session.user_id)
