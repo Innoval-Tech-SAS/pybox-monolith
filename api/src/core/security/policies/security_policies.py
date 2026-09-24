@@ -77,6 +77,17 @@ def require_admin_or_org(perm: str, session: UserSession, org_id: str) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No tienes permisos para esta acción")
 
 
+def require_org_visibility(session: UserSession, org_id: str, detail: str = "Recurso no encontrado") -> None:
+    """404 (no 403) para quien no pertenece a la organización dueña del recurso.
+
+    Un 403 distinto de "no existe" deja enumerar qué IDs de otro tenant existen. Va ANTES
+    de los chequeos de rol/permiso: esos sí dan 403, pero solo a quien ya es miembro."""
+    if session.is_global:
+        return
+    if org_id not in session.orgs:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail)
+
+
 def require_org_access(session: UserSession, org_id: str) -> None:
     if session.is_global:
         return
@@ -120,6 +131,7 @@ async def check_portfolio_org_access(
     if portfolio is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Portafolio no encontrado")
     if not user_session.is_global:
+        require_org_visibility(user_session, str(portfolio.organization_id), "Portafolio no encontrado")
         require_permission(permission, user_session, str(portfolio.organization_id))
     return portfolio.organization_id
 
