@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -107,3 +108,11 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
     ) -> bool:
         record = await self.get_by_user_and_portfolio(user_id, portfolio_id, organization_id)
         return record is not None and record.is_active
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de los accesos de usuarios a portafolios de la organización con el sello de la organización."""
+        await self.soft_delete_where(PortfolioUserAccessModel.organization_id == organization_id, deleted_at=deleted_at)
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(PortfolioUserAccessModel.organization_id == organization_id, deleted_at=deleted_at)

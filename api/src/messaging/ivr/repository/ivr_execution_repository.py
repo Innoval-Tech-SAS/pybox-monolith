@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Sequence
 
 from sqlalchemy import select
@@ -38,3 +39,11 @@ class IvrExecutionRepository(SoftDeleteRepositoryBase[IvrExecutionModel]):
             .limit(1)
         )
         return result.scalar_one_or_none()
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de las ejecuciones IVR de la organización con el sello de la organización."""
+        await self.soft_delete_where(IvrExecutionModel.organization_id == organization_id, deleted_at=deleted_at)
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(IvrExecutionModel.organization_id == organization_id, deleted_at=deleted_at)

@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import Optional, Sequence
 
 from sqlalchemy import select
@@ -68,3 +69,11 @@ class PortfolioDocumentRepository(SoftDeleteRepositoryBase[PortfolioDocumentMode
                 PortfolioDocumentModel.deleted_at.is_(None),
             )
         )
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de los documentos de portafolio de la organización con el sello de la organización."""
+        await self.soft_delete_where(PortfolioDocumentModel.organization_id == organization_id, deleted_at=deleted_at)
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(PortfolioDocumentModel.organization_id == organization_id, deleted_at=deleted_at)

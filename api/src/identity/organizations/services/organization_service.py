@@ -30,6 +30,7 @@ from identity.organizations.schemas.organization_schemas import (
     OrganizationUpdate,
     RepresentativeMode,
 )
+from identity.organizations.services.organization_cascade_service import OrganizationCascadeService
 from core.security.policies.security_policies import require_org_access, require_verified_org
 from core.security.services.encrypt_service import encrypt_service
 from identity.users.enums.user_enums import UserRole, UserScope
@@ -75,6 +76,8 @@ class OrganizationService:
             ContactRepository(org_repo.session),
             PortfolioUserAccessRepository(org_repo.session),
         )
+        # ...y con ellos deudores, chats, IVR, reportes, documentos y accesos.
+        self._cascade_service = OrganizationCascadeService(org_repo.session)
 
     # ── Queries ──────────────────────────────────────────────────────────────
 
@@ -473,7 +476,10 @@ class OrganizationService:
     async def soft_delete_organization(self, org_id: uuid.UUID) -> None:
         """Baja lógica de la organización y, en cascada, de todo lo que le pertenece:
         membresías, roles y permisos de sus usuarios, portafolios (con sus créditos y
-        campañas).
+        campañas), deudores (con sus contactos, direcciones y documentos), extractos,
+        notificaciones judiciales, chats de WhatsApp, IVR, resultados de campañas,
+        reportes, documentos y accesos a portafolios. Facturas y tickets de soporte no
+        se tocan.
 
         Los usuarios NO se eliminan: quedan sin organización (los que no tengan otra
         vuelven a la sesión sin roles, la del titular). Toda la cascada lleva el mismo
@@ -492,6 +498,7 @@ class OrganizationService:
         await self.role_assignment_repo.soft_delete_by_organization(org_id, deleted_at)
         await self._permission_assignment_repo.soft_delete_by_organization(org_id, deleted_at)
         await self._portfolio_service.delete_for_organization(org_id, deleted_at)
+        await self._cascade_service.soft_delete_for_organization(org_id, deleted_at)
         await self._invalidate_sessions(user_ids)
 
     async def restore_organization(self, org_id: uuid.UUID) -> OrganizationModel | None:
@@ -506,6 +513,7 @@ class OrganizationService:
         await self.role_assignment_repo.restore_by_organization(org_id, deleted_at)
         await self._permission_assignment_repo.restore_by_organization(org_id, deleted_at)
         await self._portfolio_service.restore_for_organization(org_id, deleted_at)
+        await self._cascade_service.restore_for_organization(org_id, deleted_at)
         await self._invalidate_sessions(user_ids)
 
         return org

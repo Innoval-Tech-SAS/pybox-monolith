@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.contact_methods.enums.contact_method_enums import ContactMethodType
 from receivables.contact_methods.models.contact_method_model import ContactMethodModel
+from receivables.debtors.models.debtor_model import DebtorModel
 
 
 class ContactMethodRepository(SoftDeleteRepositoryBase[ContactMethodModel]):
@@ -78,3 +80,15 @@ class ContactMethodRepository(SoftDeleteRepositoryBase[ContactMethodModel]):
             if value not in bucket:
                 bucket.append(value)
         return values
+
+    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Baja en cascada de los métodos de contacto de los deudores de la organización con el sello de la organización."""
+        await self.soft_delete_where(
+            ContactMethodModel.debtor_id.in_(select(DebtorModel.id).where(DebtorModel.organization_id == organization_id)), deleted_at=deleted_at
+        )
+
+    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+        await self.restore_where(
+            ContactMethodModel.debtor_id.in_(select(DebtorModel.id).where(DebtorModel.organization_id == organization_id)), deleted_at=deleted_at
+        )
