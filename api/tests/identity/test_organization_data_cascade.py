@@ -41,6 +41,7 @@ class TestSoftDeleteOrganizationData:
         org, debtor, chat, message = await _organization_with_debtor_and_chat(db_session)
 
         await build_service(db_session).soft_delete_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await DebtorRepository(db_session).get_by_id(debtor.id) is None
         assert await WhatsAppChatRepository(db_session).get_by_id(chat.id) is None
@@ -51,6 +52,7 @@ class TestSoftDeleteOrganizationData:
         _, other_debtor, other_chat, other_message = await _organization_with_debtor_and_chat(db_session)
 
         await build_service(db_session).soft_delete_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await DebtorRepository(db_session).get_by_id(other_debtor.id) is not None
         assert await WhatsAppChatRepository(db_session).get_by_id(other_chat.id) is not None
@@ -62,8 +64,10 @@ class TestRestoreOrganizationData:
         org, debtor, chat, message = await _organization_with_debtor_and_chat(db_session)
         service = build_service(db_session)
         await service.soft_delete_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         await service.restore_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await DebtorRepository(db_session).get_by_id(debtor.id) is not None
         assert await WhatsAppChatRepository(db_session).get_by_id(chat.id) is not None
@@ -79,6 +83,8 @@ class TestRestoreOrganizationData:
 
         service = build_service(db_session)
         await service.soft_delete_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
         await service.restore_organization(org.id)
+        db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
 
         assert await debtor_repo.get_by_id(old_debtor.id) is None
