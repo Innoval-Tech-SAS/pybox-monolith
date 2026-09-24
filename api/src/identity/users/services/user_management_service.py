@@ -13,6 +13,7 @@ from identity.organizations.models.organization_membership_model import (
 from identity.organizations.repository.organization_membership_repository import (
     OrganizationMembershipRepository,
 )
+from core.database.redis import redis_client
 from core.security.services.password_hasher_service import PasswordHasherService
 from identity.users.enums.user_enums import (
     PermissionEffect,
@@ -29,6 +30,7 @@ from identity.users.repository.role_assignment_repository import (
     RoleAssignmentRepository,
 )
 from identity.users.repository.user_repository import UserRepository
+from identity.users.schemas.user_session_schema import session_key
 from identity.users.schemas.user_management_schemas import (
     ManagedUserCreate,
     ManagedUserResponse,
@@ -151,9 +153,17 @@ class UserManagementService:
             scope=UserScope.ORGANIZATION.value,
         )
 
+    async def _require_member(self, user_id: uuid.UUID, org_id: uuid.UUID) -> None:
+        """Los permisos por usuario solo se otorgan a miembros de la organización; si no
+        lo es, 404 (no se confirma que el usuario exista en otro lado)."""
+        memberships = await self.membership_repo.get_by_user_id(user_id)
+        if not any(m.organization_id == org_id for m in memberships):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Miembro no encontrado.")
+
     async def list_permissions(
         self, user_id: uuid.UUID, org_id: uuid.UUID
     ) -> PermissionListResponse:
+        await self._require_member(user_id, org_id)
         overrides = await self.permission_assignment_repo.get_overrides_for_user_org(
             user_id, org_id
         )
@@ -171,6 +181,7 @@ class UserManagementService:
         permission_name: str,
         effect: PermissionEffect,
     ) -> PermissionEntry:
+        await self._require_member(user_id, org_id)
         perm = await self.permission_assignment_repo.get_permission_by_name(
             permission_name
         )
@@ -185,6 +196,8 @@ class UserManagementService:
             organization_id=org_id,
             effect=effect,
         )
+        # La sesión cacheada lleva los permisos: sin esto el cambio no se ve hasta que expire.
+        await redis_client.delete(session_key(user_id))
         return PermissionEntry(name=permission_name, effect=effect.value)
 
     async def get_permissions_catalog(self) -> list[PermissionCatalogEntry]:
@@ -199,6 +212,7 @@ class UserManagementService:
     async def remove_permission(
         self, user_id: uuid.UUID, org_id: uuid.UUID, permission_name: str
     ) -> None:
+        await self._require_member(user_id, org_id)
         perm = await self.permission_assignment_repo.get_permission_by_name(
             permission_name
         )
@@ -217,3 +231,4 @@ class UserManagementService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Asignación de permiso no encontrada.",
             )
+        await redis_client.delete(session_key(user_id))
