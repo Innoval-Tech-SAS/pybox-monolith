@@ -98,7 +98,7 @@ async def org_portfolio_debtor(db_session):
     db_session.add(portfolio)
     await db_session.flush()
     doc_number = "900123456"
-    debtor = build_debtor(document_number_plain=doc_number)
+    debtor = build_debtor(org.id, document_number_plain=doc_number)
     db_session.add(debtor)
     await db_session.flush()
     return org, portfolio, debtor, doc_number
@@ -259,7 +259,7 @@ class TestCrossPortfolioIdor:
         other_portfolio = build_portfolio(other_org.id)
         db_session.add(other_portfolio)
         await db_session.flush()
-        debtor_elsewhere = build_debtor()
+        debtor_elsewhere = build_debtor(other_org.id)
         db_session.add(debtor_elsewhere)
         await db_session.flush()
         credit = build_credit(other_portfolio.id, debtor_elsewhere.id, is_active=True)
@@ -283,7 +283,7 @@ class TestCrossPortfolioIdor:
         other_portfolio = build_portfolio(other_org.id)
         db_session.add(other_portfolio)
         await db_session.flush()
-        debtor_elsewhere = build_debtor()
+        debtor_elsewhere = build_debtor(other_org.id)
         db_session.add(debtor_elsewhere)
         await db_session.flush()
         credit = build_credit(other_portfolio.id, debtor_elsewhere.id, is_active=True)
@@ -326,7 +326,7 @@ class TestListAndContentForOrg:
         session = await org_session(db_session, make_user_session_factory, org.id)
         statement = await service.generate(debtor.id, portfolio.id, None, session)
 
-        other_debtor = build_debtor()
+        other_debtor = build_debtor(org.id)
         db_session.add(other_debtor)
         await db_session.flush()
 
@@ -390,7 +390,7 @@ class TestSelfService:
         statement = await service.generate(debtor.id, portfolio.id, None, org_sess)
 
         other_hash = encrypt_service.hash_document("111111111")
-        other_debtor = build_debtor(document_number_plain="111111111")
+        other_debtor = build_debtor(org.id, document_number_plain="111111111")
         db_session.add(other_debtor)
         await db_session.flush()
         session = await self_session(db_session, make_user_session_factory, other_hash)

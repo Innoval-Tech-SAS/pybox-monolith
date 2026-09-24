@@ -16,7 +16,7 @@ from fastapi import HTTPException
 from core.security.services.encrypt_service import encrypt_service
 from identity.users.enums.user_enums import UserRole, UserScope
 from receivables.credits.services.credit_selfservice_service import CreditSelfServiceService
-from tests.receivables.conftest import build_credit, build_debtor, build_organization, build_portfolio
+from tests.receivables.conftest import add_organization, build_credit, build_debtor, build_organization, build_portfolio
 
 
 def self_session(make_user_session_factory, document_number_hash: str):
@@ -37,7 +37,7 @@ async def credit_of_another_debtor(db_session):
     portfolio = build_portfolio(org.id)
     db_session.add(portfolio)
     await db_session.flush()
-    owner = build_debtor()
+    owner = build_debtor(org.id)
     db_session.add(owner)
     await db_session.flush()
     credit = build_credit(portfolio.id, owner.id, is_active=True)
@@ -51,7 +51,7 @@ class TestResolveOwnedCreditIdor:
         self, db_session, make_user_session_factory, credit_of_another_debtor
     ):
         requester_doc = "111222333"
-        requester = build_debtor(document_number_plain=requester_doc)
+        requester = build_debtor((await add_organization(db_session)).id, document_number_plain=requester_doc)
         db_session.add(requester)
         await db_session.flush()
 
@@ -64,7 +64,7 @@ class TestResolveOwnedCreditIdor:
 
     async def test_unknown_credit_raises_404(self, db_session, make_user_session_factory):
         requester_doc = "444555666"
-        requester = build_debtor(document_number_plain=requester_doc)
+        requester = build_debtor((await add_organization(db_session)).id, document_number_plain=requester_doc)
         db_session.add(requester)
         await db_session.flush()
 
@@ -77,11 +77,11 @@ class TestResolveOwnedCreditIdor:
 
     async def test_own_credit_resolves(self, db_session, make_user_session_factory):
         doc_number = "777888999"
-        debtor = build_debtor(document_number_plain=doc_number)
-        db_session.add(debtor)
-        await db_session.flush()
         org = build_organization()
         db_session.add(org)
+        await db_session.flush()
+        debtor = build_debtor(org.id, document_number_plain=doc_number)
+        db_session.add(debtor)
         await db_session.flush()
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)

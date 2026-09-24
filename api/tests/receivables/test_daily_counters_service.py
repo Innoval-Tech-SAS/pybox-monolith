@@ -20,7 +20,7 @@ class TestRunForCountry:
         db_session.add(portfolio)
         await db_session.flush()
         db_session.add(PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True))
-        debtor = build_debtor()
+        debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
         credit = build_credit(
@@ -47,7 +47,7 @@ class TestRunForCountry:
         db_session.add(portfolio)
         await db_session.flush()
         db_session.add(PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True))
-        debtor = build_debtor()
+        debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
         credit = build_credit(
@@ -76,7 +76,7 @@ class TestRunForCountry:
         db_session.add(portfolio)
         await db_session.flush()
         db_session.add(PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True))
-        debtor = build_debtor()
+        debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
         credit = build_credit(
@@ -109,7 +109,7 @@ class TestRunAllNationalities:
         db_session.add(portfolio)
         await db_session.flush()
         db_session.add(PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True))
-        debtor = build_debtor()
+        debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
         credit = build_credit(

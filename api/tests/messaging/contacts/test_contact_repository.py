@@ -145,7 +145,7 @@ class TestGetLatestByRecipientAndOrg:
         org = build_organization()
         db_session.add(org)
         await db_session.flush()
-        debtor = build_debtor()
+        debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
         repo = ContactRepository(db_session)

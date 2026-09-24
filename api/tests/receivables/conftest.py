@@ -190,6 +190,15 @@ def build_organization(**overrides) -> OrganizationModel:
     return OrganizationModel(**defaults)
 
 
+async def add_organization(db_session, **overrides) -> OrganizationModel:
+    """Crea y persiste una organización suelta -- para tests que solo necesitan "una
+    empresa" a la que colgarle un deudor."""
+    org = build_organization(**overrides)
+    db_session.add(org)
+    await db_session.flush()
+    return org
+
+
 def build_portfolio(organization_id: uuid.UUID, **overrides) -> PortfolioModel:
     defaults = dict(
         name=f"Portafolio {uuid.uuid4().hex[:8]}",
@@ -212,11 +221,13 @@ async def real_portfolio(db_session, verified_org_id) -> PortfolioModel:
     return portfolio
 
 
-def build_debtor(**overrides) -> DebtorModel:
+def build_debtor(organization_id: uuid.UUID, **overrides) -> DebtorModel:
     """No es fixture: cada llamado genera un deudor con documento único, para
-    poder crear varios en el mismo test (titular + codeudor, etc.)."""
+    poder crear varios en el mismo test (titular + codeudor, etc.). El deudor es de
+    UNA organización, así que `organization_id` es obligatorio."""
     doc_number = overrides.pop("document_number_plain", unique_document_number())
     defaults = dict(
+        organization_id=organization_id,
         full_name="Deudor de Prueba",
         debtor_type=DebtorType.DEBTOR,
         document_type="CC",
@@ -228,8 +239,10 @@ def build_debtor(**overrides) -> DebtorModel:
 
 
 @pytest_asyncio.fixture
-async def real_debtor(db_session) -> DebtorModel:
-    debtor = build_debtor()
+async def real_debtor(db_session, real_portfolio) -> DebtorModel:
+    # Misma organización que `real_portfolio`: así `real_credit` (portafolio + deudor)
+    # respeta la invariante deudor.organización == portafolio.organización.
+    debtor = build_debtor(real_portfolio.organization_id)
     db_session.add(debtor)
     await db_session.flush()
     return debtor
