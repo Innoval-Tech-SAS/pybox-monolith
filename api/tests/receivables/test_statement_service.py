@@ -230,14 +230,14 @@ class TestGenerateSingleCredit:
             await service.generate(uuid.uuid4(), portfolio.id, None, session)
         assert exc_info.value.status_code == 404
 
-    async def test_without_permission_raises_403(self, db_session, make_user_session_factory, org_portfolio_debtor):
+    async def test_from_an_unrelated_org_raises_404(self, db_session, make_user_session_factory, org_portfolio_debtor):
         _, portfolio, debtor, _ = org_portfolio_debtor
         service = build_service(db_session)
         session = await no_access_session(db_session, make_user_session_factory)
 
         with pytest.raises(HTTPException) as exc_info:
             await service.generate(debtor.id, portfolio.id, None, session)
-        assert exc_info.value.status_code == 403
+        assert exc_info.value.status_code == 404
 
 
 class TestCrossPortfolioIdor:

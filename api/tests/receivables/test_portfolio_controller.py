@@ -47,10 +47,10 @@ class TestGetPortfolio:
         resp = await authed.get(f"{BASE}/{uuid.uuid4()}")
         assert resp.status_code == 404
 
-    async def test_forbidden_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
+    async def test_not_found_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
         authed = auth_as(other_org_session(make_user_session_factory))
         resp = await authed.get(f"{BASE}/{real_portfolio.id}")
-        assert resp.status_code == 403
+        assert resp.status_code == 404
 
 
 class TestUpdatePortfolio:
@@ -65,10 +65,10 @@ class TestUpdatePortfolio:
         resp = await authed.patch(f"{BASE}/{uuid.uuid4()}", json={"name": "x"})
         assert resp.status_code == 404
 
-    async def test_forbidden_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
+    async def test_not_found_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
         authed = auth_as(other_org_session(make_user_session_factory))
         resp = await authed.patch(f"{BASE}/{real_portfolio.id}", json={"name": "hack"})
-        assert resp.status_code == 403
+        assert resp.status_code == 404
 
 
 class TestDeletePortfolio:
@@ -79,10 +79,10 @@ class TestDeletePortfolio:
         follow_up = await authed.get(f"{BASE}/{real_portfolio.id}")
         assert follow_up.status_code == 404
 
-    async def test_forbidden_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
+    async def test_not_found_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
         authed = auth_as(other_org_session(make_user_session_factory))
         resp = await authed.delete(f"{BASE}/{real_portfolio.id}")
-        assert resp.status_code == 403
+        assert resp.status_code == 404
 
 
 class TestPortfolioStats:
@@ -94,10 +94,10 @@ class TestPortfolioStats:
         assert body["creditos"] == 1
         assert body["titulares"] == 1
 
-    async def test_forbidden_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
+    async def test_not_found_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
         authed = auth_as(other_org_session(make_user_session_factory))
         resp = await authed.get(f"{BASE}/{real_portfolio.id}/stats")
-        assert resp.status_code == 403
+        assert resp.status_code == 404
 
 
 class TestPortfolioSendStatusCounts:
@@ -138,6 +138,15 @@ class TestPortfolioAccess:
         resp = await client.post("/api/v1/auth/register/user", json=payload)
         assert resp.status_code == 201
         target_user = await get_user_by_email(db_session, payload["email"])
+        # Los accesos solo se conceden a miembros de la organización del portafolio.
+        from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
+
+        db_session.add(
+            OrganizationMembershipModel(
+                user_id=target_user.id, organization_id=real_portfolio.organization_id, created_by=target_user.id
+            )
+        )
+        await db_session.flush()
 
         authed = auth_as(make_user_session_factory(user_id=real_admin_user_id, role=UserRole.ADMIN, scope=UserScope.GLOBAL))
         resp = await authed.put(
@@ -149,10 +158,10 @@ class TestPortfolioAccess:
         assert body[0]["userId"] == str(target_user.id)
         assert body[0]["isActive"] is True
 
-    async def test_forbidden_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
+    async def test_not_found_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
         authed = auth_as(other_org_session(make_user_session_factory))
         resp = await authed.get(f"{BASE}/{real_portfolio.id}/access")
-        assert resp.status_code == 403
+        assert resp.status_code == 404
 
 
 class TestDailyCounterConfig:
@@ -182,9 +191,9 @@ class TestDailyCounterConfig:
         resp = await authed.post(f"{BASE}/{real_portfolio.id}/daily-counter-config/sync", json={})
         assert resp.status_code == 404
 
-    async def test_forbidden_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
+    async def test_not_found_for_unrelated_org(self, auth_as, make_user_session_factory, real_portfolio):
         authed = auth_as(other_org_session(make_user_session_factory))
         resp = await authed.patch(
             f"{BASE}/{real_portfolio.id}/daily-counter-config", json={"enabled": True}
         )
-        assert resp.status_code == 403
+        assert resp.status_code == 404
