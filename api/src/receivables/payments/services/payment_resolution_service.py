@@ -1,3 +1,5 @@
+"""Aplica sobre las cuotas el resultado de un ticket de autogestión de pago."""
+
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession

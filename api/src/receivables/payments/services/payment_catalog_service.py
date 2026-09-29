@@ -1,3 +1,5 @@
+"""Catálogo de estados de pago (valores fijos derivados del enum)."""
+
 from receivables.payments.enums.payment_enums import (
     PAYMENT_STATUS_LABELS,
     PaymentStatus,

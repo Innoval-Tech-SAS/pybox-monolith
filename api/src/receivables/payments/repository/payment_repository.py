@@ -1,3 +1,5 @@
+"""Acceso a datos de las cuotas de pago de un crédito."""
+
 import uuid
 from datetime import datetime, timezone
 

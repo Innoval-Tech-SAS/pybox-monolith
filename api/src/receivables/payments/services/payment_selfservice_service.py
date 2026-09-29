@@ -1,3 +1,5 @@
+"""Autogestión de pagos del titular: reprogramación y subida de comprobante."""
+
 import uuid
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo

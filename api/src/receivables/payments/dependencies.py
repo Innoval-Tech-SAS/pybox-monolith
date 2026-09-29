@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar los servicios de pagos y autogestión."""
+
 from typing import Annotated
 
 from fastapi import Depends

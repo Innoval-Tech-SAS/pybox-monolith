@@ -1,3 +1,5 @@
+"""Resuelve el crédito/pago de un titular verificando que le pertenezca (SELF)."""
+
 import uuid
 
 from fastapi import HTTPException, status

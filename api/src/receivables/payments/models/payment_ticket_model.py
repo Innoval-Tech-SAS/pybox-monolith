@@ -1,3 +1,5 @@
+"""Vínculo entre un ticket de soporte y el pago/crédito sobre el que actúa."""
+
 import uuid
 from datetime import datetime
 

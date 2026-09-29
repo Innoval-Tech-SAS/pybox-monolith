@@ -1,3 +1,5 @@
+"""Cuota del cronograma de pagos de un crédito."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal

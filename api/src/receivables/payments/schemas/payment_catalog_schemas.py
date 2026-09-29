@@ -1,3 +1,5 @@
+"""Schema del catálogo de estados de pago."""
+
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema

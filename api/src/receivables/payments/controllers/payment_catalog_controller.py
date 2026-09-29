@@ -1,3 +1,5 @@
+"""Endpoint de catálogo de estados de pago."""
+
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from receivables.payments.dependencies import PaymentCatalogServiceDep

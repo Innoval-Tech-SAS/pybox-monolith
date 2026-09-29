@@ -1,3 +1,5 @@
+"""Schemas de autogestión de pagos: reprogramación y comprobante."""
+
 from datetime import datetime
 
 from pydantic import Field
