@@ -1,3 +1,5 @@
+"""Estructuras internas de envío por lote (no expuestas en la API)."""
+
 from __future__ import annotations
 
 import uuid

@@ -1,3 +1,5 @@
+"""Cuenta destinatarios únicos de una campaña antes de enviarla."""
+
 import json
 import uuid
 

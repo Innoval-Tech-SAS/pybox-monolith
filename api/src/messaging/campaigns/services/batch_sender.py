@@ -1,3 +1,5 @@
+"""Envío por lotes de una campaña, con reintentos y agregación de estadísticas."""
+
 from __future__ import annotations
 
 import asyncio
@@ -180,9 +182,9 @@ class BatchSender:
                 debtor_document=inp.debtor_document,
                 sent_at=sent_at,
                 provider=provider,
-                external_id=ids_by_recipient.get(inp.recipient)
-                if ids_by_recipient
-                else None,
+                external_id=(
+                    ids_by_recipient.get(inp.recipient) if ids_by_recipient else None
+                ),
                 sending_id=sending_id,
                 error=error,
                 campaign_id=inp.campaign_id,

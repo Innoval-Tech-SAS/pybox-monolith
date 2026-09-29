@@ -1,3 +1,5 @@
+"""Reexporta las constantes de campañas usadas fuera del paquete."""
+
 from messaging.campaigns.constants.batch_constants import (
     BATCH_SIZE,
     MAX_RETRIES,

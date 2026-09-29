@@ -1,3 +1,5 @@
+"""Mapeo de columna de BD a atributo Python de un modelo, vía introspección."""
+
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import DeclarativeBase
 

@@ -1,3 +1,5 @@
+"""Acceso a datos de la programación (horario/frecuencia) de campañas."""
+
 import uuid
 from datetime import datetime
 from typing import Sequence

@@ -1,3 +1,5 @@
+"""Campaña de mensajería de un portafolio, con su programación y estado."""
+
 import uuid
 from datetime import datetime
 

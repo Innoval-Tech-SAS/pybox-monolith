@@ -1,3 +1,5 @@
+"""Opciones de periodicidad y días de la semana para programar una campaña."""
+
 from messaging.campaigns.enums.campaign_enums import Periodicity
 
 PERIODICITY_LABELS: dict[Periodicity, str] = {

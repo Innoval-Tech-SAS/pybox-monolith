@@ -1,3 +1,5 @@
+"""Tablas fuente y estrategias de variable de personalización de campañas."""
+
 DEBTOR_TABLE = "deudores"
 CREDIT_TABLE = "creditos"
 PAYMENT_TABLE = "pagos"

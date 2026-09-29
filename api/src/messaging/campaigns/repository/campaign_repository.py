@@ -1,3 +1,5 @@
+"""Acceso a datos de campañas de mensajería."""
+
 import uuid
 from datetime import datetime
 from typing import Sequence

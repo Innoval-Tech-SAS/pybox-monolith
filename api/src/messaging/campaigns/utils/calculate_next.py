@@ -1,3 +1,5 @@
+"""Cálculo de la próxima fecha/hora de envío de una campaña recurrente."""
+
 import calendar
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError

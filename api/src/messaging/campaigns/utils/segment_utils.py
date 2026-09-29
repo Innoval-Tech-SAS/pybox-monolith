@@ -1,3 +1,5 @@
+"""Extracción de ids de deudor y su columna a partir de un criterio de segmento."""
+
 import uuid
 from typing import Any
 

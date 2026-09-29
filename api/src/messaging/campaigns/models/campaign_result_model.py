@@ -1,3 +1,5 @@
+"""Resultado agregado del cierre real de una ejecución de campaña."""
+
 import uuid
 from datetime import datetime
 

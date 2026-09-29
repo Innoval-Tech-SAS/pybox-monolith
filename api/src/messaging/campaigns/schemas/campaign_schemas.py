@@ -1,3 +1,5 @@
+"""Schemas de campañas: alta, edición y respuesta."""
+
 import uuid
 from datetime import datetime
 

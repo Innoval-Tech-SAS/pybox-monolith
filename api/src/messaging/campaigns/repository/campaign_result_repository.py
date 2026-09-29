@@ -1,6 +1,7 @@
+"""Acceso a datos de los resultados agregados de ejecución de campaña."""
+
 import uuid
 from datetime import datetime, timezone
-
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.campaigns.models.campaign_result_model import CampaignResultModel

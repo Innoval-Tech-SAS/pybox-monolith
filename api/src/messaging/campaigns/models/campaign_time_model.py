@@ -1,3 +1,5 @@
+"""Programación (horario/frecuencia) de una campaña recurrente."""
+
 import uuid
 from datetime import datetime
 

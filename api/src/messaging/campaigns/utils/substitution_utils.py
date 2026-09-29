@@ -1,3 +1,5 @@
+"""Construcción del `sub` (personalización) en el formato que espera 360NRS."""
+
 from enum import Enum
 from typing import Any
 

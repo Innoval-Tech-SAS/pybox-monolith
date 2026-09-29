@@ -1,3 +1,5 @@
+"""Alta, edición y programación de campañas de mensajería."""
+
 import uuid
 from datetime import datetime, timezone
 
