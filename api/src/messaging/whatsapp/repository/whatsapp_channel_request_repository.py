@@ -1,18 +1,18 @@
 import uuid
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.whatsapp.enums.whatsapp_enums import ChannelRequestStatus
-from messaging.whatsapp.models.whatsapp_channel_request_model import WhatsAppChannelRequestModel
+from messaging.whatsapp.models.whatsapp_channel_request_model import (
+    WhatsAppChannelRequestModel,
+)
 
 
-class WhatsAppChannelRequestRepository(SoftDeleteRepositoryBase[WhatsAppChannelRequestModel]):
+class WhatsAppChannelRequestRepository(
+    SoftDeleteRepositoryBase[WhatsAppChannelRequestModel]
+):
     model_class = WhatsAppChannelRequestModel
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
 
     async def get_by_org_and_phone(
         self, organization_id: uuid.UUID, phone: str
@@ -54,9 +54,12 @@ class WhatsAppChannelRequestRepository(SoftDeleteRepositoryBase[WhatsAppChannelR
         if status is not None:
             query = query.where(WhatsAppChannelRequestModel.status == status)
 
-        total: int = await self.session.scalar(
-            select(func.count()).select_from(query.subquery())
-        ) or 0
+        total: int = (
+            await self.session.scalar(
+                select(func.count()).select_from(query.subquery())
+            )
+            or 0
+        )
         result = await self.session.execute(
             query.order_by(WhatsAppChannelRequestModel.created_at.desc())
             .offset((page - 1) * page_size)

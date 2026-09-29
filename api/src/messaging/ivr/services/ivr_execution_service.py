@@ -23,14 +23,16 @@ from core.security.policies.security_policies import check_portfolio_org_access
 from identity.users.schemas.user_session_schema import UserSession
 from messaging.campaigns.repository.campaign_repository import CampaignRepository
 from messaging.ivr.client.helena_client import HelenaClient
-from messaging.ivr.enums.ivr_enums import TERMINAL_EXECUTION_STATUSES, IvrExecutionStatus
+from messaging.ivr.enums.ivr_enums import (
+    TERMINAL_EXECUTION_STATUSES,
+    IvrExecutionStatus,
+)
 from messaging.ivr.models.ivr_execution_model import IvrExecutionModel
 from messaging.ivr.repository.ivr_execution_repository import IvrExecutionRepository
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 
 
 class IvrExecutionService:
-
     def __init__(
         self,
         execution_repo: IvrExecutionRepository,
@@ -56,7 +58,9 @@ class IvrExecutionService:
         if campaign is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Campaña no encontrada")
         portfolio = await self._portfolios.get_by_id(campaign.portfolio_id)
-        await check_portfolio_org_access(user_session, portfolio, PORTFOLIO_COMMUNICATIONS)
+        await check_portfolio_org_access(
+            user_session, portfolio, PORTFOLIO_COMMUNICATIONS
+        )
         return execution
 
     async def _authorize_campaign(
@@ -66,7 +70,9 @@ class IvrExecutionService:
         if campaign is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Campaña no encontrada")
         portfolio = await self._portfolios.get_by_id(campaign.portfolio_id)
-        await check_portfolio_org_access(user_session, portfolio, PORTFOLIO_COMMUNICATIONS)
+        await check_portfolio_org_access(
+            user_session, portfolio, PORTFOLIO_COMMUNICATIONS
+        )
 
     # ── Lectura ───────────────────────────────────────────────────────────────
 
@@ -82,9 +88,11 @@ class IvrExecutionService:
         execution = await self._authorize_execution(bulk_id, user_session)
         try:
             helena_status = await self._helena.queue_status(bulk_id=bulk_id)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             # El estado local sigue siendo útil aunque Helena no responda ahora.
-            logger.warning("[ivr_execution] queue_status falló bulk=%s: %s", bulk_id, exc)
+            logger.warning(
+                "[ivr_execution] queue_status falló bulk=%s: %s", bulk_id, exc
+            )
             helena_status = None
         return execution, helena_status
 
@@ -102,7 +110,9 @@ class IvrExecutionService:
         execution.status = IvrExecutionStatus.PAUSED
         return await self._executions.update(execution)
 
-    async def resume(self, bulk_id: str, user_session: UserSession) -> IvrExecutionModel:
+    async def resume(
+        self, bulk_id: str, user_session: UserSession
+    ) -> IvrExecutionModel:
         execution = await self._authorize_execution(bulk_id, user_session)
         self._require_not_terminal(execution, "reanudar")
 
@@ -114,7 +124,9 @@ class IvrExecutionService:
         execution.status = IvrExecutionStatus.RUNNING
         return await self._executions.update(execution)
 
-    async def cancel(self, bulk_id: str, user_session: UserSession) -> IvrExecutionModel:
+    async def cancel(
+        self, bulk_id: str, user_session: UserSession
+    ) -> IvrExecutionModel:
         """Irreversible en Helena: no hay operación inversa a `cancel`."""
         execution = await self._authorize_execution(bulk_id, user_session)
         self._require_not_terminal(execution, "cancelar")
@@ -176,10 +188,14 @@ class IvrExecutionService:
                 detail,
             )
             raise HTTPException(
-                status.HTTP_502_BAD_GATEWAY, f"Helena rechazó la solicitud de {action}: {detail or exc}"
+                status.HTTP_502_BAD_GATEWAY,
+                f"Helena rechazó la solicitud de {action}: {detail or exc}",
+            ) from exc
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.error(
+                "[ivr_execution] error al %s | bulk=%s error=%s", action, bulk_id, exc
             )
-        except Exception as exc:  # noqa: BLE001
-            logger.error("[ivr_execution] error al %s | bulk=%s error=%s", action, bulk_id, exc)
             raise HTTPException(
-                status.HTTP_502_BAD_GATEWAY, f"No se pudo comunicar con Helena para {action} el bulk."
-            )
+                status.HTTP_502_BAD_GATEWAY,
+                f"No se pudo comunicar con Helena para {action} el bulk.",
+            ) from exc

@@ -2,7 +2,6 @@ import uuid
 from typing import Optional, Sequence
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.documents.models.document_model import DocumentModel
 from app_platform.support.enums.support_enums import TicketDocumentCategory
@@ -21,9 +20,6 @@ class TicketDocumentRepository(SoftDeleteRepositoryBase[TicketDocumentModel]):
 
     model_class = TicketDocumentModel
 
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
-
     def _visible_join(self):
         return (
             select(TicketDocumentModel, DocumentModel)
@@ -40,8 +36,10 @@ class TicketDocumentRepository(SoftDeleteRepositoryBase[TicketDocumentModel]):
         query = self._visible_join().where(TicketDocumentModel.ticket_id == ticket_id)
         if category is not None:
             query = query.where(TicketDocumentModel.category == category)
-        result = await self.session.execute(query.order_by(DocumentModel.created_at.desc()))
-        return [(link, document) for link, document in result.all()]
+        result = await self.session.execute(
+            query.order_by(DocumentModel.created_at.desc())
+        )
+        return list(result.all())
 
     async def get_owned(
         self, ticket_id: uuid.UUID, document_id: uuid.UUID

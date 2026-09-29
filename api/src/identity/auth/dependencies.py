@@ -1,19 +1,33 @@
-﻿from typing import Annotated, Any, AsyncGenerator
+"""Dependencias de FastAPI para autenticación: token de sesión y AuthService."""
+
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config.logger import logger
 from core.database.database import get_main_session
-from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
-from identity.organizations.repository.organization_repository import OrganizationRepository
 from core.security.constants.cookie_constants import ACCESS_TOKEN_COOKIE
 from core.security.services.auth_token_service import AuthTokenService
-from identity.users.repository.permission_assignment_repository import PermissionAssignmentRepository
-from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
-from identity.users.repository.user_preferences_repository import UserPreferencesRepository
+from identity.organizations.repository.organization_membership_repository import (
+    OrganizationMembershipRepository,
+)
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
+from identity.users.repository.permission_assignment_repository import (
+    PermissionAssignmentRepository,
+)
+from identity.users.repository.role_assignment_repository import (
+    RoleAssignmentRepository,
+)
+from identity.users.repository.user_preferences_repository import (
+    UserPreferencesRepository,
+)
 from identity.users.repository.user_repository import UserRepository
 from identity.users.services.user_service import UserService
+
 from .services.auth_service import AuthService
 
 # auto_error=False: la cookie httpOnly tiene prioridad; el header Authorization
@@ -24,11 +38,13 @@ _token_service = AuthTokenService()
 
 def _get_token_payload(
     request: Request,
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)] = None,
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(_bearer)
+    ] = None,
 ) -> dict[str, Any]:
-    from core.config.logger import logger
-
-    token = request.cookies.get(ACCESS_TOKEN_COOKIE) or (credentials.credentials if credentials else None)
+    token = request.cookies.get(ACCESS_TOKEN_COOKIE) or (
+        credentials.credentials if credentials else None
+    )
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -40,12 +56,14 @@ def _get_token_payload(
         logger.debug("[auth] token_check | result=ok user_id=%s", payload.get("sub"))
         return payload
     except ValueError as error:
-        logger.debug("[auth] token_check | result=rejected error=%s", type(error).__name__)
+        logger.debug(
+            "[auth] token_check | result=rejected error=%s", type(error).__name__
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(error),
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from error
 
 
 def get_auth_service(

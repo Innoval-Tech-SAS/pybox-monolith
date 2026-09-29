@@ -2,18 +2,16 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.portfolios.models.portfolio_model import PortfolioModel
-from receivables.portfolios.models.portfolio_user_access_model import PortfolioUserAccessModel
+from receivables.portfolios.models.portfolio_user_access_model import (
+    PortfolioUserAccessModel,
+)
 
 
 class PortfolioRepository(SoftDeleteRepositoryBase[PortfolioModel]):
     model_class = PortfolioModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_by_ids(self, ids: list[uuid.UUID]) -> list[PortfolioModel]:
         if not ids:
@@ -26,16 +24,22 @@ class PortfolioRepository(SoftDeleteRepositoryBase[PortfolioModel]):
         )
         return list(result.scalars().all())
 
-    async def get_by_organization_id(self, organization_id: uuid.UUID) -> list[PortfolioModel]:
+    async def get_by_organization_id(
+        self, organization_id: uuid.UUID
+    ) -> list[PortfolioModel]:
         return await self.list_by_organization_id(organization_id)
 
-    async def get_active_by_organization_id(self, organization_id: uuid.UUID) -> list[PortfolioModel]:
+    async def get_active_by_organization_id(
+        self, organization_id: uuid.UUID
+    ) -> list[PortfolioModel]:
         return await self.list_by_organization_id(organization_id, is_active=True)
 
     async def get_active_all(self) -> list[PortfolioModel]:
         return await self.list_all(is_active=True)
 
-    async def count_active_inactive_by_organization_id(self, organization_id: uuid.UUID) -> tuple[int, int]:
+    async def count_active_inactive_by_organization_id(
+        self, organization_id: uuid.UUID
+    ) -> tuple[int, int]:
         """Retorna (activos, inactivos) en una sola query agregada."""
         result = await self.session.execute(
             select(PortfolioModel.is_active, func.count(PortfolioModel.id))
@@ -110,10 +114,12 @@ class PortfolioRepository(SoftDeleteRepositoryBase[PortfolioModel]):
         )
         return list(result.scalars().unique().all())
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> list[uuid.UUID]:
-        """Baja en cascada de los portafolios vivos de la organización con el sello de la
-        organización. Devuelve los ids afectados para que el service propague la cascada
-        a lo que cuelga de ellos (créditos, campañas)."""
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> list[uuid.UUID]:
+        """Baja en cascada de los portafolios vivos de la organización con el sello
+        de la organización. Devuelve los ids afectados para que el service
+        propague la cascada a lo que cuelga de ellos (créditos, campañas)."""
         result = await self.session.execute(
             select(PortfolioModel.id).where(
                 PortfolioModel.organization_id == organization_id,
@@ -121,12 +127,17 @@ class PortfolioRepository(SoftDeleteRepositoryBase[PortfolioModel]):
             )
         )
         portfolio_ids = list(result.scalars().all())
-        await self.soft_delete_where(PortfolioModel.id.in_(portfolio_ids), deleted_at=deleted_at)
+        await self.soft_delete_where(
+            PortfolioModel.id.in_(portfolio_ids), deleted_at=deleted_at
+        )
         return portfolio_ids
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> list[uuid.UUID]:
-        """Inverso de ``soft_delete_by_organization``: solo los portafolios que cayeron con
-        esa organización (mismo sello), no los que ya estaban eliminados antes."""
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> list[uuid.UUID]:
+        """Inverso de ``soft_delete_by_organization``: solo los portafolios que
+        cayeron con esa organización (mismo sello), no los que ya estaban
+        eliminados antes."""
         result = await self.session.execute(
             select(PortfolioModel.id).where(
                 PortfolioModel.organization_id == organization_id,
@@ -134,5 +145,7 @@ class PortfolioRepository(SoftDeleteRepositoryBase[PortfolioModel]):
             )
         )
         portfolio_ids = list(result.scalars().all())
-        await self.restore_where(PortfolioModel.id.in_(portfolio_ids), deleted_at=deleted_at)
+        await self.restore_where(
+            PortfolioModel.id.in_(portfolio_ids), deleted_at=deleted_at
+        )
         return portfolio_ids

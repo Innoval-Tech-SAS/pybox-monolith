@@ -1,9 +1,18 @@
+"""Endpoints de campañas de mensajería: alta, edición, control y catálogos."""
+
 import uuid
 from datetime import datetime
 from typing import Annotated
 
 from fastapi import Query, status
 
+from core.config.api_router import APIRouter
+from core.security.constants.permissions import ORG_CAMPAIGNS
+from core.security.dependencies import CurrentSession
+from core.security.policies.security_policies import (
+    require_admin_or_org,
+    require_global_admin,
+)
 from messaging.campaigns.constants.campaign_options import PERIODICITY_LABELS, WEEKDAYS
 from messaging.campaigns.dependencies import CampaignServiceDep
 from messaging.campaigns.enums.campaign_enums import Periodicity
@@ -15,34 +24,43 @@ from messaging.campaigns.schemas.campaign_schemas import (
     CampaignUpdateRequest,
 )
 from messaging.campaigns.services.automation_service import is_executing
-from core.config.api_router import APIRouter
-from core.security.constants.permissions import ORG_CAMPAIGNS
-from core.security.dependencies import CurrentSession
-from core.security.policies.security_policies import require_admin_or_org, require_global_admin
 
 router = APIRouter(prefix="/campaigns", tags=["Campañas"])
 
 
-@router.get("/periodicities", summary="Periodicidades disponibles para programar campañas")
-async def list_periodicities(session: CurrentSession) -> list[dict]:
+@router.get(
+    "/periodicities", summary="Periodicidades disponibles para programar campañas"
+)
+async def list_periodicities(_session: CurrentSession) -> list[dict]:
     return [{"value": p.value, "label": PERIODICITY_LABELS[p]} for p in Periodicity]
 
 
-@router.get("/weekdays", summary="Días de la semana disponibles para campañas recurrentes")
-async def list_weekdays(session: CurrentSession) -> list[dict]:
-    return [{"value": value, "label": label, "active": active} for value, label, active in WEEKDAYS]
+@router.get(
+    "/weekdays", summary="Días de la semana disponibles para campañas recurrentes"
+)
+async def list_weekdays(_session: CurrentSession) -> list[dict]:
+    return [
+        {"value": value, "label": label, "active": active}
+        for value, label, active in WEEKDAYS
+    ]
 
 
-@router.get("/", response_model=CampaignListResponse, summary="Listar campañas del portafolio")
+@router.get(
+    "/", response_model=CampaignListResponse, summary="Listar campañas del portafolio"
+)
 async def list_campaigns(
     session: CurrentSession,
     service: CampaignServiceDep,
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
-    search: Annotated[str | None, Query(description="Búsqueda por nombre de campaña")] = None,
+    search: Annotated[
+        str | None, Query(description="Búsqueda por nombre de campaña")
+    ] = None,
     sort: Annotated[str, Query(description="Campo de orden: name | status")] = "name",
-    sort_order: Annotated[str, Query(alias="sort_order", pattern="^(asc|desc)$")] = "asc",
+    sort_order: Annotated[
+        str, Query(alias="sort_order", pattern="^(asc|desc)$")
+    ] = "asc",
 ) -> CampaignListResponse:
     campaigns, total, recipient_counts = await service.list_by_org(
         portfolio_id, page, page_size, session, search, sort, sort_order
@@ -74,10 +92,14 @@ async def campaigns_timeline(
 ) -> CampaignTimelineResponse:
     require_admin_or_org(ORG_CAMPAIGNS, session, str(organization_id))
     items = await service.timeline(organization_id, range_start, range_end)
-    return CampaignTimelineResponse(items=items, range_start=range_start, range_end=range_end)
+    return CampaignTimelineResponse(
+        items=items, range_start=range_start, range_end=range_end
+    )
 
 
-@router.get("/{campaign_id}", response_model=CampaignResponse, summary="Obtener campaña por ID")
+@router.get(
+    "/{campaign_id}", response_model=CampaignResponse, summary="Obtener campaña por ID"
+)
 async def get_campaign(
     campaign_id: uuid.UUID,
     session: CurrentSession,
@@ -104,7 +126,9 @@ async def create_campaign(
     return CampaignResponse.model_validate(campaign)
 
 
-@router.patch("/{campaign_id}", response_model=CampaignResponse, summary="Actualizar campaña")
+@router.patch(
+    "/{campaign_id}", response_model=CampaignResponse, summary="Actualizar campaña"
+)
 async def update_campaign(
     campaign_id: uuid.UUID,
     body: CampaignUpdateRequest,
@@ -134,7 +158,10 @@ async def delete_campaign(
     "/{campaign_id}/restore",
     status_code=status.HTTP_200_OK,
     summary="Restaurar campaña",
-    description="Solo administradores globales — restaurar no es un poder de admin de organización.",
+    description=(
+        "Solo administradores globales — restaurar no es un poder de admin "
+        "de organización."
+    ),
 )
 async def restore_campaign(
     campaign_id: uuid.UUID,
@@ -146,7 +173,11 @@ async def restore_campaign(
     return CampaignResponse.model_validate(campaign)
 
 
-@router.post("/{campaign_id}/activate", response_model=CampaignResponse, summary="Activar campaña")
+@router.post(
+    "/{campaign_id}/activate",
+    response_model=CampaignResponse,
+    summary="Activar campaña",
+)
 async def activate_campaign(
     campaign_id: uuid.UUID,
     session: CurrentSession,
@@ -172,7 +203,9 @@ async def campaign_execution_status(
     }
 
 
-@router.post("/{campaign_id}/pause", response_model=CampaignResponse, summary="Pausar campaña")
+@router.post(
+    "/{campaign_id}/pause", response_model=CampaignResponse, summary="Pausar campaña"
+)
 async def pause_campaign(
     campaign_id: uuid.UUID,
     session: CurrentSession,

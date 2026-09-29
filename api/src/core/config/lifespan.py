@@ -1,3 +1,5 @@
+"""Ciclo de vida de la app: seeds iniciales, listeners y schedulers en background."""
+
 import asyncio
 import contextlib
 from contextlib import asynccontextmanager
@@ -7,6 +9,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+from billing.invoices.cron import create_billing_scheduler
 from core.config.logger import logger, silence_pool_shutdown_noise
 from core.database.database import db
 from core.database.schema_version import verify_schema_is_current
@@ -20,7 +23,6 @@ from core.seed import (
     seed_platform_gateway_credentials,
 )
 from core.storage.s3_object_storage import object_storage
-from billing.invoices.cron import create_billing_scheduler
 from messaging.campaigns.cron import create_campaigns_scheduler
 from messaging.ivr.cron import create_ivr_scheduler
 from messaging.ivr.services.helena_webhook_registrar import ensure_webhook_registered
@@ -39,11 +41,14 @@ _STARTUP_LOCK_KEY = 727501
 async def lifespan(_app: FastAPI):
     # ── Startup: datos base ──
     # El esquema es responsabilidad de Alembic, no de la app: esto solo ADVIERTE si las
-    # migraciones no están al día, no aborta el arranque. Ver core/database/schema_version.py.
+    # migraciones no están al día, no aborta el arranque. Ver
+    # core/database/schema_version.py.
     await verify_schema_is_current()
 
     async with db.engine.connect() as lock_conn:
-        await lock_conn.execute(text("SELECT pg_advisory_lock(:key)"), {"key": _STARTUP_LOCK_KEY})
+        await lock_conn.execute(
+            text("SELECT pg_advisory_lock(:key)"), {"key": _STARTUP_LOCK_KEY}
+        )
         try:
             # Antes que cualquier ruta: si el almacén no responde, es mejor fallar en el
             # arranque que dejar la subida de documentos rompiendo en caliente. Esto NO
@@ -66,17 +71,23 @@ async def lifespan(_app: FastAPI):
                 # Igual que verify_schema_is_current(): con la base sin migrar, esto
                 # revienta con UndefinedTableError. Se advierte y se sigue en vez de
                 # tumbar la app — ver core/database/schema_version.py.
-                logger.warning(f"[lifespan] seed de datos base incompleto (¿falta migrar el esquema?): {exc}")
+                logger.warning(
+                    "[lifespan] seed de datos base incompleto "
+                    "(¿falta migrar el esquema?): %s",
+                    exc,
+                )
         finally:
-            await lock_conn.execute(text("SELECT pg_advisory_unlock(:key)"), {"key": _STARTUP_LOCK_KEY})
+            await lock_conn.execute(
+                text("SELECT pg_advisory_unlock(:key)"), {"key": _STARTUP_LOCK_KEY}
+            )
 
     # ── Startup: listeners y schedulers ──
     expiry_task = await start_session_expiry_listener()
 
     # Igual que el bloque de seeds: create_daily_counters_scheduler() y
-    # run_all_nationalities() leen `paises`, así que con la base sin migrar revientan con
-    # UndefinedTableError. Se advierte y se sigue sin este scheduler en vez de tumbar la
-    # app; queda `None` y el shutdown más abajo lo saltea.
+    # run_all_nationalities() leen `paises`, así que con la base sin migrar revientan
+    # con UndefinedTableError. Se advierte y se sigue sin este scheduler en vez de
+    # tumbar la app; queda `None` y el shutdown más abajo lo saltea.
     daily_counters_scheduler = None
     try:
         async with db.get_session() as session:
@@ -85,7 +96,11 @@ async def lifespan(_app: FastAPI):
         async with db.get_session() as session:
             await DailyCountersService(session).run_all_nationalities()
     except SQLAlchemyError as exc:
-        logger.warning(f"[lifespan] contadores diarios no inicializados (¿falta migrar el esquema?): {exc}")
+        logger.warning(
+            "[lifespan] contadores diarios no inicializados "
+            "(¿falta migrar el esquema?): %s",
+            exc,
+        )
 
     campaigns_scheduler = create_campaigns_scheduler()
     campaigns_scheduler.start()

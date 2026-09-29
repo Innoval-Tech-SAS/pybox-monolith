@@ -1,4 +1,6 @@
-﻿from dataclasses import dataclass
+"""Configuración de conexión a Postgres leída desde variables de entorno."""
+
+from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
@@ -17,7 +19,8 @@ class DatabaseConfig:
     database_engine: str = get_or_throw("DB_ENGINE")
     database_driver: str = get_or_throw("DB_DRIVER")
     url_connection: str = (
-        f"{database_engine}+{database_driver}://{username}:{password}@{host}:{port}/{database_name}"
+        f"{database_engine}+{database_driver}://{username}:{password}"
+        f"@{host}:{port}/{database_name}"
     )
 
 

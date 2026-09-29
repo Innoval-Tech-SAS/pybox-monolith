@@ -2,17 +2,15 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from receivables.portfolios.models.portfolio_user_access_model import PortfolioUserAccessModel
+from receivables.portfolios.models.portfolio_user_access_model import (
+    PortfolioUserAccessModel,
+)
 
 
 class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccessModel]):
     model_class = PortfolioUserAccessModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_by_user_and_org(
         self, user_id: uuid.UUID, organization_id: uuid.UUID
@@ -62,7 +60,9 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
             PortfolioUserAccessModel.deleted_at.is_(None),
         ]
         if organization_id is not None:
-            conditions.append(PortfolioUserAccessModel.organization_id == organization_id)
+            conditions.append(
+                PortfolioUserAccessModel.organization_id == organization_id
+            )
 
         result = await self.session.execute(
             select(PortfolioUserAccessModel).where(*conditions)
@@ -81,7 +81,9 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
         )
         return list(result.scalars().all())
 
-    async def get_active_user_ids_for_portfolio(self, portfolio_id: uuid.UUID) -> list[uuid.UUID]:
+    async def get_active_user_ids_for_portfolio(
+        self, portfolio_id: uuid.UUID
+    ) -> list[uuid.UUID]:
         result = await self.session.execute(
             select(PortfolioUserAccessModel.user_id).where(
                 PortfolioUserAccessModel.portfolio_id == portfolio_id,
@@ -92,13 +94,18 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
         return list(result.scalars().all())
 
     async def count_active_users_for_portfolio(self, portfolio_id: uuid.UUID) -> int:
-        return await self.session.scalar(
-            select(func.count()).select_from(PortfolioUserAccessModel).where(
-                PortfolioUserAccessModel.portfolio_id == portfolio_id,
-                PortfolioUserAccessModel.is_active.is_(True),
-                PortfolioUserAccessModel.deleted_at.is_(None),
+        return (
+            await self.session.scalar(
+                select(func.count())
+                .select_from(PortfolioUserAccessModel)
+                .where(
+                    PortfolioUserAccessModel.portfolio_id == portfolio_id,
+                    PortfolioUserAccessModel.is_active.is_(True),
+                    PortfolioUserAccessModel.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
     async def check_active_access(
         self,
@@ -106,13 +113,27 @@ class PortfolioUserAccessRepository(SoftDeleteRepositoryBase[PortfolioUserAccess
         portfolio_id: uuid.UUID,
         organization_id: uuid.UUID | None = None,
     ) -> bool:
-        record = await self.get_by_user_and_portfolio(user_id, portfolio_id, organization_id)
+        record = await self.get_by_user_and_portfolio(
+            user_id, portfolio_id, organization_id
+        )
         return record is not None and record.is_active
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de los accesos de usuarios a portafolios de la organización con el sello de la organización."""
-        await self.soft_delete_where(PortfolioUserAccessModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de los accesos de usuarios a portafolios de la
+        organización con el sello de la organización."""
+        await self.soft_delete_where(
+            PortfolioUserAccessModel.organization_id == organization_id,
+            deleted_at=deleted_at,
+        )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
-        await self.restore_where(PortfolioUserAccessModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la
+        organización."""
+        await self.restore_where(
+            PortfolioUserAccessModel.organization_id == organization_id,
+            deleted_at=deleted_at,
+        )

@@ -1,9 +1,11 @@
+"""Adaptador de Bold: solo genera el hash de integridad para el widget de frontend."""
+
 from decimal import Decimal
 
-from core.tools.config_tools import get_or_throw
 from billing.bold.utils.bold_client import generate_integrity_hash
 from billing.gateways.base import ProviderPaymentLink
 from billing.invoices.enums.invoice_enums import PaymentProvider
+from core.tools.config_tools import get_or_throw
 
 
 def _to_bold_tax(tax_type: str, tax_rate: Decimal) -> str | None:
@@ -31,10 +33,10 @@ class BoldGateway:
         reference: str,
         amount: int,
         currency: str,
-        description: str,
+        _description: str,
         tax_type: str,
         tax_rate: Decimal,
-        payer_email: str,
+        _payer_email: str,
     ) -> ProviderPaymentLink:
         integrity_signature = generate_integrity_hash(reference, amount, currency)
         return ProviderPaymentLink(

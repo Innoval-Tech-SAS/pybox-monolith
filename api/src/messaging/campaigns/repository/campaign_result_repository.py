@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.campaigns.models.campaign_result_model import CampaignResultModel
@@ -9,9 +8,6 @@ from messaging.campaigns.models.campaign_result_model import CampaignResultModel
 
 class CampaignResultRepository(SoftDeleteRepositoryBase[CampaignResultModel]):
     model_class = CampaignResultModel
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
 
     async def create(
         self,
@@ -37,10 +33,22 @@ class CampaignResultRepository(SoftDeleteRepositoryBase[CampaignResultModel]):
         )
         return await self.add(result)
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de los resultados de campañas de la organización con el sello de la organización."""
-        await self.soft_delete_where(CampaignResultModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de los resultados de campañas de la
+        organización con el sello de la organización."""
+        await self.soft_delete_where(
+            CampaignResultModel.organization_id == organization_id,
+            deleted_at=deleted_at,
+        )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
-        await self.restore_where(CampaignResultModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó
+        con la organización."""
+        await self.restore_where(
+            CampaignResultModel.organization_id == organization_id,
+            deleted_at=deleted_at,
+        )

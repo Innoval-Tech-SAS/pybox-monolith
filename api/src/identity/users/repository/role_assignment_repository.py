@@ -1,19 +1,16 @@
-﻿import uuid
+import uuid
 from datetime import datetime
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
+
 from ..enums.user_enums import UserRole, UserScope
 from ..models.role_assignment_model import RoleAssignmentModel
 
 
 class RoleAssignmentRepository(SoftDeleteRepositoryBase[RoleAssignmentModel]):
     model_class = RoleAssignmentModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_by_user_id(self, user_id: uuid.UUID) -> list[RoleAssignmentModel]:
         result = await self.session.execute(
@@ -24,7 +21,9 @@ class RoleAssignmentRepository(SoftDeleteRepositoryBase[RoleAssignmentModel]):
         )
         return list(result.scalars().all())
 
-    async def get_pending_org_admin(self, user_id: uuid.UUID) -> RoleAssignmentModel | None:
+    async def get_pending_org_admin(
+        self, user_id: uuid.UUID
+    ) -> RoleAssignmentModel | None:
         result = await self.session.execute(
             select(RoleAssignmentModel).where(
                 RoleAssignmentModel.user_id == user_id,
@@ -36,7 +35,9 @@ class RoleAssignmentRepository(SoftDeleteRepositoryBase[RoleAssignmentModel]):
         )
         return result.scalar_one_or_none()
 
-    async def get_by_user_ids(self, user_ids: list[uuid.UUID]) -> list[RoleAssignmentModel]:
+    async def get_by_user_ids(
+        self, user_ids: list[uuid.UUID]
+    ) -> list[RoleAssignmentModel]:
         if not user_ids:
             return []
         result = await self.session.execute(
@@ -71,10 +72,21 @@ class RoleAssignmentRepository(SoftDeleteRepositoryBase[RoleAssignmentModel]):
         )
         return list(result.scalars().all())
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja de los roles que los usuarios tenían en la organización (misma cascada que
-        sus membresías): quien no tenga otro rol queda sin organización."""
-        await self.soft_delete_where(RoleAssignmentModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja de los roles que los usuarios tenían en la organización (misma
+        cascada que sus membresías): quien no tenga otro rol queda sin
+        organización."""
+        await self.soft_delete_where(
+            RoleAssignmentModel.organization_id == organization_id,
+            deleted_at=deleted_at,
+        )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        await self.restore_where(RoleAssignmentModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        await self.restore_where(
+            RoleAssignmentModel.organization_id == organization_id,
+            deleted_at=deleted_at,
+        )

@@ -1,3 +1,5 @@
+"""Adaptador de Mercado Pago vía Orders API en modo manual."""
+
 from decimal import Decimal
 
 from billing.gateways.base import ProviderPaymentLink
@@ -28,10 +30,10 @@ class MercadoPagoGateway:
         self,
         reference: str,
         amount: int,
-        currency: str,
+        _currency: str,
         description: str,
-        tax_type: str,
-        tax_rate: Decimal,
+        _tax_type: str,
+        _tax_rate: Decimal,
         payer_email: str,
     ) -> ProviderPaymentLink:
         # `currency` es parte de la firma compartida con BoldGateway pero la Orders API

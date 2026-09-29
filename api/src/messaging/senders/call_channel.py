@@ -1,3 +1,5 @@
+"""Adaptador de canal IVR: traduce la interfaz común de envío a un bulk de Helena."""
+
 from typing import Any
 
 from messaging.ivr.providers.helena_call_provider import HelenaCallProvider
@@ -17,13 +19,15 @@ class CallChannel:
         self._provider = provider
 
     async def send(
-        self, to: list[str], message: str, **kwargs: Any
+        self, to: list[str], _message: str, **kwargs: Any
     ) -> tuple[bool, dict[str, str] | None, str | None]:
         ivr_context: dict[str, Any] | None = kwargs.get("ivr_context")
         targets: list[dict[str, Any]] | None = kwargs.get("targets")
 
         if not ivr_context or not ivr_context.get("ivr_config"):
-            raise ValueError("Campaña IVR sin ivr_config: se requiere un flujo IVR configurado")
+            raise ValueError(
+                "Campaña IVR sin ivr_config: se requiere un flujo IVR configurado"
+            )
 
         # Fallback: si no llegan targets estructurados, arma phones desde `to`.
         if not targets:

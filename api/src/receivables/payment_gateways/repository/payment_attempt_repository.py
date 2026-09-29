@@ -1,19 +1,21 @@
 import uuid
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from receivables.payment_gateways.models.payment_attempt_model import CreditPaymentAttemptModel
+from receivables.payment_gateways.models.payment_attempt_model import (
+    CreditPaymentAttemptModel,
+)
 
 
-class CreditPaymentAttemptRepository(SoftDeleteRepositoryBase[CreditPaymentAttemptModel]):
+class CreditPaymentAttemptRepository(
+    SoftDeleteRepositoryBase[CreditPaymentAttemptModel]
+):
     model_class = CreditPaymentAttemptModel
 
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
-
-    async def get_latest_by_payment_id(self, payment_id: uuid.UUID) -> CreditPaymentAttemptModel | None:
+    async def get_latest_by_payment_id(
+        self, payment_id: uuid.UUID
+    ) -> CreditPaymentAttemptModel | None:
         result = await self.session.execute(
             select(CreditPaymentAttemptModel)
             .where(
@@ -41,7 +43,8 @@ class CreditPaymentAttemptRepository(SoftDeleteRepositoryBase[CreditPaymentAttem
         self, provider_transaction_id: str, *, for_update: bool = False
     ) -> CreditPaymentAttemptModel | None:
         query = select(CreditPaymentAttemptModel).where(
-            CreditPaymentAttemptModel.provider_transaction_id == provider_transaction_id,
+            CreditPaymentAttemptModel.provider_transaction_id
+            == provider_transaction_id,
             CreditPaymentAttemptModel.deleted_at.is_(None),
         )
         if for_update:

@@ -1,7 +1,6 @@
-﻿import uuid
+import uuid
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.payment_methods.models.payment_method_model import PaymentMethodModel
@@ -10,10 +9,9 @@ from receivables.payment_methods.models.payment_method_model import PaymentMetho
 class PaymentMethodRepository(SoftDeleteRepositoryBase[PaymentMethodModel]):
     model_class = PaymentMethodModel
 
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
-
-    async def get_by_organization_id(self, organization_id: uuid.UUID) -> list[PaymentMethodModel]:
+    async def get_by_organization_id(
+        self, organization_id: uuid.UUID
+    ) -> list[PaymentMethodModel]:
         result = await self.session.execute(
             select(PaymentMethodModel).where(
                 PaymentMethodModel.organization_id == organization_id,
@@ -22,7 +20,9 @@ class PaymentMethodRepository(SoftDeleteRepositoryBase[PaymentMethodModel]):
         )
         return list(result.scalars().all())
 
-    async def get_active_by_organization_id(self, organization_id: uuid.UUID) -> list[PaymentMethodModel]:
+    async def get_active_by_organization_id(
+        self, organization_id: uuid.UUID
+    ) -> list[PaymentMethodModel]:
         result = await self.session.execute(
             select(PaymentMethodModel).where(
                 PaymentMethodModel.organization_id == organization_id,

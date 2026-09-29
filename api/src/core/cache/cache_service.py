@@ -1,3 +1,5 @@
+"""Servicio de cache-aside genérico sobre Redis."""
+
 from collections.abc import Awaitable, Callable
 from typing import TypeVar
 

@@ -1,3 +1,6 @@
+"""Generación y ejecución de segmentos de cartera, con auditoría en almacenamiento."""
+
+import json
 import re
 import uuid
 from datetime import datetime, timezone
@@ -7,32 +10,50 @@ import polars as pl
 from fastapi import HTTPException, status
 from pydantic import TypeAdapter
 
-from core.cache.cache_service import cache_service
-from core.config.logger import logger
 from app_platform.documents.enums.document_enums import CSV_CONTENT_TYPE
 from app_platform.documents.services.document_service import DocumentService
-from receivables.portfolios.enums.portfolio_document_enums import PortfolioDocumentCategory
-from receivables.portfolios.models.portfolio_document_model import PortfolioDocumentModel
+from app_platform.schema_manager.services.dml_service import DmlService
+from core.cache.cache_service import cache_service
+from core.config.logger import logger
+from core.security.constants.permissions import (
+    PORTFOLIO_CLIENTS,
+    PORTFOLIO_COMMUNICATIONS,
+)
+from core.security.policies.security_policies import (
+    check_portfolio_org_access,
+    has_permission,
+)
+from identity.users.schemas.user_session_schema import UserSession
+from receivables.portfolios.enums.portfolio_document_enums import (
+    PortfolioDocumentCategory,
+)
+from receivables.portfolios.models.portfolio_document_model import (
+    PortfolioDocumentModel,
+)
 from receivables.portfolios.repository.portfolio_document_repository import (
     PORTFOLIO_DOCUMENT_STORAGE_DOMAIN,
     PortfolioDocumentRepository,
 )
-from core.security.constants.permissions import PORTFOLIO_CLIENTS, PORTFOLIO_COMMUNICATIONS
-from core.security.policies.security_policies import check_portfolio_org_access, has_permission
-from app_platform.schema_manager.services.dml_service import DmlService
-from identity.users.schemas.user_session_schema import UserSession
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 from receivables.segments.models.segment_execution_model import SegmentExecutionModel
 from receivables.segments.models.segment_model import SegmentModel
-from receivables.segments.repository.segment_execution_repository import SegmentExecutionRepository
+from receivables.segments.repository.segment_execution_repository import (
+    SegmentExecutionRepository,
+)
 from receivables.segments.repository.segment_repository import SegmentRepository
-from receivables.segments.schemas.segment_schemas import SegmentCreateRequest, SegmentExecuteRequest, SegmentResponse, SegmentUpdateRequest
+from receivables.segments.schemas.segment_schemas import (
+    SegmentCreateRequest,
+    SegmentExecuteRequest,
+    SegmentResponse,
+    SegmentUpdateRequest,
+)
 
-_segment_list_adapter: TypeAdapter[list[SegmentResponse]] = TypeAdapter(list[SegmentResponse])
+_segment_list_adapter: TypeAdapter[list[SegmentResponse]] = TypeAdapter(
+    list[SegmentResponse]
+)
 
 
 class SegmentService:
-
     def __init__(
         self,
         segment_repo: SegmentRepository,
@@ -47,13 +68,24 @@ class SegmentService:
         # El CSV lo guarda el modulo de documentos: aca solo se persiste el id.
         self._document_service = DocumentService(segment_repo.session)
         # La exportacion cuelga del portafolio via `documentos_portafolio`.
-        self._portfolio_document_repo = PortfolioDocumentRepository(segment_repo.session)
+        self._portfolio_document_repo = PortfolioDocumentRepository(
+            segment_repo.session
+        )
 
-    async def _check_portfolio_access(self, user_session: UserSession, portfolio_id: uuid.UUID) -> None:
+    async def _check_portfolio_access(
+        self, user_session: UserSession, portfolio_id: uuid.UUID
+    ) -> None:
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)
-        await check_portfolio_org_access(user_session, portfolio, PORTFOLIO_COMMUNICATIONS)
+        await check_portfolio_org_access(
+            user_session, portfolio, PORTFOLIO_COMMUNICATIONS
+        )
 
-    async def create(self, portfolio_id: uuid.UUID, data: SegmentCreateRequest, user_session: UserSession) -> SegmentModel:
+    async def create(
+        self,
+        portfolio_id: uuid.UUID,
+        data: SegmentCreateRequest,
+        user_session: UserSession,
+    ) -> SegmentModel:
         await self._check_portfolio_access(user_session, portfolio_id)
         segment = SegmentModel(
             name=data.name,
@@ -66,12 +98,18 @@ class SegmentService:
         return result
 
     async def list_by_org(
-        self, portfolio_id: uuid.UUID, page: int, page_size: int, user_session: UserSession
+        self,
+        portfolio_id: uuid.UUID,
+        page: int,
+        page_size: int,
+        user_session: UserSession,
     ) -> tuple[list[SegmentModel], int]:
         await self._check_portfolio_access(user_session, portfolio_id)
         return await self._segment_repo.get_by_portfolio(portfolio_id, page, page_size)
 
-    async def list_all_by_org(self, portfolio_id: uuid.UUID, user_session: UserSession) -> list[SegmentResponse]:
+    async def list_all_by_org(
+        self, portfolio_id: uuid.UUID, user_session: UserSession
+    ) -> list[SegmentResponse]:
         await self._check_portfolio_access(user_session, portfolio_id)
 
         async def _fetch() -> list[SegmentResponse]:
@@ -85,7 +123,9 @@ class SegmentService:
             ttl=120,
         )
 
-    async def get(self, segment_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession) -> SegmentModel:
+    async def get(
+        self, segment_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
+    ) -> SegmentModel:
         await self._check_portfolio_access(user_session, portfolio_id)
         segment = await self._segment_repo.get_by_id(segment_id)
         if not segment or segment.portfolio_id != portfolio_id:
@@ -93,7 +133,11 @@ class SegmentService:
         return segment
 
     async def update(
-        self, segment_id: uuid.UUID, portfolio_id: uuid.UUID, data: SegmentUpdateRequest, user_session: UserSession
+        self,
+        segment_id: uuid.UUID,
+        portfolio_id: uuid.UUID,
+        data: SegmentUpdateRequest,
+        user_session: UserSession,
     ) -> SegmentModel:
         segment = await self.get(segment_id, portfolio_id, user_session)
         if data.name is not None:
@@ -107,7 +151,9 @@ class SegmentService:
         await cache_service.bust_prefix(f"campaign:recipient-count:{segment_id}")
         return result
 
-    async def delete(self, segment_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession) -> None:
+    async def delete(
+        self, segment_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
+    ) -> None:
         segment = await self.get(segment_id, portfolio_id, user_session)
         await self._segment_repo.delete(segment)
         await cache_service.bust(f"segment:list:{portfolio_id}")
@@ -135,8 +181,9 @@ class SegmentService:
 
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)
         organization_ids = [portfolio.organization_id] if portfolio else []
-        # El documento del deudor se ve con portfolio.clients (DebtorService); ejecutar un
-        # segmento solo exige portfolio.communications, así que sin aquel permiso sale cifrado.
+        # El documento del deudor se ve con portfolio.clients (DebtorService);
+        # ejecutar un segmento solo exige portfolio.communications, así que sin
+        # aquel permiso sale cifrado.
         can_view_documents = portfolio is not None and has_permission(
             PORTFOLIO_CLIENTS, user_session, str(portfolio.organization_id)
         )
@@ -156,8 +203,15 @@ class SegmentService:
         )
 
         if not result["success"]:
-            logger.error("[SegmentService] Error ejecutando segmento %s: %s", segment_id, result["error"])
-            raise HTTPException(result.get("status_code", status.HTTP_500_INTERNAL_SERVER_ERROR), result["error"])
+            logger.error(
+                "[SegmentService] Error ejecutando segmento %s: %s",
+                segment_id,
+                result["error"],
+            )
+            raise HTTPException(
+                result.get("status_code", status.HTTP_500_INTERNAL_SERVER_ERROR),
+                result["error"],
+            )
 
         df = self._to_dataframe(result)
         file_name: str | None = None
@@ -198,7 +252,6 @@ class SegmentService:
         return await self._execution_repo.get_by_segment(segment_id)
 
     def _to_dataframe(self, result: dict[str, Any]) -> pl.DataFrame:
-        import json
         data = json.loads(result["data"])
         if not data:
             return pl.DataFrame(schema={col: pl.Utf8 for col in result["columns"]})

@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Optional, Sequence
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.documents.models.document_model import DocumentModel
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
@@ -29,9 +28,6 @@ class DebtorDocumentRepository(SoftDeleteRepositoryBase[DebtorDocumentModel]):
 
     model_class = DebtorDocumentModel
 
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
-
     def _visible_join(self):
         return (
             select(DebtorDocumentModel, DocumentModel)
@@ -48,8 +44,10 @@ class DebtorDocumentRepository(SoftDeleteRepositoryBase[DebtorDocumentModel]):
         query = self._visible_join().where(DebtorDocumentModel.debtor_id == debtor_id)
         if category is not None:
             query = query.where(DebtorDocumentModel.category == category)
-        result = await self.session.execute(query.order_by(DocumentModel.created_at.desc()))
-        return [(link, document) for link, document in result.all()]
+        result = await self.session.execute(
+            query.order_by(DocumentModel.created_at.desc())
+        )
+        return list(result.all())
 
     async def get_owned(
         self, debtor_id: uuid.UUID, document_id: uuid.UUID
@@ -85,14 +83,30 @@ class DebtorDocumentRepository(SoftDeleteRepositoryBase[DebtorDocumentModel]):
             )
         )
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de los documentos de los deudores de la organización con el sello de la organización."""
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de los documentos de los deudores de la organización con
+        el sello de la organización."""
         await self.soft_delete_where(
-            DebtorDocumentModel.debtor_id.in_(select(DebtorModel.id).where(DebtorModel.organization_id == organization_id)), deleted_at=deleted_at
+            DebtorDocumentModel.debtor_id.in_(
+                select(DebtorModel.id).where(
+                    DebtorModel.organization_id == organization_id
+                )
+            ),
+            deleted_at=deleted_at,
         )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la
+        organización."""
         await self.restore_where(
-            DebtorDocumentModel.debtor_id.in_(select(DebtorModel.id).where(DebtorModel.organization_id == organization_id)), deleted_at=deleted_at
+            DebtorDocumentModel.debtor_id.in_(
+                select(DebtorModel.id).where(
+                    DebtorModel.organization_id == organization_id
+                )
+            ),
+            deleted_at=deleted_at,
         )

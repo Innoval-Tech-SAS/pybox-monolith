@@ -2,17 +2,13 @@ import uuid
 from typing import Sequence
 
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from app_platform.notifications.models.notification_model import NotificationModel
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 
 
 class NotificationRepository(SoftDeleteRepositoryBase[NotificationModel]):
     model_class = NotificationModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_by_user_id(self, user_id: uuid.UUID) -> Sequence[NotificationModel]:
         result = await self.session.execute(
@@ -22,7 +18,9 @@ class NotificationRepository(SoftDeleteRepositoryBase[NotificationModel]):
         )
         return result.scalars().all()
 
-    async def get_by_id_and_user(self, notification_id: uuid.UUID, user_id: uuid.UUID) -> NotificationModel | None:
+    async def get_by_id_and_user(
+        self, notification_id: uuid.UUID, user_id: uuid.UUID
+    ) -> NotificationModel | None:
         result = await self.session.execute(
             select(NotificationModel).where(
                 NotificationModel.id == notification_id,

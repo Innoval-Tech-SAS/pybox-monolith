@@ -3,15 +3,16 @@ from datetime import datetime
 from typing import Optional, Sequence
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.documents.models.document_model import DocumentModel
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.credits.models.credit_model import CreditModel
-from receivables.judicial_notifications.models.judicial_notification_document_model import (
+from receivables.judicial_notifications.models.judicial_notification_document_model import (  # pylint: disable=line-too-long
     JudicialNotificationDocumentModel,
 )
-from receivables.judicial_notifications.models.judicial_notification_model import JudicialNotificationModel
+from receivables.judicial_notifications.models.judicial_notification_model import (
+    JudicialNotificationModel,
+)
 from receivables.portfolios.models.portfolio_model import PortfolioModel
 
 # Prefijo del dominio en la clave del objeto (`<dominio>/<dueno>/<uuid><ext>`).
@@ -29,9 +30,6 @@ class JudicialNotificationDocumentRepository(
     load. Sin filtro por categoría porque la tabla no tiene esa columna."""
 
     model_class = JudicialNotificationDocumentModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     def _visible_join(self):
         return (
@@ -51,10 +49,13 @@ class JudicialNotificationDocumentRepository(
     ) -> Sequence[tuple[JudicialNotificationDocumentModel, DocumentModel]]:
         result = await self.session.execute(
             self._visible_join()
-            .where(JudicialNotificationDocumentModel.judicial_notification_id == notification_id)
+            .where(
+                JudicialNotificationDocumentModel.judicial_notification_id
+                == notification_id
+            )
             .order_by(DocumentModel.created_at.desc())
         )
-        return [(link, document) for link, document in result.all()]
+        return list(result.all())
 
     async def list_by_notifications(
         self, notification_ids: Sequence[uuid.UUID]
@@ -66,11 +67,13 @@ class JudicialNotificationDocumentRepository(
         result = await self.session.execute(
             self._visible_join()
             .where(
-                JudicialNotificationDocumentModel.judicial_notification_id.in_(notification_ids)
+                JudicialNotificationDocumentModel.judicial_notification_id.in_(
+                    notification_ids
+                )
             )
             .order_by(DocumentModel.created_at.desc())
         )
-        return [(link, document) for link, document in result.all()]
+        return list(result.all())
 
     async def get_owned(
         self, notification_id: uuid.UUID, document_id: uuid.UUID
@@ -78,7 +81,8 @@ class JudicialNotificationDocumentRepository(
         row = (
             await self.session.execute(
                 self._visible_join().where(
-                    JudicialNotificationDocumentModel.judicial_notification_id == notification_id,
+                    JudicialNotificationDocumentModel.judicial_notification_id
+                    == notification_id,
                     JudicialNotificationDocumentModel.document_id == document_id,
                 )
             )
@@ -101,30 +105,46 @@ class JudicialNotificationDocumentRepository(
             )
         )
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de los adjuntos de notificaciones judiciales de la organización con el sello de la organización."""
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de los adjuntos de notificaciones judiciales de la
+        organización con el sello de la organización."""
         await self.soft_delete_where(
-            JudicialNotificationDocumentModel.judicial_notification_id.in_(select(JudicialNotificationModel.id).where(
-                JudicialNotificationModel.credit_id.in_(
-                    select(CreditModel.id).where(
-                        CreditModel.portfolio_id.in_(
-                            select(PortfolioModel.id).where(PortfolioModel.organization_id == organization_id)
+            JudicialNotificationDocumentModel.judicial_notification_id.in_(
+                select(JudicialNotificationModel.id).where(
+                    JudicialNotificationModel.credit_id.in_(
+                        select(CreditModel.id).where(
+                            CreditModel.portfolio_id.in_(
+                                select(PortfolioModel.id).where(
+                                    PortfolioModel.organization_id == organization_id
+                                )
+                            )
                         )
                     )
                 )
-            )), deleted_at=deleted_at
+            ),
+            deleted_at=deleted_at,
         )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la
+        organización."""
         await self.restore_where(
-            JudicialNotificationDocumentModel.judicial_notification_id.in_(select(JudicialNotificationModel.id).where(
-                JudicialNotificationModel.credit_id.in_(
-                    select(CreditModel.id).where(
-                        CreditModel.portfolio_id.in_(
-                            select(PortfolioModel.id).where(PortfolioModel.organization_id == organization_id)
+            JudicialNotificationDocumentModel.judicial_notification_id.in_(
+                select(JudicialNotificationModel.id).where(
+                    JudicialNotificationModel.credit_id.in_(
+                        select(CreditModel.id).where(
+                            CreditModel.portfolio_id.in_(
+                                select(PortfolioModel.id).where(
+                                    PortfolioModel.organization_id == organization_id
+                                )
+                            )
                         )
                     )
                 )
-            )), deleted_at=deleted_at
+            ),
+            deleted_at=deleted_at,
         )

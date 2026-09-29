@@ -1,14 +1,23 @@
+"""Base común de los providers de 360NRS (SMS/Email): request HTTP autenticado."""
+
 import httpx
 
 from core.config.logger import logger
 
 
 class NRS360BaseProvider:
-    # Un `httpx.AsyncClient` por request abre/cierra conexión TLS cada vez; en un
-    # envío masivo (campañas) eso se vuelve el cuello de botella dominante. Las
-    # subclases (singletons vía __new__) crean UN solo `self._http` reutilizado
-    # entre llamadas — ver NRS360EmailProvider/NRS360SmsProvider.
+    """Request HTTP autenticado contra la API de 360NRS.
+
+    Un `httpx.AsyncClient` por request abre/cierra conexión TLS cada vez; en
+    un envío masivo (campañas) eso se vuelve el cuello de botella dominante.
+    Las subclases (singletons vía `__new__`) crean un único `_http`
+    reutilizado entre llamadas, y `_token` con la credencial ya resuelta —
+    ver `NRS360EmailProvider`/`NRS360SmsProvider`.
+    """
+
     _TIMEOUT_SECONDS = 10
+    _http: httpx.AsyncClient
+    _token: str
 
     async def _request(
         self,
@@ -38,7 +47,10 @@ class NRS360BaseProvider:
             params["beforeDate"] = before_date
         try:
             response = await self._request(
-                "GET", f"/sendings/{sending_id}/reports/events", self._token, params=params
+                "GET",
+                f"/sendings/{sending_id}/reports/events",
+                self._token,
+                params=params,
             )
             return response.text
         except httpx.HTTPStatusError as exc:
@@ -48,7 +60,6 @@ class NRS360BaseProvider:
                 exc.response.status_code,
             )
             return ""
-
 
     @property
     def url(self) -> str:
