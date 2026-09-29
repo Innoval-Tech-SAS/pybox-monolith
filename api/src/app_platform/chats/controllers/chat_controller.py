@@ -2,7 +2,7 @@ import asyncio
 import json
 import uuid
 
-from fastapi import HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 
 from app_platform.chats.dependencies import ChatServiceDep
 from app_platform.chats.websocket.connection_manager import ws_manager
@@ -16,9 +16,9 @@ _IDLE_TIMEOUT_SECONDS = 1800
 
 
 @router.websocket("/ws")
-async def chat_ws(ws: WebSocket, service: ChatServiceDep, token: str | None = Query(default=None)):
+async def chat_ws(ws: WebSocket, service: ChatServiceDep):
     try:
-        session = await get_ws_session(ws, token)
+        session = await get_ws_session(ws)
     except HTTPException:
         await ws.close(code=1008)
         return

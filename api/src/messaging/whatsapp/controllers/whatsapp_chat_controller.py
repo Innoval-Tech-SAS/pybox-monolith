@@ -73,9 +73,9 @@ async def get_whatsapp_chat_details(
 
 
 @router.websocket("/ws")
-async def whatsapp_chat_ws(ws: WebSocket, service: WhatsAppChatServiceDep, token: str | None = Query(default=None)):
+async def whatsapp_chat_ws(ws: WebSocket, service: WhatsAppChatServiceDep):
     try:
-        session = await get_ws_session(ws, token)
+        session = await get_ws_session(ws)
     except HTTPException:
         await ws.close(code=1008)
         return
