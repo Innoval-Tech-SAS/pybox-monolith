@@ -1,3 +1,5 @@
+"""Crea o actualiza el catálogo de países soportados y sus tipos de documento."""
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -1,3 +1,5 @@
+"""Cifrado simétrico (AES-GCM) para datos sensibles en reposo, con versión de clave."""
+
 from __future__ import annotations
 
 import base64

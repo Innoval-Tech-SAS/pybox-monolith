@@ -1,3 +1,5 @@
+"""Configuración de conexión al almacén de objetos (S3/SeaweedFS)."""
+
 from dataclasses import dataclass, field
 
 from core.tools.config_tools import get_or_default, get_or_throw

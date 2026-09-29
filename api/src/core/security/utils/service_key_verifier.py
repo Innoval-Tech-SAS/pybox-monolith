@@ -1,3 +1,5 @@
+"""Verificación de la llave de servicio con la que n8n llama a endpoints internos."""
+
 import hmac
 
 from core.config.logger import logger

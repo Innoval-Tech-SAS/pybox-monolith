@@ -1,3 +1,5 @@
+"""Middleware que loguea método, path, status y duración de cada request."""
+
 import time
 
 from fastapi import Request
@@ -22,9 +24,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         level = (
             logger.error
             if response.status_code >= 500
-            else logger.warning
-            if response.status_code >= 400
-            else logger.info
+            else logger.warning if response.status_code >= 400 else logger.info
         )
         level(
             "← %d %s %s (%dms)",

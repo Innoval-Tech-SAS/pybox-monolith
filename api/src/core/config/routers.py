@@ -1,3 +1,5 @@
+"""Registro central de todos los routers de la API bajo el prefijo /api/v1."""
+
 from fastapi import FastAPI
 
 from app_platform.branding.controllers.platform_branding_controller import (

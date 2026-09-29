@@ -1,3 +1,5 @@
+"""Crea o actualiza el catálogo de permisos base y sus asignaciones por rol."""
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 

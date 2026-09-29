@@ -1,3 +1,5 @@
+"""Traducción de nombres de campo y tipos de error de Pydantic a mensajes en español."""
+
 FIELD_NAMES: dict[str, str] = {
     "email": "correo electrónico",
     "password": "contraseña",

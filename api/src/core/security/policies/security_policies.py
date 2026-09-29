@@ -1,3 +1,5 @@
+"""Policies de autorización: quién puede ver/gestionar qué según scope y ownership."""
+
 import uuid
 from typing import Awaitable, Callable, Protocol
 

@@ -1,3 +1,5 @@
+"""Hashing y verificación de contraseñas con Argon2, con rehash transparente."""
+
 from __future__ import annotations
 
 import base64

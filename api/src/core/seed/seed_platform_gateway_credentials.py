@@ -1,3 +1,5 @@
+"""Crea las credenciales de pasarela de pago de la plataforma desde el entorno."""
+
 import os
 
 from sqlalchemy import select

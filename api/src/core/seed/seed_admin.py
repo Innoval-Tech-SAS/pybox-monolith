@@ -1,3 +1,5 @@
+"""Crea el usuario admin inicial (global) si todavía no existe ninguno."""
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 

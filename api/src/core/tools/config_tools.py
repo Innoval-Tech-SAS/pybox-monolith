@@ -1,3 +1,5 @@
+"""Lectura de variables de entorno, obligatorias u opcionales con default."""
+
 import os
 
 

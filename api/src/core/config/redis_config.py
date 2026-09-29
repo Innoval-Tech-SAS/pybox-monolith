@@ -1,3 +1,5 @@
+"""Configuración de conexión a Redis leída desde variables de entorno."""
+
 from dataclasses import dataclass, field
 from urllib.parse import quote
 

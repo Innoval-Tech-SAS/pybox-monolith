@@ -1,3 +1,5 @@
+"""Clientes de Redis: get/set con TTL, pub/sub, y la fábrica que los instancia."""
+
 import json
 from typing import Any, AsyncGenerator, Type, TypeVar
 

@@ -1,3 +1,5 @@
+"""Validador de fortaleza de contraseña usado por los schemas de auth."""
+
 import re
 
 MIN_LENGTH = 8

@@ -1,3 +1,5 @@
+"""Reexporta los seeds de datos base que corre el lifespan al arrancar la app."""
+
 from core.seed.seed_admin import seed_admin
 from core.seed.seed_channels import seed_channels
 from core.seed.seed_countries import seed_countries

@@ -1,3 +1,5 @@
+"""Crea o actualiza los canales de mensajería base (SMS, email, IVR, WhatsApp)."""
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 

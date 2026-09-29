@@ -1,3 +1,5 @@
+"""Set/clear de las cookies httpOnly de acceso y refresh."""
+
 from fastapi import Response
 
 from core.security.constants.cookie_constants import (

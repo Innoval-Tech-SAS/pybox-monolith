@@ -1,3 +1,5 @@
+"""Rate limiting por IP para endpoints públicos sensibles a fuerza bruta."""
+
 from fastapi import HTTPException, Request, status
 
 from core.database.redis import redis_client

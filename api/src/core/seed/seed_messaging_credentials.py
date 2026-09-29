@@ -1,3 +1,5 @@
+"""Crea las credenciales de mensajería globales a partir de variables de entorno."""
+
 import os
 
 from sqlalchemy import select

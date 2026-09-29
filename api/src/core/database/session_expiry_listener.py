@@ -1,3 +1,5 @@
+"""Escucha los eventos de expiración de sesión en Redis y cierra la sesión."""
+
 import asyncio
 import uuid
 

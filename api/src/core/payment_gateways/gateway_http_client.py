@@ -1,3 +1,5 @@
+"""Cliente HTTP base compartido por los adaptadores de pasarelas de pago."""
+
 import httpx
 
 from core.config.logger import logger

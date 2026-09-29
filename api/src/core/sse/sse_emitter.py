@@ -1,3 +1,5 @@
+"""Fan-out de eventos Server-Sent Events por usuario, en memoria del proceso."""
+
 import asyncio
 import json
 import uuid

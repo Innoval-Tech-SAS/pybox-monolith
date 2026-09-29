@@ -1,3 +1,5 @@
+"""Catálogo de claves de permisos granulares usadas por la UI y las policies."""
+
 # Org card permissions — activan módulos al entrar a una organización
 ORG_PORTFOLIOS = "org.portfolios"
 ORG_PAYMENT_METHODS = "org.payment_methods"

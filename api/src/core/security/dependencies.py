@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para resolver la sesión (cookie/SSE/WebSocket) y el MFA."""
+
 import uuid
 from typing import Annotated
 

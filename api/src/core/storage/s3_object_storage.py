@@ -1,3 +1,5 @@
+"""Implementación de ObjectStorage sobre la API S3 (SeaweedFS en este proyecto)."""
+
 from contextlib import AsyncExitStack
 from typing import Any, Optional
 

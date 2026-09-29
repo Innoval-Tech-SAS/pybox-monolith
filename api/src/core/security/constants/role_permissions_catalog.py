@@ -1,3 +1,5 @@
+"""Mapeo de rol -> conjunto de permisos base que ese rol otorga por defecto."""
+
 from core.security.constants.permissions import (
     MANAGE_WHATSAPP_CHATS,
     ORG_BILLING,
