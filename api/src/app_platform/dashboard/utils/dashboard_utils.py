@@ -1,3 +1,5 @@
+"""Helper de periodos (año/mes) usado por las agregaciones del dashboard."""
+
 from datetime import datetime, timezone
 
 

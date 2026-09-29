@@ -1,3 +1,5 @@
+"""Acceso a datos de los mensajes de un ticket de soporte."""
+
 import uuid
 from typing import Sequence
 

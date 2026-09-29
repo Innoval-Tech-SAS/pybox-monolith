@@ -1,3 +1,5 @@
+"""Gestión (lectura/reemplazo) del logo global de la plataforma."""
+
 import uuid
 
 from fastapi import HTTPException, Response, status

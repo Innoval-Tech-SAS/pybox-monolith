@@ -1,3 +1,5 @@
+"""Subida, descarga y borrado de documentos contra el almacén de objetos."""
+
 import uuid
 from typing import Optional
 from urllib.parse import quote

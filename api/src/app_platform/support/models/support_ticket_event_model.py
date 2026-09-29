@@ -1,3 +1,5 @@
+"""Evento del historial de un ticket de soporte (cambio de estado, asignación)."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, String

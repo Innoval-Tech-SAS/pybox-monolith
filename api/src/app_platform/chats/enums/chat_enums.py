@@ -1,3 +1,5 @@
+"""Tipo de chat (directo/grupo) y rol de un miembro dentro de un chat grupal."""
+
 from enum import IntEnum
 
 

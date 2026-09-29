@@ -1,3 +1,5 @@
+"""Endpoints del dashboard de organización: estadísticas y envíos mensuales."""
+
 import uuid
 from typing import Annotated
 

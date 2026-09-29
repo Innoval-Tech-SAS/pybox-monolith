@@ -1,3 +1,5 @@
+"""Nombre de archivo, content-type y clave de objeto para documentos subidos."""
+
 import hashlib
 import os
 import re

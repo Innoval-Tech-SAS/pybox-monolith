@@ -1,3 +1,5 @@
+"""Mensaje intercambiado dentro de un ticket de soporte."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, Text

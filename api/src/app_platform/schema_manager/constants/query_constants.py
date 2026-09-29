@@ -1,3 +1,5 @@
+"""Constantes de validación de queries dinámicas: identificadores y operadores."""
+
 import re
 
 IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")

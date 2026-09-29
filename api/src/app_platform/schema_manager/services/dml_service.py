@@ -1,3 +1,5 @@
+"""DML dinámico administrativo: queries genéricas con joins/filtros/agregaciones."""
+
 import json
 import uuid
 from typing import Any, Sequence

@@ -1,3 +1,5 @@
+"""Acceso a datos de los documentos adjuntos a un ticket de soporte."""
+
 import uuid
 from typing import Optional, Sequence
 

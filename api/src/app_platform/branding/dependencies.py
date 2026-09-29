@@ -1,3 +1,5 @@
+"""Dependencia de FastAPI para inyectar el PlatformBrandingService."""
+
 from typing import Annotated
 
 from fastapi import Depends

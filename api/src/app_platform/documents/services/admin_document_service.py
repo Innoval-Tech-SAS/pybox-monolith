@@ -1,3 +1,5 @@
+"""Papelera global de documentos: listado y restauración a través de dominios."""
+
 import uuid
 from datetime import datetime, timezone
 from typing import Sequence

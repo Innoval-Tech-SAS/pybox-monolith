@@ -1,3 +1,5 @@
+"""Acceso a datos de la tabla base de metadatos de archivo (sin ownership)."""
+
 import uuid
 from datetime import datetime
 from typing import Optional

@@ -1,3 +1,5 @@
+"""Listado de países y tipos de documento en el formato que consume el frontend."""
+
 from app_platform.countries.enums.country_enums import DocumentScope
 from app_platform.countries.repository.country_repository import CountryRepository
 from app_platform.countries.schemas.countries_schemas import (

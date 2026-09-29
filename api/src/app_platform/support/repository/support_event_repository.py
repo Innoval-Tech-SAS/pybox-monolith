@@ -1,3 +1,5 @@
+"""Acceso a datos del historial de eventos de un ticket de soporte."""
+
 import uuid
 from typing import Sequence
 

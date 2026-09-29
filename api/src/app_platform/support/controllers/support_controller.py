@@ -1,3 +1,5 @@
+"""Endpoints de tickets de soporte: creación, mensajes, resolución y adjuntos."""
+
 import uuid
 from typing import Annotated
 

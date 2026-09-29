@@ -1,3 +1,5 @@
+"""Schemas de respuesta del dashboard de organización."""
+
 import uuid
 
 from pydantic import Field

@@ -1,3 +1,5 @@
+"""Acceso a datos de mensajes de chat y su estado de lectura."""
+
 import uuid
 from datetime import datetime
 

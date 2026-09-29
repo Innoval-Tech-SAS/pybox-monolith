@@ -1,3 +1,5 @@
+"""Acceso a datos de tickets de soporte, con los filtros de acceso por scope."""
+
 import uuid
 from typing import TYPE_CHECKING, Sequence
 

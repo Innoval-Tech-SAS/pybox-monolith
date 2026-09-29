@@ -1,3 +1,5 @@
+"""Metadatos de un archivo guardado en el almacén de objetos."""
+
 import uuid
 
 from sqlalchemy import BigInteger, ForeignKey, String, UniqueConstraint

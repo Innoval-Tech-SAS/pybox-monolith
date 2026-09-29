@@ -1,3 +1,5 @@
+"""Tipos, estados, prioridad y categorías de los tickets de soporte."""
+
 from enum import StrEnum
 
 

@@ -1,3 +1,5 @@
+"""Lectura de un archivo subido con corte temprano al superar el tamaño máximo."""
+
 from fastapi import HTTPException, UploadFile, status
 
 

@@ -1,3 +1,5 @@
+"""Schemas de catálogo de países y tipos de documento."""
+
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema

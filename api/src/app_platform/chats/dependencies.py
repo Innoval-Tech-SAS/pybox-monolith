@@ -1,3 +1,5 @@
+"""Dependencia de FastAPI para inyectar el ChatService con sus repositories."""
+
 from typing import Annotated
 
 from fastapi import Depends

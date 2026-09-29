@@ -1,3 +1,5 @@
+"""Endpoints de notificaciones: listado, marcar leídas y stream SSE en vivo."""
+
 import asyncio
 import uuid
 

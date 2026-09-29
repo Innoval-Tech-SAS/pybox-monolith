@@ -1,3 +1,5 @@
+"""Inspección administrativa del esquema real vía information_schema/pg_catalog."""
+
 from typing import Any
 
 from sqlalchemy import text

@@ -1,3 +1,5 @@
+"""Resolución de fechas relativas (@now, semana/mes actual) para filtros dinámicos."""
+
 import re
 from datetime import date, datetime, timedelta, timezone
 from typing import Any

@@ -1,3 +1,5 @@
+"""Endpoints de chats: REST para historial/mensajes y WebSocket en tiempo real."""
+
 import asyncio
 import json
 import uuid

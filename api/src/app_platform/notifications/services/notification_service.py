@@ -1,3 +1,5 @@
+"""Creación, listado y marcado de notificaciones, con push en vivo por SSE."""
+
 import uuid
 from typing import Any
 

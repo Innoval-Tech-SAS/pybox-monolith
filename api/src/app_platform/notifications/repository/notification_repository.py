@@ -1,3 +1,5 @@
+"""Acceso a datos de las notificaciones in-app de un usuario."""
+
 import uuid
 from typing import Sequence
 

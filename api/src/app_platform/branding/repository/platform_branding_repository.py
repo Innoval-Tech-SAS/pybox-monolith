@@ -1,3 +1,5 @@
+"""Acceso a datos de la configuración de marca global (fila única)."""
+
 from typing import Optional
 
 from sqlalchemy import select

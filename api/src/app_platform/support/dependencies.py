@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para SupportService y el filtro de acceso del usuario."""
+
 import uuid
 from datetime import datetime
 from typing import Annotated

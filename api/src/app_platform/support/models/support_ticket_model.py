@@ -1,3 +1,5 @@
+"""Ticket de soporte de una organización o usuario global."""
+
 import uuid
 from datetime import datetime
 

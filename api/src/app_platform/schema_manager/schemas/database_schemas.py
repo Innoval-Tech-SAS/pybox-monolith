@@ -1,3 +1,5 @@
+"""Schemas de DDL/DML dinámico: creación/alteración de tablas y queries genéricas."""
+
 from enum import Enum
 from typing import Any
 

@@ -1,3 +1,5 @@
+"""Acceso a datos de chats y sus miembros."""
+
 import uuid
 from datetime import datetime
 

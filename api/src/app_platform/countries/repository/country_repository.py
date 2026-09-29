@@ -1,3 +1,5 @@
+"""Acceso a datos de países y sus tipos de documento."""
+
 from sqlalchemy import select
 
 from app_platform.countries.enums.country_enums import DocumentScope

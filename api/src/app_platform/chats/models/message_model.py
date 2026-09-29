@@ -1,3 +1,5 @@
+"""Mensaje enviado dentro de un chat."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, Text

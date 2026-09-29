@@ -1,3 +1,5 @@
+"""Construcción y validación de fragmentos de DDL (columnas, tipos, defaults)."""
+
 from app_platform.schema_manager.constants.ddl_constants import (
     NUMERIC_DEFAULT_RE,
     SAFE_DEFAULT_KEYWORDS,

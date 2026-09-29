@@ -1,3 +1,5 @@
+"""Endpoints de catálogo de países y tipos de documento."""
+
 from app_platform.countries.dependencies import CountryServiceDep
 from app_platform.countries.schemas.countries_schemas import (
     DocumentTypesResponse,

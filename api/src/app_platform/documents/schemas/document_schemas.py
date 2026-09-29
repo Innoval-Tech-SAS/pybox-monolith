@@ -1,3 +1,5 @@
+"""Schemas de documentos y sus categorías por dominio."""
+
 import uuid
 from datetime import datetime
 

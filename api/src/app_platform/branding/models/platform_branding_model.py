@@ -1,3 +1,5 @@
+"""Configuración de marca global de la plataforma (fila única)."""
+
 import uuid
 
 from sqlalchemy import CheckConstraint, ForeignKey, SmallInteger

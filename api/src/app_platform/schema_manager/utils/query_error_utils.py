@@ -1,3 +1,5 @@
+"""Traduce errores de Postgres a mensajes seguros para el cliente (sin filtrar SQL)."""
+
 from sqlalchemy.exc import DBAPIError
 
 from app_platform.schema_manager.constants.query_constants import (

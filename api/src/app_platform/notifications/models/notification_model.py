@@ -1,3 +1,5 @@
+"""Notificación in-app dirigida a un usuario."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String

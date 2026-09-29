@@ -1,3 +1,5 @@
+"""Schemas de tickets de soporte: creación, mensajes, filtros y respuesta."""
+
 import uuid
 from dataclasses import dataclass
 from datetime import datetime

@@ -1,3 +1,5 @@
+"""Constantes de validación para DDL dinámico (defaults seguros, regex numérica)."""
+
 import re
 
 SAFE_DEFAULT_KEYWORDS = {

@@ -1,3 +1,5 @@
+"""Registro en memoria de las conexiones WebSocket activas de chat por usuario."""
+
 import uuid
 from collections import defaultdict
 

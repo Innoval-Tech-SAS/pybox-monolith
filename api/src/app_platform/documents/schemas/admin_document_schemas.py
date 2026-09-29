@@ -1,3 +1,5 @@
+"""Schemas de la papelera global de documentos administrada por Admin Global."""
+
 import uuid
 from datetime import datetime
 from enum import StrEnum

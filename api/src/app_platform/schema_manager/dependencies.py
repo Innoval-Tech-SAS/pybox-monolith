@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar DdlService, DmlService e InspectorService."""
+
 from typing import Annotated
 
 from fastapi import Depends

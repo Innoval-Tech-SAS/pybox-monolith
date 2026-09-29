@@ -1,3 +1,5 @@
+"""Agregados de estadísticas y tendencia de envíos para el dashboard de organización."""
+
 import uuid
 from datetime import datetime, timezone
 

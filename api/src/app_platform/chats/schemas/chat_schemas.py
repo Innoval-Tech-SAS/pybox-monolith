@@ -1,3 +1,5 @@
+"""Schemas de chats, miembros y mensajes."""
+
 import uuid
 from datetime import datetime
 

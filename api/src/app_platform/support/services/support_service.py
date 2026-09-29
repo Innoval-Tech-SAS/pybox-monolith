@@ -1,3 +1,5 @@
+"""Ciclo de vida de los tickets de soporte: alta, mensajes, resolución y adjuntos."""
+
 import os
 import re
 import uuid

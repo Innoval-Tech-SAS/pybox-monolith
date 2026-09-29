@@ -1,3 +1,5 @@
+"""Construcción de SQL dinámico: literales, columnas cifradas y agregaciones."""
+
 import json
 from datetime import date, datetime
 from decimal import Decimal

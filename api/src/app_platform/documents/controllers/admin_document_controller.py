@@ -1,3 +1,5 @@
+"""Endpoints admin de la papelera global de documentos (todos los dominios)."""
+
 import uuid
 
 from fastapi import status

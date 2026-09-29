@@ -1,3 +1,5 @@
+"""DDL dinámico administrativo: crear/alterar bases de datos y tablas."""
+
 from typing import Any
 
 from sqlalchemy import text

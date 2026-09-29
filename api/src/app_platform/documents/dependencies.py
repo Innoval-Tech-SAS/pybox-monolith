@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar DocumentService y AdminDocumentService."""
+
 from typing import Annotated
 
 from fastapi import Depends

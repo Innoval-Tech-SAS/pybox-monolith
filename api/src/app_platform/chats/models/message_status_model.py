@@ -1,3 +1,5 @@
+"""Estado de lectura de un mensaje por cada miembro del chat."""
+
 import uuid
 from datetime import datetime
 

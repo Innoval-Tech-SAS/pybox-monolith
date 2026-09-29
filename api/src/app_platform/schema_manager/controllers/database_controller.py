@@ -1,3 +1,5 @@
+"""Endpoints admin de DDL/DML dinámico sobre bases de datos gestionadas."""
+
 from fastapi import HTTPException, status
 
 from app_platform.schema_manager.dependencies import (

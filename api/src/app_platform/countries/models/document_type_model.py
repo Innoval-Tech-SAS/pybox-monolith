@@ -1,3 +1,5 @@
+"""Catálogo de códigos de tipo de documento (persona y organización)."""
+
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column
 

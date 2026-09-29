@@ -1,3 +1,5 @@
+"""Schema de respuesta de la marca global de la plataforma."""
+
 import uuid
 
 from pydantic import Field, computed_field

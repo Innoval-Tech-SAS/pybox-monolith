@@ -1,3 +1,5 @@
+"""Endpoints de la marca global de la plataforma (logo público)."""
+
 import uuid
 from typing import Annotated
 

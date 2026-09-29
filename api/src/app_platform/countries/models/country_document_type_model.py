@@ -1,3 +1,5 @@
+"""Relación país-tipo de documento y el alcance en que aplica."""
+
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column

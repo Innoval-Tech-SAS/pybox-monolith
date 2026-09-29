@@ -1,3 +1,5 @@
+"""Schema de una notificación in-app."""
+
 import uuid
 from datetime import datetime
 from typing import Any

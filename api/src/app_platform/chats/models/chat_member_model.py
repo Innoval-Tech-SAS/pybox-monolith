@@ -1,3 +1,5 @@
+"""Membresía de un usuario en un chat, con su rol y estado de lectura."""
+
 import uuid
 from datetime import datetime
 

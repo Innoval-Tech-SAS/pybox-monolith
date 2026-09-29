@@ -1,3 +1,5 @@
+"""Relación entre un documento y el ticket de soporte al que pertenece."""
+
 import uuid
 
 from sqlalchemy import ForeignKey
