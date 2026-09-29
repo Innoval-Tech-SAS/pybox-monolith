@@ -1,3 +1,5 @@
+"""Endpoints de reportes de cartera: alta, edición y ejecución dinámica."""
+
 import uuid
 from typing import Annotated
 

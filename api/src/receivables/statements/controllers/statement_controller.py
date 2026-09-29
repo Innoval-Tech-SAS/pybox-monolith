@@ -1,3 +1,5 @@
+"""Endpoints de extractos de un deudor: generación y listado."""
+
 import uuid
 from typing import Annotated
 

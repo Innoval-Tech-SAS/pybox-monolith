@@ -1,3 +1,5 @@
+"""Acceso a datos de los extractos generados para un deudor."""
+
 import uuid
 from datetime import datetime
 from typing import Optional, Sequence

@@ -1,3 +1,5 @@
+"""Registro de un extracto de cuenta generado para un deudor."""
+
 import uuid
 from datetime import datetime
 

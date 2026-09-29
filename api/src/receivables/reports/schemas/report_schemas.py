@@ -1,3 +1,5 @@
+"""Schemas de reportes de cartera: definición, ejecución y respuesta."""
+
 import uuid
 from datetime import datetime
 from typing import Any, Literal

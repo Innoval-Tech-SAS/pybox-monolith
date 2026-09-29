@@ -1,3 +1,5 @@
+"""Acceso a datos de los reportes de cartera de una organización."""
+
 import uuid
 from datetime import datetime
 

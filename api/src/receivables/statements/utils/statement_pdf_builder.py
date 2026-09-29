@@ -1,3 +1,5 @@
+"""Construcción del PDF de extracto de cuenta con reportlab."""
+
 import io
 from dataclasses import dataclass
 from datetime import datetime
@@ -126,9 +128,11 @@ def build_statement_pdf(
                 ]
             ] + [
                 [
-                    str(p.installment_number)
-                    if p.installment_number is not None
-                    else "-",
+                    (
+                        str(p.installment_number)
+                        if p.installment_number is not None
+                        else "-"
+                    ),
                     _date(p.limit_pay_date),
                     _date(p.payment_date),
                     _money(p.payment_amount, currency_code),

@@ -1,3 +1,5 @@
+"""Generación y listado de extractos de cuenta (PDF) de un deudor."""
+
 import uuid
 from datetime import datetime, timezone
 from typing import Optional

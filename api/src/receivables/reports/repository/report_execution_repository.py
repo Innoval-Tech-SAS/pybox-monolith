@@ -1,3 +1,5 @@
+"""Acceso a datos de las ejecuciones guardadas de un reporte."""
+
 import uuid
 from datetime import datetime
 from typing import Sequence

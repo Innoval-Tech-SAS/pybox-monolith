@@ -1,3 +1,5 @@
+"""Ejecuta un reporte en background y notifica al usuario cuando termina."""
+
 import uuid
 
 from fastapi import HTTPException
@@ -49,9 +51,9 @@ async def execute_and_notify(
                 details={
                     "report_id": str(report_id),
                     "file_name": result["file_name"],
-                    "document_id": str(result["document_id"])
-                    if result["document_id"]
-                    else None,
+                    "document_id": (
+                        str(result["document_id"]) if result["document_id"] else None
+                    ),
                     "rows": result["rows"],
                 },
             )

@@ -1,3 +1,5 @@
+"""Schemas de extractos: solicitud de generación y respuesta."""
+
 import uuid
 from datetime import datetime
 

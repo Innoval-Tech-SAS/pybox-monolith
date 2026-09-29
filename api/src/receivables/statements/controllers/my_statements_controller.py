@@ -1,3 +1,5 @@
+"""Endpoint de autogestión: un deudor lista sus propios extractos."""
+
 import uuid
 
 from fastapi import Response

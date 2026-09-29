@@ -1,3 +1,5 @@
+"""Definición de un reporte de cartera (criterio dinámico de consulta)."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String
