@@ -4,30 +4,30 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from billing.invoices.models.payment_attempt_model import PaymentAttemptModel
+from billing.invoices.models.payment_attempt_model import InvoicePaymentAttemptModel
 
 
-class PaymentAttemptRepository(SoftDeleteRepositoryBase[PaymentAttemptModel]):
-    model_class = PaymentAttemptModel
+class InvoicePaymentAttemptRepository(SoftDeleteRepositoryBase[InvoicePaymentAttemptModel]):
+    model_class = InvoicePaymentAttemptModel
 
     def __init__(self, session: AsyncSession):
         super().__init__(session)
 
-    async def get_latest_by_invoice_id(self, invoice_id: uuid.UUID) -> PaymentAttemptModel | None:
+    async def get_latest_by_invoice_id(self, invoice_id: uuid.UUID) -> InvoicePaymentAttemptModel | None:
         result = await self.session.execute(
-            select(PaymentAttemptModel)
-            .where(PaymentAttemptModel.invoice_id == invoice_id, PaymentAttemptModel.deleted_at.is_(None))
-            .order_by(PaymentAttemptModel.attempt_number.desc())
+            select(InvoicePaymentAttemptModel)
+            .where(InvoicePaymentAttemptModel.invoice_id == invoice_id, InvoicePaymentAttemptModel.deleted_at.is_(None))
+            .order_by(InvoicePaymentAttemptModel.attempt_number.desc())
             .limit(1)
         )
         return result.scalars().first()
 
     async def get_by_provider_reference(
         self, provider_reference: str, *, for_update: bool = False
-    ) -> PaymentAttemptModel | None:
-        query = select(PaymentAttemptModel).where(
-            PaymentAttemptModel.provider_reference == provider_reference,
-            PaymentAttemptModel.deleted_at.is_(None),
+    ) -> InvoicePaymentAttemptModel | None:
+        query = select(InvoicePaymentAttemptModel).where(
+            InvoicePaymentAttemptModel.provider_reference == provider_reference,
+            InvoicePaymentAttemptModel.deleted_at.is_(None),
         )
         if for_update:
             query = query.with_for_update()
@@ -36,10 +36,10 @@ class PaymentAttemptRepository(SoftDeleteRepositoryBase[PaymentAttemptModel]):
 
     async def get_by_provider_link_id(
         self, provider_link_id: str, *, for_update: bool = False
-    ) -> PaymentAttemptModel | None:
-        query = select(PaymentAttemptModel).where(
-            PaymentAttemptModel.provider_link_id == provider_link_id,
-            PaymentAttemptModel.deleted_at.is_(None),
+    ) -> InvoicePaymentAttemptModel | None:
+        query = select(InvoicePaymentAttemptModel).where(
+            InvoicePaymentAttemptModel.provider_link_id == provider_link_id,
+            InvoicePaymentAttemptModel.deleted_at.is_(None),
         )
         if for_update:
             query = query.with_for_update()

@@ -9,7 +9,7 @@ from core.database.database import db
 from billing.exchange_rates.exchange_rate_service import ExchangeRateService
 from billing.gateways.resolver import PaymentGatewayResolver
 from billing.invoices.repository.invoice_repository import InvoiceRepository
-from billing.invoices.repository.payment_attempt_repository import PaymentAttemptRepository
+from billing.invoices.repository.payment_attempt_repository import InvoicePaymentAttemptRepository
 from billing.invoices.services.billing_cron_service import BillingCronService
 from billing.invoices.services.invoice_service import InvoiceService
 from identity.organizations.repository.organization_repository import OrganizationRepository
@@ -23,7 +23,7 @@ def _make_invoice_service(session: AsyncSession) -> InvoiceService:
     return InvoiceService(
         session,
         InvoiceRepository(session),
-        PaymentAttemptRepository(session),
+        InvoicePaymentAttemptRepository(session),
         ContactRepository(session),
         OrganizationRepository(session),
         PaymentGatewayResolver(),

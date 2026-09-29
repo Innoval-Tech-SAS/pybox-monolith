@@ -9,8 +9,8 @@ from core.base.audit_model import BaseModel
 from billing.invoices.enums.invoice_enums import PaymentAttemptStatus, PaymentProvider
 
 
-class PaymentAttemptModel(BaseModel):
-    __tablename__ = "intentos_pago"
+class InvoicePaymentAttemptModel(BaseModel):
+    __tablename__ = "intentos_pago_factura"
 
     invoice_id: Mapped[uuid.UUID] = mapped_column(
         PgUUID(as_uuid=True), ForeignKey("facturas.id", ondelete="CASCADE"), nullable=False, index=True, name="factura_id"

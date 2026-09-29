@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.base.audit_model import BaseModel
 from billing.invoices.enums.invoice_enums import InvoiceStatus
 from billing.invoices.models.invoice_item_model import InvoiceItemModel
-from billing.invoices.models.payment_attempt_model import PaymentAttemptModel
+from billing.invoices.models.payment_attempt_model import InvoicePaymentAttemptModel
 
 
 class InvoiceModel(BaseModel):
@@ -59,6 +59,6 @@ class InvoiceModel(BaseModel):
     items: Mapped[list[InvoiceItemModel]] = relationship(
         InvoiceItemModel, back_populates="invoice", cascade="all, delete-orphan", lazy="selectin"
     )
-    attempts: Mapped[list[PaymentAttemptModel]] = relationship(
-        PaymentAttemptModel, back_populates="invoice", lazy="selectin"
+    attempts: Mapped[list[InvoicePaymentAttemptModel]] = relationship(
+        InvoicePaymentAttemptModel, back_populates="invoice", lazy="selectin"
     )

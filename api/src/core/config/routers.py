@@ -18,6 +18,8 @@ from app_platform.countries.controllers.countries_controller import router as co
 from billing.provider_credentials.controllers.provider_credential_controller import router as platform_gateway_credentials_router
 from messaging.provider_credentials.controllers.provider_credential_controller import router as messaging_credentials_router
 from receivables.payment_gateways.controllers.payment_gateway_credential_controller import router as payment_gateway_credentials_router
+from receivables.payment_gateways.controllers.payment_checkout_controller import router as payment_checkout_router
+from receivables.payment_gateways.controllers.wompi_webhook_controller import router as wompi_webhook_router
 from receivables.credits.controllers.credit_catalog_controller import router as credit_catalog_router
 from receivables.judicial_notifications.controllers.judicial_notification_controller import (
     router as judicial_notifications_router,
@@ -84,6 +86,8 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(messaging_credentials_router, prefix=API_PREFIX)
     app.include_router(platform_gateway_credentials_router, prefix=API_PREFIX)
     app.include_router(payment_gateway_credentials_router, prefix=API_PREFIX)
+    app.include_router(payment_checkout_router, prefix=API_PREFIX)
+    app.include_router(wompi_webhook_router, prefix=API_PREFIX)
     app.include_router(credit_catalog_router, prefix=API_PREFIX)
     app.include_router(judicial_notifications_router, prefix=API_PREFIX)
     app.include_router(my_credits_router, prefix=API_PREFIX)

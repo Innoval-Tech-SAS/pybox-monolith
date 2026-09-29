@@ -1,38 +1,15 @@
 from typing import Any
 
-import httpx
-
 from core.config.logger import logger
+from core.payment_gateways.gateway_http_client import GatewayHttpClient
 from core.tools.config_tools import get_or_throw
 
 
-class MercadoPagoClient:
+class MercadoPagoClient(GatewayHttpClient):
     """Cliente HTTP a la Orders API de Mercado Pago (Checkout API moderno)."""
 
     _API_BASE = "https://api.mercadopago.com"
-    _TIMEOUT_SECONDS = 10
-
-    def __new__(cls) -> "MercadoPagoClient":
-        # Singleton: un solo `httpx.AsyncClient` reutilizado entre llamadas y entre
-        # instancias (cada service que necesita el cliente crea su propio
-        # `MercadoPagoClient()`) — abrir/cerrar conexión TLS por request sería el
-        # cuello de botella dominante en un flujo con varios intentos de pago.
-        if not hasattr(cls, "_instance"):
-            cls._instance = super().__new__(cls)
-            cls._instance._http = httpx.AsyncClient(timeout=cls._TIMEOUT_SECONDS)
-        return cls._instance
-
-    def _log_error(self, response: httpx.Response, context: str) -> None:
-        """
-        Loguea el cuerpo del error de MP antes de propagar. `raise_for_status()` descarta
-        `response.text`, y sin ese detalle un 4xx de MP (ej. token invalido, monto,
-        installments) llega al cliente como un 500 opaco imposible de diagnosticar.
-        """
-        if response.is_error:
-            logger.error(
-                "[mercadopago] %s fallo | status=%s body=%s",
-                context, response.status_code, response.text,
-            )
+    _LOG_TAG = "mercadopago"
 
     def _sandbox_safe_email(self, payer_email: str) -> str:
         """
