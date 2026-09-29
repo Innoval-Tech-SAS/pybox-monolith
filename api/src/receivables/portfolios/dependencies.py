@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar el PortfolioService con sus repositories."""
+
 from typing import Annotated
 
 from fastapi import Depends

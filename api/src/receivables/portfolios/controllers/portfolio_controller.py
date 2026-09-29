@@ -1,3 +1,5 @@
+"""Endpoints de portafolios: alta, edición, carga masiva y estadísticas."""
+
 import uuid
 from typing import Annotated
 

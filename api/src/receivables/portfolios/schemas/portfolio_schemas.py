@@ -1,3 +1,5 @@
+"""Schemas de portafolios: alta, edición y respuesta."""
+
 import uuid
 from datetime import date, datetime
 

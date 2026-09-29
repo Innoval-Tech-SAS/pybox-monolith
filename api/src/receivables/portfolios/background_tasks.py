@@ -1,3 +1,5 @@
+"""Procesa la carga masiva de portafolio en background y notifica al terminar."""
+
 import uuid
 
 from app_platform.countries.enums.country_enums import Nationality

@@ -1,3 +1,5 @@
+"""Configuración de actualización diaria de contadores de un portafolio."""
+
 import uuid
 from datetime import date, datetime
 

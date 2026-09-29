@@ -1,3 +1,5 @@
+"""Acceso delegado de un usuario a un portafolio específico."""
+
 import uuid
 from datetime import datetime
 

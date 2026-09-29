@@ -1,3 +1,5 @@
+"""Procesa la carga masiva de cuotas en background y notifica al terminar."""
+
 import uuid
 
 from app_platform.notifications.services.notification_service import NotificationService

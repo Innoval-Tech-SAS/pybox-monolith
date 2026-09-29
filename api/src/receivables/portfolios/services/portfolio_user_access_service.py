@@ -1,3 +1,5 @@
+"""Gestión de accesos delegados de usuarios a portafolios específicos."""
+
 import uuid
 from datetime import datetime
 

@@ -1,3 +1,5 @@
+"""Validación del nombre/extensión de un archivo de carga de portafolio."""
+
 from fastapi import HTTPException, UploadFile, status
 
 

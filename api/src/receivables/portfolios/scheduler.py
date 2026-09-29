@@ -1,3 +1,5 @@
+"""Cron diario de contadores de cartera, uno por zona horaria de país."""
+
 import asyncio
 from functools import partial
 from zoneinfo import ZoneInfo

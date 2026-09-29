@@ -1,3 +1,5 @@
+"""Acceso a datos de portafolios de una organización."""
+
 import uuid
 from datetime import datetime
 

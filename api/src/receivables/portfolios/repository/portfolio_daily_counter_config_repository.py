@@ -1,3 +1,5 @@
+"""Acceso a datos de la configuración de contadores diarios de un portafolio."""
+
 import uuid
 
 from sqlalchemy import select

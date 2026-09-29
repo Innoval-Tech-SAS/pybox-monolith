@@ -1,3 +1,5 @@
+"""Resultado interno del procesamiento de una carga masiva de portafolio."""
+
 import uuid
 from dataclasses import dataclass, field
 

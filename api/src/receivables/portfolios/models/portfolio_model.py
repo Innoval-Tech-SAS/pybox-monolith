@@ -1,3 +1,5 @@
+"""Portafolio de cartera de una organización."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String

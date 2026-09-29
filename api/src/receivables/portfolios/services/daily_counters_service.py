@@ -1,3 +1,5 @@
+"""Recalcula los contadores diarios de cartera (por país) usados en el dashboard."""
+
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 

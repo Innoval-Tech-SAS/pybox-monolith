@@ -1,3 +1,5 @@
+"""Alta, edición y estadísticas de portafolios de una organización."""
+
 import uuid
 from datetime import date, datetime, timezone
 

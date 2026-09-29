@@ -1,3 +1,5 @@
+"""Procesamiento de la carga masiva de portafolio (CSV/XLSX)."""
+
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone

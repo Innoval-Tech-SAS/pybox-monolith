@@ -1,3 +1,5 @@
+"""Acceso a datos de los documentos asociados a un portafolio."""
+
 import uuid
 from datetime import datetime
 from typing import Optional, Sequence

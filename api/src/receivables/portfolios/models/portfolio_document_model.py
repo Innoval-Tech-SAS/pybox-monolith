@@ -1,3 +1,5 @@
+"""Archivo asociado a un portafolio (exportación de segmento o fuente de carga)."""
+
 import uuid
 
 from sqlalchemy import ForeignKey

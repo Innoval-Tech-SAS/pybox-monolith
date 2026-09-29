@@ -1,3 +1,5 @@
+"""Endpoint de carga masiva de cuotas (CSV/XLSX) para un portafolio."""
+
 import uuid
 from typing import Annotated
 
