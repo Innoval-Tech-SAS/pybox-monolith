@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, Request, WebSocket, status
+from fastapi import Depends, Header, HTTPException, Query, Request, WebSocket, status
 from pydantic import ValidationError as PydanticValidationError
 
 from identity.auth.dependencies import TokenPayload
@@ -9,6 +9,7 @@ from core.config.redis_config import RedisConfig
 from core.database.redis import redis_client
 from core.security.constants.cookie_constants import ACCESS_TOKEN_COOKIE
 from core.security.services.auth_token_service import AuthTokenService
+from core.security.utils.service_key_verifier import verify_n8n_service_key
 from identity.users.schemas.user_session_schema import UserSession, mfa_verified_key, session_key
 
 _sse_token_service = AuthTokenService()
@@ -98,6 +99,12 @@ async def get_ws_session(websocket: WebSocket, token: str | None = None) -> User
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido.")
     session = await _load_session(_subject_to_uuid(payload))
     return await _require_mfa_verified(session)
+
+
+async def require_n8n_service_key(x_service_key: Annotated[str | None, Header()] = None) -> None:
+    """Gate de ruta para los endpoints internos que consume n8n (sin sesión de usuario)."""
+    if not verify_n8n_service_key(x_service_key):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid service key")
 
 
 CurrentSession = Annotated[UserSession, Depends(get_session)]

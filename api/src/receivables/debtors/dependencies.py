@@ -13,6 +13,7 @@ from receivables.debtors.repository.address_repository import AddressRepository
 from receivables.debtors.repository.debtor_document_repository import DebtorDocumentRepository
 from receivables.debtors.repository.debtor_repository import DebtorRepository
 from receivables.debtors.services.debtor_document_service import DebtorDocumentService
+from receivables.debtors.services.debtor_identity_service import DebtorIdentityService
 from receivables.debtors.services.debtor_service import DebtorService
 from receivables.payments.repository.payment_repository import PaymentRepository
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
@@ -39,6 +40,15 @@ def get_debtor_document_service(
     return DebtorDocumentService(session)
 
 
+def get_debtor_identity_service(
+    session: Annotated[AsyncSession, Depends(get_main_session)],
+) -> DebtorIdentityService:
+    return DebtorIdentityService(
+        debtor_repo=DebtorRepository(session),
+        contact_repo=ContactMethodRepository(session),
+    )
+
+
 def require_self_session(session: CurrentSession) -> UserSession:
     """Gate de scope SELF a nivel de ruta para el repositorio documental del titular:
     rechaza en el borde a quien no sea el titular. La política pura vive en
@@ -49,4 +59,5 @@ def require_self_session(session: CurrentSession) -> UserSession:
 
 DebtorServiceDep = Annotated[DebtorService, Depends(get_debtor_service)]
 DebtorDocumentServiceDep = Annotated[DebtorDocumentService, Depends(get_debtor_document_service)]
+DebtorIdentityServiceDep = Annotated[DebtorIdentityService, Depends(get_debtor_identity_service)]
 RequireSelf = Annotated[UserSession, Depends(require_self_session)]

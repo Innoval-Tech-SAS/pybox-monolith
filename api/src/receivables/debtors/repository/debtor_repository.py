@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from app_platform.countries.enums.country_enums import UserDocumentType
 from receivables.credits.models.credit_model import CreditModel
+from receivables.debtors.enums.debtor_enums import DebtorType
 from receivables.debtors.models.debtor_model import DebtorModel
 
 
@@ -31,6 +32,23 @@ class DebtorRepository(SoftDeleteRepositoryBase[DebtorModel]):
             .where(
                 DebtorModel.document_type == document_type,
                 DebtorModel.document_number_hash == document_number_hash,
+                DebtorModel.deleted_at.is_(None),
+            )
+            .order_by(DebtorModel.created_at.asc(), DebtorModel.id.asc())
+        )
+        return list(result.scalars().all())
+
+    async def list_holders_by_document(
+        self, document_type: UserDocumentType, document_number_hash: str
+    ) -> list[DebtorModel]:
+        """Igual que ``list_by_document`` pero solo las filas donde la persona figura como
+        titular. La validación de identidad por WhatsApp no aplica a los co-deudores."""
+        result = await self.session.execute(
+            select(DebtorModel)
+            .where(
+                DebtorModel.document_type == document_type,
+                DebtorModel.document_number_hash == document_number_hash,
+                DebtorModel.debtor_type == DebtorType.DEBTOR,
                 DebtorModel.deleted_at.is_(None),
             )
             .order_by(DebtorModel.created_at.asc(), DebtorModel.id.asc())
