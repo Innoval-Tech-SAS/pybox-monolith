@@ -1,3 +1,5 @@
+"""Endpoints de segmentos de cartera: alta, edición y ejecución dinámica."""
+
 import uuid
 from typing import Annotated
 

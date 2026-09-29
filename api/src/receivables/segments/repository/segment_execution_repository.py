@@ -1,3 +1,5 @@
+"""Acceso a datos de las ejecuciones guardadas de un segmento."""
+
 import uuid
 from typing import Sequence
 

@@ -1,3 +1,5 @@
+"""Ejecución guardada (auditoría) de un segmento de cartera."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, Integer, String

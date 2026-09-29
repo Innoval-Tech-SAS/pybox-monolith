@@ -1,3 +1,5 @@
+"""Acceso a datos de los métodos de pago manuales de una organización."""
+
 import uuid
 
 from sqlalchemy import select

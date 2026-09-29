@@ -1,3 +1,5 @@
+"""Método de contacto (email/teléfono) de un deudor."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, String

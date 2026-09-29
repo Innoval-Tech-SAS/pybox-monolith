@@ -1,3 +1,5 @@
+"""Dependencia de FastAPI para inyectar el PaymentMethodService."""
+
 from typing import Annotated
 
 from fastapi import Depends

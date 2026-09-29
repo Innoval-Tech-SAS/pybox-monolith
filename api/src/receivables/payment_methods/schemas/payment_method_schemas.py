@@ -1,3 +1,5 @@
+"""Schemas de métodos de pago manuales: alta, edición y respuesta."""
+
 import uuid
 from datetime import datetime
 

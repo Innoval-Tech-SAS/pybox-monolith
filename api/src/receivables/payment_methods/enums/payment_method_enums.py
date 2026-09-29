@@ -1,3 +1,5 @@
+"""Tipos de método de pago manual que una organización puede configurar."""
+
 from enum import Enum
 
 

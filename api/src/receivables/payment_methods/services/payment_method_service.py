@@ -1,3 +1,5 @@
+"""Alta, edición y consulta de métodos de pago manuales de una organización."""
+
 import uuid
 
 from fastapi import HTTPException, status
@@ -32,9 +34,11 @@ class PaymentMethodService:
             instructions=method.instructions,
             bank_name=method.bank_name,
             account_type=method.account_type,
-            account_number=encrypt_service.decrypt_to_str(method.account_number)
-            if method.account_number
-            else None,
+            account_number=(
+                encrypt_service.decrypt_to_str(method.account_number)
+                if method.account_number
+                else None
+            ),
             payment_link=method.payment_link,
             qr_image_url=method.qr_image_url,
             is_active=method.is_active,
@@ -76,9 +80,11 @@ class PaymentMethodService:
             instructions=data.instructions,
             bank_name=data.bank_name,
             account_type=data.account_type,
-            account_number=encrypt_service.encrypt_to_str(data.account_number)
-            if data.account_number
-            else None,
+            account_number=(
+                encrypt_service.encrypt_to_str(data.account_number)
+                if data.account_number
+                else None
+            ),
             payment_link=data.payment_link,
             qr_image_url=data.qr_image_url,
         )

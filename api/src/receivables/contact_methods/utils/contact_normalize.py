@@ -1,3 +1,5 @@
+"""Normalización de valores de contacto (email/teléfono) para comparar y guardar."""
+
 import re
 
 from receivables.contact_methods.enums.contact_method_enums import ContactMethodType

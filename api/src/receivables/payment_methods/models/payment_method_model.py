@@ -1,3 +1,5 @@
+"""Método de pago manual configurado por una organización."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String, Text

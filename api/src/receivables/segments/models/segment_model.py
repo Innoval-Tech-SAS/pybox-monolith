@@ -1,3 +1,5 @@
+"""Definición de un segmento de cartera (criterio dinámico de filtrado)."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, String

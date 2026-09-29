@@ -1,3 +1,5 @@
+"""Acceso a datos de los segmentos de cartera de un portafolio."""
+
 import uuid
 
 from sqlalchemy import func, select

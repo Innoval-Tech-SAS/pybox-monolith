@@ -1,3 +1,5 @@
+"""Autogestión de métodos de contacto de un deudor (verificación por documento)."""
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.countries.enums.country_enums import UserDocumentType
