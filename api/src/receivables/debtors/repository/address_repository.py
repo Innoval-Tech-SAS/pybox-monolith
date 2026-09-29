@@ -1,3 +1,5 @@
+"""Acceso a datos de las direcciones de un deudor."""
+
 import uuid
 from datetime import datetime
 

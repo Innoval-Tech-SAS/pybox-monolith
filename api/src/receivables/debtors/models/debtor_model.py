@@ -1,3 +1,5 @@
+"""Deudor de un crédito, propio de una organización."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, String, UniqueConstraint

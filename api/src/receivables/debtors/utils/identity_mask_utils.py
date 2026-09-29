@@ -1,3 +1,5 @@
+"""Enmascarado de email/teléfono para mostrar sin exponer el dato completo."""
+
 import re
 
 from receivables.debtors.constants.debtor_identity_constants import (

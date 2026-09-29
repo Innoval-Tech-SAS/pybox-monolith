@@ -1,3 +1,5 @@
+"""Schema de un documento del repositorio documental de un deudor."""
+
 from pydantic import Field
 
 from app_platform.documents.schemas.document_schemas import DocumentResponse

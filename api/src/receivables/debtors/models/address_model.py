@@ -1,3 +1,5 @@
+"""Dirección física asociada a un deudor."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, String

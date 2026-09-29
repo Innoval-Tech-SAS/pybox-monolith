@@ -1,3 +1,5 @@
+"""Verificación de identidad del deudor por challenge/confirmación (email/teléfono)."""
+
 import hmac
 
 from fastapi import HTTPException, status

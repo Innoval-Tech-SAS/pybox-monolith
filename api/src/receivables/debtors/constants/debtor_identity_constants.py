@@ -1,3 +1,5 @@
+"""Límites y formato de enmascarado para la verificación de identidad del deudor."""
+
 # Tope de intentos de verificación por documento, sin importar quién llame. Es la
 # defensa del lado API contra fuerza bruta del dato de confirmación (n8n aplica su
 # propio límite por conversación, pero un fallo de ese lado no debe dejar el dato

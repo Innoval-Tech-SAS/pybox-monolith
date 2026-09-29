@@ -1,3 +1,5 @@
+"""Endpoint de autogestión: un deudor sube y consulta sus propios documentos."""
+
 import uuid
 from typing import Annotated, Optional
 

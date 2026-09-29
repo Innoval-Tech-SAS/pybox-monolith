@@ -1,3 +1,5 @@
+"""Tipo de deudor: titular o codeudor."""
+
 from enum import StrEnum
 
 

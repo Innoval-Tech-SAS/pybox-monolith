@@ -1,3 +1,5 @@
+"""Schemas de verificación de identidad del deudor (challenge/verify)."""
+
 from typing import Annotated
 
 from pydantic import Field, StringConstraints

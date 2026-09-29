@@ -1,3 +1,5 @@
+"""Documento del repositorio documental de un deudor."""
+
 import uuid
 
 from sqlalchemy import ForeignKey

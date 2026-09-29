@@ -1,3 +1,5 @@
+"""Endpoints de deudores: alta, edición, direcciones y métodos de contacto."""
+
 import uuid
 from typing import Annotated
 

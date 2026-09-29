@@ -1,3 +1,5 @@
+"""Endpoints internos (n8n) de verificación de identidad del deudor."""
+
 from fastapi import Depends
 
 from core.config.api_router import APIRouter

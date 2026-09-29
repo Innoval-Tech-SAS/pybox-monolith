@@ -1,3 +1,5 @@
+"""Acceso a datos de los documentos del repositorio documental de un deudor."""
+
 import uuid
 from datetime import datetime
 from typing import Optional, Sequence

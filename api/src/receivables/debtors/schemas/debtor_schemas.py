@@ -1,3 +1,5 @@
+"""Schemas de deudores: perfil, direcciones y métodos de contacto."""
+
 import uuid
 from datetime import datetime
 

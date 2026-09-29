@@ -1,3 +1,5 @@
+"""Acceso a datos de deudores."""
+
 import uuid
 from datetime import datetime, timezone
 

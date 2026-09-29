@@ -1,3 +1,5 @@
+"""Alta, edición y consulta de deudores, direcciones y créditos asociados."""
+
 import uuid
 
 from fastapi import HTTPException, Response, status
