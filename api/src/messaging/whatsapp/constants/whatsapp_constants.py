@@ -1,3 +1,5 @@
+"""Endpoints y códigos de error de la Graph API de WhatsApp (Meta)."""
+
 # Confirmado contra (ejemplo de creación de plantillas usa v23.0):
 # pylint: disable-next=line-too-long
 # https://developers.facebook.com/documentation/business-messaging/whatsapp/templates/overview

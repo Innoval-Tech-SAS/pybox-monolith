@@ -1,3 +1,5 @@
+"""Alta y consulta de las credenciales de WhatsApp Business de una organización."""
+
 import uuid
 
 from fastapi import HTTPException, status

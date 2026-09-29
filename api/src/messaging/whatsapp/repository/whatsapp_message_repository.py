@@ -1,3 +1,5 @@
+"""Acceso a datos de los mensajes de WhatsApp."""
+
 import uuid
 from datetime import datetime
 

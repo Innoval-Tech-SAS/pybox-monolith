@@ -1,3 +1,5 @@
+"""Acceso a datos de los chats de WhatsApp, con el scope de visibilidad por usuario."""
+
 import uuid
 from dataclasses import dataclass
 from datetime import datetime

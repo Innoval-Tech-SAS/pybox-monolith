@@ -1,3 +1,5 @@
+"""Endpoints de plantillas de WhatsApp: alta ante Meta, listado y estado."""
+
 import uuid
 from typing import Annotated
 

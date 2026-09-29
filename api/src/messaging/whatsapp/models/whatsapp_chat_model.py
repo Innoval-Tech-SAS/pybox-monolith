@@ -1,3 +1,5 @@
+"""Hilo de conversación de WhatsApp de un número dentro de una organización."""
+
 import uuid
 from datetime import datetime
 

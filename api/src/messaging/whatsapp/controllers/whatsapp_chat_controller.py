@@ -1,3 +1,5 @@
+"""Endpoints de chats de WhatsApp: REST para historial y WebSocket en tiempo real."""
+
 import json
 import uuid
 from typing import Annotated

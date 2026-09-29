@@ -1,3 +1,5 @@
+"""Extensión de una plantilla para el canal WhatsApp (metadatos, no el contenido)."""
+
 import uuid
 
 from sqlalchemy import Enum, ForeignKey, String, UniqueConstraint

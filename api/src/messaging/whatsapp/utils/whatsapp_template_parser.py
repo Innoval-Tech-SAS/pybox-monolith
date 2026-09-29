@@ -1,3 +1,5 @@
+"""Extracción de las variables nombradas ({{variable}}) del cuerpo de una plantilla."""
+
 import re
 from typing import Any, NamedTuple
 

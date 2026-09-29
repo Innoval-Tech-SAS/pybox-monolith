@@ -1,3 +1,5 @@
+"""Acceso a datos de las solicitudes de aprobación de número de WhatsApp."""
+
 import uuid
 
 from sqlalchemy import func, select

@@ -1,3 +1,5 @@
+"""Schemas de errores de envío de WhatsApp."""
+
 import uuid
 from datetime import datetime
 

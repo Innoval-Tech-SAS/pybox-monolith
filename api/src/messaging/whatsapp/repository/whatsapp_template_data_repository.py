@@ -1,3 +1,5 @@
+"""Acceso a datos de la extensión de plantilla del canal WhatsApp."""
+
 import uuid
 
 from sqlalchemy import select

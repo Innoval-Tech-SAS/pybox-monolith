@@ -1,3 +1,5 @@
+"""Endpoints de credenciales de WhatsApp Business por organización."""
+
 import uuid
 
 from core.config.api_router import APIRouter

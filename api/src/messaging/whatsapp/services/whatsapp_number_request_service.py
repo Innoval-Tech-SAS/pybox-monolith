@@ -1,3 +1,5 @@
+"""Crea un ticket de soporte cuando una organización necesita un número de WhatsApp."""
+
 import uuid
 
 from app_platform.support.services.support_service import SupportService

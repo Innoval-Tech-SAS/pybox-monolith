@@ -1,3 +1,5 @@
+"""Schemas de plantillas de WhatsApp: alta ante Meta y respuesta."""
+
 import uuid
 from typing import Any
 

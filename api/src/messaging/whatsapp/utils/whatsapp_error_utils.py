@@ -1,3 +1,5 @@
+"""Traduce errores de la Graph API de WhatsApp a mensajes claros para el cliente."""
+
 from typing import Any
 
 import httpx

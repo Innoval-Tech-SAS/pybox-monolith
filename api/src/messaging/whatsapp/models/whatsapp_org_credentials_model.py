@@ -1,3 +1,5 @@
+"""Credenciales de WhatsApp Business Cloud API de una organización."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String, UniqueConstraint

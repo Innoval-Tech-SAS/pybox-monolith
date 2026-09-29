@@ -1,3 +1,5 @@
+"""Schemas de credenciales de WhatsApp Business de una organización."""
+
 import uuid
 
 from pydantic import Field

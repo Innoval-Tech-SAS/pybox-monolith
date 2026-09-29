@@ -1,3 +1,5 @@
+"""Endpoints de consulta de errores de envío de WhatsApp."""
+
 import uuid
 from typing import Annotated
 

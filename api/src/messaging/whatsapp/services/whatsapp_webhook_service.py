@@ -1,3 +1,5 @@
+"""Procesa el webhook de WhatsApp: mensajes entrantes, estados y errores de envío."""
+
 import json
 import uuid
 from datetime import datetime, timezone
@@ -236,15 +238,19 @@ class WhatsAppWebhookService:
                     organization_id=organization_id,
                     phone=phone,
                     profile_name=profile_name,
-                    debtor_id=debtor_contact.debtor_id
-                    if debtor_contact is not None
-                    else None,
-                    portfolio_id=debtor_contact.portfolio_id
-                    if debtor_contact is not None
-                    else None,
-                    campaign_id=debtor_contact.campaign_id
-                    if debtor_contact is not None
-                    else None,
+                    debtor_id=(
+                        debtor_contact.debtor_id if debtor_contact is not None else None
+                    ),
+                    portfolio_id=(
+                        debtor_contact.portfolio_id
+                        if debtor_contact is not None
+                        else None
+                    ),
+                    campaign_id=(
+                        debtor_contact.campaign_id
+                        if debtor_contact is not None
+                        else None
+                    ),
                 )
             )
 

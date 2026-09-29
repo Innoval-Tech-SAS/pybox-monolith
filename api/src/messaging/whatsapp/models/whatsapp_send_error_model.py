@@ -1,3 +1,5 @@
+"""Error de envío de WhatsApp reportado por Meta vía webhook."""
+
 import uuid
 from datetime import datetime
 from typing import Any

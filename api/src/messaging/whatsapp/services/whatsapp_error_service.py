@@ -1,3 +1,5 @@
+"""Consulta de los errores de envío de WhatsApp de una organización."""
+
 import uuid
 
 from core.security.policies.security_policies import require_org_admin

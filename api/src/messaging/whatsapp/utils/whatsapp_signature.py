@@ -1,3 +1,5 @@
+"""Verificación HMAC de la firma del webhook de WhatsApp (Meta)."""
+
 import hashlib
 import hmac
 

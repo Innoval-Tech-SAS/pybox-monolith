@@ -1,3 +1,5 @@
+"""Webhook de WhatsApp Cloud API: verificación y recepción de eventos de Meta."""
+
 from typing import Annotated, Any
 
 from fastapi import Header, Query, Request

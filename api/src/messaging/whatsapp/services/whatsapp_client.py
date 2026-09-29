@@ -1,3 +1,5 @@
+"""Cliente HTTP a la Graph API de WhatsApp Cloud (envío y plantillas)."""
+
 from typing import Any
 
 import httpx

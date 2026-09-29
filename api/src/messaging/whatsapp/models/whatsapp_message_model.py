@@ -1,3 +1,5 @@
+"""Mensaje de un chat de WhatsApp, entrante o saliente."""
+
 import uuid
 from datetime import datetime
 from typing import Any

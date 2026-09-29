@@ -1,3 +1,5 @@
+"""Acceso a datos de las credenciales de WhatsApp Business de una organización."""
+
 import uuid
 from datetime import datetime
 

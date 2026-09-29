@@ -1,3 +1,5 @@
+"""Alta de plantillas de WhatsApp ante Meta y su sincronización de estado."""
+
 import re
 import uuid
 from collections.abc import Awaitable

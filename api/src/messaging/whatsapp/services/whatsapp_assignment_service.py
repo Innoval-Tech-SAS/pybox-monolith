@@ -1,3 +1,5 @@
+"""Asignación de un chat de WhatsApp a un agente con permiso para atenderlo."""
+
 import uuid
 
 from core.security.constants.permissions import MANAGE_WHATSAPP_CHATS

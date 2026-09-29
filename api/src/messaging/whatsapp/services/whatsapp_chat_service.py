@@ -1,3 +1,5 @@
+"""Listado, detalle y envío de mensajes de un chat de WhatsApp."""
+
 import uuid
 from datetime import datetime, timedelta, timezone
 

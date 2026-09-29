@@ -1,3 +1,5 @@
+"""Enums del canal WhatsApp: categoría de plantilla, mensajes y solicitudes."""
+
 from enum import StrEnum
 
 

@@ -1,3 +1,5 @@
+"""Aprobación/rechazo de solicitudes de número de WhatsApp para una organización."""
+
 import uuid
 from datetime import datetime, timezone
 

@@ -1,3 +1,5 @@
+"""Endpoints de solicitudes de número de WhatsApp para una organización."""
+
 import uuid
 from typing import Annotated
 

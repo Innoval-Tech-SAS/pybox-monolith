@@ -1,3 +1,5 @@
+"""Schemas de chats y mensajes de WhatsApp."""
+
 import uuid
 from datetime import datetime
 

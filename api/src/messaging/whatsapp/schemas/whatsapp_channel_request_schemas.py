@@ -1,3 +1,5 @@
+"""Schemas de solicitudes de aprobación de número de WhatsApp."""
+
 import uuid
 from datetime import datetime
 
