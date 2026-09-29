@@ -1,3 +1,5 @@
+"""Plantilla de contenido para un canal de mensajería, propia de un portafolio."""
+
 import uuid
 
 from sqlalchemy import Enum, ForeignKey, String, Text

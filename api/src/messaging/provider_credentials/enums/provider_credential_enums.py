@@ -1,3 +1,5 @@
+"""Proveedores de mensajería con credenciales cifradas en DB por país."""
+
 from enum import StrEnum
 
 

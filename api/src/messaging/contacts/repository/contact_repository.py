@@ -1,3 +1,5 @@
+"""Acceso a datos de los contactos (envíos) y su agregación para billing/reportes."""
+
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -72,9 +74,11 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
                 campaign_id=campaign_id,
                 campaign_name=campaign_name,
                 channel_id=channel_id,
-                channel_name=channel_name.value
-                if hasattr(channel_name, "value")
-                else channel_name,
+                channel_name=(
+                    channel_name.value
+                    if hasattr(channel_name, "value")
+                    else channel_name
+                ),
                 currency=currency or "USD",
                 quantity=quantity,
                 subtotal=subtotal or Decimal("0"),

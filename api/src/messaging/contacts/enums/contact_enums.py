@@ -1,3 +1,5 @@
+"""Estado de entrega de un contacto (envío) y tipo de proveedor que lo procesó."""
+
 from enum import StrEnum
 
 

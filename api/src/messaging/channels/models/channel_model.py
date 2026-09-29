@@ -1,3 +1,5 @@
+"""Canal de mensajería (SMS, email, WhatsApp, llamada) y su precio unitario."""
+
 from decimal import Decimal
 
 from sqlalchemy import Enum, Index, Numeric, String, text

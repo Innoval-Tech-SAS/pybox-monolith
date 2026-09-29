@@ -1,3 +1,5 @@
+"""Alta, edición y consulta de canales de mensajería."""
+
 import uuid
 from typing import Sequence
 

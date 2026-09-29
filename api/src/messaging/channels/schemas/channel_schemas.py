@@ -1,3 +1,5 @@
+"""Schemas de canales de mensajería: alta, edición y respuesta."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal

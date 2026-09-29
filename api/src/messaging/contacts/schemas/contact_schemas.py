@@ -1,3 +1,5 @@
+"""Schemas de contactos (envíos): respuesta individual y agrupación por canal."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal

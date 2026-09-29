@@ -1,3 +1,5 @@
+"""Construcción de opciones de variable de plantilla con ejemplo y descripción."""
+
 from messaging.templates.schemas.template_schemas import TemplateVariableOption
 
 # Nombres reales de columna definidos en core.base.audit_model.AuditModel

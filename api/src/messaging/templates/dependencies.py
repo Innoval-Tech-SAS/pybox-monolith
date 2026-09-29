@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar TemplateService y TemplateVariableService."""
+
 from typing import Annotated
 
 from fastapi import Depends

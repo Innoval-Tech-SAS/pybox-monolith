@@ -1,3 +1,5 @@
+"""Endpoints de canales de mensajería: alta, edición y catálogo."""
+
 import uuid
 
 from fastapi import status

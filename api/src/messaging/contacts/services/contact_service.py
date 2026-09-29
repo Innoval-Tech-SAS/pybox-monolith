@@ -1,3 +1,5 @@
+"""Consulta de contactos (envíos) de un deudor, agrupados por canal."""
+
 import uuid
 from math import ceil
 

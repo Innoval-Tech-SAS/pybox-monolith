@@ -1,3 +1,5 @@
+"""Acceso a datos de las credenciales de proveedor de mensajería."""
+
 from sqlalchemy import select
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase

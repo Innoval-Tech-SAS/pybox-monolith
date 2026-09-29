@@ -1,3 +1,5 @@
+"""Descubre las variables de personalización disponibles a partir del esquema real."""
+
 from app_platform.schema_manager.services.inspector_service import InspectorService
 from messaging.campaigns.constants import PAYMENT_STRATEGY_SUFFIXES, PAYMENT_TABLE
 from messaging.templates.schemas.template_schemas import TemplateVariableOption

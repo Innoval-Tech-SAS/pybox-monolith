@@ -1,3 +1,5 @@
+"""Endpoints de consulta de contactos (envíos) de un deudor."""
+
 import uuid
 from typing import Annotated
 

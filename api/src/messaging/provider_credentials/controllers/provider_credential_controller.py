@@ -1,3 +1,5 @@
+"""Endpoints admin para gestionar las credenciales de proveedor de mensajería."""
+
 import uuid
 
 from fastapi import status

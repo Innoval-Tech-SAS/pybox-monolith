@@ -1,3 +1,5 @@
+"""Credenciales de un proveedor de mensajería (SMS/Email/WhatsApp) por país."""
+
 from sqlalchemy import Boolean, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import ENUM, JSONB
 from sqlalchemy.orm import Mapped, mapped_column

@@ -1,3 +1,5 @@
+"""Schemas de plantillas de mensajería: alta, edición y variables disponibles."""
+
 import uuid
 from datetime import datetime
 from typing import Any

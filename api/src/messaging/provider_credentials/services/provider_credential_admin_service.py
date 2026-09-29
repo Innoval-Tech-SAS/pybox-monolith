@@ -1,3 +1,5 @@
+"""Gestión admin (alta/edición/borrado) de credenciales de proveedor de mensajería."""
+
 import uuid
 
 from fastapi import HTTPException, status

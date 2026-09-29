@@ -1,3 +1,5 @@
+"""Dependencia de FastAPI para inyectar el ChannelService."""
+
 from typing import Annotated
 
 from fastapi import Depends

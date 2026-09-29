@@ -1,3 +1,5 @@
+"""Alta, edición y envío de prueba de plantillas de mensajería."""
+
 import uuid
 
 from fastapi import HTTPException, status

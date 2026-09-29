@@ -1,3 +1,5 @@
+"""Acceso a datos de las plantillas de mensajería de un portafolio."""
+
 import uuid
 
 from sqlalchemy import func, select

@@ -1,3 +1,5 @@
+"""Renderizado local de plantillas ({variable}) usado solo para el preview."""
+
 import re
 from typing import Any
 

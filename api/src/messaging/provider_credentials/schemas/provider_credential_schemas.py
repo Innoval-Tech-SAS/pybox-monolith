@@ -1,3 +1,5 @@
+"""Schemas de credenciales de proveedor de mensajería."""
+
 import uuid
 from datetime import datetime
 

@@ -1,3 +1,5 @@
+"""Registro de un envío individual (contacto) y su estado de entrega."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal
