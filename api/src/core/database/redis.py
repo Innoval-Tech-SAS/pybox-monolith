@@ -1,9 +1,9 @@
-﻿import json
+import json
 from typing import Any, AsyncGenerator, Type, TypeVar
 
 import redis.asyncio as aioredis
-from redis.asyncio.client import PubSub
 from pydantic import BaseModel
+from redis.asyncio.client import PubSub
 
 from core.config.redis_config import RedisConfig
 
@@ -62,7 +62,9 @@ class RedisClient:
             await self._client.expire(key, ttl_seconds)
         return value
 
-    async def expire(self, key: str, ttl_seconds: int = RedisConfig.DEFAULT_TTL) -> None:
+    async def expire(
+        self, key: str, ttl_seconds: int = RedisConfig.DEFAULT_TTL
+    ) -> None:
         await self._client.expire(key, ttl_seconds)
 
     async def config_set(self, name: str, value: str) -> None:
@@ -112,9 +114,10 @@ class RedisFactory:
 
     def __init__(self, config: RedisConfig | None = None):
         self._config = config or RedisConfig()
+        self._set_client: RedisClient | None = None
 
     def get_set_client(self) -> RedisClient:
-        if not hasattr(self, "_set_client"):
+        if self._set_client is None:
             self._set_client = RedisClient(self._config)
         return self._set_client
 

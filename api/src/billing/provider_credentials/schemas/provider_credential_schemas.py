@@ -3,19 +3,28 @@ from datetime import datetime
 
 from pydantic import Field
 
+from billing.provider_credentials.enums.provider_credential_enums import (
+    PlatformGatewayProvider,
+)
 from core.base.schema_base import BaseSchema
-from billing.provider_credentials.enums.provider_credential_enums import PlatformGatewayProvider
 
 
 class PlatformGatewayCredentialUpsert(BaseSchema):
     country_code: str | None = Field(
         default=None,
-        description="Código ISO del país; null = credencial global (todos los países)",
+        description=(
+            "Código ISO del país; null = credencial global (todos los países)"
+        ),
     )
-    provider: PlatformGatewayProvider = Field(description="Pasarela con la que PYBOX cobra a sus organizaciones")
+    provider: PlatformGatewayProvider = Field(
+        description="Pasarela con la que PYBOX cobra a sus organizaciones"
+    )
     secrets: dict[str, str] = Field(
         default_factory=dict,
-        description="Valores secretos en claro (se cifran al guardar). Vacío = conservar los existentes. Enviar un valor rota ese secreto.",
+        description=(
+            "Valores secretos en claro (se cifran al guardar). Vacío = conservar "
+            "los existentes. Enviar un valor rota ese secreto."
+        ),
     )
     public_config: dict[str, str] = Field(
         default_factory=dict,
@@ -23,7 +32,10 @@ class PlatformGatewayCredentialUpsert(BaseSchema):
     )
     lookup_key: str | None = Field(
         default=None,
-        description="Identificador del proveedor para resolver por igualdad (p. ej. application_id de MP)",
+        description=(
+            "Identificador del proveedor para resolver por igualdad (p. ej. "
+            "application_id de MP)"
+        ),
     )
     is_active: bool = Field(default=True, description="Si la credencial está activa")
 

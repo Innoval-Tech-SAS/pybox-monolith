@@ -1,7 +1,8 @@
-﻿import uuid
+import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import BaseModel
@@ -11,14 +12,32 @@ class ReportModel(BaseModel):
     __tablename__ = "reportes"
 
     name: Mapped[str] = mapped_column(String, nullable=False, name="nombre")
-    description: Mapped[str | None] = mapped_column(String, nullable=True, name="descripcion")
-    report_config: Mapped[dict] = mapped_column(JSONB, nullable=False, name="configuracion_reporte")
+    description: Mapped[str | None] = mapped_column(
+        String, nullable=True, name="descripcion"
+    )
+    report_config: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, name="configuracion_reporte"
+    )
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, index=True, name="id_organizacion"
+        PgUUID(as_uuid=True),
+        ForeignKey("entidades.id"),
+        nullable=False,
+        index=True,
+        name="id_organizacion",
     )
     entity_id: Mapped[uuid.UUID | None] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=True, index=True, name="id_entidad"
+        PgUUID(as_uuid=True),
+        ForeignKey("entidades.id"),
+        nullable=True,
+        index=True,
+        name="id_entidad",
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="activo")
-    is_global: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True, name="es_global")
-    category: Mapped[str | None] = mapped_column(String, nullable=True, name="categoria")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, name="activo"
+    )
+    is_global: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, index=True, name="es_global"
+    )
+    category: Mapped[str | None] = mapped_column(
+        String, nullable=True, name="categoria"
+    )

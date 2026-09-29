@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import base64
 from typing import Optional
@@ -42,7 +42,7 @@ class PasswordHasherService:
     def verify_password(self, stored_hash: str, password: str) -> bool:
         try:
             return self._ph.verify(stored_hash, self._mix(password))
-        except (InvalidHashError, VerifyMismatchError):
+        except InvalidHashError, VerifyMismatchError:
             return False
 
     def verify_and_maybe_rehash(
@@ -52,7 +52,7 @@ class PasswordHasherService:
     ) -> tuple[bool, str | None]:
         try:
             is_valid = self._ph.verify(stored_hash, self._mix(password))
-        except (InvalidHashError, VerifyMismatchError):
+        except InvalidHashError, VerifyMismatchError:
             return False, None
 
         if is_valid and self._ph.check_needs_rehash(stored_hash):

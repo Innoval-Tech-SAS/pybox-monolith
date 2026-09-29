@@ -12,7 +12,11 @@ def _week_bounds(today: date) -> tuple[date, date]:
 
 def _month_bounds(today: date) -> tuple[date, date]:
     start = today.replace(day=1)
-    next_month = start.replace(year=start.year + 1, month=1) if start.month == 12 else start.replace(month=start.month + 1)
+    next_month = (
+        start.replace(year=start.year + 1, month=1)
+        if start.month == 12
+        else start.replace(month=start.month + 1)
+    )
     return start, next_month - timedelta(days=1)
 
 

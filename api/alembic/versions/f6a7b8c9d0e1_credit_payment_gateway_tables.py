@@ -20,9 +20,10 @@ Create Date: 2026-09-28 13:30:00.000000
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "f6a7b8c9d0e1"
 down_revision: Union[str, None] = "e5f6a7b8c9d0"
@@ -39,7 +40,9 @@ _CHARGE_MODES = ("CHECKOUT", "AUTOMATIC_3RI")
 def upgrade() -> None:
     sa.Enum(*_PAYMENT_SOURCE_TYPES, name="tipo_fuente_pago").create(op.get_bind())
     sa.Enum(*_PAYMENT_SOURCE_STATUSES, name="estado_fuente_pago").create(op.get_bind())
-    sa.Enum(*_ATTEMPT_STATUSES, name="estado_intento_pago_credito").create(op.get_bind())
+    sa.Enum(*_ATTEMPT_STATUSES, name="estado_intento_pago_credito").create(
+        op.get_bind()
+    )
     sa.Enum(*_CHARGE_MODES, name="modo_cobro").create(op.get_bind())
 
     op.create_table(
@@ -47,14 +50,26 @@ def upgrade() -> None:
         sa.Column("id_deudor", sa.UUID(), nullable=False),
         sa.Column(
             "proveedor",
-            postgresql.ENUM(*_ORG_GATEWAY_PROVIDERS, name="proveedor_pasarela_organizacion", create_type=False),
+            postgresql.ENUM(
+                *_ORG_GATEWAY_PROVIDERS,
+                name="proveedor_pasarela_organizacion",
+                create_type=False,
+            ),
             nullable=False,
         ),
-        sa.Column("tipo", postgresql.ENUM(*_PAYMENT_SOURCE_TYPES, name="tipo_fuente_pago", create_type=False), nullable=False),
+        sa.Column(
+            "tipo",
+            postgresql.ENUM(
+                *_PAYMENT_SOURCE_TYPES, name="tipo_fuente_pago", create_type=False
+            ),
+            nullable=False,
+        ),
         sa.Column("id_fuente_proveedor", sa.String(length=255), nullable=False),
         sa.Column(
             "estado",
-            postgresql.ENUM(*_PAYMENT_SOURCE_STATUSES, name="estado_fuente_pago", create_type=False),
+            postgresql.ENUM(
+                *_PAYMENT_SOURCE_STATUSES, name="estado_fuente_pago", create_type=False
+            ),
             nullable=False,
         ),
         sa.Column("inscrito_3ds", sa.Boolean(), nullable=False),
@@ -67,12 +82,18 @@ def upgrade() -> None:
         sa.Column("fecha_actualizacion", sa.DateTime(timezone=True), nullable=True),
         sa.Column("eliminado_en", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["id_deudor"], ["deudores.id"], name=op.f("fk_fuentes_pago_deudor_id_deudor_deudores"), ondelete="CASCADE"
+            ["id_deudor"],
+            ["deudores.id"],
+            name=op.f("fk_fuentes_pago_deudor_id_deudor_deudores"),
+            ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_fuentes_pago_deudor")),
     )
     op.create_index(
-        op.f("ix_fuentes_pago_deudor_id_deudor"), "fuentes_pago_deudor", ["id_deudor"], unique=False
+        op.f("ix_fuentes_pago_deudor_id_deudor"),
+        "fuentes_pago_deudor",
+        ["id_deudor"],
+        unique=False,
     )
     op.create_index(
         op.f("ix_fuentes_pago_deudor_id_fuente_proveedor"),
@@ -87,20 +108,34 @@ def upgrade() -> None:
         sa.Column("numero_intento", sa.Integer(), nullable=False),
         sa.Column(
             "proveedor",
-            postgresql.ENUM(*_ORG_GATEWAY_PROVIDERS, name="proveedor_pasarela_organizacion", create_type=False),
+            postgresql.ENUM(
+                *_ORG_GATEWAY_PROVIDERS,
+                name="proveedor_pasarela_organizacion",
+                create_type=False,
+            ),
             nullable=False,
         ),
-        sa.Column("modo_cobro", postgresql.ENUM(*_CHARGE_MODES, name="modo_cobro", create_type=False), nullable=False),
+        sa.Column(
+            "modo_cobro",
+            postgresql.ENUM(*_CHARGE_MODES, name="modo_cobro", create_type=False),
+            nullable=False,
+        ),
         sa.Column("referencia_proveedor", sa.String(length=60), nullable=True),
         sa.Column("id_transaccion_proveedor", sa.String(length=255), nullable=True),
         sa.Column("id_fuente_pago", sa.UUID(), nullable=True),
         sa.Column("monto_esperado_centavos", sa.BigInteger(), nullable=True),
         sa.Column(
             "estado",
-            postgresql.ENUM(*_ATTEMPT_STATUSES, name="estado_intento_pago_credito", create_type=False),
+            postgresql.ENUM(
+                *_ATTEMPT_STATUSES,
+                name="estado_intento_pago_credito",
+                create_type=False,
+            ),
             nullable=False,
         ),
-        sa.Column("payload_proveedor", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column(
+            "payload_proveedor", postgresql.JSONB(astext_type=sa.Text()), nullable=True
+        ),
         sa.Column("permalink_aceptacion", sa.String(length=500), nullable=True),
         sa.Column("permalink_datos_personales", sa.String(length=500), nullable=True),
         sa.Column("fecha_aceptacion", sa.DateTime(timezone=True), nullable=True),
@@ -109,7 +144,10 @@ def upgrade() -> None:
         sa.Column("fecha_actualizacion", sa.DateTime(timezone=True), nullable=True),
         sa.Column("eliminado_en", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(
-            ["id_pago"], ["pagos.id"], name=op.f("fk_intentos_pago_credito_id_pago_pagos"), ondelete="CASCADE"
+            ["id_pago"],
+            ["pagos.id"],
+            name=op.f("fk_intentos_pago_credito_id_pago_pagos"),
+            ondelete="CASCADE",
         ),
         sa.ForeignKeyConstraint(
             ["id_fuente_pago"],
@@ -118,7 +156,12 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_intentos_pago_credito")),
     )
-    op.create_index(op.f("ix_intentos_pago_credito_id_pago"), "intentos_pago_credito", ["id_pago"], unique=False)
+    op.create_index(
+        op.f("ix_intentos_pago_credito_id_pago"),
+        "intentos_pago_credito",
+        ["id_pago"],
+        unique=False,
+    )
     op.create_index(
         op.f("ix_intentos_pago_credito_referencia_proveedor"),
         "intentos_pago_credito",
@@ -135,14 +178,25 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index(
-        op.f("ix_intentos_pago_credito_id_transaccion_proveedor"), table_name="intentos_pago_credito"
+        op.f("ix_intentos_pago_credito_id_transaccion_proveedor"),
+        table_name="intentos_pago_credito",
     )
-    op.drop_index(op.f("ix_intentos_pago_credito_referencia_proveedor"), table_name="intentos_pago_credito")
-    op.drop_index(op.f("ix_intentos_pago_credito_id_pago"), table_name="intentos_pago_credito")
+    op.drop_index(
+        op.f("ix_intentos_pago_credito_referencia_proveedor"),
+        table_name="intentos_pago_credito",
+    )
+    op.drop_index(
+        op.f("ix_intentos_pago_credito_id_pago"), table_name="intentos_pago_credito"
+    )
     op.drop_table("intentos_pago_credito")
 
-    op.drop_index(op.f("ix_fuentes_pago_deudor_id_fuente_proveedor"), table_name="fuentes_pago_deudor")
-    op.drop_index(op.f("ix_fuentes_pago_deudor_id_deudor"), table_name="fuentes_pago_deudor")
+    op.drop_index(
+        op.f("ix_fuentes_pago_deudor_id_fuente_proveedor"),
+        table_name="fuentes_pago_deudor",
+    )
+    op.drop_index(
+        op.f("ix_fuentes_pago_deudor_id_deudor"), table_name="fuentes_pago_deudor"
+    )
     op.drop_table("fuentes_pago_deudor")
 
     sa.Enum(*_CHARGE_MODES, name="modo_cobro").drop(op.get_bind())

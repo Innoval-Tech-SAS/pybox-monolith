@@ -1,13 +1,13 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
 
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
-from identity.auth.enums.auth_enums import AuthProvider
 from core.config.logger import logger
 from core.tools.config_tools import get_or_throw
+from identity.auth.enums.auth_enums import AuthProvider
 
 
 @dataclass(frozen=True)

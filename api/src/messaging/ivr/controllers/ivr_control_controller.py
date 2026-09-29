@@ -1,7 +1,4 @@
 import uuid
-from typing import Annotated
-
-from fastapi import Query
 
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession

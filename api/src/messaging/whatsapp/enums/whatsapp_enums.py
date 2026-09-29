@@ -20,8 +20,9 @@ class MessageDirection(StrEnum):
 
 
 class WhatsAppMessageType(StrEnum):
-    """Tipo de un mensaje de WhatsApp — espejo literal del campo `type` que documenta
-    la API de Meta (Cloud API), no se traduce (mismo criterio que WhatsAppTemplateCategory).
+    """Tipo de un mensaje de WhatsApp — espejo literal del campo `type`
+    que documenta la API de Meta (Cloud API), no se traduce (mismo
+    criterio que WhatsAppTemplateCategory).
 
     Confirmado con la documentación oficial de Meta for Developers:
     - Entrante (webhook `messages[].type`): TEXT/IMAGE/AUDIO/VIDEO/DOCUMENT/STICKER/

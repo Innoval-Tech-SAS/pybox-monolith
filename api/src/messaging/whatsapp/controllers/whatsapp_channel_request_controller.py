@@ -12,19 +12,29 @@ from messaging.whatsapp.schemas.whatsapp_channel_request_schemas import (
     WhatsAppChannelRequestResponse,
 )
 
-router = APIRouter(prefix="/whatsapp/channel-requests", tags=["Solicitudes de canal WhatsApp"])
+router = APIRouter(
+    prefix="/whatsapp/channel-requests", tags=["Solicitudes de canal WhatsApp"]
+)
 
 
-@router.get("/", response_model=WhatsAppChannelRequestListResponse, summary="Listar solicitudes de canal WhatsApp")
+@router.get(
+    "/",
+    response_model=WhatsAppChannelRequestListResponse,
+    summary="Listar solicitudes de canal WhatsApp",
+)
 async def list_whatsapp_channel_requests(
     session: CurrentSession,
     service: WhatsAppChannelRequestServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
-    request_status: Annotated[ChannelRequestStatus | None, Query(alias="status")] = None,
+    request_status: Annotated[
+        ChannelRequestStatus | None, Query(alias="status")
+    ] = None,
 ) -> WhatsAppChannelRequestListResponse:
-    items, total = await service.list_by_org(organization_id, page, page_size, session, request_status)
+    items, total = await service.list_by_org(
+        organization_id, page, page_size, session, request_status
+    )
     return WhatsAppChannelRequestListResponse(
         items=[WhatsAppChannelRequestResponse.model_validate(item) for item in items],
         total=total,

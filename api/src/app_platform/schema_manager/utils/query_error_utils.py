@@ -25,5 +25,8 @@ def describe_db_error(exc: DBAPIError) -> tuple[str, int]:
     base = DB_ERROR_MESSAGES.get(sqlstate or "")
     if base is None:
         suffix = f" (código {sqlstate})" if sqlstate else ""
-        return f"Error de base de datos al ejecutar la consulta{suffix}.", QUERY_FAILURE_STATUS_CODE
+        return (
+            f"Error de base de datos al ejecutar la consulta{suffix}.",
+            QUERY_FAILURE_STATUS_CODE,
+        )
     return (f"{base} Detalle: {detail}" if detail else base), INVALID_QUERY_STATUS_CODE

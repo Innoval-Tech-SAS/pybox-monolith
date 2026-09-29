@@ -2,7 +2,8 @@ from enum import StrEnum
 
 
 class JudicialPriority(StrEnum):
-    """Urgencia de una notificación judicial, tal como la ordena el buzón del titular."""
+    """Urgencia de una notificación judicial, tal como la ordena el buzón del
+    titular."""
 
     URGENT = "URGENTE"
     MEDIUM = "MEDIA"

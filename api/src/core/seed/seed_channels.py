@@ -10,35 +10,29 @@ _CHANNELS: list[tuple[ChannelName, str, Currency, str, str]] = [
         "SMS",
         Currency.USD,
         "0.25",
-        "Canal para envío de SMS masivo a través de API."
+        "Canal para envío de SMS masivo a través de API.",
     ),
     (
         ChannelName.EMAIL,
-       "Email",
+        "Email",
         Currency.USD,
         "0.35",
-        "Canal para envío de EMAIL masivo a través de API."
+        "Canal para envío de EMAIL masivo a través de API.",
     ),
     (
         ChannelName.WHATSAPP,
         "WhatsApp",
         Currency.USD,
         "0.50",
-        "Canal para envío de WHATSAPP masivo a través de API."
+        "Canal para envío de WHATSAPP masivo a través de API.",
     ),
-    (
-        ChannelName.CALL,
-        "Llamada",
-        Currency.USD,
-        "0.50",
-        "Canal para llamadas de voz."
-    ),
+    (ChannelName.CALL, "Llamada", Currency.USD, "0.50", "Canal para llamadas de voz."),
     (
         ChannelName.CALL_IA,
         "Llamada IA",
         Currency.USD,
         "0.50",
-        "Canal para llamadas de voz automatizadas con IA."
+        "Canal para llamadas de voz automatizadas con IA.",
     ),
 ]
 

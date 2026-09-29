@@ -3,9 +3,12 @@ from typing import Annotated
 
 from fastapi import Query, Response, status
 
-from receivables.debtors.schemas.debtor_document_schemas import DebtorDocumentListResponse
 from core.config.api_router import APIRouter
+from core.security.dependencies import CurrentSession
 from receivables.debtors.dependencies import DebtorServiceDep
+from receivables.debtors.schemas.debtor_document_schemas import (
+    DebtorDocumentListResponse,
+)
 from receivables.debtors.schemas.debtor_schemas import (
     AddressResponse,
     ContactMethodResponse,
@@ -19,9 +22,6 @@ from receivables.debtors.schemas.debtor_schemas import (
     DebtorResponse,
     RelatedContactsResponse,
 )
-from core.security.dependencies import CurrentSession
-
-from core.config.logger import logger
 
 router = APIRouter(prefix="/debtors", tags=["Deudores"])
 
@@ -30,7 +30,9 @@ router = APIRouter(prefix="/debtors", tags=["Deudores"])
     "/",
     response_model=DebtorListResponse,
     summary="Listar deudores",
-    description="Lista paginada de deudores. Requiere `portfolioId` para usuarios no globales.",
+    description=(
+        "Lista paginada de deudores. Requiere `portfolioId` para usuarios no globales."
+    ),
 )
 async def list_debtors(
     session: CurrentSession,
@@ -38,9 +40,15 @@ async def list_debtors(
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
     portfolio_id: Annotated[uuid.UUID | None, Query(alias="portfolioId")] = None,
-    q: Annotated[str | None, Query(description="Búsqueda por nombre o número de documento")] = None,
-    sort: Annotated[str, Query(description="Campo de orden: fullName | documentNumber")] = "fullName",
-    sort_order: Annotated[str, Query(alias="sort_order", pattern="^(asc|desc)$")] = "asc",
+    q: Annotated[
+        str | None, Query(description="Búsqueda por nombre o número de documento")
+    ] = None,
+    sort: Annotated[
+        str, Query(description="Campo de orden: fullName | documentNumber")
+    ] = "fullName",
+    sort_order: Annotated[
+        str, Query(alias="sort_order", pattern="^(asc|desc)$")
+    ] = "asc",
 ) -> DebtorListResponse:
     return await service.list_debtors(
         user_session=session,
@@ -72,7 +80,10 @@ async def get_debtor(
     "/{debtor_id}/related-contacts",
     response_model=RelatedContactsResponse,
     summary="Obtener red de contactos del deudor",
-    description="Retorna el deudor titular y sus co-deudores con direcciones y métodos de contacto.",
+    description=(
+        "Retorna el deudor titular y sus co-deudores con direcciones y métodos "
+        "de contacto."
+    ),
 )
 async def get_related_contacts(
     debtor_id: uuid.UUID,
@@ -102,7 +113,9 @@ async def get_debtor_credits(
     "/{debtor_id}/payments",
     response_model=list[DebtorCreditWithInstallmentsResponse],
     summary="Calendario de pagos del deudor en un portafolio",
-    description="Créditos del deudor (como titular) con sus cuotas, para el portafolio dado.",
+    description=(
+        "Créditos del deudor (como titular) con sus cuotas, para el portafolio dado."
+    ),
 )
 async def get_debtor_payments(
     debtor_id: uuid.UUID,
@@ -110,14 +123,18 @@ async def get_debtor_payments(
     service: DebtorServiceDep,
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
 ) -> list[DebtorCreditWithInstallmentsResponse]:
-    return await service.get_debtor_credits_with_installments(debtor_id, portfolio_id, session)
+    return await service.get_debtor_credits_with_installments(
+        debtor_id, portfolio_id, session
+    )
 
 
 @router.get(
     "/{debtor_id}/documents",
     response_model=DebtorDocumentListResponse,
     summary="Documentos del deudor en un portafolio",
-    description="Repositorio de documentos del deudor, del más reciente al más antiguo.",
+    description=(
+        "Repositorio de documentos del deudor, del más reciente al más antiguo."
+    ),
 )
 async def get_debtor_documents(
     debtor_id: uuid.UUID,
@@ -141,7 +158,9 @@ async def get_debtor_document_content(
     service: DebtorServiceDep,
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
 ) -> Response:
-    return await service.get_debtor_document_content(debtor_id, document_id, portfolio_id, session)
+    return await service.get_debtor_document_content(
+        debtor_id, document_id, portfolio_id, session
+    )
 
 
 @router.post(
@@ -195,5 +214,7 @@ async def create_contact_method(
     service: DebtorServiceDep,
     portfolio_id: Annotated[uuid.UUID | None, Query(alias="portfolioId")] = None,
 ) -> ContactMethodResponse:
-    contact = await service.create_contact_method(debtor_id, data, session, portfolio_id)
+    contact = await service.create_contact_method(
+        debtor_id, data, session, portfolio_id
+    )
     return ContactMethodResponse.model_validate(contact)

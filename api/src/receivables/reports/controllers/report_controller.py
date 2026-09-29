@@ -5,9 +5,12 @@ from fastapi import BackgroundTasks, Depends, Query, status
 from fastapi.responses import JSONResponse
 
 from core.config.api_router import APIRouter
-from core.security.dependencies import CurrentSession
 from core.security.constants.permissions import ORG_REPORTS
-from core.security.policies.security_policies import require_admin_or_org, require_global_admin
+from core.security.dependencies import CurrentSession
+from core.security.policies.security_policies import (
+    require_admin_or_org,
+    require_global_admin,
+)
 from core.security.rate_limit import rate_limit
 from receivables.reports.background_tasks import execute_and_notify
 from receivables.reports.dependencies import ReportServiceDep
@@ -24,10 +27,17 @@ from receivables.reports.schemas.report_schemas import (
 
 router = APIRouter(prefix="/reports", tags=["Reportes"])
 
-_report_rate_limit = Depends(rate_limit("report-execute", max_attempts=30, window_seconds=60))
+_report_rate_limit = Depends(
+    rate_limit("report-execute", max_attempts=30, window_seconds=60)
+)
 
 
-@router.post("/", response_model=ReportResponse, status_code=status.HTTP_201_CREATED, summary="Crear reporte")
+@router.post(
+    "/",
+    response_model=ReportResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear reporte",
+)
 async def create_report(
     body: ReportCreateRequest,
     session: CurrentSession,
@@ -39,7 +49,9 @@ async def create_report(
     return ReportResponse.model_validate(report)
 
 
-@router.get("/", response_model=ReportListResponse, summary="Listar reportes de la organización")
+@router.get(
+    "/", response_model=ReportListResponse, summary="Listar reportes de la organización"
+)
 async def list_reports(
     session: CurrentSession,
     service: ReportServiceDep,
@@ -57,7 +69,9 @@ async def list_reports(
     )
 
 
-@router.get("/{report_id}", response_model=ReportResponse, summary="Obtener reporte por ID")
+@router.get(
+    "/{report_id}", response_model=ReportResponse, summary="Obtener reporte por ID"
+)
 async def get_report(
     report_id: uuid.UUID,
     session: CurrentSession,
@@ -69,7 +83,9 @@ async def get_report(
     return ReportResponse.model_validate(report)
 
 
-@router.patch("/{report_id}", response_model=ReportResponse, summary="Actualizar reporte")
+@router.patch(
+    "/{report_id}", response_model=ReportResponse, summary="Actualizar reporte"
+)
 async def update_report(
     report_id: uuid.UUID,
     body: ReportUpdateRequest,
@@ -82,7 +98,9 @@ async def update_report(
     return ReportResponse.model_validate(report)
 
 
-@router.delete("/{report_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar reporte")
+@router.delete(
+    "/{report_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar reporte"
+)
 async def delete_report(
     report_id: uuid.UUID,
     session: CurrentSession,
@@ -116,8 +134,14 @@ async def restore_report(
     dependencies=[_report_rate_limit],
     response_model=None,
     responses={
-        200: {"model": ReportExecuteResponse, "description": "Resultado inmediato (modo preview)"},
-        202: {"model": ReportJobAccepted, "description": "Reporte en proceso, notificación vía SSE (modo audit)"},
+        200: {
+            "model": ReportExecuteResponse,
+            "description": "Resultado inmediato (modo preview)",
+        },
+        202: {
+            "model": ReportJobAccepted,
+            "description": "Reporte en proceso, notificación vía SSE (modo audit)",
+        },
     },
 )
 async def execute_report(
@@ -139,7 +163,10 @@ async def execute_report(
             user_id=session.user_id,
         )
         accepted = ReportJobAccepted(
-            message="El reporte se está generando. Recibirás una notificación cuando esté listo.",
+            message=(
+                "El reporte se está generando. Recibirás una notificación "
+                "cuando esté listo."
+            ),
             report_id=report_id,
             mode=body.mode,
         )

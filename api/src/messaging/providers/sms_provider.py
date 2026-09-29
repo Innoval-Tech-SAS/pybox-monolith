@@ -26,12 +26,14 @@ def _sub_shape(sub: list[dict] | None) -> str:
                 parts.append(str(key))
         return ",".join(parts)
 
-    elements = ["{" + keys(el) + "}" if isinstance(el, dict) else type(el).__name__ for el in sub]
+    elements = [
+        "{" + keys(el) + "}" if isinstance(el, dict) else type(el).__name__
+        for el in sub
+    ]
     return "[" + "; ".join(elements) + "]"
 
 
 class NRS360SmsProvider(NRS360BaseProvider):
-
     def __new__(cls) -> "NRS360SmsProvider":
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
@@ -55,10 +57,11 @@ class NRS360SmsProvider(NRS360BaseProvider):
         token = token or self._token
         sender = sender or self._sender
         encoding = resolve_sms_encoding(message, sub)
-        # ``parts`` va explícito: su default es 1 y un mensaje que necesite más partes de
-        # las declaradas no se trunca, falla con error 105. Al elegir ``utf-16`` la parte
-        # baja de 160 a 70 caracteres, así que omitirlo rompería justo los mensajes con
-        # acentos que este encoding pretende arreglar.
+        # ``parts`` va explícito: su default es 1 y un mensaje que necesite
+        # más partes de las declaradas no se trunca, falla con error 105.
+        # Al elegir ``utf-16`` la parte baja de 160 a 70 caracteres, así
+        # que omitirlo rompería justo los mensajes con acentos que este
+        # encoding pretende arreglar.
         parts = resolve_sms_parts(message, sub, encoding)
         if parts >= SMS_MAX_PARTS:
             logger.warning(
@@ -78,10 +81,12 @@ class NRS360SmsProvider(NRS360BaseProvider):
         if sub:
             payload["sub"] = sub
         logger.info("[nrs360] sms_send_start | recipients=%d", len(to))
-        # Payload de salida (sin valores del sub) para poder contrastar el envío OTP contra
-        # el de campaña ante el error 360nrs code=101 "Internal Database error".
+        # Payload de salida (sin valores del sub) para poder contrastar el
+        # envío OTP contra el de campaña ante el error 360nrs code=101
+        # "Internal Database error".
         logger.info(
-            "[nrs360] sms_payload | to=%d from=%s campaign=%s encoding=%s parts=%d sub_len=%d sub_shape=%s",
+            "[nrs360] sms_payload | to=%d from=%s campaign=%s encoding=%s "
+            "parts=%d sub_len=%d sub_shape=%s",
             len(to),
             sender,
             payload["campaignName"],
@@ -94,7 +99,9 @@ class NRS360SmsProvider(NRS360BaseProvider):
             response = await self._request("POST", SMS_ENDPOINT, token, json=payload)
             body = response.json()
             result = body.get("result", [])
-            ids_by_recipient = {item["to"]: item["id"] for item in result if item.get("id")}
+            ids_by_recipient = {
+                item["to"]: item["id"] for item in result if item.get("id")
+            }
             sending_id = body.get("sendingId")
             logger.info(
                 "[nrs360] sms_sent | recipients=%d response_items=%d sending_id=%s",
@@ -102,7 +109,11 @@ class NRS360SmsProvider(NRS360BaseProvider):
                 len(result),
                 sending_id,
             )
-            return True, ids_by_recipient, str(sending_id) if sending_id is not None else None
+            return (
+                True,
+                ids_by_recipient,
+                str(sending_id) if sending_id is not None else None,
+            )
         except httpx.HTTPStatusError as exc:
             response_body = exc.response.text[:500] if exc.response is not None else ""
             logger.error(
@@ -112,5 +123,7 @@ class NRS360SmsProvider(NRS360BaseProvider):
             )
             return False, None, None
         except Exception as exc:
-            logger.error("[nrs360] sms_error | error=%s detail=%s", type(exc).__name__, exc)
+            logger.error(
+                "[nrs360] sms_error | error=%s detail=%s", type(exc).__name__, exc
+            )
             return False, None, None

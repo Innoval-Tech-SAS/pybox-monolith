@@ -4,7 +4,6 @@ from datetime import datetime
 
 from pydantic import Field, field_validator
 
-from core.base.schema_base import BaseSchema
 from app_platform.support.enums.support_enums import (
     IdentityTopic,
     IncidentTopic,
@@ -15,6 +14,7 @@ from app_platform.support.enums.support_enums import (
     SupportTicketPriority,
     SupportTicketStatus,
 )
+from core.base.schema_base import BaseSchema
 
 
 @dataclass
@@ -51,18 +51,34 @@ _TOPIC_CASE_TYPE: dict[str, SupportCaseType] = {
 
 class TicketCategorySchema(BaseSchema):
     label: str = Field(description="Nombre de la categoría")
-    topic: str = Field(description="Identificador estable de la categoría (RequirementTopic o IncidentTopic)")
-    case_type: SupportCaseType = Field(description="Tipo de caso derivado del topic: incident o requirement")
+    topic: str = Field(
+        description=(
+            "Identificador estable de la categoría (RequirementTopic o IncidentTopic)"
+        )
+    )
+    case_type: SupportCaseType = Field(
+        description="Tipo de caso derivado del topic: incident o requirement"
+    )
     description: str = Field(description="Descripción de la categoría")
     icon: str = Field(description="Nombre del icono")
 
 
 class CreateTicketSchema(BaseSchema):
-    organization_id: uuid.UUID | None = Field(default=None, description="ID de la organización (obligatorio para scope ORG y SELF)")
+    organization_id: uuid.UUID | None = Field(
+        default=None,
+        description="ID de la organización (obligatorio para scope ORG y SELF)",
+    )
     title: str = Field(description="Título del ticket")
-    topic: str = Field(description="Categoría del ticket — determina el case_type, ver RequirementTopic/IncidentTopic")
+    topic: str = Field(
+        description=(
+            "Categoría del ticket — determina el case_type, "
+            "ver RequirementTopic/IncidentTopic"
+        )
+    )
     notes: str = Field(description="Descripción detallada del caso")
-    priority: SupportTicketPriority = Field(default=SupportTicketPriority.MEDIUM, description="Prioridad del ticket")
+    priority: SupportTicketPriority = Field(
+        default=SupportTicketPriority.MEDIUM, description="Prioridad del ticket"
+    )
 
     @field_validator("topic")
     @classmethod
@@ -82,7 +98,9 @@ class TicketOrgSchema(BaseSchema):
 
 
 class ResolveTicketSchema(BaseSchema):
-    approved: bool = Field(description="True si la resolución fue aprobada por el cliente")
+    approved: bool = Field(
+        description="True si la resolución fue aprobada por el cliente"
+    )
     notes: str = Field(description="Notas de cierre")
 
 
@@ -102,7 +120,13 @@ class SupportTicketSchema(BaseSchema):
     id: uuid.UUID = Field(description="ID único del ticket")
     ticket_number: int = Field(description="Número secuencial del ticket")
     case_type: SupportCaseType = Field(description="Tipo de caso")
-    topic: str | None = Field(default=None, description="Categoría del ticket (RequirementTopic o IncidentTopic); null en tickets antiguos sin migrar")
+    topic: str | None = Field(
+        default=None,
+        description=(
+            "Categoría del ticket (RequirementTopic o IncidentTopic); "
+            "null en tickets antiguos sin migrar"
+        ),
+    )
     status: SupportTicketStatus = Field(description="Estado actual del ticket")
     priority: SupportTicketPriority = Field(description="Prioridad del ticket")
     organization_id: uuid.UUID | None = Field(description="ID de la organización")
@@ -129,12 +153,18 @@ class OrgDocSchema(BaseSchema):
 
 class OrgDocsSchema(BaseSchema):
     org_name: str = Field(description="Nombre de la organización")
-    documents: list[OrgDocSchema] = Field(description="Lista de documentos de verificación")
+    documents: list[OrgDocSchema] = Field(
+        description="Lista de documentos de verificación"
+    )
 
 
 class CreateMessageSchema(BaseSchema):
-    body: str = Field(description="Contenido del mensaje", min_length=1, max_length=4000)
-    is_internal: bool = Field(default=False, description="True si el mensaje es solo para agentes")
+    body: str = Field(
+        description="Contenido del mensaje", min_length=1, max_length=4000
+    )
+    is_internal: bool = Field(
+        default=False, description="True si el mensaje es solo para agentes"
+    )
 
 
 class TicketMessageSchema(BaseSchema):
@@ -166,5 +196,7 @@ class TicketMetricsSchema(BaseSchema):
     closed: int = Field(description="Tickets cerrados")
     created_today: int = Field(description="Tickets creados hoy")
     resolved_today: int = Field(description="Tickets resueltos hoy")
-    avg_resolution_hours: float | None = Field(description="Tiempo promedio de resolución en horas")
+    avg_resolution_hours: float | None = Field(
+        description="Tiempo promedio de resolución en horas"
+    )
     by_priority: dict[str, int] = Field(description="Tickets por prioridad")

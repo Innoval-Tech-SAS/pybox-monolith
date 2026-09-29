@@ -32,10 +32,11 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
         self, organization_id: uuid.UUID, period_start: datetime, period_end: datetime
     ) -> list[CampaignUsageRow]:
         """
-        Desglose de consumo facturable por campaña dentro del periodo [period_start, period_end).
-        Solo cuenta contactos efectivamente enviados (sent_at no nulo) con precio registrado;
-        el costo se suma a partir del snapshot de precio de cada envío individual, ya que el
-        precio del canal puede haber cambiado durante el periodo.
+        Desglose de consumo facturable por campaña dentro del periodo
+        [period_start, period_end). Solo cuenta contactos efectivamente
+        enviados (sent_at no nulo) con precio registrado; el costo se suma
+        a partir del snapshot de precio de cada envío individual, ya que
+        el precio del canal puede haber cambiado durante el periodo.
         """
         stmt = (
             select(
@@ -71,7 +72,9 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
                 campaign_id=campaign_id,
                 campaign_name=campaign_name,
                 channel_id=channel_id,
-                channel_name=channel_name.value if hasattr(channel_name, "value") else channel_name,
+                channel_name=channel_name.value
+                if hasattr(channel_name, "value")
+                else channel_name,
                 currency=currency or "USD",
                 quantity=quantity,
                 subtotal=subtotal or Decimal("0"),
@@ -90,7 +93,8 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
     async def get_monthly_sends_by_campaign(
         self, organization_id: uuid.UUID, campaign_id: uuid.UUID, period_start: datetime
     ) -> list[tuple[datetime, int]]:
-        """Conteo de envios efectivos (sent_at no nulo) agrupado por mes desde period_start."""
+        """Conteo de envios efectivos (sent_at no nulo) agrupado por mes
+        desde period_start."""
         month = func.date_trunc("month", ContactModel.sent_at)
         stmt = (
             select(month, func.count(ContactModel.id))
@@ -133,7 +137,8 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
         page: int,
         page_size: int,
     ) -> list[tuple[uuid.UUID | None, str, int, Sequence[ContactModel]]]:
-        """Envíos del deudor en el portafolio, agrupados por canal; cada canal pagina de forma independiente."""
+        """Envíos del deudor en el portafolio, agrupados por canal; cada
+        canal pagina de forma independiente."""
         base_filters = (
             ContactModel.debtor_id == debtor_id,
             ContactModel.organization_id == organization_id,
@@ -146,7 +151,9 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
                 ChannelModel.name,
                 func.count(ContactModel.id),
             )
-            .outerjoin(ChannelModel, ChannelModel.id == ContactModel.snapshot_channel_id)
+            .outerjoin(
+                ChannelModel, ChannelModel.id == ContactModel.snapshot_channel_id
+            )
             .where(*base_filters)
             .group_by(ContactModel.snapshot_channel_id, ChannelModel.name)
             .order_by(func.count(ContactModel.id).desc())
@@ -164,12 +171,18 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
             items_stmt = (
                 select(ContactModel)
                 .where(*base_filters, channel_filter)
-                .order_by(ContactModel.sent_at.desc().nullslast(), ContactModel.id.desc())
+                .order_by(
+                    ContactModel.sent_at.desc().nullslast(), ContactModel.id.desc()
+                )
                 .offset(offset)
                 .limit(page_size)
             )
             items_result = await self.session.execute(items_stmt)
-            name = channel_name.value if hasattr(channel_name, "value") else (channel_name or "Sin canal")
+            name = (
+                channel_name.value
+                if hasattr(channel_name, "value")
+                else (channel_name or "Sin canal")
+            )
             groups.append((channel_id, name, total, items_result.scalars().all()))
         return groups
 
@@ -208,7 +221,7 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
             .distinct()
         )
         result = await self.session.execute(stmt)
-        return [(sending_id, channel_name) for sending_id, channel_name in result.all()]
+        return list(result.all())
 
     async def get_by_sending_and_recipient(
         self, sending_id: str, recipient: str
@@ -247,14 +260,18 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
             return
         await self.session.execute(
             update(ContactModel)
-            .where(ContactModel.id.in_(contact_ids), ContactModel.status == ContactStatus.SENT)
+            .where(
+                ContactModel.id.in_(contact_ids),
+                ContactModel.status == ContactStatus.SENT,
+            )
             .values(status=ContactStatus.FAILED)
         )
 
     async def get_send_status_counts(
         self, organization_id: uuid.UUID, portfolio_id: uuid.UUID | None = None
     ) -> list[tuple[str, int]]:
-        """Conteo de contactos por status; solo devuelve los statuses con al menos un registro."""
+        """Conteo de contactos por status; solo devuelve los statuses con
+        al menos un registro."""
         filters = [ContactModel.organization_id == organization_id]
         if portfolio_id is not None:
             filters.append(ContactModel.portfolio_id == portfolio_id)
@@ -267,10 +284,20 @@ class ContactRepository(SoftDeleteRepositoryBase[ContactModel]):
         result = await self.session.execute(stmt)
         return [(str(s), c) for s, c in result.all()]
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de los contactos de la organización con el sello de la organización."""
-        await self.soft_delete_where(ContactModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de los contactos de la organización con el
+        sello de la organización."""
+        await self.soft_delete_where(
+            ContactModel.organization_id == organization_id, deleted_at=deleted_at
+        )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
-        await self.restore_where(ContactModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó
+        con la organización."""
+        await self.restore_where(
+            ContactModel.organization_id == organization_id, deleted_at=deleted_at
+        )

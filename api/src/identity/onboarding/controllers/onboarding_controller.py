@@ -1,9 +1,11 @@
-﻿import json
+import json
 
 from fastapi import Depends, Form, HTTPException, UploadFile, status
 
 from core.config.api_router import APIRouter
 from core.config.logger import logger
+from core.security.dependencies import PendingMfaSession
+from core.security.rate_limit import rate_limit
 from identity.auth.exceptions import (
     CodeAlreadyUsedException,
     CodeExpiredException,
@@ -24,21 +26,23 @@ from identity.onboarding.schemas.onboarding_schemas import (
     UpdateProfileSchema,
     VerifyOtpSchema,
 )
-from core.security.dependencies import PendingMfaSession
-from core.security.rate_limit import rate_limit
 from identity.users.enums.user_enums import UserScope
 
 router = APIRouter(prefix="/onboarding", tags=["Onboarding"])
 
 # El código OTP es de 6 dígitos: sin límite de intentos es fuerza-bruteable.
-_otp_rate_limit = Depends(rate_limit("onboarding-otp", max_attempts=10, window_seconds=300))
+_otp_rate_limit = Depends(
+    rate_limit("onboarding-otp", max_attempts=10, window_seconds=300)
+)
 
 
 @router.get(
     "/status",
     response_model=OnboardingStatusSchema,
     summary="Consultar estado del onboarding",
-    description="Indica qué pasos del onboarding ha completado el usuario y cuáles faltan.",
+    description=(
+        "Indica qué pasos del onboarding ha completado el usuario y cuáles faltan."
+    ),
 )
 async def get_status(
     session: PendingMfaSession,
@@ -96,27 +100,34 @@ async def verify_otp(
             session.user_id,
             body.channel.value,
         )
-    except CodeNotFoundException:
+    except CodeNotFoundException as e:
         logger.warning(
             "[onboarding] verify_otp_failed | user_id=%s channel=%s reason=not_found",
             session.user_id,
             body.channel.value,
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Código no encontrado")
-    except CodeExpiredException:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Código no encontrado"
+        ) from e
+    except CodeExpiredException as e:
         logger.warning(
             "[onboarding] verify_otp_failed | user_id=%s channel=%s reason=expired",
             session.user_id,
             body.channel.value,
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código ha expirado")
-    except CodeAlreadyUsedException:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="El código ha expirado"
+        ) from e
+    except CodeAlreadyUsedException as e:
         logger.warning(
-            "[onboarding] verify_otp_failed | user_id=%s channel=%s reason=already_used",
+            "[onboarding] verify_otp_failed | user_id=%s channel=%s "
+            "reason=already_used",
             session.user_id,
             body.channel.value,
         )
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El código ya fue utilizado")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="El código ya fue utilizado"
+        ) from e
 
 
 @router.patch(
@@ -162,9 +173,10 @@ async def update_profile(
     "/identity-document",
     response_model=IdentityDocumentSubmittedSchema,
     summary="Subir documento de identidad (titulares SELF)",
-    description="Paso de onboarding para titulares: sube su documento de identidad (PDF o "
-    "foto) y abre el ticket de validación. Gatea el acceso a /credits/my-credits, "
-    "/statements/my-statements y /judicial-notifications/mine hasta que se apruebe.",
+    description="Paso de onboarding para titulares: sube su documento de identidad "
+    "(PDF o foto) y abre el ticket de validación. Gatea el acceso a "
+    "/credits/my-credits, /statements/my-statements y "
+    "/judicial-notifications/mine hasta que se apruebe.",
 )
 async def submit_identity_document(
     session: PendingMfaSession,
@@ -185,7 +197,8 @@ async def submit_identity_document(
     "/organization",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Crear primera organización",
-    description="Paso de onboarding para administradores: registra la organización con sus documentos.",
+    description="Paso de onboarding para administradores: registra la organización "
+    "con sus documentos.",
 )
 async def create_first_org(
     session: PendingMfaSession,
@@ -204,10 +217,16 @@ async def create_first_org(
 
     try:
         parsed = OrganizationOnboardingSchema.model_validate(json.loads(data))
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="El campo 'data' debe ser un JSON válido",
-        )
+        ) from e
 
-    await service.create_first_org(session.user_id, parsed, fiscal_document_file, mercantile_document_file, representative_document_file)
+    await service.create_first_org(
+        session.user_id,
+        parsed,
+        fiscal_document_file,
+        mercantile_document_file,
+        representative_document_file,
+    )

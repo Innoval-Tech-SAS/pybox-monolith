@@ -1,7 +1,9 @@
 import uuid
 
 from app_platform.support.services.support_service import SupportService
-from messaging.whatsapp.repository.whatsapp_org_credentials_repository import WhatsAppOrgCredentialsRepository
+from messaging.whatsapp.repository.whatsapp_org_credentials_repository import (
+    WhatsAppOrgCredentialsRepository,
+)
 
 
 class WhatsAppNumberRequestService:
@@ -24,11 +26,15 @@ class WhatsAppNumberRequestService:
         credentials = await self._credentials_repo.get_by_organization(organization_id)
         return credentials is not None and credentials.active
 
-    async def ensure_number_available(self, organization_id: uuid.UUID, requested_by: uuid.UUID) -> bool:
+    async def ensure_number_available(
+        self, organization_id: uuid.UUID, requested_by: uuid.UUID
+    ) -> bool:
         """Devuelve True si la org ya tiene número. Si no, crea (o reutiliza) el
         ticket de solicitud y devuelve False — no lanza excepción, cada caller
         decide si eso bloquea la operación o solo la deja pendiente."""
         if await self.has_active_number(organization_id):
             return True
-        await self._support_service.ensure_whatsapp_number_ticket(organization_id, requested_by)
+        await self._support_service.ensure_whatsapp_number_ticket(
+            organization_id, requested_by
+        )
         return False

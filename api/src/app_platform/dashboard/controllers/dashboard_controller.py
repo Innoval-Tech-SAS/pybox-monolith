@@ -22,7 +22,9 @@ OrganizationIdQuery = Annotated[uuid.UUID, Query(alias="organizationId")]
 @router.get(
     "/organization-stats",
     response_model=OrganizationStatsResponse,
-    summary="Estadísticas agregadas de portafolios, créditos y deudores de la organización",
+    summary=(
+        "Estadísticas agregadas de portafolios, créditos y deudores de la organización"
+    ),
 )
 async def get_organization_stats(
     session: CurrentSession,

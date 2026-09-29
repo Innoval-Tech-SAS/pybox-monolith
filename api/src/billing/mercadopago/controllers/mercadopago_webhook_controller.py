@@ -3,11 +3,13 @@ from typing import Annotated, Any
 from fastapi import Depends, Header, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from billing.invoices.dependencies import InvoiceServiceDep
+from billing.mercadopago.services.mercadopago_webhook_service import (
+    MercadoPagoWebhookService,
+)
 from core.config.api_router import APIRouter
 from core.config.logger import logger
 from core.database.database import get_main_session
-from billing.invoices.dependencies import InvoiceServiceDep
-from billing.mercadopago.services.mercadopago_webhook_service import MercadoPagoWebhookService
 
 router = APIRouter(prefix="/webhooks/mercadopago", tags=["Webhooks"])
 
@@ -23,7 +25,9 @@ async def handle_mercadopago_webhook(
 ) -> dict[str, bool]:
     logger.info(
         "[billing][mp-webhook] recibido | data_id=%s x_request_id=%s query=%s",
-        data_id, x_request_id, dict(request.query_params),
+        data_id,
+        x_request_id,
+        dict(request.query_params),
     )
 
     raw_body = await request.body()

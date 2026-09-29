@@ -19,12 +19,19 @@ class PortfolioDailyCounterConfigModel(BaseModel):
         index=True,
         name="id_portafolio",
     )
-    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, name="habilitado")
+    enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, name="habilitado"
+    )
     reactivation_mode: Mapped[str] = mapped_column(
         String, nullable=False, default="FROM_TODAY", name="modo_reactivacion"
     )
     updated_by: Mapped[uuid.UUID | None] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True, name="actualizado_por", index=True)
+        PgUUID(as_uuid=True),
+        ForeignKey("usuarios.id"),
+        nullable=True,
+        name="actualizado_por",
+        index=True,
+    )
     last_synced_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, name="ultima_sincronizacion_at"
     )

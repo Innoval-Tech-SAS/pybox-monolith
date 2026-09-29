@@ -12,7 +12,9 @@ _ORDER_TO_ATTEMPT_STATUS: dict[MercadoPagoOrderStatus, PaymentAttemptStatus] = {
 }
 
 
-def mercadopago_order_status_to_attempt_status(order_status: str) -> PaymentAttemptStatus | None:
+def mercadopago_order_status_to_attempt_status(
+    order_status: str,
+) -> PaymentAttemptStatus | None:
     """
     None para REFUNDED/CHARGED_BACK y cualquier status no mapeado: la factura ya
     quedo PAID antes de un reembolso/contracargo, su manejo es un caso aparte

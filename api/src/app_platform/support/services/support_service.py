@@ -8,16 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.documents.models.document_model import DocumentModel
 from app_platform.documents.services.document_service import DocumentService
-from app_platform.support.models.ticket_document_model import TicketDocumentModel
-from app_platform.support.repository.ticket_document_repository import (
-    TICKET_DOCUMENT_STORAGE_DOMAIN,
-    TicketDocumentRepository,
-)
 from app_platform.notifications.services.notification_service import NotificationService
-from identity.organizations.enums.organization_enums import VerificationStatus
-from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
-from identity.organizations.repository.organization_repository import OrganizationRepository
-from receivables.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
 from app_platform.support.enums.support_enums import (
     IdentityTopic,
     IncidentTopic,
@@ -29,19 +20,65 @@ from app_platform.support.enums.support_enums import (
     SupportTicketStatus,
     TicketDocumentCategory,
 )
-from receivables.payments.services.payment_resolution_service import PaymentResolutionService
-from receivables.credits.services.credit_settlement_resolution_service import CreditSettlementResolutionService
-from app_platform.support.models.support_ticket_event_model import SupportTicketEventModel
-from app_platform.support.models.support_ticket_message_model import SupportTicketMessageModel
+from app_platform.support.models.support_ticket_event_model import (
+    SupportTicketEventModel,
+)
+from app_platform.support.models.support_ticket_message_model import (
+    SupportTicketMessageModel,
+)
 from app_platform.support.models.support_ticket_model import SupportTicketModel
-from app_platform.support.repository.support_event_repository import SupportEventRepository
-from app_platform.support.repository.support_message_repository import SupportMessageRepository
-from app_platform.support.repository.support_ticket_repository import SupportTicketRepository
-from app_platform.support.schemas.support_schemas import AssignTicketSchema, CreateMessageSchema, CreateTicketSchema, OrgDocSchema, OrgDocsSchema, ResolveTicketSchema, SupportFilter, SupportTicketSchema, TicketAttachmentSchema, TicketCategorySchema, TicketEventSchema, TicketMessageSchema, TicketMetricsSchema, TicketOrgSchema, UpdateTicketPrioritySchema, UpdateTicketStatusSchema
+from app_platform.support.models.ticket_document_model import TicketDocumentModel
+from app_platform.support.repository.support_event_repository import (
+    SupportEventRepository,
+)
+from app_platform.support.repository.support_message_repository import (
+    SupportMessageRepository,
+)
+from app_platform.support.repository.support_ticket_repository import (
+    SupportTicketRepository,
+)
+from app_platform.support.repository.ticket_document_repository import (
+    TICKET_DOCUMENT_STORAGE_DOMAIN,
+    TicketDocumentRepository,
+)
+from app_platform.support.schemas.support_schemas import (
+    AssignTicketSchema,
+    CreateMessageSchema,
+    CreateTicketSchema,
+    OrgDocSchema,
+    OrgDocsSchema,
+    ResolveTicketSchema,
+    SupportFilter,
+    SupportTicketSchema,
+    TicketAttachmentSchema,
+    TicketCategorySchema,
+    TicketEventSchema,
+    TicketMessageSchema,
+    TicketMetricsSchema,
+    TicketOrgSchema,
+    UpdateTicketPrioritySchema,
+    UpdateTicketStatusSchema,
+)
 from core.database.redis import redis_client
+from identity.organizations.enums.organization_enums import VerificationStatus
+from identity.organizations.repository.organization_membership_repository import (
+    OrganizationMembershipRepository,
+)
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
 from identity.users.enums.user_enums import IdentityVerificationStatus
 from identity.users.repository.user_repository import UserRepository
 from identity.users.schemas.user_session_schema import UserSession, session_key
+from receivables.credits.services.credit_settlement_resolution_service import (
+    CreditSettlementResolutionService,
+)
+from receivables.payments.services.payment_resolution_service import (
+    PaymentResolutionService,
+)
+from receivables.portfolios.repository.portfolio_user_access_repository import (
+    PortfolioUserAccessRepository,
+)
 
 
 class SupportService:
@@ -57,8 +94,8 @@ class SupportService:
         self._notification_service = NotificationService(session)
         self._document_service = DocumentService(session)
         self._user_repo = UserRepository(session)
-        # Los adjuntos cuelgan del ticket vía `documentos_ticket`: el filtro por ticket lo
-        # hace este repo, no una columna polimórfica de `documentos`.
+        # Los adjuntos cuelgan del ticket vía `documentos_ticket`: el filtro por
+        # ticket lo hace este repo, no una columna polimórfica de `documentos`.
         self._ticket_document_repo = TicketDocumentRepository(session)
 
     async def create_org_verification_ticket(
@@ -73,7 +110,10 @@ class SupportService:
                 organization_id=org_id,
                 created_by=created_by,
                 title=f"Validación de Documentos {org_name}",
-                notes=f"Ticket creado automáticamente al registrar empresa: {org_name}. Se debe realizar la verificación documental.",
+                notes=(
+                    f"Ticket creado automáticamente al registrar empresa: "
+                    f"{org_name}. Se debe realizar la verificación documental."
+                ),
                 system_topic=RequirementTopic.DOCUMENT_VALIDATION.value,
             )
         )
@@ -96,11 +136,16 @@ class SupportService:
                 organization_id=None,
                 created_by=user_id,
                 title=f"Validación de identidad — {user_name}",
-                notes=f"Ticket creado automáticamente al subir el documento de identidad de {user_name}.",
+                notes=(
+                    "Ticket creado automáticamente al subir el documento de "
+                    f"identidad de {user_name}."
+                ),
                 system_topic=IdentityTopic.IDENTITY_VALIDATION.value,
             )
         )
-        await self._store_attachments(ticket, [file], TicketDocumentCategory.TICKET_ATTACHMENT, user_id)
+        await self._store_attachments(
+            ticket, [file], TicketDocumentCategory.TICKET_ATTACHMENT, user_id
+        )
         await self._emit_event(ticket, user_id, SupportTicketEventType.CREATED)
         await self._auto_assign(ticket, prefer_global=True)
         return ticket
@@ -127,9 +172,10 @@ class SupportService:
                 created_by=created_by,
                 title=f"Número de WhatsApp para {org_name}",
                 notes=(
-                    f"Ticket creado automáticamente: {org_name} intentó registrar una campaña "
-                    "de WhatsApp sin tener un número configurado. Provisionar el número en Meta "
-                    "Business Manager y configurarlo en la organización (whatsapp-credentials)."
+                    f"Ticket creado automáticamente: {org_name} intentó registrar "
+                    "una campaña de WhatsApp sin tener un número configurado. "
+                    "Provisionar el número en Meta Business Manager y configurarlo "
+                    "en la organización (whatsapp-credentials)."
                 ),
                 system_topic=RequirementTopic.WHATSAPP_NUMBER_REQUEST.value,
             )
@@ -170,20 +216,32 @@ class SupportService:
             result.append(await self._ticket_to_schema(t))
         return result
 
-    async def get_ticket(self, ticket_number: int, f: SupportFilter) -> SupportTicketSchema:
+    async def get_ticket(
+        self, ticket_number: int, f: SupportFilter
+    ) -> SupportTicketSchema:
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f, check_creator=True)
         return await self._ticket_to_schema(ticket)
 
     async def resolve_ticket(
-        self, ticket_number: int, agent_user_id: uuid.UUID, data: ResolveTicketSchema, f: SupportFilter
+        self,
+        ticket_number: int,
+        agent_user_id: uuid.UUID,
+        data: ResolveTicketSchema,
+        f: SupportFilter,
     ) -> SupportTicketSchema:
         if not f.can_resolve:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para resolver tickets.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para resolver tickets.",
+            )
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f)
         if ticket.status == SupportTicketStatus.RESOLVED:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El ticket ya fue resuelto.")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="El ticket ya fue resuelto.",
+            )
 
         prev_status = ticket.status
         ticket.status = SupportTicketStatus.RESOLVED
@@ -192,28 +250,41 @@ class SupportService:
         ticket.resolved_at = datetime.now(timezone.utc)
 
         await self._emit_event(
-            ticket, agent_user_id, SupportTicketEventType.RESOLVED,
-            from_value=prev_status.value, to_value=SupportTicketStatus.RESOLVED.value,
+            ticket,
+            agent_user_id,
+            SupportTicketEventType.RESOLVED,
+            from_value=prev_status.value,
+            to_value=SupportTicketStatus.RESOLVED.value,
         )
 
         if ticket.system_topic == RequirementTopic.DOCUMENT_VALIDATION.value:
             org = await self._org_repo.get_by_id(ticket.organization_id)
             if org is not None:
                 org.verification_status = (
-                    VerificationStatus.APPROVED if data.approved else VerificationStatus.DENIED
+                    VerificationStatus.APPROVED
+                    if data.approved
+                    else VerificationStatus.DENIED
                 )
                 await self._org_repo.update(org)
 
-            await self._notify_org_verification(ticket.organization_id, ticket.created_by, data.approved)
+            await self._notify_org_verification(
+                ticket.organization_id, ticket.created_by, data.approved
+            )
 
         elif ticket.system_topic == PaymentTopic.PAYMENT_RESCHEDULE.value:
-            await self._payment_resolution.apply_reschedule_resolution(ticket.id, data.approved)
+            await self._payment_resolution.apply_reschedule_resolution(
+                ticket.id, data.approved
+            )
 
         elif ticket.system_topic == PaymentTopic.PAYMENT_VALIDATION.value:
-            await self._payment_resolution.apply_validation_resolution(ticket.id, data.approved)
+            await self._payment_resolution.apply_validation_resolution(
+                ticket.id, data.approved
+            )
 
         elif ticket.system_topic == PaymentTopic.CREDIT_SETTLEMENT.value:
-            await self._credit_settlement_resolution.apply_settlement_resolution(ticket.id, data.approved)
+            await self._credit_settlement_resolution.apply_settlement_resolution(
+                ticket.id, data.approved
+            )
 
         elif ticket.system_topic == IdentityTopic.IDENTITY_VALIDATION.value:
             await self._resolve_identity_verification(ticket.created_by, data.approved)
@@ -227,26 +298,82 @@ class SupportService:
         # este formulario genérico (ver guard en create_ticket).
         if session.is_self:
             return [
-                TicketCategorySchema(label="Reprogramación de pago", topic=PaymentTopic.PAYMENT_RESCHEDULE.value, case_type=SupportCaseType.REQUIREMENT, description="Solicita mover la fecha de una cuota (hasta 30 días)", icon="calendar-clock"),
-                TicketCategorySchema(label="Validación de pago", topic=PaymentTopic.PAYMENT_VALIDATION.value, case_type=SupportCaseType.REQUIREMENT, description="Sube el comprobante de un pago que ya realizaste", icon="receipt"),
-                TicketCategorySchema(label="Consulta general", topic=IncidentTopic.GENERAL_INQUIRY.value, case_type=SupportCaseType.INCIDENT, description="Tengo una pregunta sobre el sistema", icon="help-circle"),
+                TicketCategorySchema(
+                    label="Reprogramación de pago",
+                    topic=PaymentTopic.PAYMENT_RESCHEDULE.value,
+                    case_type=SupportCaseType.REQUIREMENT,
+                    description="Solicita mover la fecha de una cuota (hasta 30 días)",
+                    icon="calendar-clock",
+                ),
+                TicketCategorySchema(
+                    label="Validación de pago",
+                    topic=PaymentTopic.PAYMENT_VALIDATION.value,
+                    case_type=SupportCaseType.REQUIREMENT,
+                    description="Sube el comprobante de un pago que ya realizaste",
+                    icon="receipt",
+                ),
+                TicketCategorySchema(
+                    label="Consulta general",
+                    topic=IncidentTopic.GENERAL_INQUIRY.value,
+                    case_type=SupportCaseType.INCIDENT,
+                    description="Tengo una pregunta sobre el sistema",
+                    icon="help-circle",
+                ),
             ]
 
         # No incluye "Solicitud de número de WhatsApp": ese ticket lo crea el sistema
         # automáticamente (ensure_whatsapp_number_ticket), no es una categoría que un
         # usuario elija a mano en este formulario.
         return [
-            TicketCategorySchema(label="Reportar un error", topic=IncidentTopic.BUG_REPORT.value, case_type=SupportCaseType.INCIDENT, description="Algo no funciona como se espera", icon="bug"),
-            TicketCategorySchema(label="Nueva funcionalidad", topic=RequirementTopic.NEW_FEATURE.value, case_type=SupportCaseType.REQUIREMENT, description="Propón una mejora o característica nueva", icon="sparkles"),
-            TicketCategorySchema(label="Problema de acceso", topic=IncidentTopic.ACCESS_ISSUE.value, case_type=SupportCaseType.INCIDENT, description="No puedo acceder a mi cuenta o a un módulo", icon="lock-keyhole"),
-            TicketCategorySchema(label="Consulta general", topic=IncidentTopic.GENERAL_INQUIRY.value, case_type=SupportCaseType.INCIDENT, description="Tengo una pregunta sobre el sistema", icon="help-circle"),
-            TicketCategorySchema(label="Validación de documentos", topic=RequirementTopic.DOCUMENT_VALIDATION.value, case_type=SupportCaseType.REQUIREMENT, description="Verificación documental de empresa", icon="file-check"),
-            TicketCategorySchema(label="Otro", topic=IncidentTopic.OTHER.value, case_type=SupportCaseType.INCIDENT, description="Mi situación no encaja en las categorías anteriores", icon="more-horizontal"),
+            TicketCategorySchema(
+                label="Reportar un error",
+                topic=IncidentTopic.BUG_REPORT.value,
+                case_type=SupportCaseType.INCIDENT,
+                description="Algo no funciona como se espera",
+                icon="bug",
+            ),
+            TicketCategorySchema(
+                label="Nueva funcionalidad",
+                topic=RequirementTopic.NEW_FEATURE.value,
+                case_type=SupportCaseType.REQUIREMENT,
+                description="Propón una mejora o característica nueva",
+                icon="sparkles",
+            ),
+            TicketCategorySchema(
+                label="Problema de acceso",
+                topic=IncidentTopic.ACCESS_ISSUE.value,
+                case_type=SupportCaseType.INCIDENT,
+                description="No puedo acceder a mi cuenta o a un módulo",
+                icon="lock-keyhole",
+            ),
+            TicketCategorySchema(
+                label="Consulta general",
+                topic=IncidentTopic.GENERAL_INQUIRY.value,
+                case_type=SupportCaseType.INCIDENT,
+                description="Tengo una pregunta sobre el sistema",
+                icon="help-circle",
+            ),
+            TicketCategorySchema(
+                label="Validación de documentos",
+                topic=RequirementTopic.DOCUMENT_VALIDATION.value,
+                case_type=SupportCaseType.REQUIREMENT,
+                description="Verificación documental de empresa",
+                icon="file-check",
+            ),
+            TicketCategorySchema(
+                label="Otro",
+                topic=IncidentTopic.OTHER.value,
+                case_type=SupportCaseType.INCIDENT,
+                description="Mi situación no encaja en las categorías anteriores",
+                icon="more-horizontal",
+            ),
         ]
 
     async def get_ticket_orgs(self, session: UserSession) -> list[TicketOrgSchema]:
         if session.is_self:
-            org_ids = await self._portfolio_access_repo.get_distinct_org_ids_by_user(session.user_id)
+            org_ids = await self._portfolio_access_repo.get_distinct_org_ids_by_user(
+                session.user_id
+            )
             result = []
             for org_id in org_ids:
                 org = await self._org_repo.get_by_id(org_id)
@@ -262,34 +389,53 @@ class SupportService:
         orgs = await self._org_repo.get_all()
         return [TicketOrgSchema(id=org.id, name=org.name) for org in orgs]
 
-    async def create_ticket(self, user_id: uuid.UUID, data: CreateTicketSchema, f: SupportFilter) -> SupportTicketSchema:
+    async def create_ticket(
+        self, user_id: uuid.UUID, data: CreateTicketSchema, f: SupportFilter
+    ) -> SupportTicketSchema:
         if not f.can_create:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para crear tickets.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para crear tickets.",
+            )
 
         # Las solicitudes de pago requieren un pago concreto (y comprobante/fecha); se
         # crean desde el calendario financiero, no por este formulario genérico.
         if data.topic in {t.value for t in PaymentTopic}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Las solicitudes de pago se crean desde el calendario financiero.",
+                detail=(
+                    "Las solicitudes de pago se crean desde el calendario financiero."
+                ),
             )
 
         # org_ids=None → GLOBAL scope: organización es opcional
         if f.org_ids is not None and data.organization_id is None:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="La entidad es obligatoria.")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="La entidad es obligatoria.",
+            )
 
         if data.organization_id is not None:
             if f.check_portfolio_access:
-                accesses = await self._portfolio_access_repo.get_active_by_user_and_org(user_id, data.organization_id)
+                accesses = await self._portfolio_access_repo.get_active_by_user_and_org(
+                    user_id, data.organization_id
+                )
                 if not accesses:
-                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta entidad.")
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="No tienes acceso a esta entidad.",
+                    )
             elif f.org_ids is not None and data.organization_id not in f.org_ids:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes acceso a esta entidad.")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="No tienes acceso a esta entidad.",
+                )
 
-        # El topic elegido por el usuario se guarda tal cual — ya no hace falta inferir
-        # nada de case_type. Solo "document_validation" dispara el efecto secundario de
-        # verificación al resolver (ver resolve_ticket/get_org_docs); cualquier otro
-        # topic (incluido "new_feature") es puramente informativo/de categorización.
+        # El topic elegido por el usuario se guarda tal cual — ya no hace falta
+        # inferir nada de case_type. Solo "document_validation" dispara el efecto
+        # secundario de verificación al resolver (ver resolve_ticket/get_org_docs);
+        # cualquier otro topic (incluido "new_feature") es puramente
+        # informativo/de categorización.
         ticket = SupportTicketModel(
             case_type=data.case_type,
             system_topic=data.topic,
@@ -306,106 +452,174 @@ class SupportService:
 
         return await self._ticket_to_schema(ticket)
 
-    async def escalate_ticket(self, ticket_number: int, f: SupportFilter) -> SupportTicketSchema:
+    async def escalate_ticket(
+        self, ticket_number: int, f: SupportFilter
+    ) -> SupportTicketSchema:
         if not f.can_escalate:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para escalar tickets.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para escalar tickets.",
+            )
 
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f)
         if ticket.status == SupportTicketStatus.RESOLVED:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No se puede escalar un ticket resuelto.")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="No se puede escalar un ticket resuelto.",
+            )
 
         old_agent = ticket.assigned_to
         await self._auto_assign(ticket, prefer_global=True)
         if ticket.assigned_to and ticket.assigned_to != old_agent:
             await self._emit_event(
-                ticket, ticket.assigned_to, SupportTicketEventType.ESCALATED,
+                ticket,
+                ticket.assigned_to,
+                SupportTicketEventType.ESCALATED,
                 to_value=str(ticket.assigned_to),
             )
         return await self._ticket_to_schema(ticket)
 
     async def get_org_docs(self, ticket_number: int, f: SupportFilter) -> OrgDocsSchema:
         if not (f.can_resolve or f.can_assign):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado."
+            )
         ticket = await self._get_ticket_or_404(ticket_number)
         if ticket.system_topic != RequirementTopic.DOCUMENT_VALIDATION.value:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Este ticket no es de verificación.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Este ticket no es de verificación.",
+            )
         org = await self._org_repo.get_by_id(ticket.organization_id)
         if org is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Empresa no encontrada."
+            )
 
         def _url(document_id: uuid.UUID | None) -> str | None:
             if document_id is None:
                 return None
             # La ruta se movió al controller de organizaciones: el documento fiscal/
-            # mercantil/representante cuelga de `entidades`, no de una tabla polimórfica.
+            # mercantil/representante cuelga de `entidades`, no de una tabla
+            # polimórfica.
             return f"/organizations/{org.id}/documents/{document_id}/content"
 
         return OrgDocsSchema(
             org_name=org.name,
             documents=[
-                OrgDocSchema(label="Documento fiscal", url=_url(org.fiscal_document_id)),
-                OrgDocSchema(label="Documento mercantil", url=_url(org.mercantile_document_id)),
-                OrgDocSchema(label="Documento representante", url=_url(org.representative_document_id)),
+                OrgDocSchema(
+                    label="Documento fiscal", url=_url(org.fiscal_document_id)
+                ),
+                OrgDocSchema(
+                    label="Documento mercantil", url=_url(org.mercantile_document_id)
+                ),
+                OrgDocSchema(
+                    label="Documento representante",
+                    url=_url(org.representative_document_id),
+                ),
             ],
         )
 
     _TERMINAL_STATUSES = {SupportTicketStatus.RESOLVED, SupportTicketStatus.CLOSED}
 
     async def update_ticket_status(
-        self, ticket_number: int, user_id: uuid.UUID, data: UpdateTicketStatusSchema, f: SupportFilter
+        self,
+        ticket_number: int,
+        user_id: uuid.UUID,
+        data: UpdateTicketStatusSchema,
+        f: SupportFilter,
     ) -> SupportTicketSchema:
         if not f.can_assign:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para mover tickets.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para mover tickets.",
+            )
         if data.status in self._TERMINAL_STATUSES:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Usa el endpoint de cierre para resolver o cerrar tickets.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Usa el endpoint de cierre para resolver o cerrar tickets.",
+            )
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f)
         if ticket.status in self._TERMINAL_STATUSES:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No se puede mover un ticket resuelto o cerrado.")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="No se puede mover un ticket resuelto o cerrado.",
+            )
         prev = ticket.status
         ticket.status = data.status
         updated = await self._ticket_repo.update(ticket)
         await self._emit_event(
-            ticket, user_id, SupportTicketEventType.STATUS_CHANGED,
-            from_value=prev.value, to_value=data.status.value,
+            ticket,
+            user_id,
+            SupportTicketEventType.STATUS_CHANGED,
+            from_value=prev.value,
+            to_value=data.status.value,
         )
         return await self._ticket_to_schema(updated)
 
     async def update_ticket_priority(
-        self, ticket_number: int, user_id: uuid.UUID, data: UpdateTicketPrioritySchema, f: SupportFilter
+        self,
+        ticket_number: int,
+        user_id: uuid.UUID,
+        data: UpdateTicketPrioritySchema,
+        f: SupportFilter,
     ) -> SupportTicketSchema:
         if not f.can_assign:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para cambiar la prioridad.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para cambiar la prioridad.",
+            )
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f)
         prev = ticket.priority
         ticket.priority = data.priority
         updated = await self._ticket_repo.update(ticket)
         await self._emit_event(
-            ticket, user_id, SupportTicketEventType.PRIORITY_CHANGED,
-            from_value=prev.value, to_value=data.priority.value,
+            ticket,
+            user_id,
+            SupportTicketEventType.PRIORITY_CHANGED,
+            from_value=prev.value,
+            to_value=data.priority.value,
         )
         return await self._ticket_to_schema(updated)
 
     async def assign_ticket(
-        self, ticket_number: int, actor_id: uuid.UUID, data: AssignTicketSchema, f: SupportFilter
+        self,
+        ticket_number: int,
+        actor_id: uuid.UUID,
+        data: AssignTicketSchema,
+        f: SupportFilter,
     ) -> SupportTicketSchema:
         if not f.can_assign:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para asignar tickets.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para asignar tickets.",
+            )
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f)
         if ticket.status in self._TERMINAL_STATUSES:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No se puede reasignar un ticket resuelto o cerrado.")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="No se puede reasignar un ticket resuelto o cerrado.",
+            )
 
-        event_type = SupportTicketEventType.REASSIGNED if ticket.assigned_to else SupportTicketEventType.ASSIGNED
+        event_type = (
+            SupportTicketEventType.REASSIGNED
+            if ticket.assigned_to
+            else SupportTicketEventType.ASSIGNED
+        )
         prev_agent = str(ticket.assigned_to) if ticket.assigned_to else None
         ticket.assigned_to = data.user_id
         ticket.status = SupportTicketStatus.IN_PROGRESS
         updated = await self._ticket_repo.update(ticket)
         await self._emit_event(
-            ticket, actor_id, event_type,
-            from_value=prev_agent, to_value=str(data.user_id),
+            ticket,
+            actor_id,
+            event_type,
+            from_value=prev_agent,
+            to_value=str(data.user_id),
         )
 
         await self._notification_service.create_notification(
@@ -422,7 +636,9 @@ class SupportService:
     # Events (audit log)
     # ------------------------------------------------------------------
 
-    async def list_events(self, ticket_number: int, f: SupportFilter) -> list[TicketEventSchema]:
+    async def list_events(
+        self, ticket_number: int, f: SupportFilter
+    ) -> list[TicketEventSchema]:
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f, check_creator=True)
         events = await self._event_repo.get_by_ticket_id(ticket.id)
@@ -441,7 +657,9 @@ class SupportService:
         ]
 
     async def get_metrics(self, f: SupportFilter) -> TicketMetricsSchema:
-        tickets = await self._ticket_repo.get_metrics_data(org_ids=f.org_ids, created_by=f.created_by)
+        tickets = await self._ticket_repo.get_metrics_data(
+            org_ids=f.org_ids, created_by=f.created_by
+        )
         today = datetime.now(timezone.utc).date()
 
         by_priority: dict[str, int] = {p.value: 0 for p in SupportTicketPriority}
@@ -456,7 +674,10 @@ class SupportService:
                 open_count += 1
             elif s == SupportTicketStatus.IN_PROGRESS:
                 in_progress += 1
-            elif s in (SupportTicketStatus.PENDING_CLIENT, SupportTicketStatus.PENDING_THIRD):
+            elif s in (
+                SupportTicketStatus.PENDING_CLIENT,
+                SupportTicketStatus.PENDING_THIRD,
+            ):
                 pending += 1
             elif s == SupportTicketStatus.RESOLVED:
                 resolved += 1
@@ -474,7 +695,11 @@ class SupportService:
             prio_key = t.priority.value
             by_priority[prio_key] = by_priority.get(prio_key, 0) + 1
 
-        avg = round(sum(resolution_hours) / len(resolution_hours), 1) if resolution_hours else None
+        avg = (
+            round(sum(resolution_hours) / len(resolution_hours), 1)
+            if resolution_hours
+            else None
+        )
 
         return TicketMetricsSchema(
             total=len(tickets),
@@ -583,7 +808,9 @@ class SupportService:
     async def _get_ticket_or_404(self, ticket_number: int) -> SupportTicketModel:
         ticket = await self._ticket_repo.get_by_ticket_number(ticket_number)
         if ticket is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado."
+            )
         return ticket
 
     def _assert_ticket_access(
@@ -594,9 +821,17 @@ class SupportService:
         check_creator: bool = False,
     ) -> None:
         if f.org_ids is not None and ticket.organization_id not in f.org_ids:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
-        if check_creator and f.created_by is not None and ticket.created_by != f.created_by:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado."
+            )
+        if (
+            check_creator
+            and f.created_by is not None
+            and ticket.created_by != f.created_by
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado."
+            )
 
     _ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".doc", ".pdf"}
     _MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
@@ -615,7 +850,9 @@ class SupportService:
         safe = re.sub(r"[^\w.\-]", "_", name)
         return safe[:120]
 
-    def _to_attachment_schema(self, ticket: SupportTicketModel, document: DocumentModel) -> TicketAttachmentSchema:
+    def _to_attachment_schema(
+        self, ticket: SupportTicketModel, document: DocumentModel
+    ) -> TicketAttachmentSchema:
         return TicketAttachmentSchema(
             name=document.original_name,
             url=f"/cs/tickets/{ticket.ticket_number}/documents/{document.id}/content",
@@ -633,23 +870,29 @@ class SupportService:
         for upload in files:
             ext = os.path.splitext(upload.filename or "")[1].lower()
             if ext not in self._ALLOWED_EXTENSIONS:
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Tipo de archivo no permitido: {ext}")
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Tipo de archivo no permitido: {ext}",
+                )
             content = await self._read_within_limit(upload)
             safe_name = self._safe_filename(upload.filename)
-            # store_generated() está pensado para artefactos que genera la propia API, no
-            # para subidas de usuario — pero acá es seguro: el content-type no sale del
-            # header que manda el cliente, sale de la whitelist de extensión de arriba.
+            # store_generated() está pensado para artefactos que genera la propia
+            # API, no para subidas de usuario — pero acá es seguro: el content-type
+            # no sale del header que manda el cliente, sale de la whitelist de
+            # extensión de arriba.
             document = await self._document_service.store_generated(
                 content=content,
                 filename=safe_name,
-                content_type=self._CONTENT_TYPE_BY_EXT.get(ext, "application/octet-stream"),
+                content_type=self._CONTENT_TYPE_BY_EXT.get(
+                    ext, "application/octet-stream"
+                ),
                 domain=TICKET_DOCUMENT_STORAGE_DOMAIN,
                 owner_id=str(ticket.id),
                 uploaded_by=uploaded_by,
                 organization_id=ticket.organization_id,
             )
-            # El enlace al ticket es una fila propia con FK real, en la misma sesión: si
-            # falla, la unidad de trabajo hace rollback de las dos.
+            # El enlace al ticket es una fila propia con FK real, en la misma
+            # sesión: si falla, la unidad de trabajo hace rollback de las dos.
             await self._ticket_document_repo.add(
                 TicketDocumentModel(
                     ticket_id=ticket.id,
@@ -664,7 +907,10 @@ class SupportService:
         """Lee el archivo en chunks y corta apenas se supera el máximo, en vez de
         bufferear todo el contenido en memoria antes de poder rechazarlo."""
         if upload.size is not None and upload.size > self._MAX_FILE_SIZE:
-            raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="El archivo excede el tamaño máximo de 10 MB.")
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="El archivo excede el tamaño máximo de 10 MB.",
+            )
         chunks = bytearray()
         while True:
             chunk = await upload.read(1024 * 1024)
@@ -672,7 +918,10 @@ class SupportService:
                 break
             chunks.extend(chunk)
             if len(chunks) > self._MAX_FILE_SIZE:
-                raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="El archivo excede el tamaño máximo de 10 MB.")
+                raise HTTPException(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail="El archivo excede el tamaño máximo de 10 MB.",
+                )
         return bytes(chunks)
 
     async def upload_attachments(
@@ -680,18 +929,27 @@ class SupportService:
     ) -> list[TicketAttachmentSchema]:
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f, check_creator=True)
-        return await self._store_attachments(ticket, files, TicketDocumentCategory.TICKET_ATTACHMENT, f.created_by)
+        return await self._store_attachments(
+            ticket, files, TicketDocumentCategory.TICKET_ATTACHMENT, f.created_by
+        )
 
     async def upload_closure_attachments(
         self, ticket_number: int, files: list[UploadFile], f: SupportFilter
     ) -> list[TicketAttachmentSchema]:
         if not f.can_resolve:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para adjuntar evidencias de cierre.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para adjuntar evidencias de cierre.",
+            )
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f)
-        return await self._store_attachments(ticket, files, TicketDocumentCategory.TICKET_CLOSURE, f.created_by)
+        return await self._store_attachments(
+            ticket, files, TicketDocumentCategory.TICKET_CLOSURE, f.created_by
+        )
 
-    async def list_closure_attachments(self, ticket_number: int, f: SupportFilter) -> list[TicketAttachmentSchema]:
+    async def list_closure_attachments(
+        self, ticket_number: int, f: SupportFilter
+    ) -> list[TicketAttachmentSchema]:
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f, check_creator=True)
         rows = await self._ticket_document_repo.list_by_ticket(
@@ -699,7 +957,9 @@ class SupportService:
         )
         return [self._to_attachment_schema(ticket, document) for _, document in rows]
 
-    async def list_attachments(self, ticket_number: int, f: SupportFilter) -> list[TicketAttachmentSchema]:
+    async def list_attachments(
+        self, ticket_number: int, f: SupportFilter
+    ) -> list[TicketAttachmentSchema]:
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f, check_creator=True)
         rows = await self._ticket_document_repo.list_by_ticket(
@@ -712,10 +972,13 @@ class SupportService:
     ) -> Response:
         ticket = await self._get_ticket_or_404(ticket_number)
         self._assert_ticket_access(ticket, f, check_creator=True)
-        # El adjunto tiene que colgar de ESE ticket: si no, 404 sin confirmar existencia.
+        # El adjunto tiene que colgar de ESE ticket: si no, 404 sin confirmar
+        # existencia.
         row = await self._ticket_document_repo.get_owned(ticket.id, document_id)
         if row is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado."
+            )
         return await self._document_service.to_content_response(row[1])
 
     async def _auto_assign(
@@ -724,7 +987,9 @@ class SupportService:
         if prefer_global:
             agent_id = await self._ticket_repo.find_least_loaded_cs_global()
         else:
-            agent_id = await self._ticket_repo.find_least_loaded_cs_org(ticket.organization_id)
+            agent_id = await self._ticket_repo.find_least_loaded_cs_org(
+                ticket.organization_id
+            )
             if agent_id is None:
                 agent_id = await self._ticket_repo.find_least_loaded_cs_global()
 
@@ -743,13 +1008,17 @@ class SupportService:
             link=f"/cs/tickets/{ticket.ticket_number}",
         )
 
-    async def _ticket_to_schema(self, ticket: SupportTicketModel) -> SupportTicketSchema:
+    async def _ticket_to_schema(
+        self, ticket: SupportTicketModel
+    ) -> SupportTicketSchema:
         org_name = ""
         if ticket.organization_id is not None:
             org = await self._org_repo.get_by_id(ticket.organization_id)
             org_name = org.name if org else ""
         schema = SupportTicketSchema.model_validate(ticket)
-        return schema.model_copy(update={"organization_name": org_name, "topic": ticket.system_topic})
+        return schema.model_copy(
+            update={"organization_name": org_name, "topic": ticket.system_topic}
+        )
 
     async def _notify_org_verification(
         self, org_id: uuid.UUID, ticket_created_by: uuid.UUID, approved: bool
@@ -776,12 +1045,16 @@ class SupportService:
                 category="org_verification",
             )
 
-    async def _resolve_identity_verification(self, user_id: uuid.UUID, approved: bool) -> None:
+    async def _resolve_identity_verification(
+        self, user_id: uuid.UUID, approved: bool
+    ) -> None:
         user = await self._user_repo.get_by_id(user_id)
         if user is None:
             return
         user.identity_verification_status = (
-            IdentityVerificationStatus.APPROVED if approved else IdentityVerificationStatus.DENIED
+            IdentityVerificationStatus.APPROVED
+            if approved
+            else IdentityVerificationStatus.DENIED
         )
         await self._user_repo.update(user)
 
@@ -794,11 +1067,18 @@ class SupportService:
             cached.identity_verification_status = user.identity_verification_status
             await redis_client.set_json(session_key(user_id), cached)
 
-        title = "Identidad verificada" if approved else "Verificación de identidad rechazada"
+        title = (
+            "Identidad verificada"
+            if approved
+            else "Verificación de identidad rechazada"
+        )
         body = (
             "Tu identidad fue verificada. Ya puedes ver tu información crediticia."
             if approved
-            else "No pudimos verificar tu identidad con el documento enviado. Contacta a soporte."
+            else (
+                "No pudimos verificar tu identidad con el documento enviado. "
+                "Contacta a soporte."
+            )
         )
         await self._notification_service.create_notification(
             user_id=user_id,

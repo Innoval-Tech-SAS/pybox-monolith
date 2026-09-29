@@ -1,14 +1,16 @@
 from app_platform.schema_manager.services.inspector_service import InspectorService
 from messaging.campaigns.constants import PAYMENT_STRATEGY_SUFFIXES, PAYMENT_TABLE
 from messaging.templates.schemas.template_schemas import TemplateVariableOption
-from messaging.templates.utils.template_variable_builder import build_payment_variable, build_variable
+from messaging.templates.utils.template_variable_builder import (
+    build_payment_variable,
+    build_variable,
+)
 
 _SCHEMA = "public"
 _SOURCE_TABLES = ("deudores", "creditos")
 
 
 class TemplateVariableService:
-
     def __init__(self, inspector: InspectorService) -> None:
         self._inspector = inspector
 

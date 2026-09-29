@@ -7,19 +7,13 @@ crea/actualiza cuotas (`PaymentModel`) sobre ellos, sin tocar deudores/direccion
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app_platform.documents.enums.document_enums import (
     CSV_CONTENT_TYPE,
     XLSX_CONTENT_TYPE,
 )
 from app_platform.documents.services.document_service import DocumentService
-from receivables.portfolios.enums.portfolio_document_enums import PortfolioDocumentCategory
-from receivables.portfolios.models.portfolio_document_model import PortfolioDocumentModel
-from receivables.portfolios.repository.portfolio_document_repository import (
-    PORTFOLIO_DOCUMENT_STORAGE_DOMAIN,
-    PortfolioDocumentRepository,
-)
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from core.config.logger import logger
 from core.tools.config_tools import get_or_default
 from receivables.credits.models.credit_model import CreditModel
@@ -32,15 +26,26 @@ from receivables.portfolios.constants.portfolio_csv_constants import (
     MAX_ERRORS,
     PORTFOLIO_CSV_BULK_UPSERT_ENV_VAR,
 )
+from receivables.portfolios.enums.portfolio_document_enums import (
+    PortfolioDocumentCategory,
+)
+from receivables.portfolios.models.portfolio_document_model import (
+    PortfolioDocumentModel,
+)
 from receivables.portfolios.models.portfolio_model import PortfolioModel
+from receivables.portfolios.repository.portfolio_document_repository import (
+    PORTFOLIO_DOCUMENT_STORAGE_DOMAIN,
+    PortfolioDocumentRepository,
+)
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from receivables.portfolios.schemas.portfolio_csv_schemas import InstallmentsUploadResult
+from receivables.portfolios.schemas.portfolio_csv_schemas import (
+    InstallmentsUploadResult,
+)
 from receivables.portfolios.schemas.portfolio_file_schemas import InstallmentRowData
 from receivables.portfolios.utils.installment_file_parser import InstallmentFileParser
 
 
 class InstallmentCsvService:
-
     def __init__(self, session: AsyncSession):
         self.session = session
         self.parser = InstallmentFileParser()
@@ -53,19 +58,30 @@ class InstallmentCsvService:
     def _bulk_upsert_enabled(self) -> bool:
         """Misma env var que `PortfolioCsvService`, leída en cada llamada (no cacheada)
         para poder togglear el flag sin redeploy."""
-        return get_or_default(PORTFOLIO_CSV_BULK_UPSERT_ENV_VAR, DEFAULT_PORTFOLIO_CSV_BULK_UPSERT) == "true"
+        return (
+            get_or_default(
+                PORTFOLIO_CSV_BULK_UPSERT_ENV_VAR, DEFAULT_PORTFOLIO_CSV_BULK_UPSERT
+            )
+            == "true"
+        )
 
     async def upload(
         self, portfolio_id: uuid.UUID, file_bytes: bytes, filename: str = ""
     ) -> InstallmentsUploadResult:
-        logger.info("[installment_csv] START | portfolio=%s bytes=%d", portfolio_id, len(file_bytes))
+        logger.info(
+            "[installment_csv] START | portfolio=%s bytes=%d",
+            portfolio_id,
+            len(file_bytes),
+        )
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
         if portfolio is None:
             raise ValueError(f"Portafolio {portfolio_id} no encontrado")
 
         file_data = self.parser.parse(file_bytes, filename)
         logger.info(
-            "[installment_csv] parsed | filas=%d skipped=%d", len(file_data.rows), file_data.total_skipped
+            "[installment_csv] parsed | filas=%d skipped=%d",
+            len(file_data.rows),
+            file_data.total_skipped,
         )
 
         await self._archive_source_file(portfolio, file_bytes, filename)
@@ -88,7 +104,9 @@ class InstallmentCsvService:
             credit_numbers = list({row.credit_number for row in file_data.rows})
             credit_by_number = {
                 c.credit_number: c
-                for c in await self.credit_repo.get_by_credit_numbers(credit_numbers, portfolio_id)
+                for c in await self.credit_repo.get_by_credit_numbers(
+                    credit_numbers, portfolio_id
+                )
             }
 
         for idx, row in enumerate(file_data.rows, start=1):
@@ -97,11 +115,14 @@ class InstallmentCsvService:
                     credit = (
                         credit_by_number.get(row.credit_number)
                         if bulk_enabled
-                        else await self.credit_repo.get_by_credit_number(row.credit_number, portfolio_id)
+                        else await self.credit_repo.get_by_credit_number(
+                            row.credit_number, portfolio_id
+                        )
                     )
                     if credit is None:
                         raise ValueError(
-                            f"El crédito {row.credit_number} no existe en este portafolio"
+                            f"El crédito {row.credit_number} no existe en este "
+                            "portafolio"
                         )
                     if row.is_full_settlement:
                         await self._settle_credit(credit, row)
@@ -131,8 +152,13 @@ class InstallmentCsvService:
             errors=errors,
         )
         logger.info(
-            "[installment_csv] END | procesados=%d fallidos=%d creadas=%d actualizadas=%d liquidados=%d",
-            processed, failed, cuotas_creadas, cuotas_actualizadas, creditos_liquidados,
+            "[installment_csv] END | procesados=%d fallidos=%d creadas=%d "
+            "actualizadas=%d liquidados=%d",
+            processed,
+            failed,
+            cuotas_creadas,
+            cuotas_actualizadas,
+            creditos_liquidados,
         )
         return result
 
@@ -140,10 +166,16 @@ class InstallmentCsvService:
     # Row handlers
     # ------------------------------------------------------------------
 
-    async def _upsert_installment(self, credit_id: uuid.UUID, row: InstallmentRowData) -> bool:
+    async def _upsert_installment(
+        self, credit_id: uuid.UUID, row: InstallmentRowData
+    ) -> bool:
         """Devuelve True si creó una cuota nueva, False si actualizó una existente."""
-        assert row.installment_number is not None  # el parser ya lo garantiza para filas no-liquidación
-        existing = await self.payment_repo.get_by_credit_and_installment(credit_id, row.installment_number)
+        assert (
+            row.installment_number is not None
+        )  # el parser ya lo garantiza para filas no-liquidación
+        existing = await self.payment_repo.get_by_credit_and_installment(
+            credit_id, row.installment_number
+        )
         status = PaymentStatus.PAID if row.payment_date else PaymentStatus.PENDING
 
         if existing is not None:
@@ -155,9 +187,13 @@ class InstallmentCsvService:
             existing.overdue_interest_amount = row.overdue_interest_amount
             existing.life_insurance_charge = row.life_insurance_charge
             existing.vehicle_insurance_charge = row.vehicle_insurance_charge
-            existing.insurances_total = row.life_insurance_charge + row.vehicle_insurance_charge
+            existing.insurances_total = (
+                row.life_insurance_charge + row.vehicle_insurance_charge
+            )
             existing.other_charges = row.other_charges
-            existing.total_interest_amount = row.current_interest_amount + row.overdue_interest_amount
+            existing.total_interest_amount = (
+                row.current_interest_amount + row.overdue_interest_amount
+            )
             existing.vat = row.vat
             existing.commission_amount = row.commission_amount
             existing.platform_fee = row.platform_fee
@@ -177,9 +213,11 @@ class InstallmentCsvService:
                 overdue_interest_amount=row.overdue_interest_amount,
                 life_insurance_charge=row.life_insurance_charge,
                 vehicle_insurance_charge=row.vehicle_insurance_charge,
-                insurances_total=row.life_insurance_charge + row.vehicle_insurance_charge,
+                insurances_total=row.life_insurance_charge
+                + row.vehicle_insurance_charge,
                 other_charges=row.other_charges,
-                total_interest_amount=row.current_interest_amount + row.overdue_interest_amount,
+                total_interest_amount=row.current_interest_amount
+                + row.overdue_interest_amount,
                 other_concepts_amount=0,
                 vat=row.vat,
                 commission_amount=row.commission_amount,
@@ -191,7 +229,9 @@ class InstallmentCsvService:
         )
         return True
 
-    async def _settle_credit(self, credit: CreditModel, row: InstallmentRowData) -> None:
+    async def _settle_credit(
+        self, credit: CreditModel, row: InstallmentRowData
+    ) -> None:
         """Pago total del crédito: registra el pago, cierra (soft-delete) las cuotas
         pendientes que quedaban y desactiva el crédito — mismo criterio que
         CreditSettlementResolutionService usa para la autogestión del titular."""
@@ -207,9 +247,11 @@ class InstallmentCsvService:
                 overdue_interest_amount=row.overdue_interest_amount,
                 life_insurance_charge=row.life_insurance_charge,
                 vehicle_insurance_charge=row.vehicle_insurance_charge,
-                insurances_total=row.life_insurance_charge + row.vehicle_insurance_charge,
+                insurances_total=row.life_insurance_charge
+                + row.vehicle_insurance_charge,
                 other_charges=row.other_charges,
-                total_interest_amount=row.current_interest_amount + row.overdue_interest_amount,
+                total_interest_amount=row.current_interest_amount
+                + row.overdue_interest_amount,
                 other_concepts_amount=0,
                 vat=row.vat,
                 commission_amount=row.commission_amount,
@@ -226,7 +268,9 @@ class InstallmentCsvService:
         credit.is_active = False
         await self.credit_repo.update(credit)
 
-    async def _archive_source_file(self, portfolio: PortfolioModel, file_bytes: bytes, filename: str):
+    async def _archive_source_file(
+        self, portfolio: PortfolioModel, file_bytes: bytes, filename: str
+    ):
         is_xlsx = filename.lower().endswith(".xlsx")
         ext = "xlsx" if is_xlsx else "csv"
         timestamp = int(datetime.now(timezone.utc).timestamp())

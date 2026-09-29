@@ -16,7 +16,9 @@ class PlatformBrandingModel(BaseModel):
 
     __tablename__ = "configuracion_plataforma"
     __table_args__ = (
-        CheckConstraint("clave_singleton = 1", name="ck_configuracion_plataforma_singleton"),
+        CheckConstraint(
+            "clave_singleton = 1", name="ck_configuracion_plataforma_singleton"
+        ),
     )
 
     singleton_key: Mapped[int] = mapped_column(

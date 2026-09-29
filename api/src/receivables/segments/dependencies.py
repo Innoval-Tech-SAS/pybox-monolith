@@ -3,10 +3,12 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.database import get_main_session
 from app_platform.schema_manager.services.dml_service import DmlService
+from core.database.database import get_main_session
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from receivables.segments.repository.segment_execution_repository import SegmentExecutionRepository
+from receivables.segments.repository.segment_execution_repository import (
+    SegmentExecutionRepository,
+)
 from receivables.segments.repository.segment_repository import SegmentRepository
 from receivables.segments.services.segment_service import SegmentService
 

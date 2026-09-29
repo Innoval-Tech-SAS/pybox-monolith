@@ -11,7 +11,6 @@ from messaging.contacts.enums.contact_enums import ContactStatus, ProviderType
 
 
 class ContactModel(BaseModel):
-
     __tablename__ = "contactos"
 
     content: Mapped[str] = mapped_column(
@@ -55,19 +54,25 @@ class ContactModel(BaseModel):
 
     # Nuevo
     provider: Mapped[ProviderType | None] = mapped_column(
-        Enum(ProviderType, name="tipo_proveedor_envio", values_callable=lambda e: [m.value for m in e]),
+        Enum(
+            ProviderType,
+            name="tipo_proveedor_envio",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=True,
         name="proveedor",
     )
 
-    # Antes provider_id. Id individual del mensaje en 360NRS (result[].id), usado para matchear el webhook.
+    # Antes provider_id. Id individual del mensaje en 360NRS (result[].id),
+    # usado para matchear el webhook.
     external_id: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
         name="id_externo",
     )
 
-    # Id del lote/envío en 360NRS (sendingId), usado para reconciliar vía reports-by-sending.
+    # Id del lote/envío en 360NRS (sendingId), usado para reconciliar vía
+    # reports-by-sending.
     sending_id: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,

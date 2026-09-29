@@ -1,21 +1,21 @@
-﻿from sqlalchemy import select, update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from identity.users.models.permission_model import PermissionModel
 from core.security.constants.permissions import (
-    ORG_PORTFOLIOS,
-    ORG_PAYMENT_METHODS,
-    ORG_REPORTS,
-    ORG_USERS,
-    ORG_CAMPAIGNS,
-    ORG_TEMPLATES,
+    MANAGE_WHATSAPP_CHATS,
     ORG_BILLING,
+    ORG_CAMPAIGNS,
+    ORG_PAYMENT_METHODS,
+    ORG_PORTFOLIOS,
+    ORG_REPORTS,
+    ORG_TEMPLATES,
+    ORG_USERS,
     PORTFOLIO_CLIENTS,
     PORTFOLIO_COMMUNICATIONS,
     PORTFOLIO_UPLOAD_NEW,
     PORTFOLIO_UPLOAD_UPDATE,
-    MANAGE_WHATSAPP_CHATS,
 )
+from identity.users.models.permission_model import PermissionModel
 
 _PERMISSIONS: list[tuple[str, str]] = [
     (ORG_PORTFOLIOS, "Mis Portafolios"),

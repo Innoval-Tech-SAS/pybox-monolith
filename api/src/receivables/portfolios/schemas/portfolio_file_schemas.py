@@ -121,7 +121,8 @@ class PortfolioFileData:
 # ──────────────────────────────────────────────────────────────────────────
 # Plan de cuotas — carga independiente del importador de portafolio de arriba.
 # No reutiliza PaymentRowData/PortfolioRowData a propósito: son estructuras del
-# flujo existente y esta es una carga separada (ver PortfolioCsvService.upload_installments_csv).
+# flujo existente y esta es una carga separada (ver
+# PortfolioCsvService.upload_installments_csv).
 # ──────────────────────────────────────────────────────────────────────────
 
 

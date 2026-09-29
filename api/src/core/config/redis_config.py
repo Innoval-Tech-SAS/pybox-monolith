@@ -1,4 +1,4 @@
-﻿from dataclasses import dataclass, field
+from dataclasses import dataclass, field
 from urllib.parse import quote
 
 from core.tools.config_tools import get_or_throw
@@ -14,4 +14,5 @@ class RedisConfig:
 
     @property
     def url(self) -> str:
-        return f"redis://:{quote(self.password, safe='')}@{self.host}:{self.port}/{self.db}"
+        password = quote(self.password, safe="")
+        return f"redis://:{password}@{self.host}:{self.port}/{self.db}"

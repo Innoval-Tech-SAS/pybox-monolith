@@ -1,11 +1,14 @@
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, Index, String, text
-from sqlalchemy.dialects.postgresql import ENUM, JSONB, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import ENUM, JSONB
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import BaseModel
-from receivables.payment_gateways.enums.payment_gateway_enums import ReceivablesGatewayProvider
+from receivables.payment_gateways.enums.payment_gateway_enums import (
+    ReceivablesGatewayProvider,
+)
 
 
 class OrganizationGatewayCredentialModel(BaseModel):
@@ -25,14 +28,19 @@ class OrganizationGatewayCredentialModel(BaseModel):
     __table_args__ = (
         Index(
             "uq_credencial_pasarela_organizacion_org_proveedor",
-            "id_organizacion", "proveedor",
+            "id_organizacion",
+            "proveedor",
             unique=True,
             postgresql_where=text("eliminado_en IS NULL"),
         ),
     )
 
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, index=True, name="id_organizacion"
+        PgUUID(as_uuid=True),
+        ForeignKey("entidades.id"),
+        nullable=False,
+        index=True,
+        name="id_organizacion",
     )
     provider: Mapped[ReceivablesGatewayProvider] = mapped_column(
         ENUM(
@@ -43,9 +51,15 @@ class OrganizationGatewayCredentialModel(BaseModel):
         nullable=False,
         name="proveedor",
     )
-    secrets: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, name="secretos")
-    public_config: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, name="config_publica")
+    secrets: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, name="secretos"
+    )
+    public_config: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, name="config_publica"
+    )
     lookup_key: Mapped[str | None] = mapped_column(
         String(255), nullable=True, index=True, name="clave_busqueda"
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="activo")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, name="activo"
+    )

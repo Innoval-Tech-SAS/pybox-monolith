@@ -3,8 +3,12 @@ import os
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from billing.provider_credentials.enums.provider_credential_enums import PlatformGatewayProvider
-from billing.provider_credentials.models.provider_credential_model import PlatformGatewayCredentialModel
+from billing.provider_credentials.enums.provider_credential_enums import (
+    PlatformGatewayProvider,
+)
+from billing.provider_credentials.models.provider_credential_model import (
+    PlatformGatewayCredentialModel,
+)
 from core.config.logger import logger
 from core.security.services.encrypt_service import encrypt_service
 
@@ -23,17 +27,20 @@ async def seed_platform_gateway_credentials(session: AsyncSession) -> None:
         (row[0], row[1])
         for row in (
             await session.execute(
-                select(PlatformGatewayCredentialModel.country_code, PlatformGatewayCredentialModel.provider)
+                select(
+                    PlatformGatewayCredentialModel.country_code,
+                    PlatformGatewayCredentialModel.provider,
+                )
             )
         ).all()
     }
 
     seeded = 0
 
-    # MercadoPago MX: por país (no global), con lookup_key = application_id para que el
-    # webhook resuelva la cuenta antes de verificar la firma. secretos = access_token +
-    # webhook_secret; no secretos (van al frontend / se buscan por igualdad) = public_key
-    # + application_id.
+    # MercadoPago MX: por país (no global), con lookup_key = application_id para que
+    # el webhook resuelva la cuenta antes de verificar la firma. secretos =
+    # access_token + webhook_secret; no secretos (van al frontend / se buscan por
+    # igualdad) = public_key + application_id.
     if ("MX", PlatformGatewayProvider.MERCADOPAGO) not in existing:
         mp_access = _env("MP_ACCESS_TOKEN_MX")
         mp_secret = _env("MP_WEBHOOK_SECRET_MX")
@@ -48,13 +55,19 @@ async def seed_platform_gateway_credentials(session: AsyncSession) -> None:
                         "access_token": encrypt_service.encrypt_to_str(mp_access),
                         "webhook_secret": encrypt_service.encrypt_to_str(mp_secret),
                     },
-                    public_config={"public_key": mp_public, "application_id": mp_app_id},
+                    public_config={
+                        "public_key": mp_public,
+                        "application_id": mp_app_id,
+                    },
                     lookup_key=mp_app_id,
                 )
             )
             seeded += 1
         else:
-            logger.warning("[seed] platform_gateway_credential_skipped | provider=mercadopago MX (env incompleto)")
+            logger.warning(
+                "[seed] platform_gateway_credential_skipped | "
+                "provider=mercadopago MX (env incompleto)"
+            )
 
     if seeded:
         await session.commit()

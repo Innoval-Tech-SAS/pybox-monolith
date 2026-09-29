@@ -19,7 +19,9 @@ class WompiClient(GatewayHttpClient):
     def _base_url(environment: str) -> str:
         return _PRODUCTION_BASE if environment == "production" else _SANDBOX_BASE
 
-    async def get_merchant_info(self, public_key: str, environment: str) -> dict[str, Any]:
+    async def get_merchant_info(
+        self, public_key: str, environment: str
+    ) -> dict[str, Any]:
         """GET /merchants/info (llave publica en header) — trae los tokens de
         aceptacion vigentes (skill `wompi-gateway`, Paso 3). El endpoint viejo
         (`GET /merchants/:public_key`, llave en la URL) se deprecara el 31/oct/2026;
@@ -32,7 +34,9 @@ class WompiClient(GatewayHttpClient):
         response.raise_for_status()
         return response.json()
 
-    async def create_transaction(self, private_key: str, environment: str, payload: dict[str, Any]) -> dict[str, Any]:
+    async def create_transaction(
+        self, private_key: str, environment: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
         response = await self._http.post(
             f"{self._base_url(environment)}/transactions",
             json=payload,
@@ -42,7 +46,9 @@ class WompiClient(GatewayHttpClient):
         response.raise_for_status()
         return response.json()
 
-    async def get_transaction(self, private_key: str, environment: str, transaction_id: str) -> dict[str, Any]:
+    async def get_transaction(
+        self, private_key: str, environment: str, transaction_id: str
+    ) -> dict[str, Any]:
         response = await self._http.get(
             f"{self._base_url(environment)}/transactions/{transaction_id}",
             headers={"Authorization": f"Bearer {private_key}"},
@@ -51,7 +57,9 @@ class WompiClient(GatewayHttpClient):
         response.raise_for_status()
         return response.json()
 
-    async def tokenize_card(self, public_key: str, environment: str, payload: dict[str, Any]) -> dict[str, Any]:
+    async def tokenize_card(
+        self, public_key: str, environment: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
         """POST /tokens/cards con llave PUBLICA — la tarjeta pasa por este backend
         directamente (API directa, no widget), lo que exige cumplimiento PCI SAQ A-EP
         (skill `wompi-gateway`, Paso 5). Usar solo si hay una razon fuerte para no usar
@@ -65,7 +73,9 @@ class WompiClient(GatewayHttpClient):
         response.raise_for_status()
         return response.json()
 
-    async def tokenize_nequi(self, public_key: str, environment: str, phone_number: str) -> dict[str, Any]:
+    async def tokenize_nequi(
+        self, public_key: str, environment: str, phone_number: str
+    ) -> dict[str, Any]:
         response = await self._http.post(
             f"{self._base_url(environment)}/tokens/nequi",
             json={"phone_number": phone_number},
@@ -75,7 +85,9 @@ class WompiClient(GatewayHttpClient):
         response.raise_for_status()
         return response.json()
 
-    async def create_payment_source(self, private_key: str, environment: str, payload: dict[str, Any]) -> dict[str, Any]:
+    async def create_payment_source(
+        self, private_key: str, environment: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
         """POST /payment_sources con llave PRIVADA desde el backend (skill
         `wompi-gateway`, Paso 5.2) — nunca desde el frontend."""
         response = await self._http.post(
@@ -87,7 +99,9 @@ class WompiClient(GatewayHttpClient):
         response.raise_for_status()
         return response.json()
 
-    async def list_pse_financial_institutions(self, private_key: str, environment: str) -> dict[str, Any]:
+    async def list_pse_financial_institutions(
+        self, private_key: str, environment: str
+    ) -> dict[str, Any]:
         response = await self._http.get(
             f"{self._base_url(environment)}/pse/financial_institutions",
             headers={"Authorization": f"Bearer {private_key}"},

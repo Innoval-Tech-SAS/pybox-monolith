@@ -1,7 +1,6 @@
-﻿from enum import StrEnum
+from enum import StrEnum
 
 from messaging.channels.enums.channel_enums import ChannelName
-
 
 TemplateChannel = ChannelName
 

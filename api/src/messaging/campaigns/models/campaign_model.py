@@ -10,7 +10,6 @@ from messaging.campaigns.enums.campaign_enums import CampaignStatus, Periodicity
 
 
 class CampaignModel(BaseModel):
-
     __tablename__ = "campanias"
 
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -29,17 +28,28 @@ class CampaignModel(BaseModel):
     # referenciada por template_id).
     message: Mapped[str | None] = mapped_column(Text, nullable=True, name="mensaje")
 
-    subject: Mapped[str | None] = mapped_column(String(255), nullable=True, name="asunto")
+    subject: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, name="asunto"
+    )
 
     channel_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("canales.id"), nullable=False, name="id_canal", index=True)
+        PgUUID(as_uuid=True),
+        ForeignKey("canales.id"),
+        nullable=False,
+        name="id_canal",
+        index=True,
+    )
 
     description: Mapped[str | None] = mapped_column(
         String(255), nullable=True, name="descripcion_campania"
     )
 
     status: Mapped[CampaignStatus] = mapped_column(
-        Enum(CampaignStatus, name="estado_campania", values_callable=lambda e: [m.value for m in e]),
+        Enum(
+            CampaignStatus,
+            name="estado_campania",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=False,
         default=CampaignStatus.DRAFT,
         name="estado_campania",
@@ -53,19 +63,34 @@ class CampaignModel(BaseModel):
         DateTime(timezone=True), nullable=True, name="programado_para"
     )
 
-    timezone: Mapped[str] = mapped_column(String(50), default="UTC", name="zona_horaria")
+    timezone: Mapped[str] = mapped_column(
+        String(50), default="UTC", name="zona_horaria"
+    )
 
     fallback: Mapped[bool] = mapped_column(Boolean, default=True, name="fallback")
 
     segment_id: Mapped[uuid.UUID | None] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("segmentos.id"), nullable=True, index=True, name="id_segmento"
+        PgUUID(as_uuid=True),
+        ForeignKey("segmentos.id"),
+        nullable=True,
+        index=True,
+        name="id_segmento",
     )
 
     template_id: Mapped[uuid.UUID | None] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("plantillas.id"), nullable=True, name="id_plantilla", index=True)
+        PgUUID(as_uuid=True),
+        ForeignKey("plantillas.id"),
+        nullable=True,
+        name="id_plantilla",
+        index=True,
+    )
 
     periodicity: Mapped[Periodicity | None] = mapped_column(
-        Enum(Periodicity, name="periodicidad", values_callable=lambda e: [m.value for m in e]),
+        Enum(
+            Periodicity,
+            name="periodicidad",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=True,
         name="periodicidad",
     )
@@ -74,7 +99,9 @@ class CampaignModel(BaseModel):
         String(8), nullable=True, name="hora_de_envio"
     )
 
-    is_immediate: Mapped[bool] = mapped_column(Boolean, default=False, name="es_inmediato")
+    is_immediate: Mapped[bool] = mapped_column(
+        Boolean, default=False, name="es_inmediato"
+    )
 
     days_of_week: Mapped[list[int] | None] = mapped_column(
         ARRAY(Integer), nullable=True, name="dias_semana"
@@ -85,5 +112,8 @@ class CampaignModel(BaseModel):
     )
 
     ivr_flow_id: Mapped[uuid.UUID | None] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("flujos_ivr.id"), nullable=True, name="id_flujo_ivr"
+        PgUUID(as_uuid=True),
+        ForeignKey("flujos_ivr.id"),
+        nullable=True,
+        name="id_flujo_ivr",
     )

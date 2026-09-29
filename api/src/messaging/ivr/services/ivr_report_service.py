@@ -38,7 +38,6 @@ _EXPORT_COLUMNS = [
 
 
 class IvrReportService:
-
     def __init__(self, interaction_repo: IvrInteractionRepository) -> None:
         self._interactions = interaction_repo
 
@@ -76,9 +75,12 @@ class IvrReportService:
                 )
                 for key, label, count in outcome_rows
             ],
-            by_amd=[IvrBreakdownRow(value=value, count=count) for value, count in by_amd],
+            by_amd=[
+                IvrBreakdownRow(value=value, count=count) for value, count in by_amd
+            ],
             by_end_node=[
-                IvrBreakdownRow(value=value, count=count) for value, count in by_end_node
+                IvrBreakdownRow(value=value, count=count)
+                for value, count in by_end_node
             ],
             by_attempt=[
                 IvrBreakdownRow(value=value, count=count) for value, count in by_attempt

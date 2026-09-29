@@ -1,5 +1,6 @@
 from enum import StrEnum
 
+
 class ContactStatus(StrEnum):
     PENDING = "PENDING"
     SENT = "SENT"
@@ -8,7 +9,8 @@ class ContactStatus(StrEnum):
     ANSWERED = "ANSWERED"
     NO_ANSWER = "NO_ANSWER"
 
-    # Eventos reportados por 360NRS (webhook / reports-by-sending), 1:1 con el campo `event`
+    # Eventos reportados por 360NRS (webhook / reports-by-sending), 1:1 con
+    # el campo `event`
     OPENED = "OPENED"
     CLICKED = "CLICKED"
     UNSUBSCRIBED = "UNSUBSCRIBED"
@@ -22,8 +24,6 @@ class ContactStatus(StrEnum):
     FORM_OPENED = "FORM_OPENED"
     FORM_SUBMITTED = "FORM_SUBMITTED"
     FORM_REJECTED = "FORM_REJECTED"
-
-
 
 
 class ProviderType(StrEnum):

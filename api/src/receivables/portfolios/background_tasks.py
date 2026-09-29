@@ -27,17 +27,34 @@ async def process_and_notify(
     country: Nationality | None,
     user_id: uuid.UUID,
 ) -> None:
-    logger.info("[portfolio] background task iniciado | org=%s nombre=%s", organization_id, portfolio_name)
+    logger.info(
+        "[portfolio] background task iniciado | org=%s nombre=%s",
+        organization_id,
+        portfolio_name,
+    )
 
-    await sse_emitter.emit(user_id, "job_progress", {
-        "type": "portfolio_upload", "status": "started", "processed": 0, "total": 0,
-    })
+    await sse_emitter.emit(
+        user_id,
+        "job_progress",
+        {
+            "type": "portfolio_upload",
+            "status": "started",
+            "processed": 0,
+            "total": 0,
+        },
+    )
 
     async def _progress(processed: int, total: int) -> None:
-        await sse_emitter.emit(user_id, "job_progress", {
-            "type": "portfolio_upload", "status": "processing",
-            "processed": processed, "total": total,
-        })
+        await sse_emitter.emit(
+            user_id,
+            "job_progress",
+            {
+                "type": "portfolio_upload",
+                "status": "processing",
+                "processed": processed,
+                "total": total,
+            },
+        )
 
     try:
         async with db.get_session() as session:
@@ -51,11 +68,19 @@ async def process_and_notify(
                 country=country,
                 on_progress=_progress,
             )
-            logger.info("[portfolio] process_csv terminado | procesados=%d fallidos=%d", result.processed_rows, result.failed_rows)
+            logger.info(
+                "[portfolio] process_csv terminado | procesados=%d fallidos=%d",
+                result.processed_rows,
+                result.failed_rows,
+            )
 
-            failed_note = f", {result.failed_rows} fallidos" if result.failed_rows > 0 else ""
-            notif_type = "error" if result.failed_rows == result.total_rows else (
-                "warning" if result.failed_rows > 0 else "success"
+            failed_note = (
+                f", {result.failed_rows} fallidos" if result.failed_rows > 0 else ""
+            )
+            notif_type = (
+                "error"
+                if result.failed_rows == result.total_rows
+                else ("warning" if result.failed_rows > 0 else "success")
             )
             await notification_service.create_notification(
                 user_id=user_id,
@@ -63,7 +88,10 @@ async def process_and_notify(
                 body=f"{result.processed_rows} registros procesados{failed_note}.",
                 category="portfolio",
                 notif_type=notif_type,
-                link=f"/my-companies/portfolios?org={organization_id}&portfolioId={result.portfolio_id}",
+                link=(
+                    f"/my-companies/portfolios?org={organization_id}"
+                    f"&portfolioId={result.portfolio_id}"
+                ),
                 details={
                     "creditos": result.creditos,
                     "titulares": result.titulares,
@@ -74,7 +102,9 @@ async def process_and_notify(
         await cache_service.bust(f"portfolio:stats:{result.portfolio_id}")
         logger.info("[portfolio] notificación enviada al usuario %s", user_id)
     except Exception:
-        logger.exception("[portfolio] error en background task | org=%s", organization_id)
+        logger.exception(
+            "[portfolio] error en background task | org=%s", organization_id
+        )
     finally:
         uploading_orgs.discard(organization_id)
         logger.info("[portfolio] org liberada del set activo | org=%s", organization_id)
@@ -87,28 +117,53 @@ async def append_and_notify(
     organization_id: uuid.UUID,
     user_id: uuid.UUID,
 ) -> None:
-    logger.info("[portfolio-append] background task iniciado | portfolio=%s", portfolio_id)
+    logger.info(
+        "[portfolio-append] background task iniciado | portfolio=%s", portfolio_id
+    )
 
-    await sse_emitter.emit(user_id, "job_progress", {
-        "type": "portfolio_append", "status": "started", "processed": 0, "total": 0,
-    })
+    await sse_emitter.emit(
+        user_id,
+        "job_progress",
+        {
+            "type": "portfolio_append",
+            "status": "started",
+            "processed": 0,
+            "total": 0,
+        },
+    )
 
     async def _progress(processed: int, total: int) -> None:
-        await sse_emitter.emit(user_id, "job_progress", {
-            "type": "portfolio_append", "status": "processing",
-            "processed": processed, "total": total,
-        })
+        await sse_emitter.emit(
+            user_id,
+            "job_progress",
+            {
+                "type": "portfolio_append",
+                "status": "processing",
+                "processed": processed,
+                "total": total,
+            },
+        )
 
     try:
         async with db.get_session() as session:
             service = PortfolioCsvService(session)
             notification_service = NotificationService(session)
-            result = await service.append_csv(portfolio_id, file_bytes, filename, on_progress=_progress)
-            logger.info("[portfolio-append] terminado | procesados=%d fallidos=%d", result.processed_rows, result.failed_rows)
+            result = await service.append_csv(
+                portfolio_id, file_bytes, filename, on_progress=_progress
+            )
+            logger.info(
+                "[portfolio-append] terminado | procesados=%d fallidos=%d",
+                result.processed_rows,
+                result.failed_rows,
+            )
 
-            failed_note = f", {result.failed_rows} fallidos" if result.failed_rows > 0 else ""
-            notif_type = "error" if result.failed_rows == result.total_rows else (
-                "warning" if result.failed_rows > 0 else "success"
+            failed_note = (
+                f", {result.failed_rows} fallidos" if result.failed_rows > 0 else ""
+            )
+            notif_type = (
+                "error"
+                if result.failed_rows == result.total_rows
+                else ("warning" if result.failed_rows > 0 else "success")
             )
             await notification_service.create_notification(
                 user_id=user_id,
@@ -116,7 +171,10 @@ async def append_and_notify(
                 body=f"{result.processed_rows} registros procesados{failed_note}.",
                 category="portfolio",
                 notif_type=notif_type,
-                link=f"/my-companies/portfolios?org={organization_id}&portfolioId={portfolio_id}",
+                link=(
+                    f"/my-companies/portfolios?org={organization_id}"
+                    f"&portfolioId={portfolio_id}"
+                ),
                 details={
                     "creditos": result.creditos,
                     "titulares": result.titulares,
@@ -138,28 +196,53 @@ async def update_and_notify(
     organization_id: uuid.UUID,
     user_id: uuid.UUID,
 ) -> None:
-    logger.info("[portfolio-update] background task iniciado | portfolio=%s", portfolio_id)
+    logger.info(
+        "[portfolio-update] background task iniciado | portfolio=%s", portfolio_id
+    )
 
-    await sse_emitter.emit(user_id, "job_progress", {
-        "type": "portfolio_update", "status": "started", "processed": 0, "total": 0,
-    })
+    await sse_emitter.emit(
+        user_id,
+        "job_progress",
+        {
+            "type": "portfolio_update",
+            "status": "started",
+            "processed": 0,
+            "total": 0,
+        },
+    )
 
     async def _progress(processed: int, total: int) -> None:
-        await sse_emitter.emit(user_id, "job_progress", {
-            "type": "portfolio_update", "status": "processing",
-            "processed": processed, "total": total,
-        })
+        await sse_emitter.emit(
+            user_id,
+            "job_progress",
+            {
+                "type": "portfolio_update",
+                "status": "processing",
+                "processed": processed,
+                "total": total,
+            },
+        )
 
     try:
         async with db.get_session() as session:
             service = PortfolioCsvService(session)
             notification_service = NotificationService(session)
-            result = await service.update_csv(portfolio_id, file_bytes, filename, on_progress=_progress)
-            logger.info("[portfolio-update] terminado | procesados=%d fallidos=%d", result.processed_rows, result.failed_rows)
+            result = await service.update_csv(
+                portfolio_id, file_bytes, filename, on_progress=_progress
+            )
+            logger.info(
+                "[portfolio-update] terminado | procesados=%d fallidos=%d",
+                result.processed_rows,
+                result.failed_rows,
+            )
 
-            failed_note = f", {result.failed_rows} fallidos" if result.failed_rows > 0 else ""
-            notif_type = "error" if result.failed_rows == result.total_rows else (
-                "warning" if result.failed_rows > 0 else "success"
+            failed_note = (
+                f", {result.failed_rows} fallidos" if result.failed_rows > 0 else ""
+            )
+            notif_type = (
+                "error"
+                if result.failed_rows == result.total_rows
+                else ("warning" if result.failed_rows > 0 else "success")
             )
             await notification_service.create_notification(
                 user_id=user_id,
@@ -167,7 +250,10 @@ async def update_and_notify(
                 body=f"{result.processed_rows} registros procesados{failed_note}.",
                 category="portfolio",
                 notif_type=notif_type,
-                link=f"/my-companies/portfolios?org={organization_id}&portfolioId={portfolio_id}",
+                link=(
+                    f"/my-companies/portfolios?org={organization_id}"
+                    f"&portfolioId={portfolio_id}"
+                ),
                 details={
                     "creditos": result.creditos,
                     "titulares": result.titulares,

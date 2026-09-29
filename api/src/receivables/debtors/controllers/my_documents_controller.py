@@ -22,9 +22,11 @@ router = APIRouter(prefix="/debtors/me/documents", tags=["Documentos del titular
     "/categories",
     response_model=list[DocumentCategoryOption],
     summary="Listar categorías de documento del titular",
-    description="Catálogo código→etiqueta de las categorías del ámbito deudor, para los "
-    "selects del front. Declarado antes de las rutas con {document_id} para que no se "
-    "resuelva como un UUID.",
+    description=(
+        "Catálogo código→etiqueta de las categorías del ámbito deudor, para los "
+        "selects del front. Declarado antes de las rutas con {document_id} para "
+        "que no se resuelva como un UUID."
+    ),
 )
 async def list_categories(
     _: CurrentSession,
@@ -53,14 +55,18 @@ async def list_my_documents(
     response_model=DebtorDocumentResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Subir un documento al repositorio del titular",
-    description="El titular sube un documento propio (PDF, PNG, JPG o WebP, hasta 10 MB). "
-    "Solo se aceptan las categorías que el titular puede aportar.",
+    description=(
+        "El titular sube un documento propio (PDF, PNG, JPG o WebP, hasta 10 "
+        "MB). Solo se aceptan las categorías que el titular puede aportar."
+    ),
 )
 async def upload_my_document(
     session: RequireSelf,
     service: DebtorDocumentServiceDep,
     file: Annotated[UploadFile, File(description="Archivo a subir")],
-    category: Annotated[DebtorDocumentCategory, Form(description="Categoría del documento")],
+    category: Annotated[
+        DebtorDocumentCategory, Form(description="Categoría del documento")
+    ],
 ) -> DebtorDocumentResponse:
     return await service.upload_mine(session, file, category)
 
@@ -68,8 +74,11 @@ async def upload_my_document(
 @router.get(
     "/{document_id}/content",
     summary="Descargar un documento del titular",
-    description="Trae el archivo del almacén por la red privada y lo entrega. El documento "
-    "se resuelve contra el deudor de la sesión: si no es suyo responde 404.",
+    description=(
+        "Trae el archivo del almacén por la red privada y lo entrega. El "
+        "documento se resuelve contra el deudor de la sesión: si no es suyo "
+        "responde 404."
+    ),
     response_class=Response,
 )
 async def download_my_document(
@@ -84,8 +93,11 @@ async def download_my_document(
     "/{document_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Eliminar un documento del titular",
-    description="Baja lógica: se marca eliminado el enlace y la fila de metadatos. Los "
-    "bytes los borra después el proceso de purga, así que un admin global puede restaurarlo.",
+    description=(
+        "Baja lógica: se marca eliminado el enlace y la fila de metadatos. Los "
+        "bytes los borra después el proceso de purga, así que un admin global "
+        "puede restaurarlo."
+    ),
 )
 async def delete_my_document(
     document_id: uuid.UUID,

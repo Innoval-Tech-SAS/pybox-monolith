@@ -17,12 +17,16 @@ class IvrExecutionSchema(BaseSchema):
     )
     status: IvrExecutionStatus = Field(description="Estado local del bulk")
     quantity: int = Field(description="Cantidad de destinatarios del bulk")
-    calls_per_second: int | None = Field(default=None, description="Ritmo con el que se despachó")
+    calls_per_second: int | None = Field(
+        default=None, description="Ritmo con el que se despachó"
+    )
     max_concurrent: int | None = Field(
         default=None, description="Tope de simultáneas con el que se despachó"
     )
     dispatched_at: datetime = Field(description="Momento del despacho a Helena")
-    finished_at: datetime | None = Field(default=None, description="Momento en que cerró")
+    finished_at: datetime | None = Field(
+        default=None, description="Momento en que cerró"
+    )
 
     @classmethod
     def from_model(cls, row: IvrExecutionModel) -> "IvrExecutionSchema":
@@ -40,12 +44,16 @@ class IvrExecutionSchema(BaseSchema):
 
 
 class IvrExecutionStatusResponse(BaseSchema):
-    """Estado combinado: la fila local (fuente rápida) + el snapshot en vivo de Helena."""
+    """Estado combinado: la fila local (fuente rápida) + el snapshot en
+    vivo de Helena."""
 
     execution: IvrExecutionSchema = Field(description="Estado registrado en Punvox")
     helena: dict[str, Any] | None = Field(
         default=None,
-        description="Respuesta cruda de Helena (GET /calls/queue/status); null si la consulta falló",
+        description=(
+            "Respuesta cruda de Helena (GET /calls/queue/status); null "
+            "si la consulta falló"
+        ),
     )
 
 

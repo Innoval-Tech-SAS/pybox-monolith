@@ -10,9 +10,10 @@ from core.base.audit_model import BaseModel
 class JudicialNotificationDocumentModel(BaseModel):
     """Adjunto de una notificación judicial.
 
-    Tabla de unión por relación, misma solución que `documentos_deudor`: reemplaza al par
-    `documentos.ambito='NOTIFICACION_JUDICIAL' + documentos.id_dueno`. Las dos FK son
-    reales y unidireccionales, así que no hay ciclo y no hace falta `use_alter`.
+    Tabla de unión por relación, misma solución que `documentos_deudor`: reemplaza
+    al par `documentos.ambito='NOTIFICACION_JUDICIAL' + documentos.id_dueno`. Las
+    dos FK son reales y unidireccionales, así que no hay ciclo y no hace falta
+    `use_alter`.
 
     Sin columna `categoria`: el viejo enum global tenía un único valor para este ámbito
     (`ADJUNTO_NOTIFICACION_JUDICIAL`), así que la columna no distinguía nada — la propia

@@ -7,7 +7,8 @@ async def read_within_limit(upload: UploadFile, max_bytes: int) -> bytes:
     if upload.size is not None and upload.size > max_bytes:
         limit_mb = max_bytes // (1024 * 1024)
         raise HTTPException(
-            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"El archivo excede el tamaño máximo de {limit_mb} MB"
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            f"El archivo excede el tamaño máximo de {limit_mb} MB",
         )
     chunks = bytearray()
     while True:
@@ -18,6 +19,7 @@ async def read_within_limit(upload: UploadFile, max_bytes: int) -> bytes:
         if len(chunks) > max_bytes:
             limit_mb = max_bytes // (1024 * 1024)
             raise HTTPException(
-                status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"El archivo excede el tamaño máximo de {limit_mb} MB"
+                status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                f"El archivo excede el tamaño máximo de {limit_mb} MB",
             )
     return bytes(chunks)

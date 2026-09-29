@@ -9,7 +9,9 @@ class DebtorDocumentResponse(DocumentResponse):
     """Metadatos de archivo (heredados) + la categoría, que vive en `documentos_deudor`
     y no en `documentos`."""
 
-    category: DebtorDocumentCategory = Field(description="Categoría del documento del deudor")
+    category: DebtorDocumentCategory = Field(
+        description="Categoría del documento del deudor"
+    )
 
 
 class DebtorDocumentListResponse(BaseSchema):

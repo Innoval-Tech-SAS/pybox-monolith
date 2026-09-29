@@ -2,7 +2,6 @@ from decimal import Decimal, InvalidOperation
 
 import httpx
 
-from core.config.logger import logger
 from billing.exchange_rates.constants.exchange_rate_constants import (
     EXCHANGE_RATE_FALLBACK_BY_CURRENCY,
     EXCHANGE_RATE_TIMEOUT_MS,
@@ -10,6 +9,7 @@ from billing.exchange_rates.constants.exchange_rate_constants import (
     MARKET_RATE_CURRENCIES,
     TRM_API_URL,
 )
+from core.config.logger import logger
 
 
 class ExchangeRateService:
@@ -27,7 +27,11 @@ class ExchangeRateService:
         if currency in MARKET_RATE_CURRENCIES:
             return await self._get_market_rate(currency, fallback)
 
-        logger.warning("[exchange_rate] sin fuente configurada para %s, usando fallback %s", currency, fallback)
+        logger.warning(
+            "[exchange_rate] sin fuente configurada para %s, usando fallback %s",
+            currency,
+            fallback,
+        )
         return fallback
 
     async def _get_trm_rate(self, fallback: Decimal) -> Decimal:
@@ -45,10 +49,18 @@ class ExchangeRateService:
                     logger.info("[exchange_rate] COP obtenida desde TRM: %s", value)
                     return value
 
-            logger.warning("[exchange_rate] respuesta de TRM con formato inesperado, usando fallback %s", fallback)
+            logger.warning(
+                "[exchange_rate] respuesta de TRM con formato inesperado, "
+                "usando fallback %s",
+                fallback,
+            )
             return fallback
         except (httpx.HTTPError, InvalidOperation, ValueError, TypeError) as exc:
-            logger.warning("[exchange_rate] fallo la llamada a la TRM (%s), usando fallback %s", exc, fallback)
+            logger.warning(
+                "[exchange_rate] fallo la llamada a la TRM (%s), usando fallback %s",
+                exc,
+                fallback,
+            )
             return fallback
 
     async def _get_market_rate(self, currency: str, fallback: Decimal) -> Decimal:
@@ -63,16 +75,26 @@ class ExchangeRateService:
             if raw_value is not None:
                 value = Decimal(str(raw_value))
                 if value > 0:
-                    logger.info("[exchange_rate] %s obtenida desde API de mercado: %s", currency, value)
+                    logger.info(
+                        "[exchange_rate] %s obtenida desde API de mercado: %s",
+                        currency,
+                        value,
+                    )
                     return value
 
             logger.warning(
-                "[exchange_rate] %s no encontrada en respuesta de mercado, usando fallback %s", currency, fallback
+                "[exchange_rate] %s no encontrada en respuesta de mercado, "
+                "usando fallback %s",
+                currency,
+                fallback,
             )
             return fallback
         except (httpx.HTTPError, InvalidOperation, ValueError, TypeError) as exc:
             logger.warning(
-                "[exchange_rate] fallo la llamada a la API de mercado para %s (%s), usando fallback %s",
-                currency, exc, fallback,
+                "[exchange_rate] fallo la llamada a la API de mercado para "
+                "%s (%s), usando fallback %s",
+                currency,
+                exc,
+                fallback,
             )
             return fallback

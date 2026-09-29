@@ -4,12 +4,24 @@ from datetime import datetime, timezone
 
 from core.config.logger import logger
 from receivables.credits.repository.credit_repository import CreditRepository
-from receivables.payment_gateways.enums.payment_gateway_enums import ChargeMode, ReceivablesGatewayProvider
+from receivables.payment_gateways.enums.payment_gateway_enums import (
+    ChargeMode,
+    ReceivablesGatewayProvider,
+)
 from receivables.payment_gateways.gateways.resolver import ReceivablesGatewayResolver
-from receivables.payment_gateways.models.payment_attempt_model import CreditPaymentAttemptModel
-from receivables.payment_gateways.repository.payment_attempt_repository import CreditPaymentAttemptRepository
-from receivables.payment_gateways.repository.payment_source_repository import DebtorPaymentSourceRepository
-from receivables.payment_gateways.utils.reference_utils import build_payment_reference, to_amount_in_cents
+from receivables.payment_gateways.models.payment_attempt_model import (
+    CreditPaymentAttemptModel,
+)
+from receivables.payment_gateways.repository.payment_attempt_repository import (
+    CreditPaymentAttemptRepository,
+)
+from receivables.payment_gateways.repository.payment_source_repository import (
+    DebtorPaymentSourceRepository,
+)
+from receivables.payment_gateways.utils.reference_utils import (
+    build_payment_reference,
+    to_amount_in_cents,
+)
 from receivables.payment_gateways.utils.wompi_status_mapping import to_attempt_status
 from receivables.payments.repository.payment_repository import PaymentRepository
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
@@ -73,13 +85,17 @@ class AutomaticChargeService:
             credit.debtor_id, ReceivablesGatewayProvider.WOMPI
         )
         if source is None:
-            return AutomaticChargeOutcome(False, None, "El deudor no tiene un medio de pago guardado.")
+            return AutomaticChargeOutcome(
+                False, None, "El deudor no tiene un medio de pago guardado."
+            )
 
         gateway = await self._gateway_resolver.get_for_organization(
             portfolio.organization_id, ReceivablesGatewayProvider.WOMPI
         )
         if gateway is None:
-            return AutomaticChargeOutcome(False, None, "La organización no tiene Wompi configurado.")
+            return AutomaticChargeOutcome(
+                False, None, "La organización no tiene Wompi configurado."
+            )
 
         eligible_for_silent_charge = (
             source.three_ds_enrolled
@@ -90,9 +106,9 @@ class AutomaticChargeService:
             return AutomaticChargeOutcome(
                 False,
                 None,
-                "Requiere confirmación del deudor: la fuente no está habilitada para 3RI "
-                "(Mastercard + challenge 3DS) o la organización no tiene la activación de "
-                "fraude de Wompi.",
+                "Requiere confirmación del deudor: la fuente no está habilitada "
+                "para 3RI (Mastercard + challenge 3DS) o la organización no "
+                "tiene la activación de fraude de Wompi.",
             )
 
         tokens = await gateway.get_acceptance_tokens()
@@ -128,7 +144,10 @@ class AutomaticChargeService:
             )
         )
         logger.info(
-            "[receivables][wompi-3ri] cobro automatico intentado | payment=%s attempt=%s estado=%s",
-            payment.id, attempt.id, attempt.status,
+            "[receivables][wompi-3ri] cobro automatico intentado | payment=%s "
+            "attempt=%s estado=%s",
+            payment.id,
+            attempt.id,
+            attempt.status,
         )
         return AutomaticChargeOutcome(True, attempt, "Cobro automático 3RI ejecutado.")

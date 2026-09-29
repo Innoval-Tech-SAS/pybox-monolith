@@ -12,7 +12,9 @@ from messaging.ivr.models.ivr_interaction_model import IvrInteractionModel
 class IvrInteractionRepository(SoftDeleteRepositoryBase[IvrInteractionModel]):
     model_class = IvrInteractionModel
 
-    async def get_by_interaction_id(self, interaction_id: str) -> IvrInteractionModel | None:
+    async def get_by_interaction_id(
+        self, interaction_id: str
+    ) -> IvrInteractionModel | None:
         result = await self.session.execute(
             select(IvrInteractionModel).where(
                 IvrInteractionModel.interaction_id == interaction_id
@@ -51,6 +53,9 @@ class IvrInteractionRepository(SoftDeleteRepositoryBase[IvrInteractionModel]):
             .where(IvrInteractionModel.bulk_id == bulk_id)
             .group_by(IvrInteractionModel.status)
         )
+        # dict(result.all()) confunde al type checker sobre el tipo de Row; se
+        # deja la comprehension explícita a propósito.
+        # pylint: disable-next=unnecessary-comprehension
         return {status: count for status, count in result.all()}
 
     async def count_unique_phones_for_bulk(self, bulk_id: str) -> int:
@@ -132,19 +137,26 @@ class IvrInteractionRepository(SoftDeleteRepositoryBase[IvrInteractionModel]):
         fue HUMAN y terminó COMPLETED debe seguir contando como humana.
         """
         terminal = tuple(TERMINAL_CALL_STATUSES)
-        has_dtmf = func.coalesce(func.jsonb_array_length(IvrInteractionModel.dtmf_events), 0) > 0
+        has_dtmf = (
+            func.coalesce(func.jsonb_array_length(IvrInteractionModel.dtmf_events), 0)
+            > 0
+        )
 
         stmt = select(
             func.count(IvrInteractionModel.id),
             func.count(IvrInteractionModel.id).filter(
                 IvrInteractionModel.status.notin_(terminal)
             ),
-            func.count(IvrInteractionModel.id).filter(IvrInteractionModel.amd_status == "HUMAN"),
+            func.count(IvrInteractionModel.id).filter(
+                IvrInteractionModel.amd_status == "HUMAN"
+            ),
             func.count(IvrInteractionModel.id).filter(
                 IvrInteractionModel.amd_status.in_(("MACHINE", "NOTSURE"))
             ),
             func.count(IvrInteractionModel.id).filter(has_dtmf),
-            func.count(IvrInteractionModel.id).filter(IvrInteractionModel.transferred.is_(True)),
+            func.count(IvrInteractionModel.id).filter(
+                IvrInteractionModel.transferred.is_(True)
+            ),
             func.count(IvrInteractionModel.id).filter(
                 IvrInteractionModel.status == IvrCallStatus.COMPLETED
             ),
@@ -206,8 +218,9 @@ class IvrInteractionRepository(SoftDeleteRepositoryBase[IvrInteractionModel]):
         )
         return result.scalars().all(), int(total or 0)
 
-
-    async def group_by_outcome(self, campaign_id: uuid.UUID) -> list[tuple[str, str | None, int]]:
+    async def group_by_outcome(
+        self, campaign_id: uuid.UUID
+    ) -> list[tuple[str, str | None, int]]:
         """Distribución de resultados de negocio: (clave, etiqueta, cantidad)."""
         result = await self.session.execute(
             select(
@@ -234,7 +247,10 @@ class IvrInteractionRepository(SoftDeleteRepositoryBase[IvrInteractionModel]):
             .group_by(column)
             .order_by(func.count(IvrInteractionModel.id).desc())
         )
-        return [(None if value is None else str(value), int(count)) for value, count in result.all()]
+        return [
+            (None if value is None else str(value), int(count))
+            for value, count in result.all()
+        ]
 
     async def get_funnel(self, campaign_id: uuid.UUID) -> dict[str, int]:
         """Embudo de la campaña: marcadas -> contestadas -> IVR -> transferidas.
@@ -243,9 +259,15 @@ class IvrInteractionRepository(SoftDeleteRepositoryBase[IvrInteractionModel]):
         actual, para que las llamadas ya cerradas sigan contando en los escalones
         por los que pasaron.
         """
-        has_dtmf = func.coalesce(func.jsonb_array_length(IvrInteractionModel.dtmf_events), 0) > 0
+        has_dtmf = (
+            func.coalesce(func.jsonb_array_length(IvrInteractionModel.dtmf_events), 0)
+            > 0
+        )
         has_collect = (
-            func.coalesce(func.jsonb_array_length(IvrInteractionModel.collected_data), 0) > 0
+            func.coalesce(
+                func.jsonb_array_length(IvrInteractionModel.collected_data), 0
+            )
+            > 0
         )
 
         stmt = select(
@@ -253,9 +275,13 @@ class IvrInteractionRepository(SoftDeleteRepositoryBase[IvrInteractionModel]):
             func.count(IvrInteractionModel.id).filter(
                 IvrInteractionModel.dial_status == "ANSWER"
             ),
-            func.count(IvrInteractionModel.id).filter(IvrInteractionModel.amd_status == "HUMAN"),
+            func.count(IvrInteractionModel.id).filter(
+                IvrInteractionModel.amd_status == "HUMAN"
+            ),
             func.count(IvrInteractionModel.id).filter(has_dtmf | has_collect),
-            func.count(IvrInteractionModel.id).filter(IvrInteractionModel.transferred.is_(True)),
+            func.count(IvrInteractionModel.id).filter(
+                IvrInteractionModel.transferred.is_(True)
+            ),
         ).where(IvrInteractionModel.campaign_id == campaign_id)
 
         row = (await self.session.execute(stmt)).one()
@@ -289,10 +315,22 @@ class IvrInteractionRepository(SoftDeleteRepositoryBase[IvrInteractionModel]):
         )
         return result.scalars().all()
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de las interacciones IVR de la organización con el sello de la organización."""
-        await self.soft_delete_where(IvrInteractionModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de las interacciones IVR de la organización
+        con el sello de la organización."""
+        await self.soft_delete_where(
+            IvrInteractionModel.organization_id == organization_id,
+            deleted_at=deleted_at,
+        )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
-        await self.restore_where(IvrInteractionModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó
+        con la organización."""
+        await self.restore_where(
+            IvrInteractionModel.organization_id == organization_id,
+            deleted_at=deleted_at,
+        )

@@ -40,4 +40,6 @@ class CreditSettlementTicketModel(BaseModel):
         PgUUID(as_uuid=True),
         ForeignKey("pagos.id"),
         nullable=True,
-        name="id_pago", index=True)
+        name="id_pago",
+        index=True,
+    )

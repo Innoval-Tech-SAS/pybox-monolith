@@ -4,14 +4,21 @@ from datetime import datetime
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema
-from receivables.payment_gateways.enums.payment_gateway_enums import ReceivablesGatewayProvider
+from receivables.payment_gateways.enums.payment_gateway_enums import (
+    ReceivablesGatewayProvider,
+)
 
 
 class OrganizationGatewayCredentialCreateRequest(BaseSchema):
-    provider: ReceivablesGatewayProvider = Field(description="Pasarela con la que esta organización cobra a sus deudores")
+    provider: ReceivablesGatewayProvider = Field(
+        description="Pasarela con la que esta organización cobra a sus deudores"
+    )
     secrets: dict[str, str] = Field(
         default_factory=dict,
-        description="Valores secretos en claro (se cifran al guardar): llaves privadas/de eventos/de integridad, según la pasarela",
+        description=(
+            "Valores secretos en claro (se cifran al guardar): llaves "
+            "privadas/de eventos/de integridad, según la pasarela"
+        ),
     )
     public_config: dict[str, str] = Field(
         default_factory=dict,
@@ -19,7 +26,10 @@ class OrganizationGatewayCredentialCreateRequest(BaseSchema):
     )
     lookup_key: str | None = Field(
         default=None,
-        description="Identificador de comercio para resolver por igualdad en el webhook, si la pasarela lo soporta (ver skill wompi-gateway)",
+        description=(
+            "Identificador de comercio para resolver por igualdad en el "
+            "webhook, si la pasarela lo soporta (ver skill wompi-gateway)"
+        ),
     )
     is_active: bool = Field(default=True, description="Si la credencial está activa")
 
@@ -27,7 +37,9 @@ class OrganizationGatewayCredentialCreateRequest(BaseSchema):
 class OrganizationGatewayCredentialUpdateRequest(BaseSchema):
     secrets: dict[str, str] = Field(
         default_factory=dict,
-        description="Vacío = conservar los existentes. Enviar un valor rota ese secreto.",
+        description=(
+            "Vacío = conservar los existentes. Enviar un valor rota ese secreto."
+        ),
     )
     public_config: dict[str, str] | None = Field(default=None)
     lookup_key: str | None = Field(default=None)

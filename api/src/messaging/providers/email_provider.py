@@ -7,7 +7,6 @@ from messaging.providers.base_provider import NRS360BaseProvider
 
 
 class NRS360EmailProvider(NRS360BaseProvider):
-
     def __new__(cls) -> "NRS360EmailProvider":
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
@@ -48,7 +47,9 @@ class NRS360EmailProvider(NRS360BaseProvider):
             response = await self._request("POST", EMAIL_ENDPOINT, token, json=payload)
             body_json = response.json()
             result = body_json.get("result", [])
-            ids_by_recipient = {item["to"]: item["id"] for item in result if item.get("id")}
+            ids_by_recipient = {
+                item["to"]: item["id"] for item in result if item.get("id")
+            }
             sending_id = body_json.get("sendingId")
             logger.info(
                 "[nrs360] email_sent | recipients=%d response_items=%d sending_id=%s",
@@ -56,7 +57,11 @@ class NRS360EmailProvider(NRS360BaseProvider):
                 len(result),
                 sending_id,
             )
-            return True, ids_by_recipient, str(sending_id) if sending_id is not None else None
+            return (
+                True,
+                ids_by_recipient,
+                str(sending_id) if sending_id is not None else None,
+            )
         except httpx.HTTPStatusError as exc:
             response_body = exc.response.text[:500] if exc.response is not None else ""
             logger.error(
@@ -66,5 +71,7 @@ class NRS360EmailProvider(NRS360BaseProvider):
             )
             return False, None, None
         except Exception as exc:
-            logger.error("[nrs360] email_error | error=%s detail=%s", type(exc).__name__, exc)
+            logger.error(
+                "[nrs360] email_error | error=%s detail=%s", type(exc).__name__, exc
+            )
             return False, None, None

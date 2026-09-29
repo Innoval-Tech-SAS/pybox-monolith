@@ -15,7 +15,11 @@ from messaging.ivr.schemas.ivr_flow_schemas import (
 router = APIRouter(prefix="/ivr/flows", tags=["IVR - Flujos"])
 
 
-@router.get("/", response_model=list[IvrFlowResponse], summary="Listar flujos IVR del portafolio")
+@router.get(
+    "/",
+    response_model=list[IvrFlowResponse],
+    summary="Listar flujos IVR del portafolio",
+)
 async def list_flows(
     session: CurrentSession,
     service: IvrFlowServiceDep,
@@ -25,7 +29,9 @@ async def list_flows(
     return [IvrFlowResponse.model_validate(f) for f in flows]
 
 
-@router.get("/{flow_id}", response_model=IvrFlowResponse, summary="Obtener flujo IVR por ID")
+@router.get(
+    "/{flow_id}", response_model=IvrFlowResponse, summary="Obtener flujo IVR por ID"
+)
 async def get_flow(
     flow_id: uuid.UUID,
     session: CurrentSession,
@@ -52,7 +58,9 @@ async def create_flow(
     return IvrFlowResponse.model_validate(flow)
 
 
-@router.patch("/{flow_id}", response_model=IvrFlowResponse, summary="Actualizar flujo IVR")
+@router.patch(
+    "/{flow_id}", response_model=IvrFlowResponse, summary="Actualizar flujo IVR"
+)
 async def update_flow(
     flow_id: uuid.UUID,
     body: IvrFlowUpdateRequest,

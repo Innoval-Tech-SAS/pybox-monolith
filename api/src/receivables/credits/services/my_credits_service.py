@@ -4,19 +4,29 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.countries.enums.country_enums import UserDocumentType
-from identity.users.enums.user_enums import IdentityVerificationStatus
 from app_platform.countries.repository.country_repository import CountryRepository
+from core.security.services.encrypt_service import encrypt_service
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
+from identity.users.enums.user_enums import IdentityVerificationStatus
 from receivables.credits.models.credit_model import CreditModel
 from receivables.credits.repository.credit_repository import CreditRepository
-from receivables.credits.repository.credit_settlement_ticket_repository import CreditSettlementTicketRepository
-from receivables.credits.schemas.my_credits_schemas import CreditWithPayments, PaymentMethodSummary, PaymentSummary
+from receivables.credits.repository.credit_settlement_ticket_repository import (
+    CreditSettlementTicketRepository,
+)
+from receivables.credits.schemas.my_credits_schemas import (
+    CreditWithPayments,
+    PaymentMethodSummary,
+    PaymentSummary,
+)
 from receivables.debtors.enums.debtor_enums import DebtorType
 from receivables.debtors.repository.debtor_repository import DebtorRepository
-from identity.organizations.repository.organization_repository import OrganizationRepository
-from receivables.payment_methods.repository.payment_method_repository import PaymentMethodRepository
+from receivables.payment_methods.repository.payment_method_repository import (
+    PaymentMethodRepository,
+)
 from receivables.payments.repository.payment_repository import PaymentRepository
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from core.security.services.encrypt_service import encrypt_service
 
 
 class MyCreditsService:
@@ -42,36 +52,43 @@ class MyCreditsService:
             return []
 
         # Una fila de deudor por empresa: el titular ve sus créditos de todas.
-        debtors = await self._debtor_repo.list_by_document(doc_type, document_number_hash)
+        debtors = await self._debtor_repo.list_by_document(
+            doc_type, document_number_hash
+        )
         if not debtors:
             return []
-        # Ver StatementService._require_self_debtors: conocer tipo+número de documento de
-        # alguien no es secreto, así que además de ser deudor conocido se exige identidad
-        # verificada (documento subido + aprobado por Atención al Cliente).
+        # Ver StatementService._require_self_debtors: conocer tipo+número de documento
+        # de alguien no es secreto, así que además de ser deudor conocido se exige
+        # identidad verificada (documento subido + aprobado por Atención al Cliente).
         if identity_verification_status != IdentityVerificationStatus.APPROVED:
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
-                "Verificación de identidad pendiente. Sube tu documento de identidad para acceder a tu información crediticia.",
+                "Verificación de identidad pendiente. Sube tu documento de "
+                "identidad para acceder a tu información crediticia.",
             )
 
         all_credits: list[tuple[CreditModel, DebtorType]] = []
         for debtor in debtors:
-            all_credits.extend((c, DebtorType.DEBTOR) for c in await self._credit_repo.get_by_debtor_id(debtor.id))
             all_credits.extend(
-                (c, DebtorType.CO_DEBTOR) for c in await self._credit_repo.get_by_codebtor_id(debtor.id)
+                (c, DebtorType.DEBTOR)
+                for c in await self._credit_repo.get_by_debtor_id(debtor.id)
+            )
+            all_credits.extend(
+                (c, DebtorType.CO_DEBTOR)
+                for c in await self._credit_repo.get_by_codebtor_id(debtor.id)
             )
 
         if not all_credits:
             return []
 
-        portfolio_ids: list[uuid.UUID] = list(
-            {c.portfolio_id for c, _ in all_credits}
-        )
+        portfolio_ids: list[uuid.UUID] = list({c.portfolio_id for c, _ in all_credits})
         portfolios = await self._portfolio_repo.get_by_ids(portfolio_ids)
         portfolio_map = {p.id: p for p in portfolios}
         # Un portafolio dado de baja no aparece en `get_by_ids`: sus créditos ya no se
         # muestran al titular (antes esto reventaba con KeyError más abajo).
-        all_credits = [(c, role) for c, role in all_credits if c.portfolio_id in portfolio_map]
+        all_credits = [
+            (c, role) for c, role in all_credits if c.portfolio_id in portfolio_map
+        ]
         if not all_credits:
             return []
 
@@ -83,7 +100,9 @@ class MyCreditsService:
 
         payment_methods_map: dict[uuid.UUID, list[PaymentMethodSummary]] = {}
         for org_id in org_ids:
-            raw_methods = await self._payment_method_repo.get_active_by_organization_id(org_id)
+            raw_methods = await self._payment_method_repo.get_active_by_organization_id(
+                org_id
+            )
             payment_methods_map[org_id] = [
                 PaymentMethodSummary(
                     id=m.id,
@@ -93,7 +112,9 @@ class MyCreditsService:
                     instructions=m.instructions,
                     bank_name=m.bank_name,
                     account_type=m.account_type,
-                    account_number=encrypt_service.decrypt_to_str(m.account_number) if m.account_number else None,
+                    account_number=encrypt_service.decrypt_to_str(m.account_number)
+                    if m.account_number
+                    else None,
                     payment_link=m.payment_link,
                     qr_image_url=m.qr_image_url,
                 )
@@ -127,7 +148,8 @@ class MyCreditsService:
             currency_code = country.currency_code if country else "COP"
 
             settlement_requested = (
-                await self._settlement_ticket_repo.get_active_by_credit_id(credit.id) is not None
+                await self._settlement_ticket_repo.get_active_by_credit_id(credit.id)
+                is not None
             )
 
             results.append(

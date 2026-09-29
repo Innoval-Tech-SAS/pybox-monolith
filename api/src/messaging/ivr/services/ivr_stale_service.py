@@ -29,9 +29,10 @@ def _stale_minutes() -> int:
 
 
 class IvrStaleService:
-
     def __init__(
-        self, interaction_repo: IvrInteractionRepository, contact_repo: ContactRepository
+        self,
+        interaction_repo: IvrInteractionRepository,
+        contact_repo: ContactRepository,
     ) -> None:
         self._interactions = interaction_repo
         self._contacts = contact_repo
@@ -46,12 +47,15 @@ class IvrStaleService:
             ids = [row.id for row in stale]
             await self._interactions.close_stale_bulk(ids, "STALE_TIMEOUT", now)
 
-            contact_ids = list({row.contact_id for row in stale if row.contact_id is not None})
+            contact_ids = list(
+                {row.contact_id for row in stale if row.contact_id is not None}
+            )
             if contact_ids:
                 await self._contacts.mark_failed_if_sent_bulk(contact_ids)
 
             logger.warning(
-                "[ivr_stale] %d interacciones cerradas por timeout (> %d min sin evento terminal)",
+                "[ivr_stale] %d interacciones cerradas por timeout (> %d "
+                "min sin evento terminal)",
                 closed,
                 _stale_minutes(),
             )

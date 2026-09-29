@@ -4,14 +4,26 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 
 from identity.users.schemas.user_session_schema import UserSession
-from receivables.payment_gateways.enums.payment_gateway_enums import ChargeMode, ReceivablesGatewayProvider
+from receivables.payment_gateways.enums.payment_gateway_enums import (
+    ChargeMode,
+    ReceivablesGatewayProvider,
+)
 from receivables.payment_gateways.gateways.base import PaymentMethodInput
 from receivables.payment_gateways.gateways.resolver import ReceivablesGatewayResolver
-from receivables.payment_gateways.models.payment_attempt_model import CreditPaymentAttemptModel
-from receivables.payment_gateways.repository.payment_attempt_repository import CreditPaymentAttemptRepository
-from receivables.payment_gateways.utils.reference_utils import build_payment_reference, to_amount_in_cents
+from receivables.payment_gateways.models.payment_attempt_model import (
+    CreditPaymentAttemptModel,
+)
+from receivables.payment_gateways.repository.payment_attempt_repository import (
+    CreditPaymentAttemptRepository,
+)
+from receivables.payment_gateways.utils.reference_utils import (
+    build_payment_reference,
+    to_amount_in_cents,
+)
 from receivables.payment_gateways.utils.wompi_status_mapping import to_attempt_status
-from receivables.payments.services.payment_ownership_resolver import PaymentOwnershipResolver
+from receivables.payments.services.payment_ownership_resolver import (
+    PaymentOwnershipResolver,
+)
 
 _CURRENCY = "COP"
 
@@ -39,14 +51,19 @@ class PaymentCheckoutService:
         payment_method: PaymentMethodInput,
         customer_email: str,
     ) -> CreditPaymentAttemptModel:
-        payment, _credit, portfolio = await self._ownership_resolver.resolve_owned_payment(session, payment_id)
+        (
+            payment,
+            _credit,
+            portfolio,
+        ) = await self._ownership_resolver.resolve_owned_payment(session, payment_id)
 
         gateway = await self._gateway_resolver.get_for_organization(
             portfolio.organization_id, ReceivablesGatewayProvider.WOMPI
         )
         if gateway is None:
             raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, "Esta organización no tiene una pasarela de pago configurada."
+                status.HTTP_400_BAD_REQUEST,
+                "Esta organización no tiene una pasarela de pago configurada.",
             )
 
         tokens = await gateway.get_acceptance_tokens()

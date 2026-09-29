@@ -14,7 +14,10 @@ router = APIRouter(prefix="/statements", tags=["Mis Extractos"])
     "/my-statements",
     response_model=StatementListResponse,
     summary="Consultar mis extractos",
-    description="Extractos del titular autenticado, generados por cualquier organización acreedora.",
+    description=(
+        "Extractos del titular autenticado, generados por cualquier "
+        "organización acreedora."
+    ),
 )
 async def list_my_statements(
     session: CurrentSession,
@@ -26,7 +29,9 @@ async def list_my_statements(
 @router.get(
     "/my-statements/{statement_id}/content",
     summary="Descargar uno de mis extractos",
-    description="Autoriza contra el titular de la sesión y entrega el archivo desde el almacén.",
+    description=(
+        "Autoriza contra el titular de la sesión y entrega el archivo desde el almacén."
+    ),
     response_class=Response,
 )
 async def download_my_statement(

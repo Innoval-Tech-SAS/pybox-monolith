@@ -3,7 +3,9 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.countries.enums.country_enums import Nationality
-from billing.provider_credentials.enums.provider_credential_enums import PlatformGatewayProvider
+from billing.provider_credentials.enums.provider_credential_enums import (
+    PlatformGatewayProvider,
+)
 from billing.provider_credentials.services.provider_credential_service import (
     DecryptedPlatformGatewayCredential,
     PlatformGatewayCredentialService,
@@ -38,10 +40,15 @@ class MercadoPagoCredentials:
 
 # ── Fallback por variables de entorno (suave: no revienta el arranque si faltan) ──
 
+
 def _load_credentials(country: str, env_suffix: str) -> MercadoPagoCredentials | None:
     access_token = get_or_default(f"MP_ACCESS_TOKEN_{env_suffix}", _ENV_FALLBACK_UNSET)
-    application_id = get_or_default(f"MP_APPLICATION_ID_{env_suffix}", _ENV_FALLBACK_UNSET)
-    webhook_secret = get_or_default(f"MP_WEBHOOK_SECRET_{env_suffix}", _ENV_FALLBACK_UNSET)
+    application_id = get_or_default(
+        f"MP_APPLICATION_ID_{env_suffix}", _ENV_FALLBACK_UNSET
+    )
+    webhook_secret = get_or_default(
+        f"MP_WEBHOOK_SECRET_{env_suffix}", _ENV_FALLBACK_UNSET
+    )
     if not (access_token and application_id and webhook_secret):
         return None
     return MercadoPagoCredentials(
@@ -55,12 +62,15 @@ def _load_credentials(country: str, env_suffix: str) -> MercadoPagoCredentials |
 
 _CREDENTIALS_BY_COUNTRY: dict[str, MercadoPagoCredentials] = {
     country: credentials
-    for country, credentials in [(Nationality.MX.value, _load_credentials(Nationality.MX.value, "MX"))]
+    for country, credentials in [
+        (Nationality.MX.value, _load_credentials(Nationality.MX.value, "MX"))
+    ]
     if credentials is not None
 }
 
 _CREDENTIALS_BY_APPLICATION_ID: dict[str, MercadoPagoCredentials] = {
-    credentials.application_id: credentials for credentials in _CREDENTIALS_BY_COUNTRY.values()
+    credentials.application_id: credentials
+    for credentials in _CREDENTIALS_BY_COUNTRY.values()
 }
 
 
@@ -70,7 +80,9 @@ def get_credentials_for_country(country: str | None) -> MercadoPagoCredentials |
     return _CREDENTIALS_BY_COUNTRY.get(country)
 
 
-def get_credentials_for_application_id(application_id: str) -> MercadoPagoCredentials | None:
+def get_credentials_for_application_id(
+    application_id: str,
+) -> MercadoPagoCredentials | None:
     credentials = _CREDENTIALS_BY_APPLICATION_ID.get(application_id)
     if credentials is not None:
         return credentials
@@ -89,7 +101,10 @@ def get_credentials_for_application_id(application_id: str) -> MercadoPagoCreden
 
 # ── Resolución desde DB (fuente de verdad), con fallback a env ──
 
-def _from_decrypted(cred: DecryptedPlatformGatewayCredential) -> MercadoPagoCredentials | None:
+
+def _from_decrypted(
+    cred: DecryptedPlatformGatewayCredential,
+) -> MercadoPagoCredentials | None:
     access_token = cred.get("access_token")
     webhook_secret = cred.get("webhook_secret")
     application_id = cred.get("application_id")
@@ -128,5 +143,6 @@ async def resolve_credentials_for_application_id(
         mp = _from_decrypted(cred)
         if mp is not None:
             return mp
-    # Fallback env: incluye la lógica de "cuenta única" para el application_id de sandbox.
+    # Fallback env: incluye la lógica de "cuenta única" para el
+    # application_id de sandbox.
     return get_credentials_for_application_id(application_id)

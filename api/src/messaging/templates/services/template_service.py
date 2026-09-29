@@ -2,14 +2,15 @@ import uuid
 
 from fastapi import HTTPException, status
 
-from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
 from core.config.logger import logger
 from core.security.constants.permissions import PORTFOLIO_COMMUNICATIONS
 from core.security.policies.security_policies import check_portfolio_org_access
 from identity.users.schemas.user_session_schema import UserSession
 from messaging.campaigns.utils.substitution_utils import build_sub
 from messaging.dispatcher import MessageDispatcher
-from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
+from messaging.provider_credentials.services.provider_credential_service import (
+    MessagingProviderCredentialService,
+)
 from messaging.templates.enums.template_enums import TemplateChannel, TemplateStatus
 from messaging.templates.models.template_model import TemplateModel
 from messaging.templates.repository.template_repository import TemplateRepository
@@ -22,6 +23,7 @@ from messaging.templates.schemas.template_schemas import (
     TemplateUpdateRequest,
 )
 from messaging.templates.services.template_renderer import TemplateRenderer
+from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 
 # Módulo-nivel, igual que en automation_service.py: un solo dispatcher compartido,
 # no uno por instancia de servicio (cada canal mantiene su propio cliente HTTP).
@@ -29,7 +31,6 @@ _DISPATCHER = MessageDispatcher()
 
 
 class TemplateService:
-
     def __init__(
         self,
         template_repo: TemplateRepository,
@@ -38,11 +39,17 @@ class TemplateService:
         self._repo = template_repo
         self._portfolio_repo = portfolio_repo
         self._renderer = TemplateRenderer()
-        self._credential_service = MessagingProviderCredentialService(portfolio_repo.session)
+        self._credential_service = MessagingProviderCredentialService(
+            portfolio_repo.session
+        )
 
-    async def _check_portfolio_access(self, user_session: UserSession, portfolio_id: uuid.UUID) -> None:
+    async def _check_portfolio_access(
+        self, user_session: UserSession, portfolio_id: uuid.UUID
+    ) -> None:
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)
-        await check_portfolio_org_access(user_session, portfolio, PORTFOLIO_COMMUNICATIONS)
+        await check_portfolio_org_access(
+            user_session, portfolio, PORTFOLIO_COMMUNICATIONS
+        )
 
     async def list_by_org(
         self,
@@ -56,7 +63,9 @@ class TemplateService:
         sort_order: str = "asc",
     ) -> tuple[list[TemplateModel], int]:
         await self._check_portfolio_access(user_session, portfolio_id)
-        return await self._repo.list_by_portfolio(portfolio_id, page, page_size, channel, search, sort_by, sort_order)
+        return await self._repo.list_by_portfolio(
+            portfolio_id, page, page_size, channel, search, sort_by, sort_order
+        )
 
     async def list_all_by_org(
         self,
@@ -77,7 +86,10 @@ class TemplateService:
         return template
 
     async def create(
-        self, portfolio_id: uuid.UUID, data: TemplateCreateRequest, user_session: UserSession
+        self,
+        portfolio_id: uuid.UUID,
+        data: TemplateCreateRequest,
+        user_session: UserSession,
     ) -> TemplateModel:
         await self._check_portfolio_access(user_session, portfolio_id)
         template = TemplateModel(
@@ -107,7 +119,9 @@ class TemplateService:
             setattr(template, key, value)
         return await self._repo.update(template)
 
-    async def delete(self, template_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession) -> None:
+    async def delete(
+        self, template_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
+    ) -> None:
         template = await self.get_by_id(template_id, portfolio_id, user_session)
         await self._repo.delete(template)
 
@@ -150,10 +164,14 @@ class TemplateService:
         template = await self.get_by_id(template_id, portfolio_id, user_session)
         if template.channel != TemplateChannel.EMAIL:
             raise HTTPException(
-                status.HTTP_422_UNPROCESSABLE_ENTITY, "Solo se pueden enviar plantillas de EMAIL desde acá."
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "Solo se pueden enviar plantillas de EMAIL desde acá.",
             )
         if template.status != TemplateStatus.ACTIVE:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "La plantilla debe estar activa para enviarse.")
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+                "La plantilla debe estar activa para enviarse.",
+            )
 
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)
 
@@ -175,8 +193,13 @@ class TemplateService:
             country=portfolio.country if portfolio else None,
         )
         if not ok:
-            logger.error("[templates] envío fallido | template=%s to=%s", template.id, data.to)
-            raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo enviar el email. Intenta de nuevo.")
+            logger.error(
+                "[templates] envío fallido | template=%s to=%s", template.id, data.to
+            )
+            raise HTTPException(
+                status.HTTP_502_BAD_GATEWAY,
+                "No se pudo enviar el email. Intenta de nuevo.",
+            )
 
         logger.info("[templates] enviado | template=%s to=%s", template.id, data.to)
         return TemplateSendResponse(message="Email enviado correctamente.")

@@ -24,13 +24,21 @@ class PaymentMethodSummary(BaseSchema):
 class PaymentSummary(BaseSchema):
     id: uuid.UUID = Field(description="ID del pago")
     limit_pay_date: datetime = Field(description="Fecha límite de pago")
-    payment_date: datetime | None = Field(default=None, description="Fecha en que se realizó el pago")
+    payment_date: datetime | None = Field(
+        default=None, description="Fecha en que se realizó el pago"
+    )
     payment_amount: float = Field(description="Monto pagado")
     installment_number: int | None = Field(default=None, description="Número de cuota")
     principal_payment: float = Field(description="Abono a capital")
     total_interest_amount: float = Field(description="Total de intereses")
     other_charges: float = Field(description="Otros cargos")
-    status: str = Field(description="Estado del pago (enum PaymentStatus: pendiente, reprogramacion_solicitada, reprogramado, validacion_solicitada, pagado)")
+    status: str = Field(
+        description=(
+            "Estado del pago (enum PaymentStatus: pendiente, "
+            "reprogramacion_solicitada, reprogramado, validacion_solicitada, "
+            "pagado)"
+        )
+    )
 
 
 class CreditWithPayments(BaseSchema):
@@ -41,10 +49,20 @@ class CreditWithPayments(BaseSchema):
     total_credit_balance: float = Field(description="Saldo total del crédito")
     overdue_principal_balance: float = Field(description="Saldo en mora (capital)")
     days_overdue_at_cutoff: int = Field(description="Días de mora al corte")
-    role: DebtorType = Field(description="Rol del deudor en este crédito (Titular o Co-deudor)")
+    role: DebtorType = Field(
+        description="Rol del deudor en este crédito (Titular o Co-deudor)"
+    )
     organization_name: str = Field(description="Nombre de la organización acreedora")
     currency_code: str = Field(description="Código de moneda (COP, MXN, etc.)")
     payments: list[PaymentSummary] = Field(description="Historial de pagos")
-    payment_methods: list[PaymentMethodSummary] = Field(default_factory=list, description="Métodos de pago aceptados por la organización")
-    is_active: bool = Field(default=True, description="Si el crédito está vigente (False = dado de baja)")
-    settlement_requested: bool = Field(default=False, description="Si hay una solicitud de baja en curso (ticket abierto)")
+    payment_methods: list[PaymentMethodSummary] = Field(
+        default_factory=list,
+        description="Métodos de pago aceptados por la organización",
+    )
+    is_active: bool = Field(
+        default=True, description="Si el crédito está vigente (False = dado de baja)"
+    )
+    settlement_requested: bool = Field(
+        default=False,
+        description="Si hay una solicitud de baja en curso (ticket abierto)",
+    )

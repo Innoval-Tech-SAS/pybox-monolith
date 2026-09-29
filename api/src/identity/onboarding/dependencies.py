@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -6,15 +6,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.support.services.support_service import SupportService
 from core.database.database import get_main_session
+from core.security.dependencies import (
+    get_pending_mfa_session,
+    get_session,
+)
 from identity.onboarding.services.onboarding_service import OnboardingService
 from identity.organizations.models.organization_model import OrganizationModel
-from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
-from identity.organizations.repository.organization_repository import OrganizationRepository
-from core.security.dependencies import CurrentSession, get_pending_mfa_session, get_session
+from identity.organizations.repository.organization_membership_repository import (
+    OrganizationMembershipRepository,
+)
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
 from identity.users.enums.user_enums import UserScope
-from identity.users.repository.permission_assignment_repository import PermissionAssignmentRepository
-from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
-from identity.users.repository.user_preferences_repository import UserPreferencesRepository
+from identity.users.repository.permission_assignment_repository import (
+    PermissionAssignmentRepository,
+)
+from identity.users.repository.role_assignment_repository import (
+    RoleAssignmentRepository,
+)
+from identity.users.repository.user_preferences_repository import (
+    UserPreferencesRepository,
+)
 from identity.users.repository.user_repository import UserRepository
 from identity.users.schemas.user_session_schema import UserSession
 from identity.users.services.user_service import UserService
@@ -29,14 +42,18 @@ def _scope_from_session(session: UserSession) -> UserScope:
     return UserScope.SELF
 
 
-async def _org_from_session(session: UserSession, db: AsyncSession) -> OrganizationModel | None:
+async def _org_from_session(
+    session: UserSession, db: AsyncSession
+) -> OrganizationModel | None:
     if not session.orgs:
         return None
     first_org_id = next(iter(session.orgs))
     return await OrganizationRepository(db).get_by_id(uuid.UUID(first_org_id))
 
 
-def get_current_scope(session: Annotated[UserSession, Depends(get_session)]) -> UserScope:
+def get_current_scope(
+    session: Annotated[UserSession, Depends(get_session)],
+) -> UserScope:
     return _scope_from_session(session)
 
 
@@ -47,7 +64,9 @@ async def get_current_org(
     return await _org_from_session(session, db)
 
 
-def get_current_scope_pending_mfa(session: Annotated[UserSession, Depends(get_pending_mfa_session)]) -> UserScope:
+def get_current_scope_pending_mfa(
+    session: Annotated[UserSession, Depends(get_pending_mfa_session)],
+) -> UserScope:
     """Variante de `get_current_scope` para endpoints de onboarding (ver
     `PendingMfaSession` en core/security/dependencies.py): el segundo factor todavía
     puede estar pendiente en ese punto del flujo."""
@@ -108,5 +127,7 @@ async def require_onboarding_complete(
 CurrentScope = Annotated[UserScope, Depends(get_current_scope)]
 CurrentOrg = Annotated[OrganizationModel | None, Depends(get_current_org)]
 PendingMfaScope = Annotated[UserScope, Depends(get_current_scope_pending_mfa)]
-PendingMfaOrg = Annotated[OrganizationModel | None, Depends(get_current_org_pending_mfa)]
+PendingMfaOrg = Annotated[
+    OrganizationModel | None, Depends(get_current_org_pending_mfa)
+]
 OnboardingServiceDep = Annotated[OnboardingService, Depends(get_onboarding_service)]

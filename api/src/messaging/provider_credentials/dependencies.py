@@ -16,5 +16,6 @@ def get_messaging_provider_credential_admin_service(
 
 
 MessagingProviderCredentialAdminServiceDep = Annotated[
-    MessagingProviderCredentialAdminService, Depends(get_messaging_provider_credential_admin_service)
+    MessagingProviderCredentialAdminService,
+    Depends(get_messaging_provider_credential_admin_service),
 ]

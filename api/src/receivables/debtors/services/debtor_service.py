@@ -3,19 +3,32 @@ import uuid
 from fastapi import HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app_platform.documents.services.document_service import DocumentService
-from receivables.debtors.repository.debtor_document_repository import DebtorDocumentRepository
-from receivables.debtors.schemas.debtor_document_schemas import DebtorDocumentListResponse
-from receivables.debtors.services.debtor_document_service import DebtorDocumentService
-from receivables.contact_methods.models.contact_method_model import ContactMethodModel
-from receivables.contact_methods.repository.contact_method_repository import ContactMethodRepository
-from receivables.contact_methods.utils.contact_normalize import normalize_contact_value
 from app_platform.countries.repository.country_repository import CountryRepository
+from app_platform.documents.services.document_service import DocumentService
+from core.config.logger import logger
+from core.security.constants.permissions import PORTFOLIO_CLIENTS
+from core.security.policies.security_policies import (
+    check_portfolio_org_access,
+    require_permission,
+)
+from core.security.services.encrypt_service import encrypt_service
+from identity.users.schemas.user_session_schema import UserSession
+from receivables.contact_methods.models.contact_method_model import ContactMethodModel
+from receivables.contact_methods.repository.contact_method_repository import (
+    ContactMethodRepository,
+)
+from receivables.contact_methods.utils.contact_normalize import normalize_contact_value
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.debtors.models.address_model import AddressModel
 from receivables.debtors.models.debtor_model import DebtorModel
 from receivables.debtors.repository.address_repository import AddressRepository
+from receivables.debtors.repository.debtor_document_repository import (
+    DebtorDocumentRepository,
+)
 from receivables.debtors.repository.debtor_repository import DebtorRepository
+from receivables.debtors.schemas.debtor_document_schemas import (
+    DebtorDocumentListResponse,
+)
 from receivables.debtors.schemas.debtor_schemas import (
     AddressResponse,
     ContactMethodResponse,
@@ -30,14 +43,9 @@ from receivables.debtors.schemas.debtor_schemas import (
     DebtorResponse,
     RelatedContactsResponse,
 )
+from receivables.debtors.services.debtor_document_service import DebtorDocumentService
 from receivables.payments.repository.payment_repository import PaymentRepository
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from core.security.constants.permissions import PORTFOLIO_CLIENTS
-from core.security.policies.security_policies import check_portfolio_org_access, require_permission
-from core.security.services.encrypt_service import encrypt_service
-from identity.users.schemas.user_session_schema import UserSession
-
-from core.config.logger import logger
 
 
 class DebtorService:
@@ -62,7 +70,12 @@ class DebtorService:
         self.payment_repo = payment_repo
         self.document_repo = document_repo
 
-    async def get_debtor(self, debtor_id: uuid.UUID, user_session: UserSession, portfolio_id: uuid.UUID | None) -> DebtorDetailResponse:
+    async def get_debtor(
+        self,
+        debtor_id: uuid.UUID,
+        user_session: UserSession,
+        portfolio_id: uuid.UUID | None,
+    ) -> DebtorDetailResponse:
         if portfolio_id is not None:
             await self._check_portfolio_access(user_session, portfolio_id)
         elif not user_session.is_global:
@@ -137,7 +150,9 @@ class DebtorService:
         if portfolio is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Portafolio no encontrado")
         currency_code = await self._country_repo.get_currency_code(portfolio.country)
-        credits = await self.credit_repo.get_by_debtor_and_portfolio(debtor_id, portfolio_id)
+        credits = await self.credit_repo.get_by_debtor_and_portfolio(
+            debtor_id, portfolio_id
+        )
         return [
             DebtorCreditResponse(
                 id=c.id,
@@ -163,7 +178,9 @@ class DebtorService:
         if portfolio is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Portafolio no encontrado")
         currency_code = await self._country_repo.get_currency_code(portfolio.country)
-        credits = await self.credit_repo.get_by_debtor_and_portfolio(debtor_id, portfolio_id)
+        credits = await self.credit_repo.get_by_debtor_and_portfolio(
+            debtor_id, portfolio_id
+        )
         result = []
         for c in credits:
             installments = await self.payment_repo.get_by_credit_id(c.id)
@@ -211,27 +228,41 @@ class DebtorService:
         return DebtorDocumentService.to_list_response(rows)
 
     async def get_debtor_document_content(
-        self, debtor_id: uuid.UUID, document_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
+        self,
+        debtor_id: uuid.UUID,
+        document_id: uuid.UUID,
+        portfolio_id: uuid.UUID,
+        user_session: UserSession,
     ) -> Response:
         await self._check_portfolio_access(user_session, portfolio_id)
         await self._require_debtor(debtor_id, portfolio_id)
-        # Último eslabón: el documento tiene que colgar de ESE deudor. Si no, 404 — no se
-        # le confirma al llamante que existe fuera de su alcance.
+        # Último eslabón: el documento tiene que colgar de ESE deudor. Si no, 404
+        # — no se le confirma al llamante que existe fuera de su alcance.
         row = await self.document_repo.get_owned(debtor_id, document_id)
         if row is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Documento no encontrado")
-        return await self._document_service.to_content_response(row[1], user_session.user_id)
+        return await self._document_service.to_content_response(
+            row[1], user_session.user_id
+        )
 
-    async def create_debtor(self, data: CreateDebtorRequest, user_session: UserSession) -> DebtorModel:
+    async def create_debtor(
+        self, data: CreateDebtorRequest, user_session: UserSession
+    ) -> DebtorModel:
         # El deudor es de una sola empresa: se exige el permiso sobre la organización
         # indicada (el global pasa por `require_permission`). El chequeo de duplicado va
         # acotado a esa organización, así un 409 nunca revela deudores de otra empresa.
         require_permission(PORTFOLIO_CLIENTS, user_session, str(data.organization_id))
         doc_hash = encrypt_service.hash_document(data.document_number)
-        existing = await self.debtor_repo.get_by_document_number(data.organization_id, doc_hash)
+        existing = await self.debtor_repo.get_by_document_number(
+            data.organization_id, doc_hash
+        )
         if existing:
             raise HTTPException(status.HTTP_409_CONFLICT, "El deudor ya existe")
-        logger.info("[debtor] creando deudor | org=%s doc_type=%s", data.organization_id, data.document_type)
+        logger.info(
+            "[debtor] creando deudor | org=%s doc_type=%s",
+            data.organization_id,
+            data.document_type,
+        )
         return await self.debtor_repo.add(
             DebtorModel(
                 organization_id=data.organization_id,
@@ -278,10 +309,13 @@ class DebtorService:
         elif not user_session.is_global:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "portfolioId es requerido")
         await self._require_debtor(debtor_id, portfolio_id)
-        # Normalizar antes de insertar: EMAIL en minúsculas; PHONE con indicativo del país del
-        # portafolio del deudor. Mantiene los contactos comparables con el dato autogestionado.
+        # Normalizar antes de insertar: EMAIL en minúsculas; PHONE con indicativo
+        # del país del portafolio del deudor. Mantiene los contactos comparables
+        # con el dato autogestionado.
         phone_prefix = await self._resolve_debtor_phone_prefix(debtor_id)
-        value = normalize_contact_value(data.contact_type, data.contact_value, phone_prefix)
+        value = normalize_contact_value(
+            data.contact_type, data.contact_value, phone_prefix
+        )
         return await self.contact_repo.add(
             ContactMethodModel(
                 debtor_id=debtor_id,
@@ -291,7 +325,8 @@ class DebtorService:
         )
 
     async def _resolve_debtor_phone_prefix(self, debtor_id: uuid.UUID) -> str | None:
-        """Indicativo telefónico del país del portafolio del deudor (por su crédito más reciente)."""
+        """Indicativo telefónico del país del portafolio del deudor (por su
+        crédito más reciente)."""
         credits = await self.credit_repo.get_by_debtor_id(debtor_id)
         if not credits:
             return None
@@ -300,15 +335,24 @@ class DebtorService:
             return None
         return await self._country_repo.get_phone_prefix(portfolio.country)
 
-    async def _check_portfolio_access(self, user_session: UserSession, portfolio_id: uuid.UUID) -> None:
+    async def _check_portfolio_access(
+        self, user_session: UserSession, portfolio_id: uuid.UUID
+    ) -> None:
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
         await check_portfolio_org_access(user_session, portfolio, PORTFOLIO_CLIENTS)
 
-    async def _require_debtor(self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID | None = None) -> DebtorModel:
+    async def _require_debtor(
+        self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID | None = None
+    ) -> DebtorModel:
         debtor = await self.debtor_repo.get_by_id(debtor_id)
         if debtor is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Deudor no encontrado")
-        if portfolio_id is not None and not await self.credit_repo.debtor_belongs_to_portfolio(debtor_id, portfolio_id):
+        if (
+            portfolio_id is not None
+            and not await self.credit_repo.debtor_belongs_to_portfolio(
+                debtor_id, portfolio_id
+            )
+        ):
             # No se confirma al llamante que el deudor existe fuera de su alcance.
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Deudor no encontrado")
         return debtor

@@ -2,9 +2,9 @@ from typing import Annotated
 
 from fastapi import Header, Request
 
-from core.config.api_router import APIRouter
 from billing.bold.services.bold_webhook_service import BoldWebhookService
 from billing.invoices.dependencies import InvoiceServiceDep
+from core.config.api_router import APIRouter
 
 router = APIRouter(prefix="/webhooks/bold", tags=["Webhooks"])
 

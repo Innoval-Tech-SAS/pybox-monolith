@@ -11,5 +11,8 @@ class BulkSendResponse(BaseSchema):
     skipped_rows: int = Field(description="Filas omitidas por datos inválidos")
     pending_approval_count: int = Field(
         default=0,
-        description="Filas de WhatsApp omitidas porque el teléfono espera aprobación del canal (solicitud de consentimiento)",
+        description=(
+            "Filas de WhatsApp omitidas porque el teléfono espera aprobación "
+            "del canal (solicitud de consentimiento)"
+        ),
     )

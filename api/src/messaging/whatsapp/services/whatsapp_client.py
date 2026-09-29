@@ -40,7 +40,11 @@ class WhatsAppCloudClient:
     ) -> httpx.Response:
         headers = {"Authorization": f"Bearer {token or self._token}"}
         response = await self._http.request(
-            method, f"{GRAPH_API_BASE_URL}{endpoint}", json=json, params=params, headers=headers
+            method,
+            f"{GRAPH_API_BASE_URL}{endpoint}",
+            json=json,
+            params=params,
+            headers=headers,
         )
         response.raise_for_status()
         return response
@@ -71,7 +75,12 @@ class WhatsAppCloudClient:
             body = response.json()
             messages = body.get("messages", [])
             wamid = messages[0]["id"] if messages else None
-            logger.info("[whatsapp] send_ok | to=%s template=%s wamid=%s", to, template_name, wamid)
+            logger.info(
+                "[whatsapp] send_ok | to=%s template=%s wamid=%s",
+                to,
+                template_name,
+                wamid,
+            )
             return True, wamid
         except httpx.HTTPStatusError as exc:
             response_body = exc.response.text[:500] if exc.response is not None else ""
@@ -82,7 +91,9 @@ class WhatsAppCloudClient:
             )
             return False, None
         except Exception as exc:
-            logger.error("[whatsapp] send_error | error=%s detail=%s", type(exc).__name__, exc)
+            logger.error(
+                "[whatsapp] send_error | error=%s detail=%s", type(exc).__name__, exc
+            )
             return False, None
 
     async def send_text(
@@ -118,7 +129,11 @@ class WhatsAppCloudClient:
             )
             return False, None
         except Exception as exc:
-            logger.error("[whatsapp] send_text_error | error=%s detail=%s", type(exc).__name__, exc)
+            logger.error(
+                "[whatsapp] send_text_error | error=%s detail=%s",
+                type(exc).__name__,
+                exc,
+            )
             return False, None
 
     async def create_template(

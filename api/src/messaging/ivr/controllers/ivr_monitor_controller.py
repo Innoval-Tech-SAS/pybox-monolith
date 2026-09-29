@@ -105,7 +105,9 @@ async def stream_campaign(
         try:
             while True:
                 try:
-                    yield await asyncio.wait_for(queue.get(), timeout=_HEARTBEAT_SECONDS)
+                    yield await asyncio.wait_for(
+                        queue.get(), timeout=_HEARTBEAT_SECONDS
+                    )
                 except asyncio.TimeoutError:
                     yield {"event": EVENT_HEARTBEAT, "data": "{}"}
         except asyncio.CancelledError:

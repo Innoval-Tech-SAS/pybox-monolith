@@ -1,6 +1,6 @@
-﻿import uuid
-from decimal import Decimal
+import uuid
 from datetime import datetime
+from decimal import Decimal
 
 from pydantic import Field
 
@@ -19,7 +19,9 @@ class ChannelCreateRequest(BaseSchema):
 class ChannelUpdateRequest(BaseSchema):
     label: str | None = Field(default=None, description="Nueva etiqueta")
     currency: Currency | None = Field(default=None, description="Nueva moneda")
-    unit_price: Decimal | None = Field(default=None, description="Nuevo precio unitario")
+    unit_price: Decimal | None = Field(
+        default=None, description="Nuevo precio unitario"
+    )
     description: str | None = Field(default=None, description="Nueva descripción")
 
 
@@ -31,4 +33,6 @@ class ChannelResponse(BaseSchema):
     unit_price: Decimal = Field(description="Precio unitario")
     description: str = Field(description="Descripción")
     created_at: datetime = Field(description="Fecha de creación")
-    updated_at: datetime | None = Field(default=None, description="Fecha de actualización")
+    updated_at: datetime | None = Field(
+        default=None, description="Fecha de actualización"
+    )

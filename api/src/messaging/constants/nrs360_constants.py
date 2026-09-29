@@ -12,9 +12,10 @@ GSM_CONCAT_PART_LENGTH = 153
 UTF16_SINGLE_PART_LENGTH = 70
 UTF16_CONCAT_PART_LENGTH = 67
 
-# ``parts`` es el máximo de partes en que 360nrs puede dividir el mensaje. Su default es 1
-# y, si el texto necesita más de las declaradas, el envío falla con error 105 (no se
-# trunca). Por eso hay que declararlo explícitamente en vez de confiar en el default.
+# ``parts`` es el máximo de partes en que 360nrs puede dividir el mensaje.
+# Su default es 1 y, si el texto necesita más de las declaradas, el envío
+# falla con error 105 (no se trunca). Por eso hay que declararlo
+# explícitamente en vez de confiar en el default.
 SMS_MAX_PARTS = 15
 
 # Alfabeto GSM 7 bit por defecto (3GPP TS 23.038): tabla básica + tabla de extensión.

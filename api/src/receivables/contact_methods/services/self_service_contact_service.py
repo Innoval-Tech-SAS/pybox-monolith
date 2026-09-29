@@ -5,16 +5,20 @@ from app_platform.countries.repository.country_repository import CountryReposito
 from core.config.logger import logger
 from receivables.contact_methods.enums.contact_method_enums import ContactMethodType
 from receivables.contact_methods.models.contact_method_model import ContactMethodModel
-from receivables.contact_methods.repository.contact_method_repository import ContactMethodRepository
+from receivables.contact_methods.repository.contact_method_repository import (
+    ContactMethodRepository,
+)
 from receivables.contact_methods.utils.contact_normalize import normalize_contact_value
 from receivables.debtors.repository.debtor_repository import DebtorRepository
 
 
 class SelfServiceContactService:
-    """Propaga a las orgs el correo/teléfono verificado por el propio titular (USER SELF).
+    """Propaga a las orgs el correo/teléfono verificado por el propio titular (USER
+    SELF).
 
-    El deudor es único global (por ``numero_documento_hash``), así que agregar una fila de
-    ``metodos_contacto`` al deudor lo hace visible a todas las orgs donde tiene créditos.
+    El deudor es único global (por ``numero_documento_hash``), así que agregar una
+    fila de ``metodos_contacto`` al deudor lo hace visible a todas las orgs donde
+    tiene créditos.
     """
 
     def __init__(
@@ -37,16 +41,19 @@ class SelfServiceContactService:
     ) -> bool:
         """Registra el valor verificado como método de contacto del deudor, si difiere.
 
-        Devuelve ``True`` si se creó una fila nueva; ``False`` si no había deudor, el valor
-        estaba vacío o ya existía (comparado normalizado; PHONE siempre con prefijo de país).
+        Devuelve ``True`` si se creó una fila nueva; ``False`` si no había deudor, el
+        valor estaba vacío o ya existía (comparado normalizado; PHONE siempre con
+        prefijo de país).
         """
         if not contact_value:
             return False
 
-        # El titular puede figurar como deudor en varias empresas (una fila por empresa):
-        # el contacto verificado se registra en cada una, porque cada empresa tiene su
-        # propia copia de los datos de contacto.
-        debtors = await self._debtor_repo.list_by_document(document_type, document_number_hash)
+        # El titular puede figurar como deudor en varias empresas (una fila por
+        # empresa): el contacto verificado se registra en cada una, porque cada
+        # empresa tiene su propia copia de los datos de contacto.
+        debtors = await self._debtor_repo.list_by_document(
+            document_type, document_number_hash
+        )
         if not debtors:
             return False
 
@@ -55,7 +62,9 @@ class SelfServiceContactService:
             if contact_type == ContactMethodType.PHONE
             else None
         )
-        normalized = normalize_contact_value(contact_type, contact_value, country_prefix)
+        normalized = normalize_contact_value(
+            contact_type, contact_value, country_prefix
+        )
         if not normalized:
             return False
 
@@ -77,7 +86,8 @@ class SelfServiceContactService:
                 )
             )
             logger.info(
-                "[self_service_contact] contacto verificado registrado | debtor_id=%s tipo=%s",
+                "[self_service_contact] contacto verificado registrado | "
+                "debtor_id=%s tipo=%s",
                 debtor.id,
                 contact_type.value,
             )

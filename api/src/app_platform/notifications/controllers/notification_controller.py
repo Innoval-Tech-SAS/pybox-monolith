@@ -21,7 +21,9 @@ async def list_notifications(session: CurrentSession, service: NotificationServi
     return await service.get_notifications(session.user_id)
 
 
-@router.post("/read-all", status_code=204, summary="Marcar todas las notificaciones como leídas")
+@router.post(
+    "/read-all", status_code=204, summary="Marcar todas las notificaciones como leídas"
+)
 async def mark_all_read(session: CurrentSession, service: NotificationServiceDep):
     await service.mark_all_read(session.user_id)
 
@@ -29,7 +31,9 @@ async def mark_all_read(session: CurrentSession, service: NotificationServiceDep
 @router.get(
     "/stream",
     summary="Stream de notificaciones en tiempo real (SSE)",
-    description="Conexión Server-Sent Events para recibir notificaciones en tiempo real.",
+    description=(
+        "Conexión Server-Sent Events para recibir notificaciones en tiempo real."
+    ),
 )
 async def notification_stream(session: SSESession):
     user_id = session.user_id
@@ -60,5 +64,7 @@ async def get_notification(
 ):
     n = await service.get_notification(notification_id, session.user_id)
     if not n:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notificación no encontrada")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Notificación no encontrada"
+        )
     return n

@@ -8,7 +8,6 @@ from core.database.redis import redis_client, redis_factory
 from identity.users.repository.user_repository import UserRepository
 from identity.users.schemas.user_session_schema import SESSION_KEY_PREFIX, session_key
 
-
 _KEYEVENT_CHANNEL = "__keyevent@0__:expired"
 _RESUBSCRIBE_BACKOFF_SECONDS = 5
 
@@ -57,8 +56,6 @@ async def _listen_forever() -> None:
         try:
             event_client = redis_factory.pubsub_client()
             await _listen(event_client)
-        except asyncio.CancelledError:
-            raise
         except Exception:
             logger.exception(
                 "session expiry listener perdió la conexión, reintentando en %ds",

@@ -18,8 +18,9 @@ el usuario (alembic upgrade head).
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "c9d0e1f2a3b4"
 down_revision: Union[str, None] = "0b2714227764"

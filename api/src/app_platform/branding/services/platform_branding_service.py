@@ -3,8 +3,12 @@ import uuid
 from fastapi import HTTPException, Response, status
 
 from app_platform.branding.models.platform_branding_model import PlatformBrandingModel
-from app_platform.branding.repository.platform_branding_repository import PlatformBrandingRepository
-from app_platform.branding.schemas.platform_branding_schemas import PlatformBrandingResponse
+from app_platform.branding.repository.platform_branding_repository import (
+    PlatformBrandingRepository,
+)
+from app_platform.branding.schemas.platform_branding_schemas import (
+    PlatformBrandingResponse,
+)
 from app_platform.documents.services.document_service import DocumentService
 from app_platform.documents.utils.document_naming import resolve_content_type
 
@@ -16,7 +20,9 @@ PLATFORM_BRANDING_OWNER_ID = "global"
 
 
 class PlatformBrandingService:
-    def __init__(self, repo: PlatformBrandingRepository, document_service: DocumentService):
+    def __init__(
+        self, repo: PlatformBrandingRepository, document_service: DocumentService
+    ):
         self._repo = repo
         self._document_service = document_service
 
@@ -24,7 +30,8 @@ class PlatformBrandingService:
         branding = await self._repo.get_singleton()
         if branding is None:
             raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR, "Configuración de plataforma no inicializada"
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "Configuración de plataforma no inicializada",
             )
         return branding
 
@@ -51,16 +58,25 @@ class PlatformBrandingService:
             await self._document_service.delete_by_id(previous_document_id)
         return updated
 
-    async def get_logo_content(self, document_id: uuid.UUID, requested_by: uuid.UUID) -> Response:
+    async def get_logo_content(
+        self, document_id: uuid.UUID, requested_by: uuid.UUID
+    ) -> Response:
         """Entrega el logo global. Ownership resuelto contra la fila singleton (mismo
         chequeo 1:1 que profile-photo/content contra la fila del usuario): 404 salvo
         que `document_id` sea EXACTAMENTE el logo vigente."""
         branding = await self.get_singleton()
-        if branding.logo_document_id is None or branding.logo_document_id != document_id:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "La plataforma no tiene logo configurado")
+        if (
+            branding.logo_document_id is None
+            or branding.logo_document_id != document_id
+        ):
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, "La plataforma no tiene logo configurado"
+            )
         document = await self._document_service.get_by_id(document_id)
         if document is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "La plataforma no tiene logo configurado")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, "La plataforma no tiene logo configurado"
+            )
         return await self._document_service.to_content_response(document, requested_by)
 
     @staticmethod

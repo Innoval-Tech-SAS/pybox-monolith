@@ -30,7 +30,10 @@ def _csv_header_response(columns: list[str], filename: str) -> Response:
 @router.get(
     "/upload-csv/template",
     summary="Descargar plantilla CSV de portafolio",
-    description="Encabezado del CSV que esperan /upload-csv, /upload-csv/append y /upload-csv/update.",
+    description=(
+        "Encabezado del CSV que esperan /upload-csv, /upload-csv/append y "
+        "/upload-csv/update."
+    ),
 )
 async def download_portfolio_template() -> Response:
     return _csv_header_response(PORTFOLIO_TEMPLATE_COLUMNS, "plantilla_portafolio.csv")
@@ -42,4 +45,6 @@ async def download_portfolio_template() -> Response:
     description="Encabezado del CSV que espera /upload-csv/installments.",
 )
 async def download_installments_template() -> Response:
-    return _csv_header_response(INSTALLMENT_TEMPLATE_COLUMNS, "plantilla_plan_cuotas.csv")
+    return _csv_header_response(
+        INSTALLMENT_TEMPLATE_COLUMNS, "plantilla_plan_cuotas.csv"
+    )

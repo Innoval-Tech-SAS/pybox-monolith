@@ -22,7 +22,11 @@ class ChatConnectionManager:
                 await oldest.close(code=1008)
             except Exception:
                 pass
-            logger.info("[chat_ws] límite de conexiones alcanzado | user_id=%s — cerrando la más antigua", user_id)
+            logger.info(
+                "[chat_ws] límite de conexiones alcanzado | user_id=%s — cerrando "
+                "la más antigua",
+                user_id,
+            )
         conns.append(ws)
 
     def disconnect(self, user_id: uuid.UUID, ws: WebSocket) -> None:
@@ -33,7 +37,9 @@ class ChatConnectionManager:
     def online_user_ids(self) -> set[uuid.UUID]:
         return {uid for uid, conns in self._connections.items() if conns}
 
-    async def broadcast_to_others(self, exclude_user_id: uuid.UUID, event: str, data: dict) -> None:
+    async def broadcast_to_others(
+        self, exclude_user_id: uuid.UUID, event: str, data: dict
+    ) -> None:
         for uid in self.online_user_ids():
             if uid != exclude_user_id:
                 await self.send_to_user(uid, event, data)
@@ -44,7 +50,11 @@ class ChatConnectionManager:
             try:
                 await ws.send_json({"event": event, "data": data})
             except Exception:
-                logger.debug("[chat_ws] send_failed | user_id=%s — marcando conexión como muerta", user_id)
+                logger.debug(
+                    "[chat_ws] send_failed | user_id=%s — marcando conexión como "
+                    "muerta",
+                    user_id,
+                )
                 dead.append(ws)
         for ws in dead:
             self.disconnect(user_id, ws)

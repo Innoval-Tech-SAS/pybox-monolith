@@ -21,4 +21,6 @@ def get_admin_document_service(
 
 
 DocumentServiceDep = Annotated[DocumentService, Depends(get_document_service)]
-AdminDocumentServiceDep = Annotated[AdminDocumentService, Depends(get_admin_document_service)]
+AdminDocumentServiceDep = Annotated[
+    AdminDocumentService, Depends(get_admin_document_service)
+]

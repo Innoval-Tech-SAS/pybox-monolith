@@ -6,12 +6,15 @@ from fastapi import HTTPException, status
 from core.security.policies.security_policies import require_org_admin
 from identity.users.schemas.user_session_schema import UserSession
 from messaging.whatsapp.enums.whatsapp_enums import ChannelRequestStatus
-from messaging.whatsapp.models.whatsapp_channel_request_model import WhatsAppChannelRequestModel
-from messaging.whatsapp.repository.whatsapp_channel_request_repository import WhatsAppChannelRequestRepository
+from messaging.whatsapp.models.whatsapp_channel_request_model import (
+    WhatsAppChannelRequestModel,
+)
+from messaging.whatsapp.repository.whatsapp_channel_request_repository import (
+    WhatsAppChannelRequestRepository,
+)
 
 
 class WhatsAppChannelRequestService:
-
     def __init__(self, repo: WhatsAppChannelRequestRepository) -> None:
         self._repo = repo
 
@@ -80,10 +83,15 @@ class WhatsAppChannelRequestService:
         request_status: ChannelRequestStatus | None = None,
     ) -> tuple[list[WhatsAppChannelRequestModel], int]:
         require_org_admin(user_session, str(organization_id))
-        return await self._repo.list_by_organization(organization_id, page, page_size, request_status)
+        return await self._repo.list_by_organization(
+            organization_id, page, page_size, request_status
+        )
 
     async def _resolve(
-        self, request_id: uuid.UUID, organization_id: uuid.UUID, user_session: UserSession
+        self,
+        request_id: uuid.UUID,
+        organization_id: uuid.UUID,
+        user_session: UserSession,
     ) -> WhatsAppChannelRequestModel:
         require_org_admin(user_session, str(organization_id))
         case = await self._repo.get_by_id(request_id)
@@ -92,7 +100,10 @@ class WhatsAppChannelRequestService:
         return case
 
     async def approve(
-        self, request_id: uuid.UUID, organization_id: uuid.UUID, user_session: UserSession
+        self,
+        request_id: uuid.UUID,
+        organization_id: uuid.UUID,
+        user_session: UserSession,
     ) -> WhatsAppChannelRequestModel:
         case = await self._resolve(request_id, organization_id, user_session)
         case.status = ChannelRequestStatus.APPROVED
@@ -101,7 +112,10 @@ class WhatsAppChannelRequestService:
         return await self._repo.update(case)
 
     async def reject(
-        self, request_id: uuid.UUID, organization_id: uuid.UUID, user_session: UserSession
+        self,
+        request_id: uuid.UUID,
+        organization_id: uuid.UUID,
+        user_session: UserSession,
     ) -> WhatsAppChannelRequestModel:
         case = await self._resolve(request_id, organization_id, user_session)
         case.status = ChannelRequestStatus.REJECTED

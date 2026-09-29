@@ -4,8 +4,12 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.database import get_main_session
-from receivables.contact_methods.repository.contact_method_repository import ContactMethodRepository
-from receivables.contact_methods.services.self_service_contact_service import SelfServiceContactService
+from receivables.contact_methods.repository.contact_method_repository import (
+    ContactMethodRepository,
+)
+from receivables.contact_methods.services.self_service_contact_service import (
+    SelfServiceContactService,
+)
 from receivables.debtors.repository.debtor_repository import DebtorRepository
 
 

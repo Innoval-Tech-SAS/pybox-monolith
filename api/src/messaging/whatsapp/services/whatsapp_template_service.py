@@ -12,8 +12,12 @@ from identity.users.schemas.user_session_schema import UserSession
 from messaging.templates.enums.template_enums import TemplateChannel, TemplateStatus
 from messaging.templates.models.template_model import TemplateModel
 from messaging.templates.repository.template_repository import TemplateRepository
-from messaging.whatsapp.models.whatsapp_template_data_model import WhatsAppTemplateDataModel
-from messaging.whatsapp.repository.whatsapp_template_data_repository import WhatsAppTemplateDataRepository
+from messaging.whatsapp.models.whatsapp_template_data_model import (
+    WhatsAppTemplateDataModel,
+)
+from messaging.whatsapp.repository.whatsapp_template_data_repository import (
+    WhatsAppTemplateDataRepository,
+)
 from messaging.whatsapp.schemas.whatsapp_template_data_schemas import (
     WhatsAppTemplateCreateRequest,
     WhatsAppTemplateVariableSlotResponse,
@@ -39,7 +43,6 @@ def _meta_name(portfolio_id: uuid.UUID, name: str) -> str:
 
 
 class WhatsAppTemplateService:
-
     def __init__(
         self,
         template_repo: TemplateRepository,
@@ -61,9 +64,13 @@ class WhatsAppTemplateService:
         except httpx.HTTPError as exc:
             raise meta_error_to_http_exception(exc) from exc
 
-    async def _check_access(self, user_session: UserSession, portfolio_id: uuid.UUID) -> None:
+    async def _check_access(
+        self, user_session: UserSession, portfolio_id: uuid.UUID
+    ) -> None:
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)
-        await check_portfolio_org_access(user_session, portfolio, PORTFOLIO_COMMUNICATIONS)
+        await check_portfolio_org_access(
+            user_session, portfolio, PORTFOLIO_COMMUNICATIONS
+        )
 
     async def create(
         self,
@@ -86,7 +93,10 @@ class WhatsAppTemplateService:
         meta_name = _meta_name(portfolio_id, data.name)
         response = await self._call_meta(
             self._client.create_template(
-                name=meta_name, category=data.category.value, language=data.language, components=data.components
+                name=meta_name,
+                category=data.category.value,
+                language=data.language,
+                components=data.components,
             )
         )
 
@@ -103,7 +113,11 @@ class WhatsAppTemplateService:
         return template, whatsapp_data
 
     async def list_by_org(
-        self, portfolio_id: uuid.UUID, page: int, page_size: int, user_session: UserSession
+        self,
+        portfolio_id: uuid.UUID,
+        page: int,
+        page_size: int,
+        user_session: UserSession,
     ) -> tuple[list[tuple[TemplateModel, WhatsAppTemplateDataModel | None]], int]:
         await self._check_access(user_session, portfolio_id)
         templates, total = await self._template_repo.list_by_portfolio(
@@ -117,22 +131,32 @@ class WhatsAppTemplateService:
         self, template_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
     ) -> tuple[TemplateModel, WhatsAppTemplateDataModel]:
         await self._check_access(user_session, portfolio_id)
-        template = await self._template_repo.get_by_id_and_portfolio(template_id, portfolio_id)
+        template = await self._template_repo.get_by_id_and_portfolio(
+            template_id, portfolio_id
+        )
         if template is None or template.channel != TemplateChannel.WHATSAPP:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Plantilla de WhatsApp no encontrada")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, "Plantilla de WhatsApp no encontrada"
+            )
         whatsapp_data = await self._data_repo.get_by_template_id(template_id)
         if whatsapp_data is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Plantilla de WhatsApp no encontrada")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, "Plantilla de WhatsApp no encontrada"
+            )
         return template, whatsapp_data
 
     async def refresh_status(
         self, template_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
     ) -> tuple[TemplateModel, WhatsAppTemplateDataModel]:
-        template, whatsapp_data = await self._get_with_data(template_id, portfolio_id, user_session)
+        template, whatsapp_data = await self._get_with_data(
+            template_id, portfolio_id, user_session
+        )
         if whatsapp_data.meta_template_id is None:
             return template, whatsapp_data
 
-        response = await self._call_meta(self._client.get_template(whatsapp_data.meta_template_id))
+        response = await self._call_meta(
+            self._client.get_template(whatsapp_data.meta_template_id)
+        )
         new_status = response.get("status", whatsapp_data.meta_status)
         whatsapp_data.meta_status = new_status
         whatsapp_data = await self._data_repo.update(whatsapp_data)
@@ -148,18 +172,28 @@ class WhatsAppTemplateService:
     async def list_variables(
         self, template_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
     ) -> list[WhatsAppTemplateVariableSlotResponse]:
-        _, whatsapp_data = await self._get_with_data(template_id, portfolio_id, user_session)
+        _, whatsapp_data = await self._get_with_data(
+            template_id, portfolio_id, user_session
+        )
         if whatsapp_data.meta_template_id is None:
             return []
-        response = await self._call_meta(self._client.get_template(whatsapp_data.meta_template_id))
+        response = await self._call_meta(
+            self._client.get_template(whatsapp_data.meta_template_id)
+        )
         slots = extract_variable_slots(response.get("components", []))
         return [
-            WhatsAppTemplateVariableSlotResponse(component=slot.component, name=slot.name, example=slot.example)
+            WhatsAppTemplateVariableSlotResponse(
+                component=slot.component, name=slot.name, example=slot.example
+            )
             for slot in slots
         ]
 
-    async def delete(self, template_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession) -> None:
-        template, whatsapp_data = await self._get_with_data(template_id, portfolio_id, user_session)
+    async def delete(
+        self, template_id: uuid.UUID, portfolio_id: uuid.UUID, user_session: UserSession
+    ) -> None:
+        template, whatsapp_data = await self._get_with_data(
+            template_id, portfolio_id, user_session
+        )
         await self._call_meta(self._client.delete_template(whatsapp_data.meta_name))
         await self._data_repo.delete(whatsapp_data)
         await self._template_repo.delete(template)
@@ -172,7 +206,9 @@ class WhatsAppTemplateService:
         template = await self._template_repo.get_by_id_including_deleted(template_id)
         if template is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Plantilla no encontrada")
-        whatsapp_data = await self._data_repo.get_by_template_id_including_deleted(template_id)
+        whatsapp_data = await self._data_repo.get_by_template_id_including_deleted(
+            template_id
+        )
         if whatsapp_data is not None:
             await self._data_repo.restore(whatsapp_data)
         return await self._template_repo.restore(template)

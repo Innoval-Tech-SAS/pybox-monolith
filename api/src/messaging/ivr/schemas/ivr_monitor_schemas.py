@@ -21,15 +21,27 @@ class IvrCallSchema(BaseSchema):
     campaign_id: uuid.UUID | None = Field(default=None, description="Campaña de Pybox")
     phone: str = Field(description="Número marcado")
     customer_name: str | None = Field(default=None, description="Nombre del cliente")
-    customer_document: str | None = Field(default=None, description="Documento del cliente")
+    customer_document: str | None = Field(
+        default=None, description="Documento del cliente"
+    )
     status: IvrCallStatus = Field(description="Estado visual derivado de la llamada")
-    last_event: str | None = Field(default=None, description="Último evento recibido de Helena")
-    attempt_number: int = Field(description="Número de intento de remarcación (1 = original)")
+    last_event: str | None = Field(
+        default=None, description="Último evento recibido de Helena"
+    )
+    attempt_number: int = Field(
+        description="Número de intento de remarcación (1 = original)"
+    )
 
     amd_status: str | None = Field(default=None, description="Resultado del AMD")
-    amd_cause: str | None = Field(default=None, description="Causa reportada por el AMD")
-    dial_status: str | None = Field(default=None, description="Resultado de la marcación")
-    transferred: bool = Field(default=False, description="Si la llamada llegó a un agente")
+    amd_cause: str | None = Field(
+        default=None, description="Causa reportada por el AMD"
+    )
+    dial_status: str | None = Field(
+        default=None, description="Resultado de la marcación"
+    )
+    transferred: bool = Field(
+        default=False, description="Si la llamada llegó a un agente"
+    )
 
     last_digit: str | None = Field(
         default=None, description="Última tecla marcada por el cliente"
@@ -37,24 +49,38 @@ class IvrCallSchema(BaseSchema):
     ivr_end_node_id: str | None = Field(
         default=None, description="Nodo del flujo donde terminó la llamada"
     )
-    ivr_end_reason: str | None = Field(default=None, description="Motivo de cierre del IVR")
-    outcome_key: str | None = Field(default=None, description="Clave del resultado de negocio")
+    ivr_end_reason: str | None = Field(
+        default=None, description="Motivo de cierre del IVR"
+    )
+    outcome_key: str | None = Field(
+        default=None, description="Clave del resultado de negocio"
+    )
     outcome_label: str | None = Field(
         default=None, description="Etiqueta del resultado configurada en el diseñador"
     )
-    dtmf_events: list[Any] | None = Field(default=None, description="Teclas marcadas, en orden")
+    dtmf_events: list[Any] | None = Field(
+        default=None, description="Teclas marcadas, en orden"
+    )
     collected_data: list[Any] | None = Field(
         default=None, description="Datos capturados por los nodos collect"
     )
 
-    duration_seconds: int | None = Field(default=None, description="Duración total en segundos")
-    started_at: datetime | None = Field(default=None, description="Inicio de la marcación")
-    answered_at: datetime | None = Field(default=None, description="Momento en que contestaron")
+    duration_seconds: int | None = Field(
+        default=None, description="Duración total en segundos"
+    )
+    started_at: datetime | None = Field(
+        default=None, description="Inicio de la marcación"
+    )
+    answered_at: datetime | None = Field(
+        default=None, description="Momento en que contestaron"
+    )
     transfer_started_at: datetime | None = Field(
         default=None, description="Inicio de la transferencia"
     )
     ended_at: datetime | None = Field(default=None, description="Fin de la llamada")
-    updated_at: datetime | None = Field(default=None, description="Última actualización")
+    updated_at: datetime | None = Field(
+        default=None, description="Última actualización"
+    )
 
     @classmethod
     def from_model(cls, row: IvrInteractionModel) -> "IvrCallSchema":
@@ -111,8 +137,12 @@ class IvrCampaignStatsSchema(BaseSchema):
     total_calls: int = Field(default=0, description="Llamadas totales del bulk")
     active_calls: int = Field(default=0, description="Llamadas aún en curso")
     human_detections: int = Field(default=0, description="AMD detectó persona")
-    machine_detections: int = Field(default=0, description="AMD detectó máquina o dudoso")
-    menu_selections: int = Field(default=0, description="Llamadas con al menos una tecla marcada")
+    machine_detections: int = Field(
+        default=0, description="AMD detectó máquina o dudoso"
+    )
+    menu_selections: int = Field(
+        default=0, description="Llamadas con al menos una tecla marcada"
+    )
     transfers: int = Field(default=0, description="Llamadas transferidas a un agente")
     completed: int = Field(default=0, description="Llamadas completadas")
     failed: int = Field(default=0, description="Llamadas fallidas")
@@ -124,7 +154,8 @@ class IvrSnapshotSchema(BaseSchema):
     """Estado inicial del monitor: lo que el stream no puede entregar por sí solo."""
 
     active_calls: list[IvrCallSchema] = Field(
-        default_factory=list, description="Llamadas en curso y las que acaban de terminar"
+        default_factory=list,
+        description="Llamadas en curso y las que acaban de terminar",
     )
     stats: IvrCampaignStatsSchema = Field(description="Contadores de la campaña")
     generated_at: datetime = Field(description="Momento en que se generó el snapshot")

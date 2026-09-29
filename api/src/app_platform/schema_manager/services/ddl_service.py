@@ -3,10 +3,18 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
+from app_platform.schema_manager.schemas.database_schemas import (
+    AlterAction,
+    ColumnDefinition,
+)
+from app_platform.schema_manager.utils.ddl_utils import (
+    build_column_ddl,
+    build_column_type,
+    render_default_value,
+    validate_ident,
+)
 from core.config.database_config import db_config
 from core.config.logger import logger
-from app_platform.schema_manager.schemas.database_schemas import AlterAction, ColumnDefinition
-from app_platform.schema_manager.utils.ddl_utils import build_column_ddl, build_column_type, render_default_value, validate_ident
 
 
 class DdlService:
@@ -38,12 +46,22 @@ class DdlService:
                     {"name": database_name},
                 )
                 if result.fetchone():
-                    return {"success": False, "message": f"La base de datos '{database_name}' ya existe"}
+                    return {
+                        "success": False,
+                        "message": f"La base de datos '{database_name}' ya existe",
+                    }
                 await conn.execute(text(f'CREATE DATABASE "{database_name}"'))
-                logger.info("[SchemaAlteration] Base de datos creada: %s", database_name)
-                return {"success": True, "message": f"Base de datos '{database_name}' creada exitosamente"}
+                logger.info(
+                    "[SchemaAlteration] Base de datos creada: %s", database_name
+                )
+                return {
+                    "success": True,
+                    "message": f"Base de datos '{database_name}' creada exitosamente",
+                }
         except Exception as exc:
-            logger.error("[SchemaAlteration] Error creando base de datos: %s", exc, exc_info=True)
+            logger.error(
+                "[SchemaAlteration] Error creando base de datos: %s", exc, exc_info=True
+            )
             return {"success": False, "message": str(exc)}
         finally:
             await engine.dispose()
@@ -69,10 +87,20 @@ class DdlService:
         try:
             async with engine.begin() as conn:
                 await conn.execute(text(sql))
-            logger.info("[SchemaAlteration] Tabla creada: %s.%s en %s", schema_name, table_name, database_name)
-            return {"success": True, "message": f"Tabla '{schema_name}.{table_name}' creada exitosamente"}
+            logger.info(
+                "[SchemaAlteration] Tabla creada: %s.%s en %s",
+                schema_name,
+                table_name,
+                database_name,
+            )
+            return {
+                "success": True,
+                "message": f"Tabla '{schema_name}.{table_name}' creada exitosamente",
+            }
         except Exception as exc:
-            logger.error("[SchemaAlteration] Error creando tabla: %s", exc, exc_info=True)
+            logger.error(
+                "[SchemaAlteration] Error creando tabla: %s", exc, exc_info=True
+            )
             return {"success": False, "message": str(exc)}
         finally:
             await engine.dispose()
@@ -98,28 +126,53 @@ class DdlService:
         try:
             if action == AlterAction.ADD_COLUMN:
                 if column is None:
-                    return {"success": False, "message": "Se requiere la definición de columna para ADD_COLUMN"}
+                    return {
+                        "success": False,
+                        "message": (
+                            "Se requiere la definición de columna para ADD_COLUMN"
+                        ),
+                    }
                 sql = f"{base} ADD COLUMN {build_column_ddl(column)}"
 
             elif action == AlterAction.DROP_COLUMN:
                 if not column_name:
-                    return {"success": False, "message": "column_name es requerido para DROP_COLUMN"}
+                    return {
+                        "success": False,
+                        "message": "column_name es requerido para DROP_COLUMN",
+                    }
                 validate_ident(column_name, "column name")
                 sql = f'{base} DROP COLUMN "{column_name}"'
 
             elif action == AlterAction.MODIFY_COLUMN:
                 if not column_name:
-                    return {"success": False, "message": "column_name es requerido para MODIFY_COLUMN"}
+                    return {
+                        "success": False,
+                        "message": "column_name es requerido para MODIFY_COLUMN",
+                    }
                 if column is None:
-                    return {"success": False, "message": "Se requiere la definición de columna para MODIFY_COLUMN"}
+                    return {
+                        "success": False,
+                        "message": (
+                            "Se requiere la definición de columna para MODIFY_COLUMN"
+                        ),
+                    }
                 validate_ident(column_name, "column name")
                 col_type = build_column_type(column)
                 sqls = [
-                    f'{base} ALTER COLUMN "{column_name}" TYPE {col_type} USING "{column_name}"::{col_type}',
-                    f'{base} ALTER COLUMN "{column_name}" {"SET NOT NULL" if not column.nullable else "DROP NOT NULL"}',
+                    (
+                        f'{base} ALTER COLUMN "{column_name}" TYPE {col_type} '
+                        f'USING "{column_name}"::{col_type}'
+                    ),
+                    (
+                        f'{base} ALTER COLUMN "{column_name}" '
+                        f"{'SET NOT NULL' if not column.nullable else 'DROP NOT NULL'}"
+                    ),
                 ]
                 if column.default_value:
-                    sqls.append(f'{base} ALTER COLUMN "{column_name}" SET DEFAULT {render_default_value(column.default_value)}')
+                    sqls.append(
+                        f'{base} ALTER COLUMN "{column_name}" SET DEFAULT '
+                        f"{render_default_value(column.default_value)}"
+                    )
                 else:
                     sqls.append(f'{base} ALTER COLUMN "{column_name}" DROP DEFAULT')
                 engine = self._engine_for(database_name)
@@ -127,17 +180,35 @@ class DdlService:
                     async with engine.begin() as conn:
                         for s in sqls:
                             await conn.execute(text(s))
-                    logger.info("[SchemaAlteration] Columna modificada: %s en %s.%s", column_name, schema_name, table_name)
-                    return {"success": True, "message": f"Columna '{column_name}' modificada exitosamente"}
+                    logger.info(
+                        "[SchemaAlteration] Columna modificada: %s en %s.%s",
+                        column_name,
+                        schema_name,
+                        table_name,
+                    )
+                    return {
+                        "success": True,
+                        "message": f"Columna '{column_name}' modificada exitosamente",
+                    }
                 except Exception as exc:
-                    logger.error("[SchemaAlteration] Error en MODIFY_COLUMN: %s", exc, exc_info=True)
+                    logger.error(
+                        "[SchemaAlteration] Error en MODIFY_COLUMN: %s",
+                        exc,
+                        exc_info=True,
+                    )
                     return {"success": False, "message": str(exc)}
                 finally:
                     await engine.dispose()
 
             elif action == AlterAction.RENAME_COLUMN:
                 if not column_name or not new_column_name:
-                    return {"success": False, "message": "column_name y new_column_name son requeridos para RENAME_COLUMN"}
+                    return {
+                        "success": False,
+                        "message": (
+                            "column_name y new_column_name son requeridos para "
+                            "RENAME_COLUMN"
+                        ),
+                    }
                 validate_ident(column_name, "column name")
                 validate_ident(new_column_name, "new column name")
                 sql = f'{base} RENAME COLUMN "{column_name}" TO "{new_column_name}"'
@@ -152,10 +223,16 @@ class DdlService:
         try:
             async with engine.begin() as conn:
                 await conn.execute(text(sql))
-            logger.info("[SchemaAlteration] ALTER TABLE ejecutado en %s.%s", schema_name, table_name)
+            logger.info(
+                "[SchemaAlteration] ALTER TABLE ejecutado en %s.%s",
+                schema_name,
+                table_name,
+            )
             return {"success": True, "message": "Tabla alterada exitosamente"}
         except Exception as exc:
-            logger.error("[SchemaAlteration] Error en ALTER TABLE: %s", exc, exc_info=True)
+            logger.error(
+                "[SchemaAlteration] Error en ALTER TABLE: %s", exc, exc_info=True
+            )
             return {"success": False, "message": str(exc)}
         finally:
             await engine.dispose()

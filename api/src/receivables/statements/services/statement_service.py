@@ -11,9 +11,14 @@ from app_platform.documents.models.document_model import DocumentModel
 from app_platform.documents.services.document_service import DocumentService
 from core.config.logger import logger
 from core.security.constants.permissions import PORTFOLIO_CLIENTS
-from core.security.policies.security_policies import check_portfolio_org_access, get_self_identity
+from core.security.policies.security_policies import (
+    check_portfolio_org_access,
+    get_self_identity,
+)
 from core.security.services.encrypt_service import encrypt_service
-from identity.organizations.repository.organization_repository import OrganizationRepository
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
 from identity.users.enums.user_enums import IdentityVerificationStatus
 from identity.users.schemas.user_session_schema import UserSession
 from receivables.credits.enums.credit_enums import CREDIT_TYPE_LABELS
@@ -27,13 +32,15 @@ from receivables.payments.repository.payment_repository import PaymentRepository
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 from receivables.statements.models.statement_model import StatementModel
 from receivables.statements.repository.statement_repository import StatementRepository
-from receivables.statements.schemas.statement_schemas import StatementListResponse, StatementResponse
+from receivables.statements.schemas.statement_schemas import (
+    StatementListResponse,
+    StatementResponse,
+)
 from receivables.statements.utils.statement_pdf_builder import (
     StatementCreditLine,
     StatementPaymentLine,
     build_statement_pdf,
 )
-
 
 # Prefijo del dominio en la clave del objeto. El extracto cuelga del deudor, pero lo
 # genera el módulo de extractos: reemplaza a `DocumentOwnerScope.DEBTOR` + categoría
@@ -100,11 +107,16 @@ class StatementService:
             credits=lines,
         )
 
-        scope_suffix = credits[0].credit_number if credit_id is not None else "consolidado"
-        filename = f"extracto_{scope_suffix}_{cutoff_date.strftime('%Y%m%d_%H%M%S')}.pdf"
+        scope_suffix = (
+            credits[0].credit_number if credit_id is not None else "consolidado"
+        )
+        filename = (
+            f"extracto_{scope_suffix}_{cutoff_date.strftime('%Y%m%d_%H%M%S')}.pdf"
+        )
 
-        # El extracto es un caso 1:1: `extractos.id_documento` ya es una FK real y UNIQUE
-        # contra `documentos`, así que no necesita fila en `documentos_deudor`.
+        # El extracto es un caso 1:1: `extractos.id_documento` ya es una FK real y
+        # UNIQUE contra `documentos`, así que no necesita fila en
+        # `documentos_deudor`.
         document = await self._document_service.store_generated(
             content=pdf_bytes,
             filename=filename,
@@ -141,7 +153,9 @@ class StatementService:
     ) -> StatementListResponse:
         await self._check_portfolio_access(user_session, portfolio_id)
         await self._require_debtor(debtor_id, portfolio_id)
-        statements = await self._statement_repo.list_by_debtor_and_portfolio(debtor_id, portfolio_id)
+        statements = await self._statement_repo.list_by_debtor_and_portfolio(
+            debtor_id, portfolio_id
+        )
         return await self._to_list_response(statements)
 
     async def get_content_for_org(
@@ -152,13 +166,17 @@ class StatementService:
         user_session: UserSession,
     ) -> Response:
         await self._check_portfolio_access(user_session, portfolio_id)
-        statement = await self._statement_repo.get_by_id_and_portfolio(statement_id, portfolio_id)
+        statement = await self._statement_repo.get_by_id_and_portfolio(
+            statement_id, portfolio_id
+        )
         if statement is None or statement.debtor_id != debtor_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Extracto no encontrado")
         # El ownership ya quedó resuelto arriba (portafolio accesible + extracto de ESE
         # deudor); el id del documento sale de la propia fila autorizada.
         document = await self._require_document(statement.document_id)
-        return await self._document_service.to_content_response(document, user_session.user_id)
+        return await self._document_service.to_content_response(
+            document, user_session.user_id
+        )
 
     # ── Lado titular (scope SELF) ────────────────────────────────────────────
 
@@ -167,34 +185,53 @@ class StatementService:
         statements = await self._statement_repo.list_by_debtor([d.id for d in debtors])
         return await self._to_list_response(statements)
 
-    async def get_content_mine(self, statement_id: uuid.UUID, user_session: UserSession) -> Response:
+    async def get_content_mine(
+        self, statement_id: uuid.UUID, user_session: UserSession
+    ) -> Response:
         debtors = await self._require_self_debtors(user_session)
-        statement = await self._statement_repo.get_owned_by_debtor(statement_id, [d.id for d in debtors])
+        statement = await self._statement_repo.get_owned_by_debtor(
+            statement_id, [d.id for d in debtors]
+        )
         if statement is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Extracto no encontrado")
-        # Igual que en el lado entidad: el extracto ya se resolvió contra el deudor de la
-        # sesión SELF, y el id del documento viene de esa fila.
+        # Igual que en el lado entidad: el extracto ya se resolvió contra el
+        # deudor de la sesión SELF, y el id del documento viene de esa fila.
         document = await self._require_document(statement.document_id)
-        return await self._document_service.to_content_response(document, user_session.user_id)
+        return await self._document_service.to_content_response(
+            document, user_session.user_id
+        )
 
     # ── Internos ─────────────────────────────────────────────────────────────
 
     async def _resolve_credits(
-        self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID, credit_id: Optional[uuid.UUID]
+        self,
+        debtor_id: uuid.UUID,
+        portfolio_id: uuid.UUID,
+        credit_id: Optional[uuid.UUID],
     ) -> list[CreditModel]:
         if credit_id is not None:
             credit = await self._credit_repo.get_by_id(credit_id)
-            if credit is None or credit.debtor_id != debtor_id or credit.portfolio_id != portfolio_id:
+            if (
+                credit is None
+                or credit.debtor_id != debtor_id
+                or credit.portfolio_id != portfolio_id
+            ):
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "Crédito no encontrado")
             return [credit] if credit.is_active else []
 
-        credits = await self._credit_repo.get_by_debtor_and_portfolio(debtor_id, portfolio_id)
+        credits = await self._credit_repo.get_by_debtor_and_portfolio(
+            debtor_id, portfolio_id
+        )
         return [c for c in credits if c.is_active]
 
-    def _to_credit_line(self, credit: CreditModel, payments: list[PaymentModel]) -> StatementCreditLine:
+    def _to_credit_line(
+        self, credit: CreditModel, payments: list[PaymentModel]
+    ) -> StatementCreditLine:
         return StatementCreditLine(
             credit_number=credit.credit_number,
-            credit_type_label=CREDIT_TYPE_LABELS.get(credit.credit_type, credit.credit_type.value),
+            credit_type_label=CREDIT_TYPE_LABELS.get(
+                credit.credit_type, credit.credit_type.value
+            ),
             disbursed_date=credit.disbursed_date,
             total_credit_balance=float(credit.total_credit_balance),
             overdue_principal_balance=float(credit.overdue_principal_balance),
@@ -215,50 +252,73 @@ class StatementService:
             ],
         )
 
-    async def _check_portfolio_access(self, user_session: UserSession, portfolio_id: uuid.UUID):
+    async def _check_portfolio_access(
+        self, user_session: UserSession, portfolio_id: uuid.UUID
+    ):
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)
         await check_portfolio_org_access(user_session, portfolio, PORTFOLIO_CLIENTS)
         return portfolio
 
     async def _require_document(self, document_id: uuid.UUID) -> DocumentModel:
-        """Metadatos del PDF del extracto. No revalida pertenencia: el id viene de la fila
-        `extractos` que el llamador ya autorizó."""
+        """Metadatos del PDF del extracto. No revalida pertenencia: el id viene de
+        la fila `extractos` que el llamador ya autorizó."""
         document = await self._document_service.get_by_id(document_id)
         if document is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Extracto no encontrado")
         return document
 
-    async def _require_debtor(self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID | None = None) -> DebtorModel:
+    async def _require_debtor(
+        self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID | None = None
+    ) -> DebtorModel:
         debtor = await self._debtor_repo.get_by_id(debtor_id)
         if debtor is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Deudor no encontrado")
-        if portfolio_id is not None and not await self._credit_repo.debtor_belongs_to_portfolio(debtor_id, portfolio_id):
+        if (
+            portfolio_id is not None
+            and not await self._credit_repo.debtor_belongs_to_portfolio(
+                debtor_id, portfolio_id
+            )
+        ):
             # No se confirma al llamante que el deudor existe fuera de su alcance.
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Deudor no encontrado")
         return debtor
 
-    async def _require_self_debtors(self, user_session: UserSession) -> list[DebtorModel]:
+    async def _require_self_debtors(
+        self, user_session: UserSession
+    ) -> list[DebtorModel]:
         document_type, document_number_hash = get_self_identity(user_session)
         try:
             doc_type = UserDocumentType(document_type)
-        except ValueError:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Tipo de documento no reconocido")
+        except ValueError as e:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, "Tipo de documento no reconocido"
+            ) from e
         # Una fila de deudor por empresa: el titular ve los extractos de todas.
-        debtors = await self._debtor_repo.list_by_document(doc_type, document_number_hash)
+        debtors = await self._debtor_repo.list_by_document(
+            doc_type, document_number_hash
+        )
         if not debtors:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "No encontramos obligaciones a tu nombre")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, "No encontramos obligaciones a tu nombre"
+            )
         # Ser deudor conocido no basta: conocer tipo+número de documento de alguien no
         # es secreto, así que antes de mostrar su información crediticia se exige que el
         # propio titular haya subido su documento de identidad y Atención al Cliente lo
         # haya aprobado (ver IdentityVerificationStatus / OnboardingService).
-        if user_session.identity_verification_status != IdentityVerificationStatus.APPROVED:
+        if (
+            user_session.identity_verification_status
+            != IdentityVerificationStatus.APPROVED
+        ):
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
-                "Verificación de identidad pendiente. Sube tu documento de identidad para acceder a tu información crediticia.",
+                "Verificación de identidad pendiente. Sube tu documento de "
+                "identidad para acceder a tu información crediticia.",
             )
         return debtors
 
-    async def _to_list_response(self, statements: list[StatementModel]) -> StatementListResponse:
+    async def _to_list_response(
+        self, statements: list[StatementModel]
+    ) -> StatementListResponse:
         if not statements:
             return StatementListResponse(items=[], total=0)
 
@@ -290,7 +350,9 @@ class StatementService:
         ]
         return StatementListResponse(items=items, total=len(items))
 
-    async def _to_response(self, statement: StatementModel, organization_name: str) -> StatementResponse:
+    async def _to_response(
+        self, statement: StatementModel, organization_name: str
+    ) -> StatementResponse:
         credit_number: Optional[str] = None
         if statement.credit_id is not None:
             credit = await self._credit_repo.get_by_id(statement.credit_id)

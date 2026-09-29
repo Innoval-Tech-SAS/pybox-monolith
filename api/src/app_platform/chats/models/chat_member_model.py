@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, SmallInteger, func
@@ -23,7 +23,9 @@ class ChatMemberModel(AuditModel):
         primary_key=True,
         name="user_id",
     )
-    role: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0, name="rol")
+    role: Mapped[int] = mapped_column(
+        SmallInteger, nullable=False, default=0, name="rol"
+    )
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=func.now(), name="fecha_union"
     )

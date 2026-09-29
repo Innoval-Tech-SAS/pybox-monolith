@@ -54,7 +54,21 @@ def example_for(name: str, data_type: str) -> str:
     if "int" in dt or "serial" in dt:
         return "123"
     if any(token in dt for token in ("numeric", "decimal", "real", "double", "money")):
-        if any(token in n for token in ("saldo", "monto", "valor", "interes", "tasa", "comision", "fee", "iva", "seguro", "cuota")):
+        if any(
+            token in n
+            for token in (
+                "saldo",
+                "monto",
+                "valor",
+                "interes",
+                "tasa",
+                "comision",
+                "fee",
+                "iva",
+                "seguro",
+                "cuota",
+            )
+        ):
             return "1234.56"
         return "12.34"
     if any(token in n for token in ("dias", "cuotas", "cantidad", "plazo")):
@@ -63,7 +77,9 @@ def example_for(name: str, data_type: str) -> str:
     return "Ejemplo"
 
 
-def build_variable(name: str, data_type: str, table: str) -> TemplateVariableOption | None:
+def build_variable(
+    name: str, data_type: str, table: str
+) -> TemplateVariableOption | None:
     if should_hide_field(name):
         return None
     return TemplateVariableOption(
@@ -77,9 +93,10 @@ def build_variable(name: str, data_type: str, table: str) -> TemplateVariableOpt
 def build_payment_variable(
     name: str, data_type: str, suffix: str, strategy_label: str, table: str
 ) -> TemplateVariableOption | None:
-    """Una columna de `pagos` genera una variable por cada estrategia de cuota
-    (ver PAYMENT_STRATEGY_SUFFIXES) — elegir la variable de la lista ya implica
-    elegir a cuál cuota del cronograma se refiere, sin necesidad de un selector aparte."""
+    """Una columna de `pagos` genera una variable por cada estrategia de
+    cuota (ver PAYMENT_STRATEGY_SUFFIXES) — elegir la variable de la
+    lista ya implica elegir a cuál cuota del cronograma se refiere, sin
+    necesidad de un selector aparte."""
     if should_hide_field(name):
         return None
     return TemplateVariableOption(

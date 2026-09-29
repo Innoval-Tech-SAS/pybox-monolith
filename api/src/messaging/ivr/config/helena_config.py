@@ -29,4 +29,6 @@ def load_helena_config() -> HelenaConfig:
     except ValueError:
         timeout_seconds = int(DEFAULT_TIMEOUT_SECONDS)
 
-    return HelenaConfig(base_url=base_url, api_key=api_key, timeout_seconds=timeout_seconds)
+    return HelenaConfig(
+        base_url=base_url, api_key=api_key, timeout_seconds=timeout_seconds
+    )

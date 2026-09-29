@@ -12,5 +12,7 @@ _BOLD_TO_ATTEMPT_STATUS: dict[BoldLinkStatus, PaymentAttemptStatus] = {
 
 
 def bold_link_status_to_attempt_status(bold: BoldLinkStatus) -> PaymentAttemptStatus:
-    """Mapeo explicito del estado de un enlace de pago Bold al PaymentAttemptStatus interno."""
+    """Mapeo explicito del estado de un enlace de pago Bold al
+    PaymentAttemptStatus interno.
+    """
     return _BOLD_TO_ATTEMPT_STATUS[bold]

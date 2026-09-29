@@ -36,18 +36,27 @@ class PaymentOwnershipResolver:
         self._portfolio_repo = portfolio_repo
 
     async def resolve_owned_payment(
-        self, session: UserSession, payment_id: uuid.UUID, *, require_pending: bool = True
+        self,
+        session: UserSession,
+        payment_id: uuid.UUID,
+        *,
+        require_pending: bool = True,
     ) -> tuple[PaymentModel, CreditModel, PortfolioModel]:
         doc_type_str, doc_number_hash = get_self_identity(session)
         try:
             doc_type = UserDocumentType(doc_type_str)
-        except ValueError:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Documento de identidad inválido.")
+        except ValueError as e:
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN, "Documento de identidad inválido."
+            ) from e
 
-        # Una fila de deudor por empresa: el crédito es del titular si lo es en cualquiera.
+        # Una fila de deudor por empresa: el crédito es del titular si lo es en
+        # cualquiera.
         debtors = await self._debtor_repo.list_by_document(doc_type, doc_number_hash)
         if not debtors:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "No se encontró tu registro de deudor.")
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN, "No se encontró tu registro de deudor."
+            )
         debtor_ids = {d.id for d in debtors}
 
         payment = await self._payment_repo.get_by_id(payment_id)

@@ -3,11 +3,6 @@ from typing import Annotated
 
 from fastapi import HTTPException, Query, status
 
-from core.config.api_router import APIRouter
-from core.security.dependencies import CurrentSession
-from core.security.constants.permissions import ORG_BILLING
-from core.security.policies.security_policies import require_global, require_permission
-from identity.users.schemas.user_session_schema import UserSession
 from billing.invoices.dependencies import InvoiceServiceDep
 from billing.invoices.schemas.invoice_schemas import (
     AdminInvoiceResponse,
@@ -18,6 +13,11 @@ from billing.invoices.schemas.invoice_schemas import (
     MercadoPagoChargeRequest,
     PaymentLinkResponse,
 )
+from core.config.api_router import APIRouter
+from core.security.constants.permissions import ORG_BILLING
+from core.security.dependencies import CurrentSession
+from core.security.policies.security_policies import require_global, require_permission
+from identity.users.schemas.user_session_schema import UserSession
 
 router = APIRouter(prefix="/billing", tags=["Facturación"])
 
@@ -29,12 +29,17 @@ def _require_billing_payer(session: UserSession, organization_id: str) -> None:
     if session.is_global:
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
-            "Los administradores globales no pueden realizar pagos, solo consultar la facturación.",
+            "Los administradores globales no pueden realizar pagos, solo "
+            "consultar la facturación.",
         )
     require_permission(ORG_BILLING, session, organization_id)
 
 
-@router.get("/current-invoice", response_model=CurrentInvoiceResponse, summary="Obtener factura vigente")
+@router.get(
+    "/current-invoice",
+    response_model=CurrentInvoiceResponse,
+    summary="Obtener factura vigente",
+)
 async def get_current_invoice(
     session: CurrentSession,
     service: InvoiceServiceDep,
@@ -80,7 +85,9 @@ async def create_or_reuse_payment_link(
     organization_id: OrganizationIdQuery,
 ) -> PaymentLinkResponse:
     _require_billing_payer(session, str(organization_id))
-    return await service.create_or_reuse_payment_link(id, organization_id, session.email)
+    return await service.create_or_reuse_payment_link(
+        id, organization_id, session.email
+    )
 
 
 @router.post(
@@ -98,11 +105,21 @@ async def charge_mercadopago_attempt(
 ) -> InvoiceResponse:
     _require_billing_payer(session, str(organization_id))
     return await service.charge_mercadopago_attempt(  # type: ignore[return-value]
-        id, organization_id, attempt_id, body.token, body.payment_method_id, body.payment_type_id, body.installments
+        id,
+        organization_id,
+        attempt_id,
+        body.token,
+        body.payment_method_id,
+        body.payment_type_id,
+        body.installments,
     )
 
 
-@router.post("/invoices/{id}/sync", response_model=InvoiceResponse, summary="Sincronizar estado de pago")
+@router.post(
+    "/invoices/{id}/sync",
+    response_model=InvoiceResponse,
+    summary="Sincronizar estado de pago",
+)
 async def sync_invoice_payment_status(
     id: uuid.UUID,
     session: CurrentSession,
@@ -110,7 +127,9 @@ async def sync_invoice_payment_status(
     organization_id: OrganizationIdQuery,
 ) -> InvoiceResponse:
     _require_billing_payer(session, str(organization_id))
-    return await service.sync_invoice_payment_status(id, organization_id)  # type: ignore[return-value]
+    return await service.sync_invoice_payment_status(  # type: ignore[return-value]
+        id, organization_id
+    )
 
 
 @router.get(

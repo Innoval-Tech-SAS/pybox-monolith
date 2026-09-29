@@ -1,17 +1,21 @@
 from typing import Any
 
-from messaging.provider_credentials.enums.provider_credential_enums import MessagingCredentialProvider
-from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
+from messaging.channels.enums.channel_enums import ChannelName
+from messaging.ivr.providers.helena_call_provider import HelenaCallProvider
+from messaging.provider_credentials.enums.provider_credential_enums import (
+    MessagingCredentialProvider,
+)
+from messaging.provider_credentials.services.provider_credential_service import (
+    MessagingProviderCredentialService,
+)
+from messaging.providers.email_provider import NRS360EmailProvider
+from messaging.providers.sms_provider import NRS360SmsProvider
 from messaging.senders.base import ChannelSender
 from messaging.senders.call_channel import CallChannel
 from messaging.senders.call_ia_channel import CallIaChannel
 from messaging.senders.email_channel import EmailChannel
 from messaging.senders.sms_channel import SmsChannel
 from messaging.senders.whatsapp_channel import WhatsAppChannel
-from messaging.channels.enums.channel_enums import ChannelName
-from messaging.ivr.providers.helena_call_provider import HelenaCallProvider
-from messaging.providers.email_provider import NRS360EmailProvider
-from messaging.providers.sms_provider import NRS360SmsProvider
 from messaging.whatsapp.services.whatsapp_client import WhatsAppCloudClient
 
 # Único punto donde se mapea canal → proveedor de credenciales. La resolución (y el
@@ -56,4 +60,6 @@ class MessageDispatcher:
         provider = _CREDENTIAL_PROVIDER_BY_CHANNEL.get(channel)
         if credential_service is not None and provider is not None:
             credential = await credential_service.get_decrypted(country, provider)
-        return await self.get_sender(channel).send(to, message, credential=credential, **kwargs)
+        return await self.get_sender(channel).send(
+            to, message, credential=credential, **kwargs
+        )

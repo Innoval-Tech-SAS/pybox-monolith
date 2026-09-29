@@ -12,7 +12,9 @@ from receivables.portfolios.repository.portfolio_repository import PortfolioRepo
 def get_contact_service(
     session: Annotated[AsyncSession, Depends(get_main_session)],
 ) -> ContactService:
-    return ContactService(repo=ContactRepository(session), portfolio_repo=PortfolioRepository(session))
+    return ContactService(
+        repo=ContactRepository(session), portfolio_repo=PortfolioRepository(session)
+    )
 
 
 ContactServiceDep = Annotated[ContactService, Depends(get_contact_service)]

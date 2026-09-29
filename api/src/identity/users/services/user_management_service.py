@@ -1,10 +1,12 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import uuid
 from typing import cast
 
 from fastapi import HTTPException, status
 
+from core.database.redis import redis_client
+from core.security.services.password_hasher_service import PasswordHasherService
 from identity.auth.enums.auth_enums import AuthProvider
 from identity.auth.utils.auth_utils import normalize_email, require_value
 from identity.organizations.models.organization_membership_model import (
@@ -13,13 +15,11 @@ from identity.organizations.models.organization_membership_model import (
 from identity.organizations.repository.organization_membership_repository import (
     OrganizationMembershipRepository,
 )
-from core.database.redis import redis_client
-from core.security.services.password_hasher_service import PasswordHasherService
 from identity.users.enums.user_enums import (
+    VALID_ROLE_SCOPE,
     PermissionEffect,
     UserRole,
     UserScope,
-    VALID_ROLE_SCOPE,
 )
 from identity.users.models.role_assignment_model import RoleAssignmentModel
 from identity.users.models.user_model import UserModel
@@ -30,7 +30,6 @@ from identity.users.repository.role_assignment_repository import (
     RoleAssignmentRepository,
 )
 from identity.users.repository.user_repository import UserRepository
-from identity.users.schemas.user_session_schema import session_key
 from identity.users.schemas.user_management_schemas import (
     ManagedUserCreate,
     ManagedUserResponse,
@@ -38,13 +37,13 @@ from identity.users.schemas.user_management_schemas import (
     PermissionEntry,
     PermissionListResponse,
 )
+from identity.users.schemas.user_session_schema import session_key
 
 _GLOBAL_ROLES = {UserRole.ADMIN, UserRole.CUSTOMER_SERVICE}
 _ORG_ROLES = {UserRole.ADMIN, UserRole.CUSTOMER_SERVICE, UserRole.USER}
 
 
 class UserManagementService:
-
     def __init__(
         self,
         user_repo: UserRepository,
@@ -93,7 +92,10 @@ class UserManagementService:
         if data.role not in _GLOBAL_ROLES:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Rol inválido para usuarios globales. Permitidos: {[r.value for r in _GLOBAL_ROLES]}",
+                detail=(
+                    "Rol inválido para usuarios globales. Permitidos: "
+                    f"{[r.value for r in _GLOBAL_ROLES]}"
+                ),
             )
         if (data.role, UserScope.GLOBAL) not in VALID_ROLE_SCOPE:
             raise HTTPException(
@@ -120,7 +122,10 @@ class UserManagementService:
         if data.role not in _ORG_ROLES:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Rol inválido para miembros de organización. Permitidos: {[r.value for r in _ORG_ROLES]}",
+                detail=(
+                    "Rol inválido para miembros de organización. Permitidos: "
+                    f"{[r.value for r in _ORG_ROLES]}"
+                ),
             )
         if (data.role, UserScope.ORGANIZATION) not in VALID_ROLE_SCOPE:
             raise HTTPException(
@@ -158,7 +163,9 @@ class UserManagementService:
         lo es, 404 (no se confirma que el usuario exista en otro lado)."""
         memberships = await self.membership_repo.get_by_user_id(user_id)
         if not any(m.organization_id == org_id for m in memberships):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Miembro no encontrado.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Miembro no encontrado."
+            )
 
     async def list_permissions(
         self, user_id: uuid.UUID, org_id: uuid.UUID
@@ -196,7 +203,8 @@ class UserManagementService:
             organization_id=org_id,
             effect=effect,
         )
-        # La sesión cacheada lleva los permisos: sin esto el cambio no se ve hasta que expire.
+        # La sesión cacheada lleva los permisos: sin esto el cambio no se ve
+        # hasta que expire.
         await redis_client.delete(session_key(user_id))
         return PermissionEntry(name=permission_name, effect=effect.value)
 

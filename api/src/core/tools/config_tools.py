@@ -12,7 +12,8 @@ def get_or_throw(key: str) -> str:
 
 
 def get_or_default(key: str, default: str) -> str:
-    """Lee una variable de entorno opcional, con default si no está definida o viene vacía."""
+    """Lee una variable de entorno opcional, con default si no está definida o viene
+    vacía."""
 
     assert key, "La clave no puede estar vacía."
 

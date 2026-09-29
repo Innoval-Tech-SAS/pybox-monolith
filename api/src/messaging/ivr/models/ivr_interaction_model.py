@@ -2,7 +2,8 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, Integer, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import BaseModel
@@ -75,7 +76,9 @@ class IvrInteractionModel(BaseModel):
 
     # ── Datos del destinatario ────────────────────────────────────────────────
 
-    phone: Mapped[str] = mapped_column(String(32), nullable=False, index=True, name="telefono")
+    phone: Mapped[str] = mapped_column(
+        String(32), nullable=False, index=True, name="telefono"
+    )
 
     customer_name: Mapped[str | None] = mapped_column(
         String(255), nullable=True, name="nombre_cliente"
@@ -94,9 +97,13 @@ class IvrInteractionModel(BaseModel):
         name="estado",
     )
 
-    amd_status: Mapped[str | None] = mapped_column(String(20), nullable=True, name="estado_amd")
+    amd_status: Mapped[str | None] = mapped_column(
+        String(20), nullable=True, name="estado_amd"
+    )
 
-    amd_cause: Mapped[str | None] = mapped_column(String(50), nullable=True, name="causa_amd")
+    amd_cause: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, name="causa_amd"
+    )
 
     dial_status: Mapped[str | None] = mapped_column(
         String(50), nullable=True, name="estado_marcacion"
@@ -138,7 +145,9 @@ class IvrInteractionModel(BaseModel):
 
     # ── Interacción con el IVR ────────────────────────────────────────────────
 
-    dtmf_events: Mapped[list | None] = mapped_column(JSONB, nullable=True, name="eventos_dtmf")
+    dtmf_events: Mapped[list | None] = mapped_column(
+        JSONB, nullable=True, name="eventos_dtmf"
+    )
 
     collected_data: Mapped[list | None] = mapped_column(
         JSONB, nullable=True, name="datos_capturados"
@@ -168,4 +177,6 @@ class IvrInteractionModel(BaseModel):
         String(60), nullable=True, name="ultimo_evento"
     )
 
-    raw_payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True, name="payload_crudo")
+    raw_payload: Mapped[dict | None] = mapped_column(
+        JSONB, nullable=True, name="payload_crudo"
+    )

@@ -19,7 +19,11 @@ from messaging.whatsapp.websocket.connection_manager import whatsapp_ws_manager
 router = APIRouter(prefix="/whatsapp/chats", tags=["Chats de WhatsApp"])
 
 
-@router.get("/", response_model=WhatsAppChatListResponse, summary="Listar hilos de WhatsApp (filtrado por asignación)")
+@router.get(
+    "/",
+    response_model=WhatsAppChatListResponse,
+    summary="Listar hilos de WhatsApp (filtrado por asignación)",
+)
 async def list_whatsapp_chats(
     session: CurrentSession,
     service: WhatsAppChatServiceDep,
@@ -28,7 +32,9 @@ async def list_whatsapp_chats(
     page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
 ) -> WhatsAppChatListResponse:
     items, total = await service.list_chats(page, page_size, session, organization_id)
-    return WhatsAppChatListResponse(items=items, total=total, page=page, page_size=page_size)
+    return WhatsAppChatListResponse(
+        items=items, total=total, page=page, page_size=page_size
+    )
 
 
 @router.get(
@@ -46,7 +52,11 @@ async def list_whatsapp_chat_messages(
     return [WhatsAppMessageResponse.model_validate(message) for message in messages]
 
 
-@router.patch("/{chat_id}/assign", response_model=WhatsAppChatResponse, summary="Reasignar un hilo (solo admin)")
+@router.patch(
+    "/{chat_id}/assign",
+    response_model=WhatsAppChatResponse,
+    summary="Reasignar un hilo (solo admin)",
+)
 async def assign_whatsapp_chat(
     chat_id: uuid.UUID,
     body: WhatsAppChatAssignRequest,
@@ -54,7 +64,9 @@ async def assign_whatsapp_chat(
     service: WhatsAppChatServiceDep,
     organization_id: Annotated[uuid.UUID, Query(alias="organizationId")],
 ) -> WhatsAppChatResponse:
-    chat = await service.assign(chat_id, organization_id, body.assigned_user_id, session)
+    chat = await service.assign(
+        chat_id, organization_id, body.assigned_user_id, session
+    )
     return WhatsAppChatResponse.model_validate(chat)
 
 
@@ -88,7 +100,7 @@ async def whatsapp_chat_ws(ws: WebSocket, service: WhatsAppChatServiceDep):
                 msg = json.loads(raw)
                 event = msg.get("event")
                 data = msg.get("data", {})
-            except (json.JSONDecodeError, AttributeError):
+            except json.JSONDecodeError, AttributeError:
                 continue
 
             try:
@@ -100,8 +112,12 @@ async def whatsapp_chat_ws(ws: WebSocket, service: WhatsAppChatServiceDep):
                         payload["requestId"] = req_id
                     await ws.send_json(payload)
 
-                organization_id_raw = data.get("organizationId") if isinstance(data, dict) else None
-                organization_id = uuid.UUID(str(organization_id_raw)) if organization_id_raw else None
+                organization_id_raw = (
+                    data.get("organizationId") if isinstance(data, dict) else None
+                )
+                organization_id = (
+                    uuid.UUID(str(organization_id_raw)) if organization_id_raw else None
+                )
 
                 if event == "list_chats":
                     # Sin organizationId el listado abarca todas las organizaciones
@@ -109,9 +125,21 @@ async def whatsapp_chat_ws(ws: WebSocket, service: WhatsAppChatServiceDep):
                     # operan sobre un hilo concreto.
                     page = int(data.get("page", 1))
                     page_size = int(data.get("pageSize", 20))
-                    items, total = await service.list_chats(page, page_size, session, organization_id)
-                    chats_data = [json.loads(c.model_dump_json(by_alias=True)) for c in items]
-                    await reply("chats", {"items": chats_data, "total": total, "page": page, "pageSize": page_size})
+                    items, total = await service.list_chats(
+                        page, page_size, session, organization_id
+                    )
+                    chats_data = [
+                        json.loads(c.model_dump_json(by_alias=True)) for c in items
+                    ]
+                    await reply(
+                        "chats",
+                        {
+                            "items": chats_data,
+                            "total": total,
+                            "page": page,
+                            "pageSize": page_size,
+                        },
+                    )
 
                 elif organization_id is None:
                     continue
@@ -120,9 +148,15 @@ async def whatsapp_chat_ws(ws: WebSocket, service: WhatsAppChatServiceDep):
                     chat_id_raw = data.get("chatId")
                     if chat_id_raw:
                         chat_id = uuid.UUID(str(chat_id_raw))
-                        messages = await service.list_messages(chat_id, organization_id, session)
+                        messages = await service.list_messages(
+                            chat_id, organization_id, session
+                        )
                         messages_data = [
-                            json.loads(WhatsAppMessageResponse.model_validate(m).model_dump_json(by_alias=True))
+                            json.loads(
+                                WhatsAppMessageResponse.model_validate(
+                                    m
+                                ).model_dump_json(by_alias=True)
+                            )
                             for m in messages
                         ]
                         await reply("messages", messages_data)
@@ -132,9 +166,13 @@ async def whatsapp_chat_ws(ws: WebSocket, service: WhatsAppChatServiceDep):
                     body = data.get("body", "")
                     if chat_id_raw and body:
                         chat_id = uuid.UUID(str(chat_id_raw))
-                        message = await service.send_message(chat_id, organization_id, body, session)
+                        message = await service.send_message(
+                            chat_id, organization_id, body, session
+                        )
                         msg_data = json.loads(
-                            WhatsAppMessageResponse.model_validate(message).model_dump_json(by_alias=True)
+                            WhatsAppMessageResponse.model_validate(
+                                message
+                            ).model_dump_json(by_alias=True)
                         )
                         await reply("message", msg_data)
 

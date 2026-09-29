@@ -8,7 +8,9 @@ from core.security.dependencies import CurrentSession
 from core.security.policies.security_policies import require_self
 from identity.users.schemas.user_session_schema import UserSession
 from receivables.payments.services.payment_catalog_service import PaymentCatalogService
-from receivables.payments.services.payment_selfservice_service import PaymentSelfServiceService
+from receivables.payments.services.payment_selfservice_service import (
+    PaymentSelfServiceService,
+)
 
 
 def get_payment_catalog_service() -> PaymentCatalogService:
@@ -24,12 +26,15 @@ def get_payment_selfservice_service(
 
 def require_self_session(session: CurrentSession) -> UserSession:
     """Gate de scope SELF a nivel de ruta: rechaza en el borde a quien no sea el
-    titular, antes de instanciar el service. La política pura vive en security_policies."""
+    titular, antes de instanciar el service. La política pura vive en
+    security_policies."""
     require_self(session)
     return session
 
 
-PaymentCatalogServiceDep = Annotated[PaymentCatalogService, Depends(get_payment_catalog_service)]
+PaymentCatalogServiceDep = Annotated[
+    PaymentCatalogService, Depends(get_payment_catalog_service)
+]
 PaymentSelfServiceServiceDep = Annotated[
     PaymentSelfServiceService, Depends(get_payment_selfservice_service)
 ]

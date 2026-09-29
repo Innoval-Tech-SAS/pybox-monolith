@@ -51,4 +51,6 @@ class PaymentTicketModel(BaseModel):
         PgUUID(as_uuid=True),
         ForeignKey("pagos.id"),
         nullable=True,
-        name="id_pago_nuevo", index=True)
+        name="id_pago_nuevo",
+        index=True,
+    )

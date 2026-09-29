@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 
 from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
@@ -9,7 +9,6 @@ from messaging.templates.enums.template_enums import TemplateChannel, TemplateSt
 
 
 class TemplateModel(BaseModel):
-
     __tablename__ = "plantillas"
 
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
@@ -29,13 +28,18 @@ class TemplateModel(BaseModel):
     )
 
     status: Mapped[TemplateStatus] = mapped_column(
-        Enum(TemplateStatus, name="estado_plantilla", values_callable=lambda e: [m.value for m in e]),
+        Enum(
+            TemplateStatus,
+            name="estado_plantilla",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=False,
         default=TemplateStatus.DRAFT,
         name="estado_plantilla",
     )
 
-    # Nullable: no aplica para WHATSAPP (el contenido real vive en Meta, ver datos_plantilla_whatsapp).
+    # Nullable: no aplica para WHATSAPP (el contenido real vive en Meta,
+    # ver datos_plantilla_whatsapp).
     body: Mapped[str | None] = mapped_column(Text, nullable=True, name="cuerpo")
 
     design: Mapped[str | None] = mapped_column(Text, nullable=True, name="diseno")

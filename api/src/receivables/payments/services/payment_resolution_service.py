@@ -5,7 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from receivables.payments.enums.payment_enums import PaymentStatus
 from receivables.payments.models.payment_model import PaymentModel
 from receivables.payments.repository.payment_repository import PaymentRepository
-from receivables.payments.repository.payment_ticket_repository import PaymentTicketRepository
+from receivables.payments.repository.payment_ticket_repository import (
+    PaymentTicketRepository,
+)
 
 
 class PaymentResolutionService:
@@ -20,7 +22,9 @@ class PaymentResolutionService:
         self._payment_repo = PaymentRepository(session)
         self._payment_ticket_repo = PaymentTicketRepository(session)
 
-    async def apply_reschedule_resolution(self, ticket_id: uuid.UUID, approved: bool) -> None:
+    async def apply_reschedule_resolution(
+        self, ticket_id: uuid.UUID, approved: bool
+    ) -> None:
         link = await self._payment_ticket_repo.get_by_ticket_id(ticket_id)
         if link is None:
             return
@@ -42,7 +46,9 @@ class PaymentResolutionService:
         await self._payment_ticket_repo.update(link)
         await self._payment_repo.update(payment)
 
-    async def apply_validation_resolution(self, ticket_id: uuid.UUID, approved: bool) -> None:
+    async def apply_validation_resolution(
+        self, ticket_id: uuid.UUID, approved: bool
+    ) -> None:
         link = await self._payment_ticket_repo.get_by_ticket_id(ticket_id)
         if link is None:
             return

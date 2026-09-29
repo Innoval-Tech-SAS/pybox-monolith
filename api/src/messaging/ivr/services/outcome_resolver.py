@@ -56,7 +56,9 @@ def resolve_outcome(
     La clave siempre se puede calcular; la etiqueta es `None` si el flujo no
     tiene configurado ese desenlace (no es un error: la llamada igual se cierra).
     """
-    node_name, key = _resolve_key(ivr_end_node_id, ivr_end_reason, dial_status, amd_status)
+    node_name, key = _resolve_key(
+        ivr_end_node_id, ivr_end_reason, dial_status, amd_status
+    )
 
     node_outcomes = (outcomes or {}).get(node_name)
     if not isinstance(node_outcomes, dict):

@@ -2,12 +2,16 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from messaging.provider_credentials.enums.provider_credential_enums import MessagingCredentialProvider
-from messaging.provider_credentials.models.provider_credential_model import MessagingProviderCredentialModel
+from core.security.services.encrypt_service import encrypt_service
+from messaging.provider_credentials.enums.provider_credential_enums import (
+    MessagingCredentialProvider,
+)
+from messaging.provider_credentials.models.provider_credential_model import (
+    MessagingProviderCredentialModel,
+)
 from messaging.provider_credentials.repository.provider_credential_repository import (
     MessagingProviderCredentialRepository,
 )
-from core.security.services.encrypt_service import encrypt_service
 
 
 @dataclass(frozen=True)
@@ -38,14 +42,21 @@ class MessagingProviderCredentialService:
     async def resolve_by_lookup_key(
         self, provider: MessagingCredentialProvider, lookup_key: str
     ) -> DecryptedMessagingCredential | None:
-        return self._to_decrypted(await self._repo.get_by_lookup_key(provider, lookup_key))
+        return self._to_decrypted(
+            await self._repo.get_by_lookup_key(provider, lookup_key)
+        )
 
     @staticmethod
-    def _to_decrypted(row: MessagingProviderCredentialModel | None) -> DecryptedMessagingCredential | None:
+    def _to_decrypted(
+        row: MessagingProviderCredentialModel | None,
+    ) -> DecryptedMessagingCredential | None:
         if row is None or not row.is_active:
             return None
         decrypted = {
-            key: encrypt_service.decrypt_to_str(token) for key, token in (row.secrets or {}).items()
+            key: encrypt_service.decrypt_to_str(token)
+            for key, token in (row.secrets or {}).items()
         }
         values = {**(row.public_config or {}), **decrypted}
-        return DecryptedMessagingCredential(row.country_code, row.provider, values, row.lookup_key)
+        return DecryptedMessagingCredential(
+            row.country_code, row.provider, values, row.lookup_key
+        )

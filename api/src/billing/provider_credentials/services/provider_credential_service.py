@@ -2,8 +2,12 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from billing.provider_credentials.enums.provider_credential_enums import PlatformGatewayProvider
-from billing.provider_credentials.models.provider_credential_model import PlatformGatewayCredentialModel
+from billing.provider_credentials.enums.provider_credential_enums import (
+    PlatformGatewayProvider,
+)
+from billing.provider_credentials.models.provider_credential_model import (
+    PlatformGatewayCredentialModel,
+)
 from billing.provider_credentials.repository.provider_credential_repository import (
     PlatformGatewayCredentialRepository,
 )
@@ -38,15 +42,23 @@ class PlatformGatewayCredentialService:
     async def resolve_by_lookup_key(
         self, provider: PlatformGatewayProvider, lookup_key: str
     ) -> DecryptedPlatformGatewayCredential | None:
-        """Para el webhook de MP: resolver por application_id antes de verificar firma."""
-        return self._to_decrypted(await self._repo.get_by_lookup_key(provider, lookup_key))
+        """Para el webhook de MP: resolver por application_id antes de verificar
+        firma."""
+        return self._to_decrypted(
+            await self._repo.get_by_lookup_key(provider, lookup_key)
+        )
 
     @staticmethod
-    def _to_decrypted(row: PlatformGatewayCredentialModel | None) -> DecryptedPlatformGatewayCredential | None:
+    def _to_decrypted(
+        row: PlatformGatewayCredentialModel | None,
+    ) -> DecryptedPlatformGatewayCredential | None:
         if row is None or not row.is_active:
             return None
         decrypted = {
-            key: encrypt_service.decrypt_to_str(token) for key, token in (row.secrets or {}).items()
+            key: encrypt_service.decrypt_to_str(token)
+            for key, token in (row.secrets or {}).items()
         }
         values = {**(row.public_config or {}), **decrypted}
-        return DecryptedPlatformGatewayCredential(row.country_code, row.provider, values, row.lookup_key)
+        return DecryptedPlatformGatewayCredential(
+            row.country_code, row.provider, values, row.lookup_key
+        )

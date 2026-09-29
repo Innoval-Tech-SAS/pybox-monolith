@@ -31,10 +31,13 @@ def serialize_value(value: Any) -> Any:
     return value
 
 
-def encrypted_output_columns(tables: list[dict[str, Any]], *, prefixed: bool) -> set[str]:
-    """Nombres, en el resultado, de las columnas que vienen de ENCRYPTED_COLUMNS. `prefixed`
-    es el modo join (`alias_columna`); con `alias.*` o modo tabla única el nombre es el de
-    la columna. Incluir de más es inofensivo: `decrypt_sensitive_value` solo toca tokens."""
+def encrypted_output_columns(
+    tables: list[dict[str, Any]], *, prefixed: bool
+) -> set[str]:
+    """Nombres, en el resultado, de las columnas que vienen de ENCRYPTED_COLUMNS.
+    `prefixed` es el modo join (`alias_columna`); con `alias.*` o modo tabla única
+    el nombre es el de la columna. Incluir de más es inofensivo:
+    `decrypt_sensitive_value` solo toca tokens."""
     outputs: set[str] = set()
     for table in tables:
         schema, table_name = sanitize_table_name(table["name"])
@@ -49,15 +52,26 @@ def encrypted_output_columns(tables: list[dict[str, Any]], *, prefixed: bool) ->
     return outputs
 
 
-def encrypted_group_outputs(alias_map: dict[str, str], group_by: list[dict[str, Any]]) -> set[str]:
-    """Alias de salida de las columnas de agrupación (ya normalizadas) que son cifradas."""
-    encrypted_by_alias = {alias: ENCRYPTED_COLUMNS.get(full_name, set()) for full_name, alias in alias_map.items()}
-    return {g["output_alias"] for g in group_by if g["column"] in encrypted_by_alias.get(g["table_alias"], set())}
+def encrypted_group_outputs(
+    alias_map: dict[str, str], group_by: list[dict[str, Any]]
+) -> set[str]:
+    """Alias de salida de las columnas de agrupación (ya normalizadas) que son
+    cifradas."""
+    encrypted_by_alias = {
+        alias: ENCRYPTED_COLUMNS.get(full_name, set())
+        for full_name, alias in alias_map.items()
+    }
+    return {
+        g["output_alias"]
+        for g in group_by
+        if g["column"] in encrypted_by_alias.get(g["table_alias"], set())
+    }
 
 
 def decrypt_sensitive_value(value: Any) -> Any:
-    """Descifra un token de EncryptService; cualquier otro valor (None, texto plano de otra
-    tabla) pasa igual. Un token inválido o de otra clave lanza ValueError / InvalidTag."""
+    """Descifra un token de EncryptService; cualquier otro valor (None, texto
+    plano de otra tabla) pasa igual. Un token inválido o de otra clave lanza
+    ValueError / InvalidTag."""
     if isinstance(value, str) and value.startswith(f"{encrypt_service.VERSION}:"):
         return encrypt_service.decrypt_to_str(value)
     return value
@@ -67,7 +81,7 @@ def parse_json_if_string(value: Any) -> Any:
     if isinstance(value, str):
         try:
             return json.loads(value)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return value
     return value
 
@@ -106,7 +120,8 @@ def sanitize_identifier(value: str | None, *, label: str) -> str:
     if not IDENTIFIER_RE.match(identifier):
         raise ValueError(
             f"Valor inválido para {label}: '{value}'. "
-            "Solo se permiten letras, números y guion bajo (_), y no puede empezar por un número."
+            "Solo se permiten letras, números y guion bajo (_), y no puede "
+            "empezar por un número."
         )
     return identifier
 
@@ -116,7 +131,9 @@ def sanitize_table_name(full_name: str) -> tuple[str, str]:
     if "." not in raw:
         return "public", sanitize_identifier(raw, label="la tabla")
     schema, table = raw.split(".", 1)
-    return sanitize_identifier(schema, label="el esquema"), sanitize_identifier(table, label="la tabla")
+    return sanitize_identifier(schema, label="el esquema"), sanitize_identifier(
+        table, label="la tabla"
+    )
 
 
 def normalize_operator(op: str) -> str:
@@ -135,7 +152,9 @@ def ensure_operator_allowed(op: str, *, in_having: bool = False) -> str:
 def normalize_sort_direction(direction: str) -> str:
     normalized = str(direction or "asc").strip().lower()
     if normalized not in {"asc", "desc"}:
-        raise ValueError(f"Dirección de ordenamiento inválida: '{direction}' (usa asc o desc).")
+        raise ValueError(
+            f"Dirección de ordenamiento inválida: '{direction}' (usa asc o desc)."
+        )
     return normalized
 
 
@@ -143,7 +162,8 @@ def normalize_aggregate_function(function_name: str | None) -> str:
     normalized = str(function_name or "").strip().lower()
     if normalized not in VALID_AGG_FUNCTIONS:
         raise ValueError(
-            f"Función de agregación no soportada: '{function_name}'. Usa count, sum, avg, min o max."
+            f"Función de agregación no soportada: '{function_name}'. Usa "
+            "count, sum, avg, min o max."
         )
     return normalized
 
@@ -167,7 +187,10 @@ def build_sql_condition(expression: str, operator: str, value: Any) -> str:
         values = value if isinstance(value, list) else []
         if len(values) != 2:
             raise ValueError("El operador BETWEEN requiere exactamente dos valores.")
-        return f"{expression} BETWEEN {sql_literal(values[0])} AND {sql_literal(values[1])}"
+        return (
+            f"{expression} BETWEEN {sql_literal(values[0])} "
+            f"AND {sql_literal(values[1])}"
+        )
     if operator == "like":
         return f"{expression} LIKE {sql_literal(value)}"
     if operator == "ilike":
@@ -187,17 +210,26 @@ def build_tenant_scope_condition(
     segmentos solo pueden apuntar a las tablas explícitamente habilitadas para eso."""
     template = TENANT_SCOPED_TABLES.get(full_table_name)
     if template is None:
-        raise ValueError(f"La tabla '{full_table_name}' no está habilitada para reportes/segmentos.")
+        raise ValueError(
+            f"La tabla '{full_table_name}' no está habilitada para reportes/segmentos."
+        )
     portfolio_list = ", ".join(sql_literal(pid) for pid in portfolio_ids) or "NULL"
-    organization_list = ", ".join(sql_literal(oid) for oid in organization_ids) or "NULL"
-    return template.format(alias=alias, portfolio_ids=portfolio_list, organization_ids=organization_list)
+    organization_list = (
+        ", ".join(sql_literal(oid) for oid in organization_ids) or "NULL"
+    )
+    return template.format(
+        alias=alias, portfolio_ids=portfolio_list, organization_ids=organization_list
+    )
 
 
 def _hash_filter_value(column: str, op: str, value: Any) -> Any:
     if op in {"is_null", "is_not_null"}:
         return value
     if op not in HASHED_FILTER_OPERATORS:
-        raise ValueError(f"La columna '{column}' solo se puede filtrar por igualdad o lista de valores.")
+        raise ValueError(
+            f"La columna '{column}' solo se puede filtrar por igualdad o "
+            "lista de valores."
+        )
     values = value if isinstance(value, list) else [value]
     if not values or any(v is None or not str(v).strip() for v in values):
         raise ValueError(f"El filtro de '{column}' requiere un valor.")
@@ -205,7 +237,9 @@ def _hash_filter_value(column: str, op: str, value: Any) -> Any:
     return hashed if isinstance(value, list) else hashed[0]
 
 
-def build_where_clauses(filters: list[dict[str, Any]], alias: str, full_table_name: str | None = None) -> str:
+def build_where_clauses(
+    filters: list[dict[str, Any]], alias: str, full_table_name: str | None = None
+) -> str:
     """`full_table_name` (`schema.tabla`) permite reescribir las columnas cifradas de
     HASHED_FILTER_COLUMNS a su columna hash; sin él todos los filtros van tal cual."""
     if not filters:
@@ -232,7 +266,10 @@ def build_table_alias_map(tables: list[dict[str, Any]]) -> dict[str, str]:
         alias = table.get("alias") or table_name
         alias = sanitize_identifier(alias, label=f"el alias de la tabla {full_name}")
         if alias in alias_set:
-            raise ValueError(f"El alias de tabla '{alias}' está repetido: cada tabla debe tener un alias distinto.")
+            raise ValueError(
+                f"El alias de tabla '{alias}' está repetido: cada tabla debe "
+                "tener un alias distinto."
+            )
         alias_set.add(alias)
         alias_map[full_name] = alias
     return alias_map
@@ -243,7 +280,9 @@ def resolve_alias(tables: list[dict[str, Any]], table_ref: str | None) -> str:
     if not table_ref:
         if len(alias_map) == 1:
             return next(iter(alias_map.values()))
-        raise ValueError("Cuando hay varias tablas hay que indicar a cuál se refiere cada campo.")
+        raise ValueError(
+            "Cuando hay varias tablas hay que indicar a cuál se refiere cada campo."
+        )
     ref = str(table_ref).strip()
     if ref in alias_map.values():
         return sanitize_identifier(ref, label="el alias de la tabla")
@@ -259,7 +298,9 @@ def resolve_full_table_name(tables: list[dict[str, Any]], table_ref: str | None)
     if not table_ref:
         if len(alias_map) == 1:
             return next(iter(alias_map.keys()))
-        raise ValueError("Cuando hay varias tablas hay que indicar a cuál se refiere cada campo.")
+        raise ValueError(
+            "Cuando hay varias tablas hay que indicar a cuál se refiere cada campo."
+        )
     ref = str(table_ref).strip()
     if ref in alias_map:
         return ref
@@ -273,14 +314,18 @@ def resolve_full_table_name(tables: list[dict[str, Any]], table_ref: str | None)
     return full_name
 
 
-def build_select_parts(table: dict[str, Any], alias: str, *, prefixed_alias: bool = False) -> list[str]:
+def build_select_parts(
+    table: dict[str, Any], alias: str, *, prefixed_alias: bool = False
+) -> list[str]:
     columns = table.get("columns") or []
     if not columns:
         return [f"{alias}.*"]
     parts = []
     for raw_col in columns:
         col = sanitize_identifier(raw_col, label="la columna")
-        parts.append(f"{alias}.{col} AS {alias}_{col}" if prefixed_alias else f"{alias}.{col}")
+        parts.append(
+            f"{alias}.{col} AS {alias}_{col}" if prefixed_alias else f"{alias}.{col}"
+        )
     return parts
 
 
@@ -294,7 +339,9 @@ def default_aggregation_alias(function_name: str, column: str, table_alias: str)
     fn = normalize_aggregate_function(function_name)
     if column == "*":
         return f"{fn}_all"
-    return f"{fn}_{sanitize_identifier(table_alias, label='el alias de la tabla')}_{sanitize_identifier(column, label='la columna de la agregación')}"
+    alias_part = sanitize_identifier(table_alias, label="el alias de la tabla")
+    column_part = sanitize_identifier(column, label="la columna de la agregación")
+    return f"{fn}_{alias_part}_{column_part}"
 
 
 def normalize_aggregate_specs(
@@ -313,23 +360,29 @@ def normalize_aggregate_specs(
     normalized_group_by: list[dict[str, Any]] = []
     for group in group_by:
         table_alias = resolve_alias(tables, group.get("table"))
-        column = sanitize_identifier(group.get("column"), label="la columna de agrupación")
+        column = sanitize_identifier(
+            group.get("column"), label="la columna de agrupación"
+        )
         output_alias = default_group_alias(group.get("alias"), column)
         if output_alias in output_aliases:
             raise ValueError(f"Alias de salida repetido: '{output_alias}'.")
         output_aliases.add(output_alias)
         group_aliases.add(output_alias)
-        normalized_group_by.append({
-            "table_alias": table_alias,
-            "column": column,
-            "output_alias": output_alias,
-            "sql_expression": f"{table_alias}.{column}",
-        })
+        normalized_group_by.append(
+            {
+                "table_alias": table_alias,
+                "column": column,
+                "output_alias": output_alias,
+                "sql_expression": f"{table_alias}.{column}",
+            }
+        )
 
     if not aggregations:
         raise ValueError("El modo agregación requiere al menos una agregación.")
 
-    default_single_alias = next(iter(alias_map.values())) if len(alias_map) == 1 else None
+    default_single_alias = (
+        next(iter(alias_map.values())) if len(alias_map) == 1 else None
+    )
 
     normalized_aggregations: list[dict[str, Any]] = []
     for metric in aggregations:
@@ -341,33 +394,48 @@ def normalize_aggregate_specs(
         if raw_col == "*":
             if fn != "count":
                 raise ValueError("Solo COUNT admite la columna '*'.")
-            table_alias = resolve_alias(tables, metric.get("table")) if metric.get("table") else default_single_alias
+            table_alias = (
+                resolve_alias(tables, metric.get("table"))
+                if metric.get("table")
+                else default_single_alias
+            )
             sql_expression = "COUNT(*)"
         else:
             table_alias = resolve_alias(tables, metric.get("table"))
             col = sanitize_identifier(raw_col, label="la columna de la agregación")
             sql_expression = f"{fn.upper()}({table_alias}.{col})"
 
-        metric_alias = metric.get("alias") or default_aggregation_alias(fn, raw_col, table_alias or "all")
-        metric_alias = sanitize_identifier(metric_alias, label="el alias de la agregación")
+        metric_alias = metric.get("alias") or default_aggregation_alias(
+            fn, raw_col, table_alias or "all"
+        )
+        metric_alias = sanitize_identifier(
+            metric_alias, label="el alias de la agregación"
+        )
         if metric_alias in output_aliases:
             raise ValueError(f"Alias de salida repetido: '{metric_alias}'.")
         output_aliases.add(metric_alias)
         metric_aliases.add(metric_alias)
         metric_sql_by_alias[metric_alias] = sql_expression
-        normalized_aggregations.append({
-            "function": fn,
-            "table_alias": table_alias,
-            "column": raw_col,
-            "metric_alias": metric_alias,
-            "sql_expression": sql_expression,
-        })
+        normalized_aggregations.append(
+            {
+                "function": fn,
+                "table_alias": table_alias,
+                "column": raw_col,
+                "metric_alias": metric_alias,
+                "sql_expression": sql_expression,
+            }
+        )
 
     normalized_having: list[dict[str, Any]] = []
     for condition in having:
-        metric_alias = sanitize_identifier(condition.get("metric"), label="la métrica del HAVING")
+        metric_alias = sanitize_identifier(
+            condition.get("metric"), label="la métrica del HAVING"
+        )
         if metric_alias not in metric_aliases:
-            raise ValueError(f"La métrica '{metric_alias}' del HAVING no existe entre las agregaciones.")
+            raise ValueError(
+                f"La métrica '{metric_alias}' del HAVING no existe entre las "
+                "agregaciones."
+            )
         op = ensure_operator_allowed(condition.get("op", "="), in_having=True)
         value = parse_json_if_string(condition.get("value"))
         normalized_having.append({"metric": metric_alias, "op": op, "value": value})
@@ -375,10 +443,13 @@ def normalize_aggregate_specs(
     sortable_fields = group_aliases | metric_aliases
     normalized_order_by: list[dict[str, Any]] = []
     for ordering in order_by:
-        field = sanitize_identifier(ordering.get("field"), label="el campo de ordenamiento")
+        field = sanitize_identifier(
+            ordering.get("field"), label="el campo de ordenamiento"
+        )
         if field not in sortable_fields:
             raise ValueError(
-                f"El campo de ordenamiento '{field}' debe ser un alias de agrupación o de agregación."
+                f"El campo de ordenamiento '{field}' debe ser un alias de "
+                "agrupación o de agregación."
             )
         direction = normalize_sort_direction(ordering.get("direction", "asc"))
         normalized_order_by.append({"field": field, "direction": direction})

@@ -8,7 +8,9 @@ from receivables.payment_gateways.dependencies import WompiWebhookServiceDep
 router = APIRouter(prefix="/webhooks/wompi", tags=["Webhooks"])
 
 
-@router.post("/{organization_id}", summary="Webhook de Wompi para notificaciones de transacción")
+@router.post(
+    "/{organization_id}", summary="Webhook de Wompi para notificaciones de transacción"
+)
 async def handle_wompi_webhook(
     organization_id: uuid.UUID,
     request: Request,

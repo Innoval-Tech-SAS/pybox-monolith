@@ -9,7 +9,9 @@ class SmsChannel:
     def __init__(self, provider: NRS360SmsProvider) -> None:
         self._provider = provider
 
-    async def send(self, to: list[str], message: str, **kwargs: Any) -> tuple[bool, dict[str, str] | None, str | None]:
+    async def send(
+        self, to: list[str], message: str, **kwargs: Any
+    ) -> tuple[bool, dict[str, str] | None, str | None]:
         sub: list[dict] | None = kwargs.get("sub")
         credential = kwargs.get("credential")
         return await self._provider.send_sms(

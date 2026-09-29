@@ -1,4 +1,7 @@
-from receivables.payments.enums.payment_enums import PAYMENT_STATUS_LABELS, PaymentStatus
+from receivables.payments.enums.payment_enums import (
+    PAYMENT_STATUS_LABELS,
+    PaymentStatus,
+)
 from receivables.payments.schemas.payment_catalog_schemas import PaymentStatusOption
 
 

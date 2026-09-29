@@ -13,8 +13,18 @@ class CountryModel(AuditModel):
 
     code: Mapped[str] = mapped_column(String(2), primary_key=True, name="codigo")
     name: Mapped[str] = mapped_column(String(100), nullable=False, name="nombre")
-    phone_prefix: Mapped[str] = mapped_column(String(8), nullable=False, name="prefijo_telefonico")
-    timezone: Mapped[str] = mapped_column(String(64), nullable=False, name="zona_horaria")
-    currency_code: Mapped[str] = mapped_column(String(3), nullable=False, name="codigo_moneda")
-    flag_url: Mapped[str] = mapped_column(String(255), nullable=False, name="url_bandera")
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="activo")
+    phone_prefix: Mapped[str] = mapped_column(
+        String(8), nullable=False, name="prefijo_telefonico"
+    )
+    timezone: Mapped[str] = mapped_column(
+        String(64), nullable=False, name="zona_horaria"
+    )
+    currency_code: Mapped[str] = mapped_column(
+        String(3), nullable=False, name="codigo_moneda"
+    )
+    flag_url: Mapped[str] = mapped_column(
+        String(255), nullable=False, name="url_bandera"
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, name="activo"
+    )

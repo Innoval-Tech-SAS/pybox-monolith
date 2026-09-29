@@ -3,11 +3,10 @@ import uuid
 from fastapi import HTTPException, status
 
 from core.config.api_router import APIRouter
-from receivables.portfolios.dependencies import PortfolioUserAccessServiceDep
 from core.security.dependencies import CurrentSession
 from core.security.policies.security_policies import require_org_admin
 from identity.users.dependencies import UserManagementServiceDep
-from identity.users.enums.user_enums import UserRole, UserScope
+from identity.users.enums.user_enums import UserRole
 from identity.users.schemas.user_management_schemas import (
     ManagedUserCreate,
     ManagedUserResponse,
@@ -16,8 +15,11 @@ from identity.users.schemas.user_management_schemas import (
     PermissionListResponse,
     PortfolioAccessEntry,
 )
+from receivables.portfolios.dependencies import PortfolioUserAccessServiceDep
 
-router = APIRouter(prefix="/organizations/{org_id}/members", tags=["Miembros de Organización"])
+router = APIRouter(
+    prefix="/organizations/{org_id}/members", tags=["Miembros de Organización"]
+)
 
 
 @router.post(
@@ -36,7 +38,7 @@ async def create_org_member(
     if body.role not in {UserRole.ADMIN, UserRole.CUSTOMER_SERVICE, UserRole.USER}:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Rol inválido para miembros de organización.",
+            detail="Rol inválido para miembros de organización.",
         )
     return await service.create_org_member(session.user_id, org_id, body)
 
@@ -102,7 +104,10 @@ async def list_portfolio_access(
 ) -> list[PortfolioAccessEntry]:
     require_org_admin(session, str(org_id))
     items = await access_service.list_org_portfolios_with_access_status(user_id, org_id)
-    return [PortfolioAccessEntry(portfolio_id=pid, name=name, has_access=has) for pid, name, has in items]
+    return [
+        PortfolioAccessEntry(portfolio_id=pid, name=name, has_access=has)
+        for pid, name, has in items
+    ]
 
 
 @router.put(
@@ -118,7 +123,9 @@ async def grant_portfolio_access(
     access_service: PortfolioUserAccessServiceDep,
 ) -> None:
     require_org_admin(session, str(org_id))
-    await access_service.grant_access(user_id, portfolio_id, org_id, granted_by=session.user_id)
+    await access_service.grant_access(
+        user_id, portfolio_id, org_id, granted_by=session.user_id
+    )
 
 
 @router.delete(

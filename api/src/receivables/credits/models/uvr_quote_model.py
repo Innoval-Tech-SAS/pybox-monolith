@@ -5,6 +5,7 @@ from decimal import Decimal
 from sqlalchemy import DateTime, ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
+
 from core.base.audit_model import BaseModel
 
 
@@ -14,6 +15,13 @@ class UVRQuoteModel(BaseModel):
     quote_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True, name="fecha_cotizacion"
     )
-    quote_value: Mapped[Decimal] = mapped_column(Numeric(12, 6), nullable=False, name="valor_cotizacion")
+    quote_value: Mapped[Decimal] = mapped_column(
+        Numeric(12, 6), nullable=False, name="valor_cotizacion"
+    )
     credit_id: Mapped[uuid.UUID | None] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("creditos.id"), nullable=True, name="id_credito", index=True)
+        PgUUID(as_uuid=True),
+        ForeignKey("creditos.id"),
+        nullable=True,
+        name="id_credito",
+        index=True,
+    )

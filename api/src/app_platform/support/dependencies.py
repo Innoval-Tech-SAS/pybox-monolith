@@ -5,11 +5,15 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.database import get_main_session
-from core.security.dependencies import CurrentSession
-from app_platform.support.enums.support_enums import SupportCaseType, SupportTicketPriority, SupportTicketStatus
+from app_platform.support.enums.support_enums import (
+    SupportCaseType,
+    SupportTicketPriority,
+    SupportTicketStatus,
+)
 from app_platform.support.schemas.support_schemas import SupportFilter
 from app_platform.support.services.support_service import SupportService
+from core.database.database import get_main_session
+from core.security.dependencies import CurrentSession
 from identity.users.enums.user_enums import UserRole, UserScope
 
 _STAFF_ROLES = {UserRole.ADMIN, UserRole.CUSTOMER_SERVICE}
@@ -32,15 +36,19 @@ def get_support_filter(
     from_date_param: datetime | None = Query(None, alias="fromDate"),
     to_date_param: datetime | None = Query(None, alias="toDate"),
 ) -> SupportFilter:
-    search = dict(
-        q=q or None,
-        status_filter=_STATUS_MAP.get(status_param) if status_param else None,
-        priority_filter=_PRIORITY_MAP.get(priority_param) if priority_param else None,
-        case_type_filter=_CASE_TYPE_MAP.get(case_type_param) if case_type_param else None,
-        assigned_to_filter=assigned_to_param,
-        from_date=from_date_param,
-        to_date=to_date_param,
-    )
+    search = {
+        "q": q or None,
+        "status_filter": _STATUS_MAP.get(status_param) if status_param else None,
+        "priority_filter": (
+            _PRIORITY_MAP.get(priority_param) if priority_param else None
+        ),
+        "case_type_filter": (
+            _CASE_TYPE_MAP.get(case_type_param) if case_type_param else None
+        ),
+        "assigned_to_filter": assigned_to_param,
+        "from_date": from_date_param,
+        "to_date": to_date_param,
+    }
 
     # Global scope: role is set at session level
     if session.scope == UserScope.GLOBAL:
@@ -91,7 +99,9 @@ def get_support_filter(
             **search,
         )
 
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado."
+    )
 
 
 def get_support_service(

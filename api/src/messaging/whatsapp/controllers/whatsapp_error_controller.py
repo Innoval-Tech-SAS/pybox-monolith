@@ -6,12 +6,19 @@ from fastapi import Query
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from messaging.whatsapp.dependencies import WhatsAppErrorServiceDep
-from messaging.whatsapp.schemas.whatsapp_error_schemas import WhatsAppSendErrorListResponse, WhatsAppSendErrorResponse
+from messaging.whatsapp.schemas.whatsapp_error_schemas import (
+    WhatsAppSendErrorListResponse,
+    WhatsAppSendErrorResponse,
+)
 
 router = APIRouter(prefix="/whatsapp/errors", tags=["Errores de envío de WhatsApp"])
 
 
-@router.get("/", response_model=WhatsAppSendErrorListResponse, summary="Listar errores de envío de WhatsApp")
+@router.get(
+    "/",
+    response_model=WhatsAppSendErrorListResponse,
+    summary="Listar errores de envío de WhatsApp",
+)
 async def list_whatsapp_send_errors(
     session: CurrentSession,
     service: WhatsAppErrorServiceDep,

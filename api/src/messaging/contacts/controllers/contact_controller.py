@@ -24,4 +24,6 @@ async def get_debtor_contacts(
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
 ) -> list[ContactsByChannelGroup]:
-    return await service.get_by_debtor(debtor_id, portfolio_id, session, page, page_size)
+    return await service.get_by_debtor(
+        debtor_id, portfolio_id, session, page, page_size
+    )

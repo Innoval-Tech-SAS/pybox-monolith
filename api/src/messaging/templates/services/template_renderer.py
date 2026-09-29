@@ -22,6 +22,7 @@ class TemplateRenderer:
     def render(self, source: str, variables: dict[str, Any]) -> str:
         def replace(match: re.Match) -> str:
             return str(variables.get(match.group(1), match.group(0)))
+
         return _VAR_PATTERN.sub(replace, source)
 
     def render_fields(

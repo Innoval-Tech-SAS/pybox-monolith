@@ -1,13 +1,13 @@
-﻿from decimal import Decimal
+from decimal import Decimal
 
 from sqlalchemy import Enum, Index, Numeric, String, text
 from sqlalchemy.orm import Mapped, mapped_column
+
 from core.base.audit_model import BaseModel
 from messaging.channels.enums.channel_enums import ChannelName, Currency
 
 
 class ChannelModel(BaseModel):
-
     __tablename__ = "canales"
     __table_args__ = (
         # Único parcial (solo entre canales vivos): con soft-delete, un canal borrado
@@ -32,6 +32,8 @@ class ChannelModel(BaseModel):
         Numeric(precision=10, scale=2), nullable=False, name="precio_unitario"
     )
 
-    description: Mapped[str] = mapped_column(String(255), nullable=False, name="descripcion")
+    description: Mapped[str] = mapped_column(
+        String(255), nullable=False, name="descripcion"
+    )
 
     label: Mapped[str] = mapped_column(String(50), nullable=False, name="etiqueta")

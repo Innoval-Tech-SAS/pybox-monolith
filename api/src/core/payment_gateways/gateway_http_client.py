@@ -29,5 +29,8 @@ class GatewayHttpClient:
         if response.is_error:
             logger.error(
                 "[%s] %s fallo | status=%s body=%s",
-                self._LOG_TAG, context, response.status_code, response.text,
+                self._LOG_TAG,
+                context,
+                response.status_code,
+                response.text,
             )

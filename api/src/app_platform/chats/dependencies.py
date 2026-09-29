@@ -10,7 +10,9 @@ from core.database.database import get_main_session
 from identity.organizations.repository.organization_membership_repository import (
     OrganizationMembershipRepository,
 )
-from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
+from identity.users.repository.role_assignment_repository import (
+    RoleAssignmentRepository,
+)
 from identity.users.repository.user_repository import UserRepository
 
 

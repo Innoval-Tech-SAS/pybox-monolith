@@ -18,6 +18,7 @@ def validate_password_strength(password: str) -> str:
     classes_present = sum(1 for pattern in _CLASS_PATTERNS if pattern.search(password))
     if classes_present < 3:
         raise ValueError(
-            "La contraseña debe combinar al menos 3 de: minúsculas, mayúsculas, números y símbolos."
+            "La contraseña debe combinar al menos 3 de: minúsculas, mayúsculas, "
+            "números y símbolos."
         )
     return password

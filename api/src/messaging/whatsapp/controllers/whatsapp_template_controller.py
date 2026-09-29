@@ -38,7 +38,11 @@ async def create_whatsapp_template(
     )
 
 
-@router.get("/", response_model=WhatsAppTemplateListResponse, summary="Listar plantillas de WhatsApp del portafolio")
+@router.get(
+    "/",
+    response_model=WhatsAppTemplateListResponse,
+    summary="Listar plantillas de WhatsApp del portafolio",
+)
 async def list_whatsapp_templates(
     session: CurrentSession,
     service: WhatsAppTemplateServiceDep,
@@ -73,7 +77,9 @@ async def refresh_whatsapp_template_status(
     service: WhatsAppTemplateServiceDep,
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
 ) -> WhatsAppTemplateResponse:
-    template, whatsapp_data = await service.refresh_status(template_id, portfolio_id, session)
+    template, whatsapp_data = await service.refresh_status(
+        template_id, portfolio_id, session
+    )
     return WhatsAppTemplateResponse(
         template=TemplateResponse.model_validate(template),
         whatsapp=WhatsAppTemplateDataResponse.model_validate(whatsapp_data),

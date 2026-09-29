@@ -19,7 +19,9 @@ router = APIRouter(prefix="/webhooks/helena", tags=["Webhooks"])
 async def handle_helena_webhook(
     request: Request,
     service: IvrEventServiceDep,
-    x_helena_signature: Annotated[str | None, Header(alias="x-helena-signature")] = None,
+    x_helena_signature: Annotated[
+        str | None, Header(alias="x-helena-signature")
+    ] = None,
 ) -> dict[str, bool]:
     """Recibe los eventos de Helena y los delega al servicio de ingesta.
 

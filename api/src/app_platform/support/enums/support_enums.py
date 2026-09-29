@@ -54,8 +54,9 @@ class PaymentTopic(StrEnum):
 
 
 # Para qué sirve un documento colgado de un ticket (tabla `documentos_ticket`).
-# Reemplaza la porción "ámbito ticket" del viejo enum global `DocumentCategory`: acotado
-# a los dos casos reales del módulo, no a los quince de todos los ámbitos juntos.
+# Reemplaza la porción "ámbito ticket" del viejo enum global `DocumentCategory`:
+# acotado a los dos casos reales del módulo, no a los quince de todos los ámbitos
+# juntos.
 class TicketDocumentCategory(StrEnum):
     TICKET_ATTACHMENT = "ADJUNTO_TICKET"
     TICKET_CLOSURE = "EVIDENCIA_CIERRE"
@@ -64,8 +65,8 @@ class TicketDocumentCategory(StrEnum):
 # Igual que PaymentTopic: topic de autogestión, pero del titular consigo mismo, no con
 # un crédito de una organización — por eso el ticket se crea sin organization_id
 # (prefer_global=True en _auto_assign) y lo resuelve cualquier Atención al Cliente
-# GLOBAL, no la de una organización puntual. Ver OnboardingService.submit_identity_document
-# y SupportService.resolve_ticket.
+# GLOBAL, no la de una organización puntual. Ver
+# OnboardingService.submit_identity_document y SupportService.resolve_ticket.
 class IdentityTopic(StrEnum):
     IDENTITY_VALIDATION = "VALIDACION_IDENTIDAD"
 
