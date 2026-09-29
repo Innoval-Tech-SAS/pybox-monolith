@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.countries.enums.country_enums import Nationality
-from app_platform.provider_credentials.enums.provider_credential_enums import CredentialProvider
-from app_platform.provider_credentials.services.provider_credential_service import (
-    DecryptedCredential,
-    ProviderCredentialService,
+from billing.provider_credentials.enums.provider_credential_enums import PlatformGatewayProvider
+from billing.provider_credentials.services.provider_credential_service import (
+    DecryptedPlatformGatewayCredential,
+    PlatformGatewayCredentialService,
 )
 from core.tools.config_tools import get_or_default
 
@@ -89,7 +89,7 @@ def get_credentials_for_application_id(application_id: str) -> MercadoPagoCreden
 
 # ── Resolución desde DB (fuente de verdad), con fallback a env ──
 
-def _from_decrypted(cred: DecryptedCredential) -> MercadoPagoCredentials | None:
+def _from_decrypted(cred: DecryptedPlatformGatewayCredential) -> MercadoPagoCredentials | None:
     access_token = cred.get("access_token")
     webhook_secret = cred.get("webhook_secret")
     application_id = cred.get("application_id")
@@ -108,8 +108,8 @@ async def resolve_credentials_for_country(
     session: AsyncSession, country: str | None
 ) -> MercadoPagoCredentials | None:
     if country is not None:
-        cred = await ProviderCredentialService(session).get_decrypted(
-            country, CredentialProvider.MERCADOPAGO
+        cred = await PlatformGatewayCredentialService(session).get_decrypted(
+            country, PlatformGatewayProvider.MERCADOPAGO
         )
         if cred is not None:
             mp = _from_decrypted(cred)
@@ -121,8 +121,8 @@ async def resolve_credentials_for_country(
 async def resolve_credentials_for_application_id(
     session: AsyncSession, application_id: str
 ) -> MercadoPagoCredentials | None:
-    cred = await ProviderCredentialService(session).resolve_by_lookup_key(
-        CredentialProvider.MERCADOPAGO, application_id
+    cred = await PlatformGatewayCredentialService(session).resolve_by_lookup_key(
+        PlatformGatewayProvider.MERCADOPAGO, application_id
     )
     if cred is not None:
         mp = _from_decrypted(cred)

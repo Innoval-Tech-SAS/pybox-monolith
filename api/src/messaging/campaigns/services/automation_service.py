@@ -9,7 +9,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.countries.repository.country_repository import CountryRepository
-from app_platform.provider_credentials.services.provider_credential_service import ProviderCredentialService
+from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
 from app_platform.schema_manager.services.dml_service import DmlService
 from app_platform.schema_manager.services.inspector_service import InspectorService
 from billing.billing_status.services.billing_status_service import BillingStatusService
@@ -134,7 +134,7 @@ class AutomationService:
         self._debtor_repo = debtor_repo
         self._portfolio_repo = portfolio_repo
         self._country_repo = CountryRepository(portfolio_repo.session)
-        self._credential_service = ProviderCredentialService(portfolio_repo.session)
+        self._credential_service = MessagingProviderCredentialService(portfolio_repo.session)
         self._whatsapp_credentials_repo = whatsapp_credentials_repo
         self._whatsapp_template_data_repo = whatsapp_template_data_repo
         self._whatsapp_channel_request_service = whatsapp_channel_request_service

@@ -67,10 +67,17 @@ export const otherSignInItems: NavbarItem[] = [
     adminGlobalOnly: true,
   },
   {
-    name: "Credenciales",
+    name: "Credenciales de mensajería",
     icon: <KeyRound size={20} />,
-    path: "/provider-credentials",
-    // Claves de envío/pasarela cifradas: solo administradores globales.
+    path: "/messaging-credentials",
+    // Claves de envío (SMS/Email/WhatsApp) cifradas: solo administradores globales.
+    adminGlobalOnly: true,
+  },
+  {
+    name: "Credenciales de pasarela (plataforma)",
+    icon: <KeyRound size={20} />,
+    path: "/platform-gateway-credentials",
+    // Cuentas propias de PYBOX para cobrar a las organizaciones: solo administradores globales.
     adminGlobalOnly: true,
   },
   {

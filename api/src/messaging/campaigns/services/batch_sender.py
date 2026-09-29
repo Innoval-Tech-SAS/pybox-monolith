@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from app_platform.provider_credentials.services.provider_credential_service import ProviderCredentialService
+from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
 from core.config.logger import logger
 from messaging.campaigns.constants import BATCH_SIZE, MAX_RETRIES, RETRY_BASE_MS
 from messaging.campaigns.schemas.batch_schemas import BatchStats, SendInput
@@ -39,7 +39,7 @@ class BatchSender:
         campaign_name: str | None = None,
         phone_number_id: str | None = None,
         language: str | None = None,
-        credential_service: ProviderCredentialService | None = None,
+        credential_service: MessagingProviderCredentialService | None = None,
         country: str | None = None,
         channel_context: dict[str, Any] | None = None,
     ) -> BatchStats:
@@ -190,7 +190,7 @@ class BatchSender:
         campaign_name: str | None = None,
         phone_number_id: str | None = None,
         language: str | None = None,
-        credential_service: ProviderCredentialService | None = None,
+        credential_service: MessagingProviderCredentialService | None = None,
         country: str | None = None,
         channel_context: dict[str, Any] | None = None,
     ) -> tuple[int, int]:
@@ -215,7 +215,7 @@ class BatchSender:
         campaign_name: str | None = None,
         phone_number_id: str | None = None,
         language: str | None = None,
-        credential_service: ProviderCredentialService | None = None,
+        credential_service: MessagingProviderCredentialService | None = None,
         country: str | None = None,
     ) -> tuple[int, int]:
         success = 0
@@ -251,7 +251,7 @@ class BatchSender:
         channel_context: dict[str, Any] | None = None,
         campaign_name: str | None = None,
         sender: str = "Template",
-        credential_service: ProviderCredentialService | None = None,
+        credential_service: MessagingProviderCredentialService | None = None,
         country: str | None = None,
     ) -> tuple[int, int]:
         to = [inp.recipient for inp in chunk]

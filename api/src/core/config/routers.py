@@ -14,7 +14,8 @@ from messaging.contacts.controllers.contact_controller import router as contacts
 from receivables.debtors.controllers.debtor_controller import router as debtors_router
 from receivables.debtors.controllers.my_documents_controller import router as my_debtor_documents_router
 from app_platform.countries.controllers.countries_controller import router as countries_router
-from app_platform.provider_credentials.controllers.provider_credential_controller import router as provider_credentials_router
+from billing.provider_credentials.controllers.provider_credential_controller import router as platform_gateway_credentials_router
+from messaging.provider_credentials.controllers.provider_credential_controller import router as messaging_credentials_router
 from receivables.credits.controllers.credit_catalog_controller import router as credit_catalog_router
 from receivables.judicial_notifications.controllers.judicial_notification_controller import (
     router as judicial_notifications_router,
@@ -77,7 +78,8 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(debtors_router, prefix=API_PREFIX)
     app.include_router(my_debtor_documents_router, prefix=API_PREFIX)
     app.include_router(countries_router, prefix=API_PREFIX)
-    app.include_router(provider_credentials_router, prefix=API_PREFIX)
+    app.include_router(messaging_credentials_router, prefix=API_PREFIX)
+    app.include_router(platform_gateway_credentials_router, prefix=API_PREFIX)
     app.include_router(credit_catalog_router, prefix=API_PREFIX)
     app.include_router(judicial_notifications_router, prefix=API_PREFIX)
     app.include_router(my_credits_router, prefix=API_PREFIX)

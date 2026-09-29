@@ -2,7 +2,6 @@ import app_platform.branding.models.platform_branding_model  # noqa: F401
 import app_platform.countries.models.country_model  # noqa: F401
 import app_platform.countries.models.document_type_model  # noqa: F401
 import app_platform.countries.models.country_document_type_model  # noqa: F401
-import app_platform.provider_credentials.models.provider_credential_model  # noqa: F401
 import app_platform.chats.models.chat_member_model  # noqa: F401
 import app_platform.chats.models.chat_model  # noqa: F401
 import app_platform.chats.models.message_model  # noqa: F401
@@ -13,11 +12,13 @@ import app_platform.support.models.ticket_document_model  # noqa: F401
 import billing.invoices.models.invoice_model  # noqa: F401
 import billing.invoices.models.invoice_item_model  # noqa: F401
 import billing.invoices.models.payment_attempt_model  # noqa: F401
+import billing.provider_credentials.models.provider_credential_model  # noqa: F401
 import messaging.campaigns.models.campaign_model  # noqa: F401
 import messaging.campaigns.models.campaign_time_model  # noqa: F401
 import messaging.campaigns.models.campaign_result_model  # noqa: F401
 import messaging.channels.models.channel_model  # noqa: F401
 import messaging.contacts.models.contact_model  # noqa: F401
+import messaging.provider_credentials.models.provider_credential_model  # noqa: F401
 import messaging.ivr.models.ivr_flow_model  # noqa: F401
 import messaging.ivr.models.ivr_interaction_model  # noqa: F401
 import messaging.ivr.models.ivr_execution_model  # noqa: F401

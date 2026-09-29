@@ -30,8 +30,8 @@ from receivables.debtors.schemas.debtor_schemas import DebtorCreditResponse, Deb
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 from receivables.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
 from app_platform.countries.repository.country_repository import CountryRepository
-from app_platform.provider_credentials.enums.provider_credential_enums import CredentialProvider
-from app_platform.provider_credentials.services.provider_credential_service import ProviderCredentialService
+from messaging.provider_credentials.enums.provider_credential_enums import MessagingCredentialProvider
+from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
 
 
 # Ventana de servicio al cliente de Meta: solo se puede enviar texto libre (fuera de
@@ -74,7 +74,7 @@ class WhatsAppChatService:
         self._campaign_repo = campaign_repo
         self._user_repo = user_repo
         self._country_repo = CountryRepository(portfolio_repo.session)
-        self._credential_service = ProviderCredentialService(portfolio_repo.session)
+        self._credential_service = MessagingProviderCredentialService(portfolio_repo.session)
 
     async def _build_scope(self, organization_id: uuid.UUID, user_session: UserSession) -> OrgChatScope:
         # Solo un admin de la org (o usuario global) ve todos los hilos; un agente de
@@ -190,7 +190,7 @@ class WhatsAppChatService:
         if credentials is None:
             raise HTTPException(status.HTTP_409_CONFLICT, "La organización no tiene WhatsApp configurado")
 
-        wa_cred = await self._credential_service.get_decrypted(None, CredentialProvider.WHATSAPP_CLOUD)
+        wa_cred = await self._credential_service.get_decrypted(None, MessagingCredentialProvider.WHATSAPP_CLOUD)
         ok, wamid = await self._client.send_text(
             credentials.phone_number_id,
             chat.phone,

@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 
 from app_platform.countries.enums.country_enums import UserDocumentType
 from app_platform.countries.repository.country_repository import CountryRepository
-from app_platform.provider_credentials.services.provider_credential_service import ProviderCredentialService
+from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
 from billing.billing_status.services.billing_status_service import BillingStatusService
 from core.config.logger import logger
 from core.security.constants.permissions import PORTFOLIO_COMMUNICATIONS
@@ -59,7 +59,7 @@ class BulkSendService:
         self._portfolio_repo = portfolio_repo
         self._campaign_repo = campaign_repo
         self._country_repo = CountryRepository(portfolio_repo.session)
-        self._credential_service = ProviderCredentialService(portfolio_repo.session)
+        self._credential_service = MessagingProviderCredentialService(portfolio_repo.session)
         self._batch_sender = batch_sender
         self._billing_status_service = billing_status_service
         self._whatsapp_credentials_repo = whatsapp_credentials_repo

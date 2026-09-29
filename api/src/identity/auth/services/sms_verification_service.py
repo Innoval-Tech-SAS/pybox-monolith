@@ -1,6 +1,6 @@
 ﻿from sqlalchemy.ext.asyncio import AsyncSession
 
-from app_platform.provider_credentials.services.provider_credential_service import ProviderCredentialService
+from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
 from core.config.logger import logger
 from identity.auth.enums.notification_enums import VerificationChannel
 from identity.auth.constants.verification_constants import SMS_TEMPLATE as _SMS_TEMPLATE
@@ -18,7 +18,7 @@ class SMSVerificationService(VerificationService):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session)
         self._dispatcher = MessageDispatcher()
-        self._credential_service = ProviderCredentialService(session)
+        self._credential_service = MessagingProviderCredentialService(session)
 
     async def _dispatch(self, user, code: str) -> bool:
         if not user.phone_number:

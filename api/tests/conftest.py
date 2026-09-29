@@ -47,8 +47,9 @@ from core.seed import (
     seed_admin,
     seed_channels,
     seed_countries,
+    seed_messaging_credentials,
     seed_permissions,
-    seed_provider_credentials,
+    seed_platform_gateway_credentials,
 )
 from identity.auth.dependencies import _get_token_payload
 from identity.users.enums.user_enums import UserRole, UserScope
@@ -148,7 +149,9 @@ async def _prepared_database() -> AsyncGenerator[None, None]:
     async with db.get_session() as session:
         await seed_countries(session)
     async with db.get_session() as session:
-        await seed_provider_credentials(session)
+        await seed_messaging_credentials(session)
+    async with db.get_session() as session:
+        await seed_platform_gateway_credentials(session)
     async with db.get_session() as session:
         await seed_permissions(session)
     async with db.get_session() as session:
