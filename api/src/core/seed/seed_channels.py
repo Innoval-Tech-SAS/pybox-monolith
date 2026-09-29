@@ -5,11 +5,41 @@ from messaging.channels.enums.channel_enums import ChannelName, Currency
 from messaging.channels.models.channel_model import ChannelModel
 
 _CHANNELS: list[tuple[ChannelName, str, Currency, str, str]] = [
-    (ChannelName.SMS, "SMS", Currency.USD, "0.25", "Canal para envío de SMS masivo a través de API."),
-    (ChannelName.EMAIL, "Email", Currency.USD, "0.35", "Canal para envío de EMAIL masivo a través de API."),
-    (ChannelName.WHATSAPP, "WhatsApp", Currency.USD, "0.50", "Canal para envío de WHATSAPP masivo a través de API."),
-    (ChannelName.CALL, "Llamada", Currency.USD, "0.50", "Canal para llamadas de voz."),
-    (ChannelName.CALL_IA, "Llamada IA", Currency.USD, "0.50", "Canal para llamadas de voz automatizadas con IA."),
+    (
+        ChannelName.SMS,
+        "SMS",
+        Currency.USD,
+        "0.25",
+        "Canal para envío de SMS masivo a través de API."
+    ),
+    (
+        ChannelName.EMAIL,
+       "Email",
+        Currency.USD,
+        "0.35",
+        "Canal para envío de EMAIL masivo a través de API."
+    ),
+    (
+        ChannelName.WHATSAPP,
+        "WhatsApp",
+        Currency.USD,
+        "0.50",
+        "Canal para envío de WHATSAPP masivo a través de API."
+    ),
+    (
+        ChannelName.CALL,
+        "Llamada",
+        Currency.USD,
+        "0.50",
+        "Canal para llamadas de voz."
+    ),
+    (
+        ChannelName.CALL_IA,
+        "Llamada IA",
+        Currency.USD,
+        "0.50",
+        "Canal para llamadas de voz automatizadas con IA."
+    ),
 ]
 
 
