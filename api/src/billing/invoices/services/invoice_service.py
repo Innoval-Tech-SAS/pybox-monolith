@@ -13,9 +13,9 @@ from billing.invoices.constants.billing_constants import ATTEMPT_TTL, billing_co
 from billing.invoices.enums.invoice_enums import InvoiceStatus, PaymentAttemptStatus, PaymentProvider
 from billing.invoices.models.invoice_model import InvoiceModel
 from billing.invoices.models.invoice_item_model import InvoiceItemModel
-from billing.invoices.models.payment_attempt_model import PaymentAttemptModel
+from billing.invoices.models.payment_attempt_model import InvoicePaymentAttemptModel
 from billing.invoices.repository.invoice_repository import InvoiceRepository
-from billing.invoices.repository.payment_attempt_repository import PaymentAttemptRepository
+from billing.invoices.repository.payment_attempt_repository import InvoicePaymentAttemptRepository
 from billing.invoices.schemas.invoice_params_schemas import CreateInvoiceParams, InvoiceItemInput
 from billing.invoices.schemas.invoice_schemas import (
     AdminInvoiceResponse,
@@ -39,7 +39,7 @@ class InvoiceService:
         self,
         session: AsyncSession,
         invoice_repo: InvoiceRepository,
-        attempt_repo: PaymentAttemptRepository,
+        attempt_repo: InvoicePaymentAttemptRepository,
         contact_repo: ContactRepository,
         organization_repo: OrganizationRepository,
         gateway_resolver: PaymentGatewayResolver,
@@ -261,7 +261,7 @@ class InvoiceService:
         )
 
         attempt = await self._attempt_repo.add(
-            PaymentAttemptModel(
+            InvoicePaymentAttemptModel(
                 invoice_id=invoice_id,
                 attempt_number=attempt_number,
                 provider=PaymentProvider(gateway.name),
@@ -436,7 +436,7 @@ class InvoiceService:
         return await self.get_invoice(invoice_id, organization_id)
 
     async def _sync_mercadopago_order_to_attempt(
-        self, attempt: PaymentAttemptModel, order: dict[str, Any]
+        self, attempt: InvoicePaymentAttemptModel, order: dict[str, Any]
     ) -> None:
         """
         Mapea el estado de una Order de MP al intento (failed -> REJECTED, processed ->
@@ -453,7 +453,7 @@ class InvoiceService:
     async def _apply_attempt_status(
         self,
         provider: str,
-        attempt: PaymentAttemptModel,
+        attempt: InvoicePaymentAttemptModel,
         status: PaymentAttemptStatus,
         reported_amount: Decimal | None,
         payload: dict[str, Any],
@@ -479,7 +479,7 @@ class InvoiceService:
     async def _mark_attempt_paid(
         self,
         provider: str,
-        attempt: PaymentAttemptModel,
+        attempt: InvoicePaymentAttemptModel,
         reported_amount: Decimal | None,
         payload: dict[str, Any],
     ) -> None:

@@ -9,7 +9,7 @@ from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from billing.invoices.enums.invoice_enums import InvoiceStatus, PaymentAttemptStatus
 from billing.invoices.models.invoice_item_model import InvoiceItemModel
 from billing.invoices.models.invoice_model import InvoiceModel
-from billing.invoices.models.payment_attempt_model import PaymentAttemptModel
+from billing.invoices.models.payment_attempt_model import InvoicePaymentAttemptModel
 from identity.organizations.models.organization_model import OrganizationModel
 
 _NON_BILLABLE_STATUSES = (InvoiceStatus.DRAFT, InvoiceStatus.CANCELLED)
@@ -267,18 +267,18 @@ class InvoiceRepository(SoftDeleteRepositoryBase[InvoiceModel]):
         """Ingreso (subtotal_base_amount) de facturas pagadas, atribuido a la pasarela del intento que las pago."""
         result = await self.session.execute(
             select(
-                PaymentAttemptModel.provider,
+                InvoicePaymentAttemptModel.provider,
                 func.coalesce(func.sum(InvoiceModel.subtotal_base_amount), 0),
             )
-            .join(PaymentAttemptModel, PaymentAttemptModel.invoice_id == InvoiceModel.id)
+            .join(InvoicePaymentAttemptModel, InvoicePaymentAttemptModel.invoice_id == InvoiceModel.id)
             .where(
                 tuple_(InvoiceModel.period_year, InvoiceModel.period_month) >= (since_year, since_month),
                 InvoiceModel.deleted_at.is_(None),
                 InvoiceModel.status == InvoiceStatus.PAID,
-                PaymentAttemptModel.status == PaymentAttemptStatus.PAID,
-                PaymentAttemptModel.deleted_at.is_(None),
+                InvoicePaymentAttemptModel.status == PaymentAttemptStatus.PAID,
+                InvoicePaymentAttemptModel.deleted_at.is_(None),
             )
-            .group_by(PaymentAttemptModel.provider)
+            .group_by(InvoicePaymentAttemptModel.provider)
             .order_by(func.sum(InvoiceModel.subtotal_base_amount).desc())
         )
         return [(provider, Decimal(total)) for provider, total in result.all()]

@@ -59,7 +59,7 @@ def make_attempt(**overrides) -> MagicMock:
         created_at=datetime.now(timezone.utc),
     )
     defaults.update(overrides)
-    attempt = MagicMock(name="PaymentAttemptModel")
+    attempt = MagicMock(name="InvoicePaymentAttemptModel")
     for key, value in defaults.items():
         setattr(attempt, key, value)
     return attempt

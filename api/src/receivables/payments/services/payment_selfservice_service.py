@@ -5,12 +5,10 @@ from zoneinfo import ZoneInfo
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app_platform.countries.enums.country_enums import UserDocumentType
 from app_platform.countries.repository.country_repository import CountryRepository
 from app_platform.support.enums.support_enums import PaymentTopic
 from app_platform.support.schemas.support_schemas import SupportFilter
 from app_platform.support.services.support_service import SupportService
-from core.security.policies.security_policies import get_self_identity
 from identity.users.schemas.user_session_schema import UserSession
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.debtors.repository.debtor_repository import DebtorRepository
@@ -20,6 +18,7 @@ from receivables.payments.models.payment_ticket_model import PaymentTicketModel
 from receivables.payments.repository.payment_repository import PaymentRepository
 from receivables.payments.repository.payment_ticket_repository import PaymentTicketRepository
 from receivables.payments.schemas.payment_selfservice_schemas import PaymentRequestResponse
+from receivables.payments.services.payment_ownership_resolver import PaymentOwnershipResolver
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 
 _RESCHEDULE_WINDOW_DAYS = 30
@@ -38,6 +37,9 @@ class PaymentSelfServiceService:
         self._payment_ticket_repo = PaymentTicketRepository(session)
         self._support = SupportService(session)
         self._country_repo = CountryRepository(session)
+        self._ownership_resolver = PaymentOwnershipResolver(
+            self._debtor_repo, self._credit_repo, self._payment_repo, self._portfolio_repo
+        )
 
     async def request_reschedule(
         self, session: UserSession, payment_id: uuid.UUID, new_date: datetime
@@ -117,39 +119,7 @@ class PaymentSelfServiceService:
     async def _resolve_owned_payment(
         self, session: UserSession, payment_id: uuid.UUID
     ) -> tuple[PaymentModel, object, uuid.UUID, ZoneInfo]:
-        doc_type_str, doc_number_hash = get_self_identity(session)
-        try:
-            doc_type = UserDocumentType(doc_type_str)
-        except ValueError:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Documento de identidad inválido.")
-
-        # Una fila de deudor por empresa: el crédito es del titular si lo es en cualquiera.
-        debtors = await self._debtor_repo.list_by_document(doc_type, doc_number_hash)
-        if not debtors:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "No se encontró tu registro de deudor.")
-        debtor_ids = {d.id for d in debtors}
-
-        payment = await self._payment_repo.get_by_id(payment_id)
-        if payment is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pago no encontrado.")
-
-        credit = await self._credit_repo.get_by_id(payment.credit_id)
-        # 404 genérico también cuando el pago existe pero el crédito no es del
-        # titular: un 403 distinto de "no encontrado" deja adivinar por fuerza
-        # bruta qué IDs de pago existen en el sistema, aunque sean de otro deudor.
-        if credit is None or not ({credit.debtor_id, credit.codebtor_id} & debtor_ids):
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pago no encontrado.")
-
-        if payment.status != PaymentStatus.PENDING:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT,
-                "Este pago ya tiene una solicitud en curso o no admite solicitudes.",
-            )
-
-        portfolio = await self._portfolio_repo.get_by_id(credit.portfolio_id)
-        if portfolio is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Portafolio no encontrado.")
-
+        payment, credit, portfolio = await self._ownership_resolver.resolve_owned_payment(session, payment_id)
         tz = ZoneInfo(await self._country_repo.get_timezone(portfolio.country)) if portfolio.country else timezone.utc
         return payment, credit, portfolio.organization_id, tz
 
