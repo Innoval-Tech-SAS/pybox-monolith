@@ -2,6 +2,7 @@ import {
   BarChart2,
   CreditCard,
   FolderOpen,
+  KeyRound,
   Receipt,
   Settings,
   Users,
@@ -35,6 +36,17 @@ export const ORG_MODULES: OrgModule[] = [
     gradient: "from-emerald-500 to-cyan-600",
     path: "/my-companies/payment-methods",
     requiredPermission: "org.payment_methods",
+  },
+  {
+    key: "payment-gateway-credentials",
+    title: "Pasarelas de Cobro",
+    description: "Conecta tu propia cuenta de pasarela para cobrarle a tus deudores.",
+    icon: KeyRound,
+    gradient: "from-indigo-500 to-violet-600",
+    path: "/my-companies/payment-gateway-credentials",
+    // A diferencia de payment-methods (permiso delegable), esto mueve dinero real de
+    // la empresa: solo el ADMIN de la organización (o un admin global) lo ve.
+    adminOnly: true,
   },
   {
     key: "billing",

@@ -43,6 +43,7 @@ import identity.organizations.models.organization_membership_model  # noqa: F401
 import receivables.payments.models.payment_model  # noqa: F401
 import receivables.payments.models.payment_ticket_model  # noqa: F401
 import receivables.payment_methods.models.payment_method_model  # noqa: F401
+import receivables.payment_gateways.models.payment_gateway_credential_model  # noqa: F401
 import receivables.portfolios.models.portfolio_model  # noqa: F401
 import receivables.portfolios.models.portfolio_user_access_model  # noqa: F401
 import receivables.portfolios.models.portfolio_daily_counter_config_model  # noqa: F401
