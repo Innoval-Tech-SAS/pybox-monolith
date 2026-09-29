@@ -21,6 +21,7 @@ const DebtorJudicialPage = lazy(() => import("./companies/pages/debtor-judicial-
 const PortfolioSettingsPage = lazy(() => import("./companies/pages/portfolio-settings-page").then((m) => ({ default: m.PortfolioSettingsPage })));
 const OrgSettingsPage = lazy(() => import("./companies/pages/org-settings-page").then((m) => ({ default: m.OrgSettingsPage })));
 const PaymentMethodsPage = lazy(() => import("./companies/pages/payment-methods-page").then((m) => ({ default: m.PaymentMethodsPage })));
+const PaymentGatewayCredentialsPage = lazy(() => import("./companies/pages/payment-gateway-credentials-page").then((m) => ({ default: m.PaymentGatewayCredentialsPage })));
 const CreatePaymentMethodPage = lazy(() => import("./companies/pages/create-payment-method-page").then((m) => ({ default: m.CreatePaymentMethodPage })));
 const EditPaymentMethodPage = lazy(() => import("./companies/pages/edit-payment-method-page").then((m) => ({ default: m.EditPaymentMethodPage })));
 const BillingPage = lazy(() => import("./billing/pages/billing-page").then((m) => ({ default: m.BillingPage })));
@@ -213,6 +214,10 @@ export const authRouter = [
   {
     path: "/my-companies/payment-methods",
     element: <PaymentMethodsPage />,
+  },
+  {
+    path: "/my-companies/payment-gateway-credentials",
+    element: <PaymentGatewayCredentialsPage />,
   },
   {
     path: "/my-companies/reports",
