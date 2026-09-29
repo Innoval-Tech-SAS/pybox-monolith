@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar UserService y UserManagementService."""
+
 from typing import Annotated
 
 from fastapi import Depends

@@ -1,3 +1,5 @@
+"""Acceso a datos de las membresías de usuarios en organizaciones."""
+
 import uuid
 from datetime import datetime
 

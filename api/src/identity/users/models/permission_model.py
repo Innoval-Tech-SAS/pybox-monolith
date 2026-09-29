@@ -1,3 +1,5 @@
+"""Catálogo de permisos granulares configurables del sistema."""
+
 from sqlalchemy import Boolean, SmallInteger, String
 from sqlalchemy.orm import Mapped, mapped_column
 

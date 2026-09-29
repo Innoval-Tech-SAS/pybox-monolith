@@ -1,3 +1,5 @@
+"""Código de verificación (OTP) emitido a un usuario por email o SMS."""
+
 import uuid
 from datetime import datetime
 

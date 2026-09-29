@@ -1,3 +1,5 @@
+"""Permiso granular otorgado/denegado a un usuario en un scope específico."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, Index, text

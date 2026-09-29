@@ -1,3 +1,5 @@
+"""Endpoints de gestión de miembros y permisos delegados de una organización."""
+
 import uuid
 
 from fastapi import HTTPException, status

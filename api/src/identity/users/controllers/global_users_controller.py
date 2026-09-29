@@ -1,3 +1,5 @@
+"""Endpoints de gestión de administradores globales de la plataforma."""
+
 from fastapi import HTTPException, status
 
 from core.config.api_router import APIRouter

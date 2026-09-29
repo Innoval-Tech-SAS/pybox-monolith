@@ -1,3 +1,5 @@
+"""Estado de verificación y sector de una organización."""
+
 from enum import StrEnum
 
 

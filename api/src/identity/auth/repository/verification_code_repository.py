@@ -1,3 +1,5 @@
+"""Acceso a datos de los códigos de verificación (OTP) y su ciclo de vida."""
+
 import uuid
 from datetime import datetime, timezone
 

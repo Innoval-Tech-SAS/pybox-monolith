@@ -1,3 +1,5 @@
+"""Rol, scope y estado de verificación de identidad de un usuario."""
+
 from enum import Enum
 
 

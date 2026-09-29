@@ -1,3 +1,5 @@
+"""Validación de tamaño de los documentos que sube una organización."""
+
 from fastapi import HTTPException, status
 
 from identity.organizations.constants.organization_constants import (

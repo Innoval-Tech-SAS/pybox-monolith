@@ -1,3 +1,5 @@
+"""Acceso a datos de usuarios: búsqueda, disponibilidad para chat y sesiones activas."""
+
 from __future__ import annotations
 
 import uuid

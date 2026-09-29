@@ -1,3 +1,5 @@
+"""Baja lógica en cascada de todos los datos de una organización eliminada."""
+
 import uuid
 from datetime import datetime
 

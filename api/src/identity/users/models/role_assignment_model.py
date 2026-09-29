@@ -1,3 +1,5 @@
+"""Rol de un usuario en un scope (global u organización)."""
+
 import uuid
 
 from sqlalchemy import CheckConstraint, ForeignKey, Index, text

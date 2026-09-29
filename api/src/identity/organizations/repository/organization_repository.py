@@ -1,3 +1,5 @@
+"""Acceso a datos de organizaciones."""
+
 import uuid
 from typing import Sequence
 

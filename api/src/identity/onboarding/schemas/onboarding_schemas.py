@@ -1,3 +1,5 @@
+"""Schemas del flujo de onboarding: OTP, datos de registro y estado."""
+
 from enum import Enum
 
 from pydantic import Field, field_validator

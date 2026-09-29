@@ -1,3 +1,5 @@
+"""Schema de las preferencias de UI del usuario (tours descartados)."""
+
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema

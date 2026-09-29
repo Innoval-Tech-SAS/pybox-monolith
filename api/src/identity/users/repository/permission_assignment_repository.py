@@ -1,3 +1,5 @@
+"""Acceso a datos de los permisos granulares asignados a un usuario."""
+
 import uuid
 from datetime import datetime
 

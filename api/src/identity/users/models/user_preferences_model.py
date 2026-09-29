@@ -1,3 +1,5 @@
+"""Preferencias de UI del usuario (tours descartados, etc.)."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, String

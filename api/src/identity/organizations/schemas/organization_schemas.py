@@ -1,3 +1,5 @@
+"""Schemas de organizaciones: alta, edición, verificación y documentos."""
+
 import uuid
 from datetime import datetime
 from enum import Enum
@@ -106,9 +108,7 @@ class OrganizationResponse(BaseSchema):
     def representative_document_file(self) -> str | None:
         return self._document_url(self.representative_document_id)
 
-    @computed_field(  # type: ignore[misc]
-        description="URL del logo de la organización"
-    )
+    @computed_field(description="URL del logo de la organización")  # type: ignore[misc]
     @property
     def logo_url(self) -> str | None:
         return self._document_url(self.logo_document_id)

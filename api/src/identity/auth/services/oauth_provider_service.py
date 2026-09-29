@@ -1,3 +1,5 @@
+"""Verifica el token de Google OAuth y extrae el perfil del proveedor."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

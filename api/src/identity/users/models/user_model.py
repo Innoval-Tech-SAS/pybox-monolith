@@ -1,3 +1,5 @@
+"""Usuario de la plataforma: credenciales, identidad y estado de sesión."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String, UniqueConstraint

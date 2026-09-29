@@ -1,3 +1,5 @@
+"""Acceso a datos de las preferencias de UI de un usuario."""
+
 import uuid
 
 from sqlalchemy import select

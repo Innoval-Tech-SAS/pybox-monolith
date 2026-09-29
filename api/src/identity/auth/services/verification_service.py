@@ -1,3 +1,5 @@
+"""Base común de generación/verificación de OTP, compartida por email y SMS."""
+
 import secrets
 import uuid
 from abc import ABC, abstractmethod

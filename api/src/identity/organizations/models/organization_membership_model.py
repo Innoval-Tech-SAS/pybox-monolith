@@ -1,3 +1,5 @@
+"""Membresía de un usuario en una organización."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, UniqueConstraint

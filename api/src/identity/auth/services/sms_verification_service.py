@@ -1,3 +1,5 @@
+"""Envío del código de verificación (OTP) por SMS."""
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config.logger import logger

@@ -1,3 +1,5 @@
+"""Schema de sesión de usuario (Redis) y las claves derivadas de su ciclo de vida."""
+
 import uuid
 from datetime import datetime
 

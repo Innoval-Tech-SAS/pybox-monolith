@@ -1,3 +1,5 @@
+"""Gestión de usuarios administrados: alta, roles y permisos delegados."""
+
 from __future__ import annotations
 
 import uuid

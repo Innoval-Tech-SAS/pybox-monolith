@@ -1,3 +1,5 @@
+"""Schemas de entrada/salida de registro, login y OAuth."""
+
 from __future__ import annotations
 
 from pydantic import EmailStr, Field, field_validator

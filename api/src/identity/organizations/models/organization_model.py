@@ -1,3 +1,5 @@
+"""Organización cliente de la plataforma (empresa acreedora)."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, ForeignKeyConstraint, String

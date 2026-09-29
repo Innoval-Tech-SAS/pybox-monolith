@@ -1,3 +1,5 @@
+"""Endpoints del flujo de onboarding: verificación OTP y datos de registro."""
+
 import json
 
 from fastapi import Depends, Form, HTTPException, UploadFile, status

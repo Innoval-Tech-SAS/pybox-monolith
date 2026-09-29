@@ -1,3 +1,5 @@
+"""Endpoint de solo lectura del catálogo de permisos configurables."""
+
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from identity.users.dependencies import UserManagementServiceDep

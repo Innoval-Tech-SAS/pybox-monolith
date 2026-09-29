@@ -1,3 +1,5 @@
+"""Registro, login, OAuth y recuperación de contraseña de usuarios."""
+
 import uuid
 from typing import cast
 
@@ -118,9 +120,11 @@ class AuthService:
             auth_provider=AuthProvider.SELF,
             nationality=nationality,
             document_type=document_type,
-            document_number=encrypt_service.encrypt_to_str(document_number)
-            if document_number
-            else None,
+            document_number=(
+                encrypt_service.encrypt_to_str(document_number)
+                if document_number
+                else None
+            ),
             document_number_hash=document_number_hash,
         )
 
@@ -302,9 +306,9 @@ class AuthService:
             provider_user_id=provider_profile.provider_user_id,
             nationality=nationality,
             document_type=doc_type,
-            document_number=encrypt_service.encrypt_to_str(doc_number)
-            if doc_number
-            else None,
+            document_number=(
+                encrypt_service.encrypt_to_str(doc_number) if doc_number else None
+            ),
             document_number_hash=doc_number_hash,
         )
         return await self.user_repository.add(user), True
@@ -385,9 +389,9 @@ class AuthService:
             return {"masked_email": None, "masked_phone": None}
         return {
             "masked_email": mask_email(cast(str, user.email)) if user.email else None,
-            "masked_phone": mask_phone(cast(str, user.phone_number))
-            if user.phone_number
-            else None,
+            "masked_phone": (
+                mask_phone(cast(str, user.phone_number)) if user.phone_number else None
+            ),
         }
 
     async def verify_reset_code(

@@ -1,3 +1,5 @@
+"""Claves de los tours guiados de la interfaz que un usuario puede descartar."""
+
 # Tours guiados de la interfaz — deben coincidir con las claves del frontend
 # (client/src/**/constants/*-tour.ts). Solo estas claves pueden persistirse
 # como descartadas.

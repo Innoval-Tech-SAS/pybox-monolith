@@ -1,3 +1,5 @@
+"""Plantillas de email y SMS para el código de verificación (OTP)."""
+
 # HTML/CSS de un solo bloque para máxima compatibilidad con clientes de correo
 # (estilos inline, sin hoja de estilos externa); envolver las líneas no aporta nada
 # y arriesga romper algún atributo, así que se deja tal cual.

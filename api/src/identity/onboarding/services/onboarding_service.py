@@ -1,3 +1,5 @@
+"""Orquesta el flujo de onboarding: OTP, datos personales/de empresa y documentos."""
+
 import uuid
 
 from fastapi import HTTPException, UploadFile, status
@@ -433,16 +435,16 @@ class OnboardingService:
                     must_change_password=hashed_pw is not None,
                     auth_provider=AuthProvider.SELF,
                     document_type=data.rep_document_type,
-                    document_number=encrypt_service.encrypt_to_str(
-                        data.rep_document_number
-                    )
-                    if data.rep_document_number
-                    else None,
-                    document_number_hash=encrypt_service.hash_document(
-                        data.rep_document_number
-                    )
-                    if data.rep_document_number
-                    else None,
+                    document_number=(
+                        encrypt_service.encrypt_to_str(data.rep_document_number)
+                        if data.rep_document_number
+                        else None
+                    ),
+                    document_number_hash=(
+                        encrypt_service.hash_document(data.rep_document_number)
+                        if data.rep_document_number
+                        else None
+                    ),
                 )
             )
             await self._membership_repo.add(

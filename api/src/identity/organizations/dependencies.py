@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI: OrganizationService y el scope admin del usuario actual."""
+
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status

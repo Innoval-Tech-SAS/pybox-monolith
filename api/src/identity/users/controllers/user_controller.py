@@ -1,3 +1,5 @@
+"""Endpoints del propio usuario: perfil, preferencias, foto y disponibilidad."""
+
 import uuid
 from typing import Annotated
 

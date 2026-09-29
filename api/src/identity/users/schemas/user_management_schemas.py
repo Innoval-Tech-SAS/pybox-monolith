@@ -1,3 +1,5 @@
+"""Schemas de gestión de usuarios: alta, permisos y catálogo de roles/permisos."""
+
 import uuid
 
 from pydantic import EmailStr, Field

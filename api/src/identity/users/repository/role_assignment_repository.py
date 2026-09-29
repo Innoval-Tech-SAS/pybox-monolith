@@ -1,3 +1,5 @@
+"""Acceso a datos de los roles asignados a un usuario por scope."""
+
 import uuid
 from datetime import datetime
 

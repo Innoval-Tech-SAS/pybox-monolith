@@ -1,3 +1,5 @@
+"""Schemas de usuario: resumen, detalle admin y disponibilidad para chat."""
+
 from __future__ import annotations
 
 import uuid

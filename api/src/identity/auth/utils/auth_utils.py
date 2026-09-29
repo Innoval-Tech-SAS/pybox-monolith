@@ -1,3 +1,5 @@
+"""Normalización de datos de auth y enmascarado de email/teléfono para logs."""
+
 from identity.auth.enums.auth_enums import AuthProvider
 
 

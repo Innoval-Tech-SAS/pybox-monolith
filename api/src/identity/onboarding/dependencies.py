@@ -1,3 +1,5 @@
+"""Dependencias de scope/organización actual y gate de onboarding completo."""
+
 import uuid
 from typing import Annotated
 
