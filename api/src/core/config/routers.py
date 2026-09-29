@@ -12,6 +12,7 @@ from identity.auth.controllers.auth_controller import router as auth_router
 from app_platform.schema_manager.controllers.database_controller import router as schema_manager_router
 from messaging.contacts.controllers.contact_controller import router as contacts_router
 from receivables.debtors.controllers.debtor_controller import router as debtors_router
+from receivables.debtors.controllers.debtor_identity_controller import router as debtor_identity_router
 from receivables.debtors.controllers.my_documents_controller import router as my_debtor_documents_router
 from app_platform.countries.controllers.countries_controller import router as countries_router
 from billing.provider_credentials.controllers.provider_credential_controller import router as platform_gateway_credentials_router
@@ -77,6 +78,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(contacts_router, prefix=API_PREFIX)
     app.include_router(admin_documents_router, prefix=API_PREFIX)
     app.include_router(debtors_router, prefix=API_PREFIX)
+    app.include_router(debtor_identity_router, prefix=API_PREFIX)
     app.include_router(my_debtor_documents_router, prefix=API_PREFIX)
     app.include_router(countries_router, prefix=API_PREFIX)
     app.include_router(messaging_credentials_router, prefix=API_PREFIX)
