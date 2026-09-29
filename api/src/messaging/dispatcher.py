@@ -1,7 +1,7 @@
 from typing import Any
 
-from app_platform.provider_credentials.enums.provider_credential_enums import CredentialProvider
-from app_platform.provider_credentials.services.provider_credential_service import ProviderCredentialService
+from messaging.provider_credentials.enums.provider_credential_enums import MessagingCredentialProvider
+from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
 from messaging.senders.base import ChannelSender
 from messaging.senders.call_channel import CallChannel
 from messaging.senders.call_ia_channel import CallIaChannel
@@ -17,10 +17,10 @@ from messaging.whatsapp.services.whatsapp_client import WhatsAppCloudClient
 # Único punto donde se mapea canal → proveedor de credenciales. La resolución (y el
 # descifrado) de las credenciales por país vive aquí, en el gateway, para no repetirla
 # en cada call site (campañas, envío masivo, OTP, chat de WhatsApp todos pasan por acá).
-_CREDENTIAL_PROVIDER_BY_CHANNEL: dict[str, CredentialProvider] = {
-    ChannelName.SMS: CredentialProvider.NRS360_SMS,
-    ChannelName.EMAIL: CredentialProvider.NRS360_EMAIL,
-    ChannelName.WHATSAPP: CredentialProvider.WHATSAPP_CLOUD,
+_CREDENTIAL_PROVIDER_BY_CHANNEL: dict[str, MessagingCredentialProvider] = {
+    ChannelName.SMS: MessagingCredentialProvider.NRS360_SMS,
+    ChannelName.EMAIL: MessagingCredentialProvider.NRS360_EMAIL,
+    ChannelName.WHATSAPP: MessagingCredentialProvider.WHATSAPP_CLOUD,
 }
 
 
@@ -45,7 +45,7 @@ class MessageDispatcher:
         channel: str,
         to: list[str],
         message: str,
-        credential_service: ProviderCredentialService | None = None,
+        credential_service: MessagingProviderCredentialService | None = None,
         country: str | None = None,
         **kwargs: Any,
     ) -> tuple[bool, dict[str, str] | None, str | None]:

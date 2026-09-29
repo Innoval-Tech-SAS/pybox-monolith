@@ -62,7 +62,8 @@ const BoldPaymentResultPage = lazy(() => import("./billing/pages/bold-payment-re
 const DatabaseExplorerPage = lazy(() => import("./databases/pages/database-explorer-page").then((m) => ({ default: m.DatabaseExplorerPage })));
 const CreateTablePage = lazy(() => import("./databases/pages/create-table-page").then((m) => ({ default: m.CreateTablePage })));
 const AlterTablePage = lazy(() => import("./databases/pages/alter-table-page").then((m) => ({ default: m.AlterTablePage })));
-const ProviderCredentialsPage = lazy(() => import("./provider-credentials/pages/provider-credentials-page").then((m) => ({ default: m.ProviderCredentialsPage })));
+const MessagingCredentialsPage = lazy(() => import("./messaging-credentials/pages/messaging-credentials-page").then((m) => ({ default: m.MessagingCredentialsPage })));
+const PlatformGatewayCredentialsPage = lazy(() => import("./platform-gateway-credentials/pages/platform-gateway-credentials-page").then((m) => ({ default: m.PlatformGatewayCredentialsPage })));
 const PlatformBrandingPage = lazy(() => import("./companies/pages/platform-branding-page").then((m) => ({ default: m.PlatformBrandingPage })));
 const NotFound = lazy(() => import("./ui/pages/not-found").then((m) => ({ default: m.NotFound })));
 
@@ -346,8 +347,12 @@ export const authRouter = [
     element: <AlterTablePage />,
   },
   {
-    path: "/provider-credentials",
-    element: <ProviderCredentialsPage />,
+    path: "/messaging-credentials",
+    element: <MessagingCredentialsPage />,
+  },
+  {
+    path: "/platform-gateway-credentials",
+    element: <PlatformGatewayCredentialsPage />,
   },
   {
     path: "/platform/branding",

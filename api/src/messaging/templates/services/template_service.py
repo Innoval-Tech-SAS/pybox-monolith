@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import HTTPException, status
 
-from app_platform.provider_credentials.services.provider_credential_service import ProviderCredentialService
+from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
 from core.config.logger import logger
 from core.security.constants.permissions import PORTFOLIO_COMMUNICATIONS
 from core.security.policies.security_policies import check_portfolio_org_access
@@ -38,7 +38,7 @@ class TemplateService:
         self._repo = template_repo
         self._portfolio_repo = portfolio_repo
         self._renderer = TemplateRenderer()
-        self._credential_service = ProviderCredentialService(portfolio_repo.session)
+        self._credential_service = MessagingProviderCredentialService(portfolio_repo.session)
 
     async def _check_portfolio_access(self, user_session: UserSession, portfolio_id: uuid.UUID) -> None:
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)

@@ -5,12 +5,12 @@ entorno reales esten seteadas, se parchan esos diccionarios directamente via
 `monkeypatch.setattr` sobre el modulo -- unitario puro, sin red ni DB.
 
 `resolve_credentials_for_country`/`resolve_credentials_for_application_id` en cambio se
-prueban con `db_session` REAL (fuente de verdad: tabla `credenciales_proveedor`,
+prueban con `db_session` REAL (fuente de verdad: tabla `credenciales_pasarela_plataforma`,
 cifrada), confirmando que la DB tiene prioridad sobre el fallback de env y que una
 credencial inactiva/incompleta cae al fallback en vez de romper el cobro."""
 
-from app_platform.provider_credentials.enums.provider_credential_enums import CredentialProvider
-from app_platform.provider_credentials.models.provider_credential_model import ProviderCredentialModel
+from billing.provider_credentials.enums.provider_credential_enums import PlatformGatewayProvider
+from billing.provider_credentials.models.provider_credential_model import PlatformGatewayCredentialModel
 from core.security.services.encrypt_service import encrypt_service
 from billing.mercadopago.utils import mercadopago_credentials as mp_credentials
 from billing.mercadopago.utils.mercadopago_credentials import (
@@ -25,14 +25,14 @@ async def _add_credential(
     db_session,
     *,
     country_code: str | None,
-    provider: CredentialProvider = CredentialProvider.MERCADOPAGO,
+    provider: PlatformGatewayProvider = PlatformGatewayProvider.MERCADOPAGO,
     secrets: dict[str, str] | None = None,
     public_config: dict | None = None,
     lookup_key: str | None = None,
     is_active: bool = True,
-) -> ProviderCredentialModel:
+) -> PlatformGatewayCredentialModel:
     secrets = secrets if secrets is not None else {"access_token": "tok", "webhook_secret": "whsec"}
-    row = ProviderCredentialModel(
+    row = PlatformGatewayCredentialModel(
         country_code=country_code,
         provider=provider,
         secrets={key: encrypt_service.encrypt_to_str(value) for key, value in secrets.items()},
@@ -86,9 +86,9 @@ class TestGetCredentialsForApplicationId:
 
 class TestResolveCredentialsForCountry:
     # Se usa "AR" (no "MX") para las filas insertadas por estos tests: el seed real
-    # (seed_provider_credentials, sembrado una vez por sesion de pytest) puede haber
-    # creado ya una fila (MX, MERCADOPAGO) desde las env vars reales del proyecto, y
-    # esa combinacion tiene un UniqueConstraint -- insertar otra chocaria. "AR" nunca
+    # (seed_platform_gateway_credentials, sembrado una vez por sesion de pytest) puede
+    # haber creado ya una fila (MX, MERCADOPAGO) desde las env vars reales del proyecto,
+    # y esa combinacion tiene un UniqueConstraint -- insertar otra chocaria. "AR" nunca
     # se siembra para Mercado Pago.
 
     async def test_country_none_returns_none_without_querying_db(self, db_session):

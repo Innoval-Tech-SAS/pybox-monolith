@@ -15,8 +15,9 @@ from core.seed import (
     seed_admin,
     seed_channels,
     seed_countries,
+    seed_messaging_credentials,
     seed_permissions,
-    seed_provider_credentials,
+    seed_platform_gateway_credentials,
 )
 from core.storage.s3_object_storage import object_storage
 from billing.invoices.cron import create_billing_scheduler
@@ -52,7 +53,9 @@ async def lifespan(_app: FastAPI):
                 async with db.get_session() as session:
                     await seed_countries(session)
                 async with db.get_session() as session:
-                    await seed_provider_credentials(session)
+                    await seed_messaging_credentials(session)
+                async with db.get_session() as session:
+                    await seed_platform_gateway_credentials(session)
                 async with db.get_session() as session:
                     await seed_permissions(session)
                 async with db.get_session() as session:
