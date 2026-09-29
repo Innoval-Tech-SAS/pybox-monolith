@@ -1,3 +1,5 @@
+"""Endpoints admin para gestionar las credenciales de pasarela de la plataforma."""
+
 import uuid
 
 from fastapi import status

@@ -1,3 +1,5 @@
+"""Estados de una Order de la Orders API de Mercado Pago."""
+
 from enum import StrEnum
 
 

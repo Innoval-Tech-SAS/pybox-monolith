@@ -1,3 +1,5 @@
+"""Acceso a datos de facturas: consulta, listado y transiciones de estado."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal

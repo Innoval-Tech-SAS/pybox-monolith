@@ -1,3 +1,5 @@
+"""Procesa el webhook de Bold: verifica la firma y actualiza el intento de pago."""
+
 import json
 from decimal import Decimal
 from typing import Any

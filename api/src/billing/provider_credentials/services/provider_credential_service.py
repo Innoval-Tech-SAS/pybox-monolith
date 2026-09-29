@@ -1,3 +1,5 @@
+"""Resuelve y descifra la credencial de pasarela de facturación de la plataforma."""
+
 from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession

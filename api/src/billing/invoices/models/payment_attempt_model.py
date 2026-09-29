@@ -1,3 +1,5 @@
+"""Intento de pago de una factura contra la pasarela de facturación (Bold/MP)."""
+
 import uuid
 from typing import Any
 

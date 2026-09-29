@@ -1,3 +1,5 @@
+"""Schemas de respuesta del dashboard de facturación (resumen, por canal/proveedor)."""
+
 from decimal import Decimal
 
 from pydantic import Field

@@ -1,3 +1,5 @@
+"""Línea de factura: consumo snapshot de una campaña/canal en el periodo facturado."""
+
 import uuid
 from decimal import Decimal
 

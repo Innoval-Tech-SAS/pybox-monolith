@@ -1,3 +1,5 @@
+"""Schema de respuesta del estado de bloqueo por facturación de una organización."""
+
 import uuid
 
 from pydantic import Field

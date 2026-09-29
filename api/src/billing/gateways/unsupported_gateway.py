@@ -1,3 +1,5 @@
+"""Gateway placeholder para países sin pasarela de facturación configurada."""
+
 from decimal import Decimal
 
 from billing.gateways.base import ProviderPaymentLink

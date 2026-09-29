@@ -1,3 +1,5 @@
+"""Helpers de redondeo, periodos de facturación y generación de referencias."""
+
 from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal
 

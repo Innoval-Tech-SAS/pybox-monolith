@@ -1,3 +1,5 @@
+"""Schemas de respuesta de facturas: items, admin y checkout de pago."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal

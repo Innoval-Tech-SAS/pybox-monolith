@@ -1,3 +1,5 @@
+"""Estados de factura, de intento de pago y proveedores de pasarela de facturación."""
+
 from enum import Enum
 
 

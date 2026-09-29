@@ -1,3 +1,5 @@
+"""Cliente HTTP a la Orders API de Mercado Pago."""
+
 from typing import Any
 
 from core.config.logger import logger

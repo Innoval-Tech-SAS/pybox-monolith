@@ -1,3 +1,5 @@
+"""URLs, monedas soportadas y valores de fallback para la tasa de cambio."""
+
 # COP usa la TRM oficial (Superintendencia Financiera de Colombia) via dolarapi.com;
 # es la misma fuente que ya estaba en produccion antes de soportar otras monedas.
 # Docs: https://dolarapi.com/docs/colombia/operations/get-trm

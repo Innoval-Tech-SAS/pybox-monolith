@@ -1,3 +1,5 @@
+"""Cálculo del hash de integridad que el widget de Bold exige en el frontend."""
+
 from core.payment_gateways.integrity_signature import (
     build_concatenated_sha256_signature,
 )

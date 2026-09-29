@@ -1,3 +1,5 @@
+"""Verificación de la firma del webhook de Mercado Pago con el validador oficial."""
+
 from mercadopago.webhook import InvalidWebhookSignatureError, WebhookSignatureValidator
 
 from core.config.logger import logger

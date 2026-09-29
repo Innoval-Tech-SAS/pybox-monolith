@@ -1,3 +1,5 @@
+"""Acceso a datos de los intentos de pago de una factura."""
+
 import uuid
 
 from sqlalchemy import select

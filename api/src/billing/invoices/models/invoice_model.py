@@ -1,3 +1,5 @@
+"""Factura mensual de una organización, con sus items y sus intentos de pago."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal

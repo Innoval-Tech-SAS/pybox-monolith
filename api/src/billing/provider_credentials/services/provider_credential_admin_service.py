@@ -1,3 +1,5 @@
+"""Gestión admin (alta/edición/borrado) de credenciales de pasarela de la plataforma."""
+
 import uuid
 
 from fastapi import HTTPException, status

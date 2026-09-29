@@ -1,3 +1,5 @@
+"""Webhook de Bold: recibe notificaciones de estado de los enlaces de pago."""
+
 from typing import Annotated
 
 from fastapi import Header, Request

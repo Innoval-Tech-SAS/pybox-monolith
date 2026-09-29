@@ -1,3 +1,5 @@
+"""Calcula el nivel de bloqueo de una organización según sus facturas vencidas."""
+
 import uuid
 from datetime import datetime, timezone
 

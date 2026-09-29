@@ -1,3 +1,5 @@
+"""Parámetros de facturación mensual (impuestos, plazos, bloqueo) por entorno."""
+
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal

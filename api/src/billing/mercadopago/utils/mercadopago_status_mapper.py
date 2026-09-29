@@ -1,3 +1,5 @@
+"""Mapeo de estado de Order de Mercado Pago a PaymentAttemptStatus interno."""
+
 from billing.invoices.enums.invoice_enums import PaymentAttemptStatus
 from billing.mercadopago.enums.mercadopago_enums import MercadoPagoOrderStatus
 

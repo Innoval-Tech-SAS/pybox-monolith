@@ -1,3 +1,5 @@
+"""Agregados de facturación para el dashboard: resumen, tendencia y desglose."""
+
 from decimal import Decimal
 
 from billing.billing_dashboard.schemas.billing_dashboard_schemas import (

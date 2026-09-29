@@ -1,3 +1,5 @@
+"""Parámetros internos de entrada para crear una factura (no expuestos en la API)."""
+
 import uuid
 from dataclasses import dataclass, field
 from decimal import Decimal

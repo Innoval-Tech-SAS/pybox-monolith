@@ -1,3 +1,5 @@
+"""Endpoints de facturas: consulta, cobro y sincronización de estado de pago."""
+
 import uuid
 from typing import Annotated
 

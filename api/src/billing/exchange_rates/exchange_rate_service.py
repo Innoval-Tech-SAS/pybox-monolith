@@ -1,3 +1,5 @@
+"""Tasa de cambio USD -> moneda local, con fallback si la fuente externa falla."""
+
 from decimal import Decimal, InvalidOperation
 
 import httpx

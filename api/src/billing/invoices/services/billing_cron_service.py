@@ -1,3 +1,5 @@
+"""Generación mensual de facturas y transiciones de mora, orquestadas por el cron."""
+
 from datetime import datetime, timezone
 from decimal import Decimal
 

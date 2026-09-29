@@ -1,3 +1,5 @@
+"""Pasarelas con las que la plataforma cobra la suscripción a sus organizaciones."""
+
 from enum import StrEnum
 
 

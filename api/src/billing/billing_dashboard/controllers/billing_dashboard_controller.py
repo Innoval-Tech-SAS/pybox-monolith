@@ -1,3 +1,5 @@
+"""Endpoints del dashboard de facturación para administradores globales."""
+
 from billing.billing_dashboard.dependencies import BillingDashboardServiceDep
 from billing.billing_dashboard.schemas.billing_dashboard_schemas import (
     BillingSummaryResponse,

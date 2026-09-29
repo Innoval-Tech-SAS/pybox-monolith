@@ -1,3 +1,5 @@
+"""Consulta, creación y cobro de facturas de suscripción por organización."""
+
 import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -218,9 +220,11 @@ class InvoiceService:
                     channel_id=item.channel_id,
                     channel_name=item.channel_name,
                     base_currency=item.base_currency,
-                    unit_price_base=(item.subtotal_base / item.quantity)
-                    if item.quantity
-                    else Decimal("0"),
+                    unit_price_base=(
+                        (item.subtotal_base / item.quantity)
+                        if item.quantity
+                        else Decimal("0")
+                    ),
                     quantity=item.quantity,
                     subtotal_base=item.subtotal_base,
                 )

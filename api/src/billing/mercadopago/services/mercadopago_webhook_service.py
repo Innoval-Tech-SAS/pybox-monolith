@@ -1,3 +1,5 @@
+"""Procesa el webhook de Mercado Pago: verifica firma y actualiza el intento de pago."""
+
 from decimal import Decimal
 from typing import Any
 

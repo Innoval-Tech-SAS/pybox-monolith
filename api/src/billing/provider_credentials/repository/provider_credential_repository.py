@@ -1,3 +1,5 @@
+"""Acceso a datos de las credenciales de pasarela de facturación de la plataforma."""
+
 from sqlalchemy import select
 
 from billing.provider_credentials.enums.provider_credential_enums import (

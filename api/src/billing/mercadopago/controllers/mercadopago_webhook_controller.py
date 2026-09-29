@@ -1,3 +1,5 @@
+"""Webhook de Mercado Pago: recibe notificaciones de estado de la Orders API."""
+
 from typing import Annotated, Any
 
 from fastapi import Depends, Header, Query, Request

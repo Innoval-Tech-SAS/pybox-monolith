@@ -1,3 +1,5 @@
+"""Resuelve las credenciales de Mercado Pago por país, con fallback al entorno."""
+
 from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession

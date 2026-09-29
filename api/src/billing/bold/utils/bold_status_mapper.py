@@ -1,3 +1,5 @@
+"""Mapeo de estado de enlace de pago Bold a PaymentAttemptStatus interno."""
+
 from billing.bold.enums.bold_enums import BoldLinkStatus
 from billing.invoices.enums.invoice_enums import PaymentAttemptStatus
 

@@ -1,3 +1,5 @@
+"""Schemas de credenciales de pasarela de facturación de la plataforma."""
+
 import uuid
 from datetime import datetime
 

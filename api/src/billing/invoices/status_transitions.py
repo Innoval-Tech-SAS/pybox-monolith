@@ -1,3 +1,5 @@
+"""Reglas de transición de InvoiceStatus según el resultado de un intento de pago."""
+
 from billing.invoices.enums.invoice_enums import InvoiceStatus, PaymentAttemptStatus
 
 

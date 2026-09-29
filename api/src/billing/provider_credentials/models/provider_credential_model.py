@@ -1,3 +1,5 @@
+"""Credenciales de la cuenta propia de la plataforma en una pasarela de facturación."""
+
 from sqlalchemy import Boolean, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import ENUM, JSONB
 from sqlalchemy.orm import Mapped, mapped_column

@@ -1,3 +1,5 @@
+"""Resuelve qué pasarela de facturación usar según el país de la organización."""
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from billing.gateways.base import PaymentGateway

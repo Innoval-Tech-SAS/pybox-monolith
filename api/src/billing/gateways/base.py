@@ -1,3 +1,5 @@
+"""Protocol común de las pasarelas de pago de suscripción/facturación (Bold, MP)."""
+
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Protocol
