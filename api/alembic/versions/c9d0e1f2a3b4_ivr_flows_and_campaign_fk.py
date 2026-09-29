@@ -14,6 +14,7 @@ resultado ya quedó incorporado en el baseline consolidado `00f053faf300`.
 NO se ejecuta automáticamente -- generada para revisión y ejecución manual por
 el usuario (alembic upgrade head).
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -29,7 +30,9 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "flujos_ivr",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+        sa.Column(
+            "id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False
+        ),
         sa.Column(
             "id_portafolio",
             postgresql.UUID(as_uuid=True),

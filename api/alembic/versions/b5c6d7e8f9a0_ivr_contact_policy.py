@@ -14,6 +14,7 @@ estructura dentro del JSONB `config`/`grafo` que ya existe.
 NO se ejecuta automaticamente -- generada para ejecucion manual por el usuario
 (alembic upgrade head).
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -27,7 +28,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     op.add_column(
-        "flujos_ivr", sa.Column("id_politica_contacto", sa.String(length=64), nullable=True)
+        "flujos_ivr",
+        sa.Column("id_politica_contacto", sa.String(length=64), nullable=True),
     )
 
 

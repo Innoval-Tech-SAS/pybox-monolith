@@ -11,6 +11,7 @@ configurada por nodo en el disenador y resuelta al cerrar cada llamada.
 NO se ejecuta automaticamente -- generada para ejecucion manual por el usuario
 (alembic upgrade head).
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -25,7 +26,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # Mapa {nombre_nodo: {clave: etiqueta}} compilado desde el disenador.
-    op.add_column("flujos_ivr", sa.Column("resultados", postgresql.JSONB(), nullable=True))
+    op.add_column(
+        "flujos_ivr", sa.Column("resultados", postgresql.JSONB(), nullable=True)
+    )
 
     op.add_column(
         "interacciones_ivr",
@@ -43,7 +46,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index("ix_interacciones_ivr_clave_resultado", table_name="interacciones_ivr")
+    op.drop_index(
+        "ix_interacciones_ivr_clave_resultado", table_name="interacciones_ivr"
+    )
     op.drop_column("interacciones_ivr", "etiqueta_resultado")
     op.drop_column("interacciones_ivr", "clave_resultado")
     op.drop_column("flujos_ivr", "resultados")

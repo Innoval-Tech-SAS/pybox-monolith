@@ -14,6 +14,7 @@ NULL = grupo global-only o chat DIRECT (esta columna no aplica a DIRECT).
 No hay ciclo de FK: `entidades` no referencia `chats`, así que no hace falta
 `use_alter=True` aquí (a diferencia de `fk_entidades_id_documento_logo_documentos`).
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -44,6 +45,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_constraint("fk_chats_id_organizacion_entidades", "chats", type_="foreignkey")
+    op.drop_constraint(
+        "fk_chats_id_organizacion_entidades", "chats", type_="foreignkey"
+    )
     op.drop_index(op.f("ix_chats_id_organizacion"), table_name="chats")
     op.drop_column("chats", "id_organizacion")

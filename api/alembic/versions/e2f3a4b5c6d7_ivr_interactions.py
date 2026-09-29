@@ -17,6 +17,7 @@ estado del contacto fallará con "invalid input value for enum contactstatus".
 NO se ejecuta automáticamente -- generada para ejecución manual por el usuario
 (alembic upgrade head).
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -59,12 +60,16 @@ def upgrade() -> None:
 
     op.create_table(
         "interacciones_ivr",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+        sa.Column(
+            "id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False
+        ),
         # Identidad en Helena
         sa.Column("id_interaccion", sa.String(length=64), nullable=False),
         sa.Column("id_envio", sa.String(length=64), nullable=False),
         sa.Column("id_interaccion_raiz", sa.String(length=64), nullable=True),
-        sa.Column("numero_intento", sa.Integer(), nullable=False, server_default=sa.text("1")),
+        sa.Column(
+            "numero_intento", sa.Integer(), nullable=False, server_default=sa.text("1")
+        ),
         # Correlación con Pybox
         sa.Column(
             "id_contacto",
@@ -108,7 +113,9 @@ def upgrade() -> None:
         # Ciclo de la llamada
         sa.Column("iniciada_en", sa.DateTime(timezone=True), nullable=True),
         sa.Column("contestada_en", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("transferencia_iniciada_en", sa.DateTime(timezone=True), nullable=True),
+        sa.Column(
+            "transferencia_iniciada_en", sa.DateTime(timezone=True), nullable=True
+        ),
         sa.Column("finalizada_en", sa.DateTime(timezone=True), nullable=True),
         # Trazabilidad
         sa.Column("ultimo_evento", sa.String(length=60), nullable=True),
@@ -132,19 +139,29 @@ def upgrade() -> None:
     )
     op.create_index("ix_interacciones_ivr_id_envio", "interacciones_ivr", ["id_envio"])
     op.create_index(
-        "ix_interacciones_ivr_id_interaccion_raiz", "interacciones_ivr", ["id_interaccion_raiz"]
+        "ix_interacciones_ivr_id_interaccion_raiz",
+        "interacciones_ivr",
+        ["id_interaccion_raiz"],
     )
-    op.create_index("ix_interacciones_ivr_id_contacto", "interacciones_ivr", ["id_contacto"])
-    op.create_index("ix_interacciones_ivr_id_campania", "interacciones_ivr", ["id_campania"])
+    op.create_index(
+        "ix_interacciones_ivr_id_contacto", "interacciones_ivr", ["id_contacto"]
+    )
+    op.create_index(
+        "ix_interacciones_ivr_id_campania", "interacciones_ivr", ["id_campania"]
+    )
     op.create_index(
         "ix_interacciones_ivr_id_organizacion", "interacciones_ivr", ["id_organizacion"]
     )
     op.create_index("ix_interacciones_ivr_telefono", "interacciones_ivr", ["telefono"])
     op.create_index(
-        "ix_interacciones_ivr_campania_estado", "interacciones_ivr", ["id_campania", "estado"]
+        "ix_interacciones_ivr_campania_estado",
+        "interacciones_ivr",
+        ["id_campania", "estado"],
     )
     op.create_index(
-        "ix_interacciones_ivr_envio_telefono", "interacciones_ivr", ["id_envio", "telefono"]
+        "ix_interacciones_ivr_envio_telefono",
+        "interacciones_ivr",
+        ["id_envio", "telefono"],
     )
 
     # Estados de contacto propios del canal de llamadas. `ADD VALUE IF NOT
@@ -156,12 +173,18 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("ix_interacciones_ivr_envio_telefono", table_name="interacciones_ivr")
-    op.drop_index("ix_interacciones_ivr_campania_estado", table_name="interacciones_ivr")
+    op.drop_index(
+        "ix_interacciones_ivr_campania_estado", table_name="interacciones_ivr"
+    )
     op.drop_index("ix_interacciones_ivr_telefono", table_name="interacciones_ivr")
-    op.drop_index("ix_interacciones_ivr_id_organizacion", table_name="interacciones_ivr")
+    op.drop_index(
+        "ix_interacciones_ivr_id_organizacion", table_name="interacciones_ivr"
+    )
     op.drop_index("ix_interacciones_ivr_id_campania", table_name="interacciones_ivr")
     op.drop_index("ix_interacciones_ivr_id_contacto", table_name="interacciones_ivr")
-    op.drop_index("ix_interacciones_ivr_id_interaccion_raiz", table_name="interacciones_ivr")
+    op.drop_index(
+        "ix_interacciones_ivr_id_interaccion_raiz", table_name="interacciones_ivr"
+    )
     op.drop_index("ix_interacciones_ivr_id_envio", table_name="interacciones_ivr")
     op.drop_index("ix_interacciones_ivr_id_interaccion", table_name="interacciones_ivr")
     op.drop_table("interacciones_ivr")

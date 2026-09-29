@@ -14,6 +14,7 @@ campaña de llamadas falla con "invalid input value for enum tipo_proveedor_envi
 NO se ejecuta automáticamente -- generada para ejecución manual por el usuario
 (alembic upgrade head).
 """
+
 from typing import Sequence, Union
 
 from alembic import op

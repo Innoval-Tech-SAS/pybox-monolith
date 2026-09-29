@@ -12,6 +12,7 @@ el que se despachan sus bulks.
 NO se ejecuta automaticamente -- generada para ejecucion manual por el usuario
 (alembic upgrade head).
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -42,7 +43,9 @@ def upgrade() -> None:
 
     op.create_table(
         "ejecuciones_ivr",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
+        sa.Column(
+            "id", postgresql.UUID(as_uuid=True), primary_key=True, nullable=False
+        ),
         sa.Column("id_envio", sa.String(length=64), nullable=False),
         sa.Column(
             "id_campania",
@@ -75,14 +78,22 @@ def upgrade() -> None:
     op.create_index(
         "ix_ejecuciones_ivr_id_envio", "ejecuciones_ivr", ["id_envio"], unique=True
     )
-    op.create_index("ix_ejecuciones_ivr_id_campania", "ejecuciones_ivr", ["id_campania"])
+    op.create_index(
+        "ix_ejecuciones_ivr_id_campania", "ejecuciones_ivr", ["id_campania"]
+    )
     op.create_index(
         "ix_ejecuciones_ivr_id_organizacion", "ejecuciones_ivr", ["id_organizacion"]
     )
 
-    op.add_column("flujos_ivr", sa.Column("llamadas_por_segundo", sa.Integer(), nullable=True))
-    op.add_column("flujos_ivr", sa.Column("maximo_concurrentes", sa.Integer(), nullable=True))
-    op.add_column("flujos_ivr", sa.Column("id_llamante", sa.String(length=50), nullable=True))
+    op.add_column(
+        "flujos_ivr", sa.Column("llamadas_por_segundo", sa.Integer(), nullable=True)
+    )
+    op.add_column(
+        "flujos_ivr", sa.Column("maximo_concurrentes", sa.Integer(), nullable=True)
+    )
+    op.add_column(
+        "flujos_ivr", sa.Column("id_llamante", sa.String(length=50), nullable=True)
+    )
 
 
 def downgrade() -> None:

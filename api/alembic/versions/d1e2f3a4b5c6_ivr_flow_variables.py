@@ -9,6 +9,7 @@ Variables por defecto que se envían a Helena para todo el bulk de la campaña
 
 NO se ejecuta automáticamente -- generada para ejecución manual (alembic upgrade head).
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -22,7 +23,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("flujos_ivr", sa.Column("variables", postgresql.JSONB(), nullable=True))
+    op.add_column(
+        "flujos_ivr", sa.Column("variables", postgresql.JSONB(), nullable=True)
+    )
 
 
 def downgrade() -> None:
