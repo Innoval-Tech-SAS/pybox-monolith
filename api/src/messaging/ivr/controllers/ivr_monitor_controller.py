@@ -1,3 +1,5 @@
+"""Endpoints de monitoreo IVR en vivo: listado de llamadas y stream SSE."""
+
 import asyncio
 import uuid
 from typing import Annotated

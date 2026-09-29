@@ -1,3 +1,5 @@
+"""Schemas de flujos IVR: alta, edición y respuesta."""
+
 import uuid
 from datetime import datetime
 from typing import Any

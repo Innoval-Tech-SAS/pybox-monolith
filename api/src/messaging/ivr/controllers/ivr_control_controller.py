@@ -1,3 +1,5 @@
+"""Endpoints de control de una ejecución IVR: pausar, reanudar, cancelar, ritmo."""
+
 import uuid
 
 from core.config.api_router import APIRouter

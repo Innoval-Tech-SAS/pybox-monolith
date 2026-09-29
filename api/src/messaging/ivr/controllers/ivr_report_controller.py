@@ -1,3 +1,5 @@
+"""Endpoint de reporte de campaña IVR (resumen exportable)."""
+
 import uuid
 from typing import Annotated
 

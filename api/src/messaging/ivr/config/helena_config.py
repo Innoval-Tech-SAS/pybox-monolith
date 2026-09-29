@@ -1,3 +1,5 @@
+"""Configuración de conexión a Helena, cargada de forma perezosa."""
+
 from dataclasses import dataclass
 
 from core.tools.config_tools import get_or_default, get_or_throw

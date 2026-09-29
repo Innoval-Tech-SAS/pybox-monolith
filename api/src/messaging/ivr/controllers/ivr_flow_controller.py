@@ -1,3 +1,5 @@
+"""Endpoints de flujos IVR: alta, edición y catálogo."""
+
 import uuid
 from typing import Annotated
 

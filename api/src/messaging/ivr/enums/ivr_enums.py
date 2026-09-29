@@ -1,3 +1,5 @@
+"""Estados de llamada, ejecución y eventos que Helena reporta del canal IVR."""
+
 from enum import StrEnum
 
 

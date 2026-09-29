@@ -1,3 +1,5 @@
+"""Schemas de ejecución IVR: estado, asignación de flujo y control de campaña."""
+
 import uuid
 from datetime import datetime
 from typing import Any

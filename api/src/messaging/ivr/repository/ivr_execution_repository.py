@@ -1,3 +1,5 @@
+"""Acceso a datos de los bulks de llamadas IVR despachados a Helena."""
+
 import uuid
 from datetime import datetime
 from typing import Sequence

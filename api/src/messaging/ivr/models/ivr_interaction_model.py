@@ -1,3 +1,5 @@
+"""Una interacción (llamada) reportada por Helena."""
+
 import uuid
 from datetime import datetime
 

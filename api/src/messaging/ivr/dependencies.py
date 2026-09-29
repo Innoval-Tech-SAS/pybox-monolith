@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar los servicios de IVR y sus repositories."""
+
 from typing import Annotated
 
 from fastapi import Depends

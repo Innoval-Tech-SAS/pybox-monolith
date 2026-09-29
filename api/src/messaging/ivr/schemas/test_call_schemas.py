@@ -1,3 +1,5 @@
+"""Schema de la solicitud de llamada de prueba desde el diseñador de flujos IVR."""
+
 from typing import Any
 
 from pydantic import Field

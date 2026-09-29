@@ -1,3 +1,5 @@
+"""Webhook de Helena: recibe eventos de llamadas y campañas IVR."""
+
 import json
 from typing import Annotated, Any
 

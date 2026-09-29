@@ -1,3 +1,5 @@
+"""Acceso a datos de las interacciones (llamadas) IVR reportadas por Helena."""
+
 import uuid
 from datetime import datetime
 from typing import Any, Sequence

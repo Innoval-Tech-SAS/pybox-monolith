@@ -1,3 +1,5 @@
+"""Schemas del reporte de campaña IVR: desenlaces y desglose por nodo."""
+
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema

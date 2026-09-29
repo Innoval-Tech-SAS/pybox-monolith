@@ -1,3 +1,5 @@
+"""Schemas del monitor IVR en vivo: llamadas y estadísticas de campaña."""
+
 import uuid
 from datetime import datetime
 from typing import Any

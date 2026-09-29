@@ -1,3 +1,5 @@
+"""Cliente HTTP asíncrono para la API externa de Helena (llamadas IVR)."""
+
 from __future__ import annotations
 
 from typing import Any, Literal

@@ -1,3 +1,5 @@
+"""Flujo IVR reutilizable diseñado en el frontend."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, Integer, String
