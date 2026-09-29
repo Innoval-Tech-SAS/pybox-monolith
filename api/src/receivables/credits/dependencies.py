@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar los servicios de créditos."""
+
 from typing import Annotated
 
 from fastapi import Depends

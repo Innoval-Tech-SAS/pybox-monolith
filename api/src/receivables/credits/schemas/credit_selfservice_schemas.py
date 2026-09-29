@@ -1,3 +1,5 @@
+"""Schema de respuesta de la solicitud de liquidación (settlement) de un crédito."""
+
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema

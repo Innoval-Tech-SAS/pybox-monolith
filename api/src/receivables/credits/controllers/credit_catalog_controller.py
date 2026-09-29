@@ -1,3 +1,5 @@
+"""Endpoint de catálogo de tipos de crédito."""
+
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from receivables.credits.dependencies import CreditCatalogServiceDep

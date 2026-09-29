@@ -1,3 +1,5 @@
+"""Acceso a datos de créditos, con las consultas agregadas de cartera."""
+
 import uuid
 from datetime import date, datetime, timezone
 from typing import NamedTuple, Sequence

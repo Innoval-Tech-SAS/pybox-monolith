@@ -1,3 +1,5 @@
+"""Consulta de autogestión: créditos y pagos del deudor autenticado."""
+
 import uuid
 
 from fastapi import HTTPException, status
@@ -112,9 +114,11 @@ class MyCreditsService:
                     instructions=m.instructions,
                     bank_name=m.bank_name,
                     account_type=m.account_type,
-                    account_number=encrypt_service.decrypt_to_str(m.account_number)
-                    if m.account_number
-                    else None,
+                    account_number=(
+                        encrypt_service.decrypt_to_str(m.account_number)
+                        if m.account_number
+                        else None
+                    ),
                     payment_link=m.payment_link,
                     qr_image_url=m.qr_image_url,
                 )

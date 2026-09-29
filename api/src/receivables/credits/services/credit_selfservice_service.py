@@ -1,3 +1,5 @@
+"""Autogestión de créditos del titular: solicitud de liquidación (settlement)."""
+
 import uuid
 
 from fastapi import HTTPException, UploadFile, status

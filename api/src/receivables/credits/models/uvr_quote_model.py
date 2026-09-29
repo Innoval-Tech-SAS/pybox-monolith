@@ -1,3 +1,5 @@
+"""Cotización histórica de UVR usada para créditos denominados en esa unidad."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal

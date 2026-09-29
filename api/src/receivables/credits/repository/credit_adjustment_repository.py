@@ -1,3 +1,5 @@
+"""Acceso a datos de los ajustes manuales aplicados a un crédito."""
+
 import uuid
 
 from sqlalchemy import select

@@ -1,3 +1,5 @@
+"""Acceso a datos de las cotizaciones históricas de UVR."""
+
 import uuid
 from datetime import datetime
 

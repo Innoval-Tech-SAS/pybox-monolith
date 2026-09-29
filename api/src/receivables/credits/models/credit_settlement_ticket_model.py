@@ -1,3 +1,5 @@
+"""Vínculo entre un ticket de soporte y el crédito que el titular pide dar de baja."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, Numeric

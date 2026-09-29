@@ -1,3 +1,5 @@
+"""Catálogo de tipos de crédito (valores fijos derivados del enum)."""
+
 from receivables.credits.enums.credit_enums import CREDIT_TYPE_LABELS, CreditTypes
 from receivables.credits.schemas.credit_catalog_schemas import CreditTypeOption
 

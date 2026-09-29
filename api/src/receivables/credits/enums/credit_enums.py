@@ -1,3 +1,5 @@
+"""Tipo de crédito desde la perspectiva del titular (qué se debe)."""
+
 from enum import StrEnum
 
 

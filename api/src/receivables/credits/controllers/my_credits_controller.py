@@ -1,3 +1,5 @@
+"""Endpoint de autogestión: un deudor consulta sus propios créditos."""
+
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from core.security.policies.security_policies import get_self_identity

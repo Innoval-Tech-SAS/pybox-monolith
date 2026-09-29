@@ -1,3 +1,5 @@
+"""Schemas de autogestión: créditos y pagos del deudor autenticado."""
+
 import uuid
 from datetime import datetime
 

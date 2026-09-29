@@ -1,3 +1,5 @@
+"""Endpoint de autogestión: solicitud de liquidación (settlement) de un crédito."""
+
 import uuid
 from typing import Annotated
 

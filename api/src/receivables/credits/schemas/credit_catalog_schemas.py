@@ -1,3 +1,5 @@
+"""Schema del catálogo de tipos de crédito."""
+
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema

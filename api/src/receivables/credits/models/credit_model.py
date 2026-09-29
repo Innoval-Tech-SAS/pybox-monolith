@@ -1,3 +1,5 @@
+"""Crédito de un deudor dentro de un portafolio."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal

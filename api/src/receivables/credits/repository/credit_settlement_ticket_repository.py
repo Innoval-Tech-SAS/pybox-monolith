@@ -1,3 +1,5 @@
+"""Acceso a datos del vínculo entre ticket de soporte y crédito a dar de baja."""
+
 import uuid
 
 from sqlalchemy import select

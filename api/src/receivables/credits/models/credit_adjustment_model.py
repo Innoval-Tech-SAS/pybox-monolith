@@ -1,3 +1,5 @@
+"""Ajuste manual (condonación, corrección) aplicado a un crédito."""
+
 import uuid
 from datetime import datetime
 from decimal import Decimal

@@ -1,3 +1,5 @@
+"""Aplica el resultado de un ticket de liquidación (settlement) sobre el crédito."""
+
 import uuid
 from datetime import datetime, timezone
 
