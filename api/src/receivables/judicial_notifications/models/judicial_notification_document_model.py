@@ -1,3 +1,5 @@
+"""Relación entre un documento y la notificación judicial a la que pertenece."""
+
 import uuid
 
 from sqlalchemy import ForeignKey

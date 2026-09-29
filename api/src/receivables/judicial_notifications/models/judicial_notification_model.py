@@ -1,3 +1,5 @@
+"""Notificación judicial enviada por una entidad a un deudor."""
+
 import uuid
 from datetime import datetime
 

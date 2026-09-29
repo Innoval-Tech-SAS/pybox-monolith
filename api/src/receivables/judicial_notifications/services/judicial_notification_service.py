@@ -1,3 +1,5 @@
+"""Alta y consulta de notificaciones judiciales, con sus documentos adjuntos."""
+
 import uuid
 from typing import Sequence
 

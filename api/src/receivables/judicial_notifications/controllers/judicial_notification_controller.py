@@ -1,3 +1,5 @@
+"""Endpoints de notificaciones judiciales: buzón del deudor y panel de la entidad."""
+
 import uuid
 from typing import Annotated
 

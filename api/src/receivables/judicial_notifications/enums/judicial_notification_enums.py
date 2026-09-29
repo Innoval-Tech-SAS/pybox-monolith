@@ -1,3 +1,5 @@
+"""Prioridad de una notificación judicial."""
+
 from enum import StrEnum
 
 

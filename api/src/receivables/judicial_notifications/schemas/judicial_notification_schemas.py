@@ -1,3 +1,5 @@
+"""Schemas de notificaciones judiciales: alta, buzón del deudor y panel de entidad."""
+
 import uuid
 from datetime import datetime
 

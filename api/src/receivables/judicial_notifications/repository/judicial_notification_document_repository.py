@@ -1,3 +1,5 @@
+"""Acceso a datos de los documentos adjuntos a una notificación judicial."""
+
 import uuid
 from datetime import datetime
 from typing import Optional, Sequence
