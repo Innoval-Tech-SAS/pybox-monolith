@@ -1,3 +1,5 @@
+"""Cálculo de encoding (GSM/UTF-16) y número de partes de un SMS antes de enviarlo."""
+
 from math import ceil
 from typing import Any
 

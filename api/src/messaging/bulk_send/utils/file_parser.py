@@ -1,3 +1,5 @@
+"""Parser del CSV/XLSX de envío masivo (documento + destinatario)."""
+
 from __future__ import annotations
 
 import io

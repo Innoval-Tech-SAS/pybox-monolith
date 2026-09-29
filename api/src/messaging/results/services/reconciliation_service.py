@@ -1,3 +1,5 @@
+"""Reconciliación periódica de eventos de envío (SMS/email) contra 360NRS."""
+
 from __future__ import annotations
 
 import io

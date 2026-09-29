@@ -1,3 +1,5 @@
+"""Adaptador de canal Email: traduce la interfaz común de envío al provider 360NRS."""
+
 from typing import Any
 
 from messaging.providers.email_provider import NRS360EmailProvider

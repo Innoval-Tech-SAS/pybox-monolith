@@ -1,3 +1,5 @@
+"""Protocol común que implementa cada adaptador de canal (SMS, email, WhatsApp, IVR)."""
+
 from typing import Any, Protocol
 
 

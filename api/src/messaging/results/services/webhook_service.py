@@ -1,3 +1,5 @@
+"""Aplica el evento del webhook de 360NRS al estado de entrega de un contacto."""
+
 from core.config.logger import logger
 from messaging.contacts.enums.contact_enums import ContactStatus
 from messaging.contacts.repository.contact_repository import ContactRepository

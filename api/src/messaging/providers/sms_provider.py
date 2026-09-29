@@ -1,3 +1,5 @@
+"""Provider singleton de envío de SMS vía 360NRS (POST /sms)."""
+
 import httpx
 
 from core.config.logger import logger

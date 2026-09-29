@@ -1,3 +1,5 @@
+"""Resuelve el canal/proveedor y credencial correctos, y envía el mensaje."""
+
 from typing import Any
 
 from messaging.channels.enums.channel_enums import ChannelName

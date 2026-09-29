@@ -1,3 +1,5 @@
+"""Endpoints y límites de longitud/partes de la API de 360NRS (SMS/Email)."""
+
 SMS_ENDPOINT = "/sms"
 EMAIL_ENDPOINT = "/mailing"
 

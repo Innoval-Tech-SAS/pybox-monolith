@@ -1,3 +1,5 @@
+"""Envío masivo de mensajes a deudores a partir de un archivo CSV/XLSX subido."""
+
 from __future__ import annotations
 
 import uuid
@@ -208,10 +210,10 @@ class BulkSendService:
         subject: str | None,
     ) -> tuple[str, str | None, str | None]:
         if template_id is not None:
-            tpl: (
-                TemplateModel | None
-            ) = await self._template_repo.get_by_id_and_portfolio(
-                template_id, portfolio_id
+            tpl: TemplateModel | None = (
+                await self._template_repo.get_by_id_and_portfolio(
+                    template_id, portfolio_id
+                )
             )
             if tpl is None:
                 raise HTTPException(

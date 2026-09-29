@@ -1,3 +1,5 @@
+"""Placeholder de canal de llamadas con IA, todavía no implementado."""
+
 from typing import Any
 
 

@@ -1,3 +1,5 @@
+"""Provider singleton de envío de email vía 360NRS (POST /mailing)."""
+
 import httpx
 
 from core.config.logger import logger

@@ -1,3 +1,5 @@
+"""Endpoint de envío masivo de mensajes a partir de un archivo CSV/XLSX."""
+
 import uuid
 from typing import Annotated
 

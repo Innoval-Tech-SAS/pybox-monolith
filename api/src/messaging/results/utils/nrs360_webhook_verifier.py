@@ -1,3 +1,5 @@
+"""Verificación del token compartido del webhook de eventos de 360NRS."""
+
 import hmac
 
 from core.config.logger import logger

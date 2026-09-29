@@ -1,3 +1,5 @@
+"""Adaptador de canal SMS: traduce la interfaz común de envío al provider 360NRS."""
+
 from typing import Any
 
 from messaging.providers.sms_provider import NRS360SmsProvider

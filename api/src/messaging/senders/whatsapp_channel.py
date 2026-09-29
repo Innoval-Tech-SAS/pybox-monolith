@@ -1,3 +1,5 @@
+"""Adaptador de canal WhatsApp: traduce la interfaz común de envío al Cloud API."""
+
 from typing import Any
 
 from messaging.whatsapp.services.whatsapp_client import WhatsAppCloudClient

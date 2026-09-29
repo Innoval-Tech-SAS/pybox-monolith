@@ -1,3 +1,5 @@
+"""Schema de respuesta del envío masivo: totales de éxito, fallo y omitidos."""
+
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema
