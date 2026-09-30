@@ -1,3 +1,5 @@
+"""Firma de integridad y verificación de eventos webhook de Wompi."""
+
 import hmac
 from typing import Any
 

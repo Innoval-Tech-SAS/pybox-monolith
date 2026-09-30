@@ -1,3 +1,5 @@
+"""Endpoints de checkout: fuentes de pago guardadas y creación de transacciones."""
+
 import uuid
 
 from fastapi import status

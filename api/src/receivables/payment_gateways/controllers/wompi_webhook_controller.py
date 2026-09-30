@@ -1,3 +1,5 @@
+"""Webhook de Wompi: recibe notificaciones de estado de una transacción."""
+
 import uuid
 
 from fastapi import Request

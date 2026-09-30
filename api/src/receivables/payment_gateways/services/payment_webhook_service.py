@@ -1,3 +1,5 @@
+"""Procesa el webhook de la pasarela de cobro: actualiza el intento de pago."""
+
 import uuid
 from datetime import datetime, timezone
 from typing import Any

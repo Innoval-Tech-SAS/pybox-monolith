@@ -1,3 +1,5 @@
+"""Acceso a datos de los intentos de cobro contra la pasarela de la organización."""
+
 import uuid
 
 from sqlalchemy import select

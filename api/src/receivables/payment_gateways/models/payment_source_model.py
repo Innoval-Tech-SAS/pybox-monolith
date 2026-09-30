@@ -1,3 +1,5 @@
+"""Fuente de pago guardada (tokenizada) de un deudor para cobros recurrentes."""
+
 import uuid
 from datetime import datetime
 

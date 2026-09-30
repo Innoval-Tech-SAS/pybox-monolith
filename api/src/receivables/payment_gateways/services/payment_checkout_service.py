@@ -1,3 +1,5 @@
+"""Creación de transacciones de cobro (checkout) contra la pasarela de cobro."""
+
 import uuid
 from datetime import datetime, timezone
 

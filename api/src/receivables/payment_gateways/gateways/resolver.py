@@ -1,3 +1,5 @@
+"""Resuelve qué pasarela de cobro usar según la configuración de la organización."""
+
 import uuid
 
 from receivables.payment_gateways.enums.payment_gateway_enums import (

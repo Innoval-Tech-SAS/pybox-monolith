@@ -1,3 +1,5 @@
+"""Cliente HTTP crudo a la API de Wompi (sin conocer organizaciones ni cuotas)."""
+
 from typing import Any
 
 from core.payment_gateways.gateway_http_client import GatewayHttpClient

@@ -1,3 +1,5 @@
+"""Alta y consulta de fuentes de pago guardadas (tokenizadas) de un deudor."""
+
 import uuid
 from datetime import datetime, timezone
 

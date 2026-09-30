@@ -1,3 +1,5 @@
+"""Adaptador de Wompi: implementa el Protocol de pasarela de cobro de receivables."""
+
 from typing import Any
 
 from receivables.payment_gateways.gateways.base import (

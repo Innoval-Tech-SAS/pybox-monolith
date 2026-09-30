@@ -1,3 +1,5 @@
+"""Schemas de checkout: métodos de pago y transacciones contra la pasarela."""
+
 import uuid
 from typing import Annotated, Literal, Union
 

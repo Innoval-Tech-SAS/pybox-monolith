@@ -1,3 +1,5 @@
+"""Acceso a datos de las fuentes de pago guardadas de un deudor."""
+
 import uuid
 
 from sqlalchemy import select

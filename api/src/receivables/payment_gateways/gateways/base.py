@@ -1,3 +1,5 @@
+"""Protocol común de las pasarelas de cobro de receivables (Wompi, Bold, ...)."""
+
 from dataclasses import dataclass
 from typing import Any, Protocol, Union
 

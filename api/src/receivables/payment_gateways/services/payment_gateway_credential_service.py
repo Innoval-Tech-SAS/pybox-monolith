@@ -1,3 +1,5 @@
+"""Resuelve y descifra la credencial de pasarela de cobro de una organización."""
+
 import uuid
 from dataclasses import dataclass
 

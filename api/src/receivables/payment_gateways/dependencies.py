@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar los servicios de pasarela de pago."""
+
 from typing import Annotated
 
 from fastapi import Depends

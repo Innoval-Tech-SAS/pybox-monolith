@@ -1,3 +1,5 @@
+"""Schemas de credenciales de pasarela de cobro de una organización."""
+
 import uuid
 from datetime import datetime
 

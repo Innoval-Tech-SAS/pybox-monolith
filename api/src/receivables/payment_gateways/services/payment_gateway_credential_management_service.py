@@ -1,3 +1,5 @@
+"""Alta, edición y borrado de credenciales de pasarela de cobro de una organización."""
+
 import uuid
 
 from fastapi import HTTPException, status

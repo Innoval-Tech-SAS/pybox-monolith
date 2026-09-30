@@ -1,3 +1,5 @@
+"""Acceso a datos de las credenciales de pasarela de cobro de una organización."""
+
 import uuid
 
 from sqlalchemy import select

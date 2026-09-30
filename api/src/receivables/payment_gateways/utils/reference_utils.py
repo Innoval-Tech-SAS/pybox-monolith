@@ -1,3 +1,5 @@
+"""Generación de referencias únicas para transacciones de cobro."""
+
 import uuid
 from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal

@@ -1,3 +1,5 @@
+"""Intento de cobro de una cuota contra la pasarela de pago de la organización."""
+
 import uuid
 from datetime import datetime
 from typing import Any

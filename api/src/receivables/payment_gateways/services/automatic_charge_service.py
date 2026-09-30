@@ -1,3 +1,5 @@
+"""Cobro automático (recurrente) de cuotas contra la pasarela de la organización."""
+
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone

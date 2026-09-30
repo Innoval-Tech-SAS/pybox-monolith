@@ -1,3 +1,5 @@
+"""Pasarelas con las que una organización cobra a sus propios deudores."""
+
 from enum import StrEnum
 
 

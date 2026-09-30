@@ -1,3 +1,5 @@
+"""Credenciales de la cuenta propia de una organización en una pasarela de cobro."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, Index, String, text
