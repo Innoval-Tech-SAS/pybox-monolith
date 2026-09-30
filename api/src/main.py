@@ -1,3 +1,5 @@
+"""Punto de entrada de la API: arma la app FastAPI, middlewares y routers."""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
