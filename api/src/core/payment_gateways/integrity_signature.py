@@ -1,3 +1,5 @@
+"""Firma de integridad SHA256 compartida por los adaptadores de Bold y Wompi."""
+
 import hashlib
 
 

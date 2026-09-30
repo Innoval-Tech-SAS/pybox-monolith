@@ -1,3 +1,5 @@
+"""Dependencia de FastAPI para inyectar el BulkSendService con sus repositories."""
+
 from typing import Annotated
 
 from fastapi import Depends
@@ -14,11 +16,21 @@ from messaging.channels.repository.channel_repository import ChannelRepository
 from messaging.contacts.repository.contact_repository import ContactRepository
 from messaging.dispatcher import MessageDispatcher
 from messaging.templates.repository.template_repository import TemplateRepository
-from messaging.whatsapp.repository.whatsapp_channel_request_repository import WhatsAppChannelRequestRepository
-from messaging.whatsapp.repository.whatsapp_org_credentials_repository import WhatsAppOrgCredentialsRepository
-from messaging.whatsapp.repository.whatsapp_template_data_repository import WhatsAppTemplateDataRepository
-from messaging.whatsapp.services.whatsapp_channel_request_service import WhatsAppChannelRequestService
-from messaging.whatsapp.services.whatsapp_number_request_service import WhatsAppNumberRequestService
+from messaging.whatsapp.repository.whatsapp_channel_request_repository import (
+    WhatsAppChannelRequestRepository,
+)
+from messaging.whatsapp.repository.whatsapp_org_credentials_repository import (
+    WhatsAppOrgCredentialsRepository,
+)
+from messaging.whatsapp.repository.whatsapp_template_data_repository import (
+    WhatsAppTemplateDataRepository,
+)
+from messaging.whatsapp.services.whatsapp_channel_request_service import (
+    WhatsAppChannelRequestService,
+)
+from messaging.whatsapp.services.whatsapp_number_request_service import (
+    WhatsAppNumberRequestService,
+)
 from receivables.debtors.repository.debtor_repository import DebtorRepository
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 
@@ -38,7 +50,9 @@ def get_bulk_send_service(
         billing_status_service=BillingStatusService(InvoiceRepository(session)),
         whatsapp_credentials_repo=WhatsAppOrgCredentialsRepository(session),
         whatsapp_template_data_repo=WhatsAppTemplateDataRepository(session),
-        whatsapp_channel_request_service=WhatsAppChannelRequestService(WhatsAppChannelRequestRepository(session)),
+        whatsapp_channel_request_service=WhatsAppChannelRequestService(
+            WhatsAppChannelRequestRepository(session)
+        ),
         whatsapp_number_request_service=WhatsAppNumberRequestService(
             WhatsAppOrgCredentialsRepository(session), SupportService(session)
         ),

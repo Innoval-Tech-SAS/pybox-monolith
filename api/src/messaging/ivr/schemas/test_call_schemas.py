@@ -1,3 +1,5 @@
+"""Schema de la solicitud de llamada de prueba desde el diseñador de flujos IVR."""
+
 from typing import Any
 
 from pydantic import Field
@@ -15,9 +17,16 @@ class IvrTestCallRequest(BaseSchema):
     variables: dict[str, Any] | None = Field(
         default=None, description="Variables para Helena (AMD_*, PJSIP_TRUNK, …)"
     )
-    customer_name: str | None = Field(default=None, description="Nombre del cliente (reportería)")
-    customer_document: str | None = Field(default=None, description="Documento del cliente")
-    campaign_id: str | None = Field(default=None, description="ID de campaña (default 'TEST')")
+    customer_name: str | None = Field(
+        default=None, description="Nombre del cliente (reportería)"
+    )
+    customer_document: str | None = Field(
+        default=None, description="Documento del cliente"
+    )
+    campaign_id: str | None = Field(
+        default=None, description="ID de campaña (default 'TEST')"
+    )
     redial_config: dict[str, Any] | None = Field(
-        default=None, description="Configuración de remarcado (maxAttempts, retryDelaySeconds)"
+        default=None,
+        description="Configuración de remarcado (maxAttempts, retryDelaySeconds)",
     )

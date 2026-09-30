@@ -1,3 +1,5 @@
+"""Extensión de una plantilla para el canal WhatsApp (metadatos, no el contenido)."""
+
 import uuid
 
 from sqlalchemy import Enum, ForeignKey, String, UniqueConstraint
@@ -37,9 +39,7 @@ class WhatsAppTemplateDataModel(BaseModel):
         String(255), nullable=False, name="nombre_meta"
     )
 
-    language: Mapped[str] = mapped_column(
-        String(10), nullable=False, name="idioma"
-    )
+    language: Mapped[str] = mapped_column(String(10), nullable=False, name="idioma")
 
     category: Mapped[WhatsAppTemplateCategory] = mapped_column(
         Enum(WhatsAppTemplateCategory), nullable=False, name="categoria"

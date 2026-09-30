@@ -39,7 +39,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-import core.config.models  # noqa: F401 -- registra los modelos en Base.metadata
+import core.config.models
 from core.database import redis as redis_module
 from core.database.database import Base, db, get_main_session
 from core.security.dependencies import get_pending_mfa_session, get_session, get_sse_session, get_ws_session

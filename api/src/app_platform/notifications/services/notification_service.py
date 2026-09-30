@@ -1,10 +1,14 @@
+"""Creación, listado y marcado de notificaciones, con push en vivo por SSE."""
+
 import uuid
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.notifications.models.notification_model import NotificationModel
-from app_platform.notifications.repository.notification_repository import NotificationRepository
+from app_platform.notifications.repository.notification_repository import (
+    NotificationRepository,
+)
 from app_platform.notifications.schemas.notification_schemas import NotificationSchema
 from core.sse.sse_emitter import sse_emitter
 
@@ -17,7 +21,9 @@ class NotificationService:
         items = await self._repo.get_by_user_id(user_id)
         return [NotificationSchema.model_validate(n) for n in items]
 
-    async def get_notification(self, notification_id: uuid.UUID, user_id: uuid.UUID) -> NotificationSchema | None:
+    async def get_notification(
+        self, notification_id: uuid.UUID, user_id: uuid.UUID
+    ) -> NotificationSchema | None:
         n = await self._repo.get_by_id_and_user(notification_id, user_id)
         return NotificationSchema.model_validate(n) if n else None
 
@@ -46,5 +52,7 @@ class NotificationService:
             )
         )
         schema = NotificationSchema.model_validate(notification)
-        await sse_emitter.emit(user_id, "notification", schema.model_dump(mode="json", by_alias=True))
+        await sse_emitter.emit(
+            user_id, "notification", schema.model_dump(mode="json", by_alias=True)
+        )
         return schema

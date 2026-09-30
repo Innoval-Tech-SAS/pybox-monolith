@@ -1,3 +1,5 @@
+"""Dependencia de FastAPI para inyectar el CacheService singleton."""
+
 from typing import Annotated
 
 from fastapi import Depends

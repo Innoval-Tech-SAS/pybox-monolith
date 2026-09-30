@@ -1,3 +1,5 @@
+"""Endpoints de notificaciones judiciales: buzón del deudor y panel de la entidad."""
+
 import uuid
 from typing import Annotated
 
@@ -23,8 +25,11 @@ router = APIRouter(prefix="/judicial-notifications", tags=["Buzón judicial"])
     "/priorities",
     response_model=list[JudicialPriorityOption],
     summary="Listar prioridades judiciales",
-    description="Catálogo código→etiqueta de prioridades, para el select del panel de la entidad y el chip del buzón. "
-    "Declarado antes de las rutas con {notification_id} para que no se resuelva como un UUID.",
+    description=(
+        "Catálogo código→etiqueta de prioridades, para el select del panel de "
+        "la entidad y el chip del buzón. Declarado antes de las rutas con "
+        "{notification_id} para que no se resuelva como un UUID."
+    ),
 )
 async def list_priorities(
     _: CurrentSession,
@@ -37,8 +42,11 @@ async def list_priorities(
     "/mine",
     response_model=JudicialInboxResponse,
     summary="Buzón judicial del titular",
-    description="Notificaciones judiciales de los créditos del titular autenticado (como deudor o codeudor), "
-    "de la más reciente a la más antigua, con el contador de no leídas.",
+    description=(
+        "Notificaciones judiciales de los créditos del titular autenticado "
+        "(como deudor o codeudor), de la más reciente a la más antigua, con el "
+        "contador de no leídas."
+    ),
 )
 async def my_inbox(
     session: RequireSelf,
@@ -92,7 +100,9 @@ async def create_notification(
     "/credits/{credit_id}",
     response_model=list[JudicialNotificationResponse],
     summary="Notificaciones emitidas sobre un crédito",
-    description="Listado del lado de la entidad. Requiere el permiso portfolio.judicial.",
+    description=(
+        "Listado del lado de la entidad. Requiere el permiso portfolio.judicial."
+    ),
 )
 async def list_by_credit(
     credit_id: uuid.UUID,
@@ -121,8 +131,11 @@ async def upload_attachments(
 @router.get(
     "/{notification_id}/documents/{document_id}/content",
     summary="Descargar un adjunto de una notificación judicial",
-    description="El titular descarga los adjuntos de sus propias notificaciones; la entidad, "
-    "los de los créditos sobre los que tiene el permiso portfolio.judicial.",
+    description=(
+        "El titular descarga los adjuntos de sus propias notificaciones; la "
+        "entidad, los de los créditos sobre los que tiene el permiso "
+        "portfolio.judicial."
+    ),
     response_class=Response,
 )
 async def get_attachment_content(

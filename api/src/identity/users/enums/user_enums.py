@@ -1,3 +1,5 @@
+"""Rol, scope y estado de verificación de identidad de un usuario."""
+
 from enum import Enum
 
 
@@ -33,10 +35,10 @@ class IdentityVerificationStatus(str, Enum):
 
 
 VALID_ROLE_SCOPE: set[tuple[UserRole, UserScope]] = {
-    (UserRole.ADMIN,             UserScope.GLOBAL),
-    (UserRole.CUSTOMER_SERVICE,  UserScope.GLOBAL),
-    (UserRole.ADMIN,             UserScope.ORGANIZATION),
-    (UserRole.CUSTOMER_SERVICE,  UserScope.ORGANIZATION),
-    (UserRole.USER,              UserScope.ORGANIZATION),
-    (UserRole.USER,              UserScope.SELF),
+    (UserRole.ADMIN, UserScope.GLOBAL),
+    (UserRole.CUSTOMER_SERVICE, UserScope.GLOBAL),
+    (UserRole.ADMIN, UserScope.ORGANIZATION),
+    (UserRole.CUSTOMER_SERVICE, UserScope.ORGANIZATION),
+    (UserRole.USER, UserScope.ORGANIZATION),
+    (UserRole.USER, UserScope.SELF),
 }

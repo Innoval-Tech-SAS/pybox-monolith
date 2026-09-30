@@ -1,27 +1,36 @@
+"""Endpoints de organizaciones: alta, edición, verificación y documentos."""
+
 import uuid
 from typing import Literal
 
-from fastapi import File, Form, HTTPException, UploadFile, status
+from fastapi import File, Form, HTTPException, Response, UploadFile, status
 
-from fastapi import Response
-
+from app_platform.documents.utils.document_naming import (
+    generate_uuid7_filename,
+    resolve_content_type,
+)
+from app_platform.support.dependencies import SupportServiceDep
 from core.config.api_router import APIRouter
+from core.security.dependencies import CurrentSession, PendingMfaSession
+from core.security.policies.security_policies import (
+    require_global_admin,
+    require_org_access,
+)
 from identity.onboarding.dependencies import CurrentScope
 from identity.organizations.dependencies import AdminScopeDep, OrgServiceDep
-from app_platform.support.dependencies import SupportServiceDep
-from identity.organizations.enums.organization_enums import EntitySectors
-from identity.organizations.utils.document_upload_utils import require_within_size_limit
-from app_platform.documents.utils.document_naming import generate_uuid7_filename, resolve_content_type
+from identity.organizations.enums.organization_enums import (
+    EntitySectors,
+    VerificationStatus,
+)
 from identity.organizations.schemas.organization_schemas import (
     EntitySectorOption,
-    OrgRegisterResponse,
     OrganizationCreate,
     OrganizationResponse,
     OrganizationUpdate,
+    OrgRegisterResponse,
     RepresentativeMode,
 )
-from core.security.dependencies import CurrentSession, PendingMfaSession
-from core.security.policies.security_policies import require_global_admin, require_org_access
+from identity.organizations.utils.document_upload_utils import require_within_size_limit
 from identity.users.dependencies import UserServiceDep
 from identity.users.enums.user_enums import UserScope
 
@@ -53,7 +62,13 @@ async def list_organizations(
     "/sectors",
     response_model=list[EntitySectorOption],
     summary="Listar sectores de entidad",
-    description="Catálogo código→etiqueta de sectores, para los selects del front. Debe quedar declarado antes de /{org_id} para que la ruta no se resuelva como un UUID. Usa PendingMfaSession porque el wizard de onboarding (paso 'organization', antes de POST /onboarding/organization) lo consume mientras el MFA todavía puede estar pendiente.",
+    description=(
+        "Catálogo código→etiqueta de sectores, para los selects del front. Debe "
+        "quedar declarado antes de /{org_id} para que la ruta no se resuelva como "
+        "un UUID. Usa PendingMfaSession porque el wizard de onboarding (paso "
+        "'organization', antes de POST /onboarding/organization) lo consume "
+        "mientras el MFA todavía puede estar pendiente."
+    ),
 )
 async def list_sectors(
     _: PendingMfaSession,
@@ -107,7 +122,9 @@ async def update_organization(
     admin_scope: AdminScopeDep,
     service: OrgServiceDep,
 ) -> OrganizationResponse:
-    updated = await service.update_organization(org_id, body, session.user_id, admin_scope)
+    updated = await service.update_organization(
+        org_id, body, session.user_id, admin_scope
+    )
     return service.to_response(updated)
 
 
@@ -124,9 +141,8 @@ async def request_verification(
     support_service: SupportServiceDep,
 ) -> OrganizationResponse:
     if admin_scope == UserScope.ORGANIZATION:
-        await service._assert_admin_of_org(session.user_id, org_id)
+        await service.assert_admin_of_org(session.user_id, org_id)
     org = await service.get_by_id(org_id)
-    from identity.organizations.enums.organization_enums import VerificationStatus
     org.verification_status = VerificationStatus.PENDING
     org = await service.org_repo.update(org)
     await support_service.create_org_verification_ticket(org_id, session.user_id)
@@ -147,7 +163,7 @@ async def update_org_document(
     file: UploadFile = File(...),
 ) -> OrganizationResponse:
     if admin_scope == UserScope.ORGANIZATION:
-        await service._assert_admin_of_org(session.user_id, org_id)
+        await service.assert_admin_of_org(session.user_id, org_id)
     org = await service.get_by_id(org_id)
     file_bytes = await file.read()
     require_within_size_limit(file_bytes)
@@ -171,9 +187,11 @@ async def update_org_document(
 @router.get(
     "/{org_id}/documents/{document_id}/content",
     summary="Descargar un documento de la organización",
-    description="Autoriza a un usuario con acceso a la entidad dueña y entrega el archivo. "
-    "Si el documento no es de esa organización responde 404. Antes vivía en "
-    "`/documents/organizations/{org_id}/{document_id}/content`.",
+    description=(
+        "Autoriza a un usuario con acceso a la entidad dueña y entrega el "
+        "archivo. Si el documento no es de esa organización responde 404. Antes "
+        "vivía en `/documents/organizations/{org_id}/{document_id}/content`."
+    ),
     response_class=Response,
 )
 async def download_org_document(
@@ -203,8 +221,11 @@ async def delete_organization(
     "/{org_id}/restore",
     status_code=status.HTTP_200_OK,
     summary="Restaurar organización",
-    description="Deshace la baja lógica de la organización y de sus membresías. Solo "
-    "administradores globales — restaurar no es un poder de admin de organización.",
+    description=(
+        "Deshace la baja lógica de la organización y de sus membresías. Solo "
+        "administradores globales — restaurar no es un poder de admin de "
+        "organización."
+    ),
 )
 async def restore_organization(
     org_id: uuid.UUID,
@@ -220,7 +241,10 @@ async def restore_organization(
     response_model=OrgRegisterResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Registrar organización con documentos",
-    description="Crea una organización con sus documentos fiscales, mercantiles y del representante legal. Genera automáticamente un ticket de verificación.",
+    description=(
+        "Crea una organización con sus documentos fiscales, mercantiles y del "
+        "representante legal. Genera automáticamente un ticket de verificación."
+    ),
 )
 async def register_organization(
     session: CurrentSession,

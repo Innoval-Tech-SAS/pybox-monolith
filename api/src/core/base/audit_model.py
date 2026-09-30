@@ -1,4 +1,6 @@
-﻿import uuid
+"""Mixins base de auditoría e identidad para los modelos SQLAlchemy."""
+
+import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, func

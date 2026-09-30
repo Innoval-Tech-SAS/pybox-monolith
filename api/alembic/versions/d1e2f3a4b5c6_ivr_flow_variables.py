@@ -13,8 +13,9 @@ NO se ejecuta automáticamente -- generada para ejecución manual (alembic upgra
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "d1e2f3a4b5c6"
 down_revision: Union[str, None] = "c9d0e1f2a3b4"

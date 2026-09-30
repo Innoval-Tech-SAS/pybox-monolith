@@ -1,3 +1,5 @@
+"""Procesa el webhook de Bold: verifica la firma y actualiza el intento de pago."""
+
 import json
 from decimal import Decimal
 from typing import Any
@@ -30,15 +32,22 @@ class BoldWebhookService:
             logger.info("[billing] webhook Bold ignorado | type=%s", event_type)
             return
 
-        # Nuestro orderId se guarda como `reference`; Bold lo retorna en data.metadata.reference
+        # Nuestro orderId se guarda como `reference`; Bold lo retorna en
+        # data.metadata.reference
         data = body.get("data") or {}
         metadata = data.get("metadata") or {}
         bold_reference = metadata.get("reference") or ""
         if not bold_reference:
-            logger.warning("[billing] webhook Bold SALE_APPROVED sin data.metadata.reference")
+            logger.warning(
+                "[billing] webhook Bold SALE_APPROVED sin data.metadata.reference"
+            )
             return
 
         reported_amount = data.get("amount")
-        reported_amount_decimal = Decimal(str(reported_amount)) if reported_amount is not None else None
+        reported_amount_decimal = (
+            Decimal(str(reported_amount)) if reported_amount is not None else None
+        )
 
-        await self._invoice_service.mark_attempt_paid("BOLD", bold_reference, reported_amount_decimal, body)
+        await self._invoice_service.mark_attempt_paid(
+            "BOLD", bold_reference, reported_amount_decimal, body
+        )

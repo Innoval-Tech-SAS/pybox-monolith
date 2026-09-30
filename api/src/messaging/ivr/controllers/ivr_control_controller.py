@@ -1,7 +1,6 @@
-import uuid
-from typing import Annotated
+"""Endpoints de control de una ejecución IVR: pausar, reanudar, cancelar, ritmo."""
 
-from fastapi import Query
+import uuid
 
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession

@@ -1,4 +1,6 @@
-﻿import uuid
+"""Estado de lectura de un mensaje por cada miembro del chat."""
+
+import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey

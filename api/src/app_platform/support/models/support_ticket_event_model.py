@@ -1,11 +1,14 @@
+"""Evento del historial de un ticket de soporte (cambio de estado, asignación)."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from core.base.audit_model import BaseModel
 from app_platform.support.enums.support_enums import SupportTicketEventType
+from core.base.audit_model import BaseModel
 
 
 class SupportTicketEventModel(BaseModel):
@@ -19,7 +22,12 @@ class SupportTicketEventModel(BaseModel):
         index=True,
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, name="usuario_id", index=True)
+        PgUUID(as_uuid=True),
+        ForeignKey("usuarios.id"),
+        nullable=False,
+        name="usuario_id",
+        index=True,
+    )
     event_type: Mapped[SupportTicketEventType] = mapped_column(
         ENUM(
             SupportTicketEventType,
@@ -29,5 +37,9 @@ class SupportTicketEventModel(BaseModel):
         nullable=False,
         name="tipo_evento",
     )
-    from_value: Mapped[str | None] = mapped_column(String(100), nullable=True, name="valor_anterior")
-    to_value: Mapped[str | None] = mapped_column(String(100), nullable=True, name="valor_nuevo")
+    from_value: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, name="valor_anterior"
+    )
+    to_value: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, name="valor_nuevo"
+    )

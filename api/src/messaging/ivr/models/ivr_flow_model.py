@@ -1,7 +1,10 @@
+"""Flujo IVR reutilizable diseñado en el frontend."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import BaseModel
@@ -40,10 +43,14 @@ class IvrFlowModel(BaseModel):
     )
 
     # Variables enviadas a Helena por defecto para todo el bulk (AMD_*, PJSIP_TRUNK, …).
-    variables: Mapped[dict | None] = mapped_column(JSONB, nullable=True, name="variables")
+    variables: Mapped[dict | None] = mapped_column(
+        JSONB, nullable=True, name="variables"
+    )
 
     # Etiquetas de resultado por desenlace, compiladas desde el diseñador:
-    outcomes: Mapped[dict | None] = mapped_column(JSONB, nullable=True, name="resultados")
+    outcomes: Mapped[dict | None] = mapped_column(
+        JSONB, nullable=True, name="resultados"
+    )
 
     # Ritmo de marcación y caller ID por defecto para los bulks de este flujo
     calls_per_second: Mapped[int | None] = mapped_column(

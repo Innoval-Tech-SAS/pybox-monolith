@@ -1,22 +1,27 @@
+"""Acceso a datos de los intentos de pago de una factura."""
+
 import uuid
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from billing.invoices.models.payment_attempt_model import InvoicePaymentAttemptModel
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 
 
-class InvoicePaymentAttemptRepository(SoftDeleteRepositoryBase[InvoicePaymentAttemptModel]):
+class InvoicePaymentAttemptRepository(
+    SoftDeleteRepositoryBase[InvoicePaymentAttemptModel]
+):
     model_class = InvoicePaymentAttemptModel
 
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
-
-    async def get_latest_by_invoice_id(self, invoice_id: uuid.UUID) -> InvoicePaymentAttemptModel | None:
+    async def get_latest_by_invoice_id(
+        self, invoice_id: uuid.UUID
+    ) -> InvoicePaymentAttemptModel | None:
         result = await self.session.execute(
             select(InvoicePaymentAttemptModel)
-            .where(InvoicePaymentAttemptModel.invoice_id == invoice_id, InvoicePaymentAttemptModel.deleted_at.is_(None))
+            .where(
+                InvoicePaymentAttemptModel.invoice_id == invoice_id,
+                InvoicePaymentAttemptModel.deleted_at.is_(None),
+            )
             .order_by(InvoicePaymentAttemptModel.attempt_number.desc())
             .limit(1)
         )

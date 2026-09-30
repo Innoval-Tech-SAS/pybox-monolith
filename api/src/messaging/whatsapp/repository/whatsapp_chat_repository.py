@@ -1,9 +1,10 @@
+"""Acceso a datos de los chats de WhatsApp, con el scope de visibilidad por usuario."""
+
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.whatsapp.models.whatsapp_chat_model import WhatsAppChatModel
@@ -25,9 +26,6 @@ class OrgChatScope:
 
 class WhatsAppChatRepository(SoftDeleteRepositoryBase[WhatsAppChatModel]):
     model_class = WhatsAppChatModel
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
 
     async def get_by_org_and_phone(
         self, organization_id: uuid.UUID, phone: str
@@ -61,20 +59,27 @@ class WhatsAppChatRepository(SoftDeleteRepositoryBase[WhatsAppChatModel]):
             for scope in scopes:
                 checks = [WhatsAppChatModel.organization_id == scope.organization_id]
                 if scope.assigned_user_id is not None:
-                    checks.append(WhatsAppChatModel.assigned_user_id == scope.assigned_user_id)
+                    checks.append(
+                        WhatsAppChatModel.assigned_user_id == scope.assigned_user_id
+                    )
                 # None = sin restricción (admin de la org o usuario global); una lista
                 # (incluso vacía) acota a los portafolios que el agente tiene asignados
                 # en accesos_usuario_portafolio — los hilos sin portafolio resuelto
                 # (NULL) quedan fuera para agentes no-admin, ver
                 # whatsapp_chat_service._get_chat_for_user.
                 if scope.portfolio_ids is not None:
-                    checks.append(WhatsAppChatModel.portfolio_id.in_(scope.portfolio_ids))
+                    checks.append(
+                        WhatsAppChatModel.portfolio_id.in_(scope.portfolio_ids)
+                    )
                 conditions.append(and_(*checks))
             query = query.where(or_(*conditions))
 
-        total: int = await self.session.scalar(
-            select(func.count()).select_from(query.subquery())
-        ) or 0
+        total: int = (
+            await self.session.scalar(
+                select(func.count()).select_from(query.subquery())
+            )
+            or 0
+        )
         result = await self.session.execute(
             query.order_by(WhatsAppChatModel.last_message_at.desc().nullslast())
             .offset((page - 1) * page_size)
@@ -82,7 +87,9 @@ class WhatsAppChatRepository(SoftDeleteRepositoryBase[WhatsAppChatModel]):
         )
         return list(result.scalars().all()), total
 
-    async def get_least_loaded_user(self, candidate_user_ids: list[uuid.UUID]) -> uuid.UUID | None:
+    async def get_least_loaded_user(
+        self, candidate_user_ids: list[uuid.UUID]
+    ) -> uuid.UUID | None:
         """Entre los agentes candidatos, el que tiene menos hilos abiertos asignados
         actualmente. Empate: el primero por `id_usuario` (orden estable)."""
         if not candidate_user_ids:
@@ -96,12 +103,24 @@ class WhatsAppChatRepository(SoftDeleteRepositoryBase[WhatsAppChatModel]):
             .group_by(WhatsAppChatModel.assigned_user_id)
         )
         counts = dict(result.all())
-        return min(sorted(candidate_user_ids, key=str), key=lambda uid: counts.get(uid, 0))
+        return min(
+            sorted(candidate_user_ids, key=str), key=lambda uid: counts.get(uid, 0)
+        )
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de los chats de WhatsApp de la organización con el sello de la organización."""
-        await self.soft_delete_where(WhatsAppChatModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de los chats de WhatsApp de la organización
+        con el sello de la organización."""
+        await self.soft_delete_where(
+            WhatsAppChatModel.organization_id == organization_id, deleted_at=deleted_at
+        )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
-        await self.restore_where(WhatsAppChatModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó
+        con la organización."""
+        await self.restore_where(
+            WhatsAppChatModel.organization_id == organization_id, deleted_at=deleted_at
+        )

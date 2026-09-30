@@ -1,4 +1,6 @@
-﻿import uuid
+"""Schema de una notificación in-app."""
+
+import uuid
 from datetime import datetime
 from typing import Any
 
@@ -16,7 +18,9 @@ class NotificationSchema(BaseSchema):
     is_read: bool = Field(description="Indica si el usuario ya leyó la notificación")
     created_at: datetime = Field(description="Fecha de creación")
     link: str | None = Field(default=None, description="URL de destino al hacer clic")
-    details: dict[str, Any] | None = Field(default=None, description="Datos adicionales de la notificación")
+    details: dict[str, Any] | None = Field(
+        default=None, description="Datos adicionales de la notificación"
+    )
 
     @field_validator("notif_type", mode="before")
     @classmethod

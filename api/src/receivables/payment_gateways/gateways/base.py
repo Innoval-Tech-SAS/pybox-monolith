@@ -1,3 +1,5 @@
+"""Protocol común de las pasarelas de cobro de receivables (Wompi, Bold, ...)."""
+
 from dataclasses import dataclass
 from typing import Any, Protocol, Union
 
@@ -46,7 +48,12 @@ class BancolombiaTransferPaymentMethod:
     payment_description: str
 
 
-PaymentMethodInput = Union[CardPaymentMethod, PsePaymentMethod, NequiPaymentMethod, BancolombiaTransferPaymentMethod]
+PaymentMethodInput = Union[
+    CardPaymentMethod,
+    PsePaymentMethod,
+    NequiPaymentMethod,
+    BancolombiaTransferPaymentMethod,
+]
 
 
 @dataclass(frozen=True)
@@ -116,7 +123,9 @@ class ReceivablesPaymentGateway(Protocol):
         accept_personal_auth: str,
     ) -> WompiPaymentSource: ...
 
-    async def list_pse_financial_institutions(self) -> list[WompiFinancialInstitution]: ...
+    async def list_pse_financial_institutions(
+        self,
+    ) -> list[WompiFinancialInstitution]: ...
 
     async def get_transaction(self, transaction_id: str) -> WompiTransaction: ...
 

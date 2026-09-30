@@ -1,4 +1,6 @@
-﻿import uuid
+"""Schemas de gestión de usuarios: alta, permisos y catálogo de roles/permisos."""
+
+import uuid
 
 from pydantic import EmailStr, Field
 
@@ -49,7 +51,9 @@ class PermissionEntry(BaseSchema):
 
 
 class PermissionListResponse(BaseSchema):
-    permissions: list[PermissionEntry] = Field(description="Lista de permisos del miembro")
+    permissions: list[PermissionEntry] = Field(
+        description="Lista de permisos del miembro"
+    )
 
 
 class PortfolioAccessEntry(BaseSchema):

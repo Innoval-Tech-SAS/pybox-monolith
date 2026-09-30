@@ -35,7 +35,6 @@ _RECENTLY_ENDED_SECONDS = 60
 
 
 class IvrMonitorService:
-
     def __init__(
         self,
         interaction_repo: IvrInteractionRepository,
@@ -53,7 +52,9 @@ class IvrMonitorService:
         if campaign is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Campaña no encontrada")
         portfolio = await self._portfolios.get_by_id(campaign.portfolio_id)
-        await check_portfolio_org_access(user_session, portfolio, PORTFOLIO_COMMUNICATIONS)
+        await check_portfolio_org_access(
+            user_session, portfolio, PORTFOLIO_COMMUNICATIONS
+        )
         return campaign
 
     async def get_snapshot(
@@ -64,8 +65,12 @@ class IvrMonitorService:
 
     async def build_snapshot(self, campaign_id: uuid.UUID) -> IvrSnapshotSchema:
         """Snapshot sin comprobar permisos (ya validados por quien llama)."""
-        ended_since = datetime.now(timezone.utc) - timedelta(seconds=_RECENTLY_ENDED_SECONDS)
-        rows = await self._interactions.get_active_for_campaign(campaign_id, ended_since)
+        ended_since = datetime.now(timezone.utc) - timedelta(
+            seconds=_RECENTLY_ENDED_SECONDS
+        )
+        rows = await self._interactions.get_active_for_campaign(
+            campaign_id, ended_since
+        )
         stats = await self._interactions.get_campaign_stats(campaign_id)
         return IvrSnapshotSchema(
             active_calls=[IvrCallSchema.from_model(row) for row in rows],
@@ -74,7 +79,9 @@ class IvrMonitorService:
         )
 
     async def get_stats(self, campaign_id: uuid.UUID) -> IvrCampaignStatsSchema:
-        return IvrCampaignStatsSchema(**await self._interactions.get_campaign_stats(campaign_id))
+        return IvrCampaignStatsSchema(
+            **await self._interactions.get_campaign_stats(campaign_id)
+        )
 
     async def list_calls(
         self,

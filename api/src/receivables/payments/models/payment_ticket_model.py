@@ -1,3 +1,5 @@
+"""Vínculo entre un ticket de soporte y el pago/crédito sobre el que actúa."""
+
 import uuid
 from datetime import datetime
 
@@ -51,4 +53,6 @@ class PaymentTicketModel(BaseModel):
         PgUUID(as_uuid=True),
         ForeignKey("pagos.id"),
         nullable=True,
-        name="id_pago_nuevo", index=True)
+        name="id_pago_nuevo",
+        index=True,
+    )

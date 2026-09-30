@@ -1,9 +1,10 @@
+"""Acceso a datos de la programación (horario/frecuencia) de campañas."""
+
 import uuid
 from datetime import datetime
 from typing import Sequence
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.campaigns.models.campaign_model import CampaignModel
@@ -12,9 +13,6 @@ from messaging.campaigns.models.campaign_time_model import CampaignTimeModel
 
 class CampaignTimeRepository(SoftDeleteRepositoryBase[CampaignTimeModel]):
     model_class = CampaignTimeModel
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
 
     async def list_active_by_org(
         self, organization_id: uuid.UUID
@@ -55,7 +53,9 @@ class CampaignTimeRepository(SoftDeleteRepositoryBase[CampaignTimeModel]):
 
     async def get_by_campaign(self, campaign_id: uuid.UUID) -> CampaignTimeModel | None:
         result = await self.session.execute(
-            select(CampaignTimeModel).where(CampaignTimeModel.campaign_id == campaign_id)
+            select(CampaignTimeModel).where(
+                CampaignTimeModel.campaign_id == campaign_id
+            )
         )
         return result.scalar_one_or_none()
 
@@ -64,6 +64,8 @@ class CampaignTimeRepository(SoftDeleteRepositoryBase[CampaignTimeModel]):
         ct.next_execution = None
         return await self.update(ct)
 
-    async def reschedule(self, ct: CampaignTimeModel, next_execution: datetime) -> CampaignTimeModel:
+    async def reschedule(
+        self, ct: CampaignTimeModel, next_execution: datetime
+    ) -> CampaignTimeModel:
         ct.next_execution = next_execution
         return await self.update(ct)

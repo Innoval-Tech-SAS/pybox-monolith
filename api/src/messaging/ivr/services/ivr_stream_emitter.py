@@ -36,7 +36,6 @@ def organization_topic(organization_id: uuid.UUID | str) -> str:
 
 
 class IvrStreamEmitter:
-
     def __init__(self) -> None:
         self._queues: dict[str, list[asyncio.Queue]] = defaultdict(list)
 
@@ -68,7 +67,9 @@ class IvrStreamEmitter:
         for queue in list(queues):
             self._put_nowait_dropping_oldest(queue, payload, topic)
 
-    async def emit_many(self, topics: list[str | None], event: str, data: dict[str, Any]) -> None:
+    async def emit_many(
+        self, topics: list[str | None], event: str, data: dict[str, Any]
+    ) -> None:
         """Emite el mismo evento a varios tópicos (campaña + organización)."""
         for topic in topics:
             if topic:
@@ -84,10 +85,14 @@ class IvrStreamEmitter:
                 queue.get_nowait()
                 queue.put_nowait(payload)
                 logger.warning(
-                    "[ivr_stream] cola llena en topic=%s: se descartó el evento más viejo", topic
+                    "[ivr_stream] cola llena en topic=%s: se descartó el "
+                    "evento más viejo",
+                    topic,
                 )
-            except (asyncio.QueueEmpty, asyncio.QueueFull):
-                logger.warning("[ivr_stream] no se pudo encolar el evento en topic=%s", topic)
+            except asyncio.QueueEmpty, asyncio.QueueFull:
+                logger.warning(
+                    "[ivr_stream] no se pudo encolar el evento en topic=%s", topic
+                )
 
 
 #: Instancia de proceso. Ver la nota de multi-worker en el docstring del módulo.

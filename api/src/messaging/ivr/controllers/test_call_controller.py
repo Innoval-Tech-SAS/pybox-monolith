@@ -1,3 +1,5 @@
+"""Endpoint de prueba para enviar una llamada IVR única a través de Helena."""
+
 from typing import Any
 
 import httpx
@@ -47,7 +49,11 @@ async def send_test_call(
         raise HTTPException(
             status.HTTP_502_BAD_GATEWAY,
             f"Helena rechazó la llamada de prueba: {detail or exc}",
-        )
-    except Exception as exc:  # noqa: BLE001
+        ) from exc
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        # Cualquier falla no-HTTP de Helena (timeout, conexión) también debe
+        # volver como 502 y no como 500 sin manejar.
         logger.error("[ivr] test_call_error | error=%s", exc)
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo enviar la llamada de prueba.")
+        raise HTTPException(
+            status.HTTP_502_BAD_GATEWAY, "No se pudo enviar la llamada de prueba."
+        ) from exc

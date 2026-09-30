@@ -1,3 +1,5 @@
+"""Catálogo de claves de permisos granulares usadas por la UI y las policies."""
+
 # Org card permissions — activan módulos al entrar a una organización
 ORG_PORTFOLIOS = "org.portfolios"
 ORG_PAYMENT_METHODS = "org.payment_methods"
@@ -17,6 +19,7 @@ PORTFOLIO_COMMUNICATIONS = "portfolio.communications"
 # porque es un acto con peso legal: ver los datos del deudor no debería habilitarlo.
 PORTFOLIO_JUDICIAL = "portfolio.judicial"
 
-# Otorgado individualmente a usuarios USER/ORGANIZATION que operan la bandeja de WhatsApp
-# ("agentes de WhatsApp") — no es un rol nuevo, solo un permiso suelto (ver PermissionAssignmentModel).
+# Otorgado individualmente a usuarios USER/ORGANIZATION que operan la bandeja de
+# WhatsApp ("agentes de WhatsApp") — no es un rol nuevo, solo un permiso suelto (ver
+# PermissionAssignmentModel).
 MANAGE_WHATSAPP_CHATS = "org.manage_whatsapp_chats"

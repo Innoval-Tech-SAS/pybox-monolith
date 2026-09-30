@@ -1,12 +1,15 @@
-﻿import secrets
+"""Emisión y verificación de JWT de acceso/refresh para la sesión de usuario."""
+
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
 
-from identity.auth.enums.auth_enums import AuthProvider
+from core.config.logger import logger
 from core.tools.config_tools import get_or_throw
+from identity.auth.enums.auth_enums import AuthProvider
 from identity.users.models.user_model import UserModel
 
 
@@ -22,13 +25,25 @@ class AuthTokenService:
     @property
     def redis(self):
         if self._redis is None:
-            from core.database.redis import redis_client
+            # Import perezoso: instanciar el módulo evalúa RedisConfig y exige
+            # REDIS_HOST/PORT/PASSWORD ya en el import. Los métodos de tokens
+            # que no tocan Redis (generate/verify_access_token) deben poder
+            # usarse sin esas variables configuradas.
+            from core.database.redis import (  # pylint: disable=import-outside-toplevel
+                redis_client,
+            )
+
             self._redis = redis_client
         return self._redis
 
-    def generate_access_token(self, user: UserModel, auth_provider: AuthProvider) -> str:
-        from core.config.logger import logger
-        logger.debug("[token] generate_access | user_id=%s provider=%s", user.id, auth_provider.value)
+    def generate_access_token(
+        self, user: UserModel, auth_provider: AuthProvider
+    ) -> str:
+        logger.debug(
+            "[token] generate_access | user_id=%s provider=%s",
+            user.id,
+            auth_provider.value,
+        )
         now = datetime.now(timezone.utc)
         token = jwt.encode(
             {
@@ -49,25 +64,31 @@ class AuthTokenService:
             {
                 "sub": str(user_id),
                 "jti": jti,
-                "exp": datetime.now(timezone.utc) + timedelta(days=self.REFRESH_TOKEN_EXPIRE_DAYS),
+                "exp": datetime.now(timezone.utc)
+                + timedelta(days=self.REFRESH_TOKEN_EXPIRE_DAYS),
             },
             self.secret_key,
             algorithm=self.ALGORITHM,
         )
-        await self.redis.set(f"refresh:{user_id}", jti, self.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600)
+        await self.redis.set(
+            f"refresh:{user_id}", jti, self.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600
+        )
         return token
 
     def verify_access_token(self, token: str) -> dict[str, Any]:
-        from core.config.logger import logger
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=[self.ALGORITHM])
-            logger.debug("[token] verify_access | result=ok user_id=%s", payload.get("sub"))
+            logger.debug(
+                "[token] verify_access | result=ok user_id=%s", payload.get("sub")
+            )
             return payload
         except jwt.ExpiredSignatureError as e:
             logger.debug("[token] verify_access | result=expired")
             raise ValueError("El token expiró.") from e
         except jwt.InvalidTokenError as e:
-            logger.debug("[token] verify_access | result=invalid error=%s", type(e).__name__)
+            logger.debug(
+                "[token] verify_access | result=invalid error=%s", type(e).__name__
+            )
             raise ValueError("El token no es válido.") from e
 
     async def verify_refresh_token(self, user_id: uuid.UUID, jti: str) -> bool:

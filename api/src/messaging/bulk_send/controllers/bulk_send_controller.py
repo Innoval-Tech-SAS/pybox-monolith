@@ -1,3 +1,5 @@
+"""Endpoint de envío masivo de mensajes a partir de un archivo CSV/XLSX."""
+
 import uuid
 from typing import Annotated
 
@@ -20,12 +22,30 @@ router = APIRouter(prefix="/messaging/bulk-send", tags=["Envío masivo"])
 async def bulk_send(
     session: CurrentSession,
     service: BulkSendServiceDep,
-    file: Annotated[UploadFile, File(description="Archivo CSV o XLSX con columnas: tipo_documento, documento, destinatario + variables")],
+    file: Annotated[
+        UploadFile,
+        File(
+            description=(
+                "Archivo CSV o XLSX con columnas: tipo_documento, "
+                "documento, destinatario + variables"
+            )
+        ),
+    ],
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
     channel_id: Annotated[uuid.UUID, Query(alias="channelId")],
     template_id: Annotated[uuid.UUID | None, Query(alias="templateId")] = None,
-    body: Annotated[str | None, Form(description="Contenido del mensaje con variables {nombre_columna}. Requerido si no se usa templateId")] = None,
-    subject: Annotated[str | None, Form(description="Asunto del mensaje. Obligatorio para EMAIL")] = None,
+    body: Annotated[
+        str | None,
+        Form(
+            description=(
+                "Contenido del mensaje con variables {nombre_columna}. "
+                "Requerido si no se usa templateId"
+            )
+        ),
+    ] = None,
+    subject: Annotated[
+        str | None, Form(description="Asunto del mensaje. Obligatorio para EMAIL")
+    ] = None,
 ) -> BulkSendResponse:
     rows = await parse_file(file)
     return await service.process(
@@ -37,4 +57,3 @@ async def bulk_send(
         body=body,
         subject=subject,
     )
- 

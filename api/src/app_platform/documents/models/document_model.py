@@ -1,3 +1,5 @@
+"""Metadatos de un archivo guardado en el almacén de objetos."""
+
 import uuid
 
 from sqlalchemy import BigInteger, ForeignKey, String, UniqueConstraint
@@ -34,7 +36,9 @@ class DocumentModel(BaseModel):
         # esta unicidad sobre el par, Postgres no puede exigir que el documento apuntado
         # pertenezca a la MISMA organización que lo referencia (ver db-schema-design,
         # ítem 3 — atributo derivado sin invariante protegida).
-        UniqueConstraint("id", "id_organizacion", name="uq_documentos_id_id_organizacion"),
+        UniqueConstraint(
+            "id", "id_organizacion", name="uq_documentos_id_id_organizacion"
+        ),
     )
 
     # ── Ubicación en el almacén ──────────────────────────────────────────────
@@ -47,9 +51,9 @@ class DocumentModel(BaseModel):
     # entre organizaciones; en documentos del titular va nulo.
     #
     # use_alter: `entidades` apunta de vuelta a `documentos` (fiscal, mercantil,
-    # representante) y `usuarios` también (foto de perfil), así que hay un ciclo de FK y
-    # no existe un orden de CREATE TABLE que lo satisfaga. Marcando este lado, SQLAlchemy
-    # lo saca del grafo de dependencias y puede volver a ordenar las tablas.
+    # representante) y `usuarios` también (foto de perfil), así que hay un ciclo de
+    # FK y no existe un orden de CREATE TABLE que lo satisfaga. Marcando este lado,
+    # SQLAlchemy lo saca del grafo de dependencias y puede volver a ordenar las tablas.
     organization_id: Mapped[uuid.UUID | None] = mapped_column(
         PgUUID(as_uuid=True),
         ForeignKey("entidades.id", use_alter=True),
@@ -59,21 +63,30 @@ class DocumentModel(BaseModel):
     )
 
     # ── Datos del archivo ────────────────────────────────────────────────────
-    original_name: Mapped[str] = mapped_column(String(255), nullable=False, name="nombre_original")
-    content_type: Mapped[str] = mapped_column(String(100), nullable=False, name="tipo_contenido")
-    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False, name="tamano_bytes")
-    # SHA-256 del contenido. La API ve pasar los bytes, así que puede calcularlo: sirve
-    # para detectar duplicados y para probar la integridad de un documento con valor legal.
+    original_name: Mapped[str] = mapped_column(
+        String(255), nullable=False, name="nombre_original"
+    )
+    content_type: Mapped[str] = mapped_column(
+        String(100), nullable=False, name="tipo_contenido"
+    )
+    size_bytes: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, name="tamano_bytes"
+    )
+    # SHA-256 del contenido. La API ve pasar los bytes, así que puede calcularlo:
+    # sirve para detectar duplicados y para probar la integridad de un documento
+    # con valor legal.
     checksum: Mapped[str] = mapped_column(
         String(64), nullable=False, index=True, name="suma_verificacion"
     )
     # ETag que reporta el almacén, para reconciliar contra él si hiciera falta.
     etag: Mapped[str | None] = mapped_column(String(128), nullable=True, name="etag")
 
-    # use_alter por el mismo ciclo que `organization_id`: usuarios.id_documento_foto_perfil
-    # apunta a esta tabla.
+    # use_alter por el mismo ciclo que `organization_id`:
+    # usuarios.id_documento_foto_perfil apunta a esta tabla.
     uploaded_by: Mapped[uuid.UUID | None] = mapped_column(
         PgUUID(as_uuid=True),
         ForeignKey("usuarios.id", use_alter=True),
         nullable=True,
-        name="subido_por", index=True)
+        name="subido_por",
+        index=True,
+    )

@@ -1,3 +1,5 @@
+"""Alta y consulta de notificaciones judiciales, con sus documentos adjuntos."""
+
 import uuid
 from typing import Sequence
 
@@ -8,13 +10,19 @@ from app_platform.countries.enums.country_enums import UserDocumentType
 from app_platform.documents.enums.document_enums import MAX_DOCUMENT_SIZE_BYTES
 from app_platform.documents.models.document_model import DocumentModel
 from app_platform.documents.services.document_service import DocumentService
-from app_platform.documents.utils.document_naming import resolve_content_type, safe_original_name
+from app_platform.documents.utils.document_naming import (
+    resolve_content_type,
+    safe_original_name,
+)
 from app_platform.documents.utils.upload_limits import read_within_limit
 from app_platform.notifications.services.notification_service import NotificationService
 from core.security.constants.permissions import PORTFOLIO_JUDICIAL
-from core.security.policies.security_policies import get_self_identity, require_permission
-from identity.users.repository.user_repository import UserRepository
+from core.security.policies.security_policies import (
+    get_self_identity,
+    require_permission,
+)
 from identity.users.enums.user_enums import IdentityVerificationStatus
+from identity.users.repository.user_repository import UserRepository
 from identity.users.schemas.user_session_schema import UserSession
 from receivables.debtors.models.debtor_model import DebtorModel
 from receivables.debtors.repository.debtor_repository import DebtorRepository
@@ -22,15 +30,17 @@ from receivables.judicial_notifications.enums.judicial_notification_enums import
     JUDICIAL_PRIORITY_LABELS,
     JudicialPriority,
 )
-from receivables.judicial_notifications.models.judicial_notification_document_model import (
+from receivables.judicial_notifications.models.judicial_notification_document_model import (  # pylint: disable=line-too-long
     JudicialNotificationDocumentModel,
 )
-from receivables.judicial_notifications.models.judicial_notification_model import JudicialNotificationModel
-from receivables.judicial_notifications.repository.judicial_notification_document_repository import (
+from receivables.judicial_notifications.models.judicial_notification_model import (
+    JudicialNotificationModel,
+)
+from receivables.judicial_notifications.repository.judicial_notification_document_repository import (  # pylint: disable=line-too-long
     JUDICIAL_NOTIFICATION_DOCUMENT_STORAGE_DOMAIN,
     JudicialNotificationDocumentRepository,
 )
-from receivables.judicial_notifications.repository.judicial_notification_repository import (
+from receivables.judicial_notifications.repository.judicial_notification_repository import (  # pylint: disable=line-too-long
     JudicialNotificationRepository,
     JudicialNotificationRow,
 )
@@ -41,7 +51,6 @@ from receivables.judicial_notifications.schemas.judicial_notification_schemas im
     JudicialNotificationResponse,
     JudicialPriorityOption,
 )
-
 
 # Prioridad judicial → tipo visual de la campana (enum de NotificationModel).
 _PRIORITY_NOTIF_TYPE: dict[JudicialPriority, str] = {
@@ -56,7 +65,6 @@ JUDICIAL_NOTIFICATION_CATEGORY = "judicial"
 
 
 class JudicialNotificationService:
-
     def __init__(self, session: AsyncSession) -> None:
         self._repo = JudicialNotificationRepository(session)
         self._debtor_repo = DebtorRepository(session)
@@ -75,7 +83,9 @@ class JudicialNotificationService:
 
     def list_priorities(self) -> list[JudicialPriorityOption]:
         return [
-            JudicialPriorityOption(value=priority.value, label=JUDICIAL_PRIORITY_LABELS[priority])
+            JudicialPriorityOption(
+                value=priority.value, label=JUDICIAL_PRIORITY_LABELS[priority]
+            )
             for priority in JudicialPriority
         ]
 
@@ -88,7 +98,9 @@ class JudicialNotificationService:
         attachments_by_notification = await self._get_attachments_by_notification(rows)
         return JudicialInboxResponse(
             items=[
-                self._to_response(row, attachments_by_notification.get(str(row.notification.id), []))
+                self._to_response(
+                    row, attachments_by_notification.get(str(row.notification.id), [])
+                )
                 for row in rows
             ],
             unread_count=unread,
@@ -98,7 +110,9 @@ class JudicialNotificationService:
         debtors = await self._require_debtors(session)
         # El repo filtra por deudor: si la notificación no es suya vuelve None y
         # respondemos 404, sin confirmarle que existe.
-        notification = await self._repo.get_owned_by_debtor(notification_id, [d.id for d in debtors])
+        notification = await self._repo.get_owned_by_debtor(
+            notification_id, [d.id for d in debtors]
+        )
         if notification is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Notificación no encontrada")
         if notification.is_read:
@@ -136,7 +150,10 @@ class JudicialNotificationService:
         created = await self._repo.add(notification)
         row = await self._repo.get_row_by_id(created.id)
         if row is None:
-            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "No se pudo leer la notificación creada")
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                "No se pudo leer la notificación creada",
+            )
 
         response = self._to_response(row)
         await self._notify_recipients(response)
@@ -152,7 +169,9 @@ class JudicialNotificationService:
         rows = await self._repo.get_by_credit_id(credit_id)
         attachments_by_notification = await self._get_attachments_by_notification(rows)
         return [
-            self._to_response(row, attachments_by_notification.get(str(row.notification.id), []))
+            self._to_response(
+                row, attachments_by_notification.get(str(row.notification.id), [])
+            )
             for row in rows
         ]
 
@@ -164,7 +183,9 @@ class JudicialNotificationService:
         row = await self._repo.get_row_by_id(notification_id)
         if row is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Notificación no encontrada")
-        organization_id = await self._repo.get_credit_organization_id(row.notification.credit_id)
+        organization_id = await self._repo.get_credit_organization_id(
+            row.notification.credit_id
+        )
         if organization_id is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Crédito no encontrado")
         require_permission(PORTFOLIO_JUDICIAL, session, str(organization_id))
@@ -202,18 +223,26 @@ class JudicialNotificationService:
             debtors = await self._require_debtors(session)
             # El repo filtra por deudor: si la notificación no es suya vuelve None y
             # respondemos 404, sin confirmarle a quien pregunta que existe.
-            owned = await self._repo.get_owned_by_debtor(notification_id, [d.id for d in debtors])
+            owned = await self._repo.get_owned_by_debtor(
+                notification_id, [d.id for d in debtors]
+            )
             if owned is None:
-                raise HTTPException(status.HTTP_404_NOT_FOUND, "Notificación no encontrada")
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND, "Notificación no encontrada"
+                )
         else:
-            organization_id = await self._repo.get_credit_organization_id(row.notification.credit_id)
+            organization_id = await self._repo.get_credit_organization_id(
+                row.notification.credit_id
+            )
             if organization_id is None:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, "Crédito no encontrado")
             require_permission(PORTFOLIO_JUDICIAL, session, str(organization_id))
 
         # Último eslabón: el adjunto tiene que colgar de ESA notificación. Si no, 404 —
         # no se le confirma a quien pregunta que el documento existe.
-        owned_document = await self._document_repo.get_owned(notification_id, document_id)
+        owned_document = await self._document_repo.get_owned(
+            notification_id, document_id
+        )
         if owned_document is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Documento no encontrado")
         return await self._document_service.to_content_response(
@@ -236,7 +265,9 @@ class JudicialNotificationService:
         links = await self._document_repo.list_by_notifications(notification_ids)
         by_notification: dict[str, list[DocumentModel]] = {}
         for link, document in links:
-            by_notification.setdefault(str(link.judicial_notification_id), []).append(document)
+            by_notification.setdefault(str(link.judicial_notification_id), []).append(
+                document
+            )
         return by_notification
 
     async def _notify_recipients(self, response: JudicialNotificationResponse) -> None:
@@ -296,19 +327,26 @@ class JudicialNotificationService:
         document_type, document_number_hash = get_self_identity(session)
         try:
             doc_type = UserDocumentType(document_type)
-        except ValueError:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Tipo de documento no reconocido")
+        except ValueError as e:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, "Tipo de documento no reconocido"
+            ) from e
 
-        debtors = await self._debtor_repo.list_by_document(doc_type, document_number_hash)
+        debtors = await self._debtor_repo.list_by_document(
+            doc_type, document_number_hash
+        )
         if not debtors:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "No encontramos obligaciones a tu nombre")
-        # Ver StatementService._require_self_debtors: conocer tipo+número de documento de
-        # alguien no es secreto, así que además de ser deudor conocido se exige identidad
-        # verificada (documento subido + aprobado por Atención al Cliente).
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, "No encontramos obligaciones a tu nombre"
+            )
+        # Ver StatementService._require_self_debtors: conocer tipo+número de documento
+        # de alguien no es secreto, así que además de ser deudor conocido se exige
+        # identidad verificada (documento subido + aprobado por Atención al Cliente).
         if session.identity_verification_status != IdentityVerificationStatus.APPROVED:
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
-                "Verificación de identidad pendiente. Sube tu documento de identidad para acceder a tu información crediticia.",
+                "Verificación de identidad pendiente. Sube tu documento de "
+                "identidad para acceder a tu información crediticia.",
             )
         return debtors
 
@@ -331,7 +369,10 @@ class JudicialNotificationService:
                 JudicialNotificationAttachment(
                     id=document.id,
                     name=document.original_name,
-                    url=f"/judicial-notifications/{row.notification.id}/documents/{document.id}/content",
+                    url=(
+                        f"/judicial-notifications/{row.notification.id}/"
+                        f"documents/{document.id}/content"
+                    ),
                     size=document.size_bytes or 0,
                 )
                 for document in documents

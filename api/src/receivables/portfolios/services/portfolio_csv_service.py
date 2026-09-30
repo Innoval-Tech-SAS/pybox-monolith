@@ -1,34 +1,33 @@
+"""Procesamiento de la carga masiva de portafolio (CSV/XLSX)."""
+
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from decimal import Decimal
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app_platform.countries.enums.country_enums import Nationality
+from app_platform.countries.repository.country_repository import CountryRepository
 from app_platform.documents.enums.document_enums import (
     CSV_CONTENT_TYPE,
     XLSX_CONTENT_TYPE,
 )
 from app_platform.documents.services.document_service import DocumentService
-from receivables.portfolios.enums.portfolio_document_enums import PortfolioDocumentCategory
-from receivables.portfolios.models.portfolio_document_model import PortfolioDocumentModel
-from receivables.portfolios.repository.portfolio_document_repository import (
-    PORTFOLIO_DOCUMENT_STORAGE_DOMAIN,
-    PortfolioDocumentRepository,
-)
-
-from sqlalchemy.ext.asyncio import AsyncSession
-from app_platform.countries.enums.country_enums import Nationality
-
 from core.config.logger import logger
+from core.security.services.encrypt_service import encrypt_service
 from core.tools.config_tools import get_or_default
-
-from app_platform.countries.repository.country_repository import CountryRepository
 from receivables.contact_methods.models.contact_method_model import ContactMethodModel
-from receivables.contact_methods.repository.contact_method_repository import ContactMethodRepository
+from receivables.contact_methods.repository.contact_method_repository import (
+    ContactMethodRepository,
+)
 from receivables.contact_methods.utils.contact_normalize import normalize_contact_value
 from receivables.credits.models.credit_adjustment_model import CreditAdjustmentModel
 from receivables.credits.models.credit_model import CreditModel
 from receivables.credits.models.uvr_quote_model import UVRQuoteModel
-from receivables.credits.repository.credit_adjustment_repository import CreditAdjustmentRepository
+from receivables.credits.repository.credit_adjustment_repository import (
+    CreditAdjustmentRepository,
+)
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.credits.repository.uvr_quote_repository import UVRQuoteRepository
 from receivables.debtors.models.address_model import AddressModel
@@ -37,15 +36,24 @@ from receivables.debtors.repository.address_repository import AddressRepository
 from receivables.debtors.repository.debtor_repository import DebtorRepository
 from receivables.payments.models.payment_model import PaymentModel
 from receivables.payments.repository.payment_repository import PaymentRepository
-from receivables.portfolios.models.portfolio_model import PortfolioModel
-from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from core.security.services.encrypt_service import encrypt_service
 from receivables.portfolios.constants.portfolio_csv_constants import (
     DEFAULT_PORTFOLIO_CSV_BULK_UPSERT,
     MAX_ERRORS,
     PORTFOLIO_CSV_BULK_CHUNK_SIZE,
     PORTFOLIO_CSV_BULK_UPSERT_ENV_VAR,
 )
+from receivables.portfolios.enums.portfolio_document_enums import (
+    PortfolioDocumentCategory,
+)
+from receivables.portfolios.models.portfolio_document_model import (
+    PortfolioDocumentModel,
+)
+from receivables.portfolios.models.portfolio_model import PortfolioModel
+from receivables.portfolios.repository.portfolio_document_repository import (
+    PORTFOLIO_DOCUMENT_STORAGE_DOMAIN,
+    PortfolioDocumentRepository,
+)
+from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 from receivables.portfolios.schemas.portfolio_csv_schemas import CsvProcessResult
 from receivables.portfolios.schemas.portfolio_file_schemas import (
     AddressRowData,
@@ -60,7 +68,6 @@ from receivables.portfolios.utils.portfolio_file_parser import PortfolioFilePars
 
 
 class PortfolioCsvService:
-
     def __init__(self, session: AsyncSession):
         self.session = session
         self.parser = PortfolioFileParser()
@@ -116,10 +123,19 @@ class PortfolioCsvService:
         filename: str = "",
         on_progress: Callable[[int, int], Awaitable[None]] | None = None,
     ) -> CsvProcessResult:
-        logger.info("[process_csv] START | org=%s nombre=%s bytes=%d", organization_id, portfolio_name, len(file_bytes))
+        logger.info(
+            "[process_csv] START | org=%s nombre=%s bytes=%d",
+            organization_id,
+            portfolio_name,
+            len(file_bytes),
+        )
 
         file_data = self.parser.parse(file_bytes, filename)
-        logger.info("[process_csv] parsed | filas=%d skipped=%d", len(file_data.rows), file_data.total_skipped)
+        logger.info(
+            "[process_csv] parsed | filas=%d skipped=%d",
+            len(file_data.rows),
+            file_data.total_skipped,
+        )
 
         portfolio = await self.portfolio_repo.add(
             PortfolioModel(
@@ -130,24 +146,38 @@ class PortfolioCsvService:
         )
         logger.info("[process_csv] portfolio creado | id=%s", portfolio.id)
 
-        archived = await self._archive_source_file(portfolio, file_bytes, filename, "create")
-        logger.info("[process_csv] archivo guardado | documento=%s", archived.document_id)
+        archived = await self._archive_source_file(
+            portfolio, file_bytes, filename, "create"
+        )
+        logger.info(
+            "[process_csv] archivo guardado | documento=%s", archived.document_id
+        )
 
         total_rows = len(file_data.rows) + file_data.total_skipped
 
         titulares_docs = {
-            (r.debtor.document_type, encrypt_service.hash_document(r.debtor.document_number))
+            (
+                r.debtor.document_type,
+                encrypt_service.hash_document(r.debtor.document_number),
+            )
             for r in file_data.rows
         }
         codeudores_docs = {
-            (r.codebtor.document_type, encrypt_service.hash_document(r.codebtor.document_number))
+            (
+                r.codebtor.document_type,
+                encrypt_service.hash_document(r.codebtor.document_number),
+            )
             for r in file_data.rows
             if r.codebtor
         }
 
         phone_prefix = await self.country_repo.get_phone_prefix(portfolio.country)
         processed, errors = await self._process_rows(
-            file_data.rows, portfolio.id, portfolio.organization_id, phone_prefix, on_progress
+            file_data.rows,
+            portfolio.id,
+            portfolio.organization_id,
+            phone_prefix,
+            on_progress,
         )
 
         failed = len(file_data.rows) - processed
@@ -162,7 +192,12 @@ class PortfolioCsvService:
             clientes_unicos=len(titulares_docs),
             errors=errors,
         )
-        logger.info("[process_csv] END | procesados=%d fallidos=%d total=%d", processed, failed, total_rows)
+        logger.info(
+            "[process_csv] END | procesados=%d fallidos=%d total=%d",
+            processed,
+            failed,
+            total_rows,
+        )
         return result
 
     # ------------------------------------------------------------------
@@ -182,14 +217,20 @@ class PortfolioCsvService:
             async with self.session.begin_nested():
                 debtor = await self._upsert_debtor(organization_id, row.debtor)
                 codebtor = (
-                    await self._upsert_debtor(organization_id, row.codebtor) if row.codebtor else None
+                    await self._upsert_debtor(organization_id, row.codebtor)
+                    if row.codebtor
+                    else None
                 )
                 await self._upsert_address(debtor.id, row.primary_address)
                 if row.secondary_address:
                     await self._upsert_address(debtor.id, row.secondary_address)
-                await self._upsert_contact_methods(debtor.id, row.debtor_contacts, phone_prefix)
+                await self._upsert_contact_methods(
+                    debtor.id, row.debtor_contacts, phone_prefix
+                )
                 if codebtor and row.codebtor_contacts:
-                    await self._upsert_contact_methods(codebtor.id, row.codebtor_contacts, phone_prefix)
+                    await self._upsert_contact_methods(
+                        codebtor.id, row.codebtor_contacts, phone_prefix
+                    )
                 credit = await self._upsert_credit(
                     row.credit,
                     portfolio_id,
@@ -201,7 +242,9 @@ class PortfolioCsvService:
                 if row.uvr_quote:
                     await self._insert_uvr_quote(credit.id, row.uvr_quote)
                 if row.credit_adjustment:
-                    await self._insert_credit_adjustment(credit.id, row.credit_adjustment)
+                    await self._insert_credit_adjustment(
+                        credit.id, row.credit_adjustment
+                    )
         except Exception as exc:
             logger.warning("[_process_row] ERROR | fila=%d error=%s", row_number, exc)
             return f"Fila {row_number} (doc: {row.debtor.document_number}): {exc}"
@@ -215,7 +258,12 @@ class PortfolioCsvService:
     def _bulk_upsert_enabled(self) -> bool:
         """Lee la env var EN CADA LLAMADA (no cacheada a nivel de módulo/instancia) para
         que el flag se pueda togglear sin redeploy."""
-        return get_or_default(PORTFOLIO_CSV_BULK_UPSERT_ENV_VAR, DEFAULT_PORTFOLIO_CSV_BULK_UPSERT) == "true"
+        return (
+            get_or_default(
+                PORTFOLIO_CSV_BULK_UPSERT_ENV_VAR, DEFAULT_PORTFOLIO_CSV_BULK_UPSERT
+            )
+            == "true"
+        )
 
     async def _process_rows(
         self,
@@ -226,8 +274,12 @@ class PortfolioCsvService:
         on_progress: Callable[[int, int], Awaitable[None]] | None,
     ) -> tuple[int, list[str]]:
         if self._bulk_upsert_enabled():
-            return await self._process_rows_bulk(rows, portfolio_id, organization_id, phone_prefix, on_progress)
-        return await self._process_rows_sequential(rows, portfolio_id, organization_id, phone_prefix, on_progress)
+            return await self._process_rows_bulk(
+                rows, portfolio_id, organization_id, phone_prefix, on_progress
+            )
+        return await self._process_rows_sequential(
+            rows, portfolio_id, organization_id, phone_prefix, on_progress
+        )
 
     async def _process_rows_sequential(
         self,
@@ -242,7 +294,9 @@ class PortfolioCsvService:
         errors: list[str] = []
         total_to_process = len(rows)
         for idx, row in enumerate(rows, start=1):
-            error = await self._process_row(row, portfolio_id, organization_id, idx, phone_prefix)
+            error = await self._process_row(
+                row, portfolio_id, organization_id, idx, phone_prefix
+            )
             if error:
                 if len(errors) < MAX_ERRORS:
                     errors.append(error)
@@ -260,18 +314,20 @@ class PortfolioCsvService:
         phone_prefix: str | None,
         on_progress: Callable[[int, int], Awaitable[None]] | None,
     ) -> tuple[int, list[str]]:
-        """Precarga + bulk upsert de deudores/créditos por chunk (un solo `INSERT ...
-        ON CONFLICT DO UPDATE ... RETURNING` por entidad, en vez de un SELECT+INSERT/UPDATE
-        por fila). Direcciones/métodos de contacto/pago/cotización UVR/ajuste de crédito
-        siguen resolviéndose fila por fila (`_finish_row_after_bulk`) reusando los mismos
-        helpers que el camino secuencial -- son operaciones más baratas y ya aceleradas
-        por los índices agregados en la Fase 1, así que no valía el riesgo extra de
-        bulk-ificarlas también en este mismo cambio.
+        """Precarga + bulk upsert de deudores/créditos por chunk (un solo `INSERT
+        ... ON CONFLICT DO UPDATE ... RETURNING` por entidad, en vez de un
+        SELECT+INSERT/UPDATE por fila). Direcciones/métodos de contacto/pago/
+        cotización UVR/ajuste de crédito siguen resolviéndose fila por fila
+        (`_finish_row_after_bulk`) reusando los mismos helpers que el camino
+        secuencial -- son operaciones más baratas y ya aceleradas por los índices
+        agregados en la Fase 1, así que no valía el riesgo extra de bulk-ificarlas
+        también en este mismo cambio.
 
-        Si el bulk de un chunk falla por algo no previsto (p. ej. un dato fuera de rango),
-        ESE chunk completo se reprocesa fila por fila con el camino secuencial (aislado por
-        SAVEPOINT) -- así nunca se pierde la garantía "una fila mala no tumba el archivo",
-        pagando el costo del SAVEPOINT por fila solo en el caso excepcional.
+        Si el bulk de un chunk falla por algo no previsto (p. ej. un dato fuera de
+        rango), ESE chunk completo se reprocesa fila por fila con el camino
+        secuencial (aislado por SAVEPOINT) -- así nunca se pierde la garantía "una
+        fila mala no tumba el archivo", pagando el costo del SAVEPOINT por fila
+        solo en el caso excepcional.
         """
         processed = 0
         errors: list[str] = []
@@ -285,21 +341,27 @@ class PortfolioCsvService:
             credit_id_by_number: dict[str, uuid.UUID] | None = None
             try:
                 async with self.session.begin_nested():
-                    debtor_id_by_hash = await self._bulk_upsert_debtors_chunk(organization_id, chunk)
+                    debtor_id_by_hash = await self._bulk_upsert_debtors_chunk(
+                        organization_id, chunk
+                    )
                     credit_id_by_number = await self._bulk_upsert_credits_chunk(
                         chunk, portfolio_id, debtor_id_by_hash
                     )
             except Exception as exc:
                 logger.warning(
-                    "[_process_rows_bulk] bulk de chunk falló, reprocesando fila por fila | inicio=%d error=%s",
-                    first_row_number, exc,
+                    "[_process_rows_bulk] bulk de chunk falló, reprocesando fila "
+                    "por fila | inicio=%d error=%s",
+                    first_row_number,
+                    exc,
                 )
                 debtor_id_by_hash = None
 
             if debtor_id_by_hash is None:
                 for offset, row in enumerate(chunk):
                     idx = first_row_number + offset
-                    error = await self._process_row(row, portfolio_id, organization_id, idx, phone_prefix)
+                    error = await self._process_row(
+                        row, portfolio_id, organization_id, idx, phone_prefix
+                    )
                     if error:
                         if len(errors) < MAX_ERRORS:
                             errors.append(error)
@@ -338,7 +400,9 @@ class PortfolioCsvService:
             for debtor_data in (d for d in (row.debtor, row.codebtor) if d is not None):
                 doc_hash = encrypt_service.hash_document(debtor_data.document_number)
                 debtors_by_hash[doc_hash] = {
-                    "document_number": encrypt_service.encrypt_to_str(debtor_data.document_number),
+                    "document_number": encrypt_service.encrypt_to_str(
+                        debtor_data.document_number
+                    ),
                     "document_number_hash": doc_hash,
                     "full_name": debtor_data.full_name,
                     "document_type": debtor_data.document_type,
@@ -360,9 +424,13 @@ class PortfolioCsvService:
         credits_by_number: dict[str, dict] = {}
         for row in chunk:
             data = row.credit
-            debtor_id = debtor_id_by_hash[encrypt_service.hash_document(row.debtor.document_number)]
+            debtor_id = debtor_id_by_hash[
+                encrypt_service.hash_document(row.debtor.document_number)
+            ]
             codebtor_id = (
-                debtor_id_by_hash.get(encrypt_service.hash_document(row.codebtor.document_number))
+                debtor_id_by_hash.get(
+                    encrypt_service.hash_document(row.codebtor.document_number)
+                )
                 if row.codebtor
                 else None
             )
@@ -396,7 +464,9 @@ class PortfolioCsvService:
                 "debtor_id": debtor_id,
                 "codebtor_id": codebtor_id,
             }
-        return await self.credit_repo.bulk_upsert_by_credit_number(list(credits_by_number.values()))
+        return await self.credit_repo.bulk_upsert_by_credit_number(
+            list(credits_by_number.values())
+        )
 
     async def _finish_row_after_bulk(
         self,
@@ -406,14 +476,19 @@ class PortfolioCsvService:
         credit_id_by_number: dict[str, uuid.UUID],
         phone_prefix: str | None,
     ) -> str | None:
-        """Resuelve direcciones/contactos/pago/UVR/ajuste de una fila cuyo deudor/crédito
-        YA se resolvió en el bulk del chunk -- mismos helpers que `_process_row`, sin el
-        SELECT+INSERT/UPDATE de deudor/crédito que ya no hace falta repetir."""
+        """Resuelve direcciones/contactos/pago/UVR/ajuste de una fila cuyo
+        deudor/crédito YA se resolvió en el bulk del chunk -- mismos helpers que
+        `_process_row`, sin el SELECT+INSERT/UPDATE de deudor/crédito que ya no
+        hace falta repetir."""
         try:
             async with self.session.begin_nested():
-                debtor_id = debtor_id_by_hash[encrypt_service.hash_document(row.debtor.document_number)]
+                debtor_id = debtor_id_by_hash[
+                    encrypt_service.hash_document(row.debtor.document_number)
+                ]
                 codebtor_id = (
-                    debtor_id_by_hash.get(encrypt_service.hash_document(row.codebtor.document_number))
+                    debtor_id_by_hash.get(
+                        encrypt_service.hash_document(row.codebtor.document_number)
+                    )
                     if row.codebtor
                     else None
                 )
@@ -421,9 +496,13 @@ class PortfolioCsvService:
                 await self._upsert_address(debtor_id, row.primary_address)
                 if row.secondary_address:
                     await self._upsert_address(debtor_id, row.secondary_address)
-                await self._upsert_contact_methods(debtor_id, row.debtor_contacts, phone_prefix)
+                await self._upsert_contact_methods(
+                    debtor_id, row.debtor_contacts, phone_prefix
+                )
                 if codebtor_id and row.codebtor_contacts:
-                    await self._upsert_contact_methods(codebtor_id, row.codebtor_contacts, phone_prefix)
+                    await self._upsert_contact_methods(
+                        codebtor_id, row.codebtor_contacts, phone_prefix
+                    )
 
                 credit_id = credit_id_by_number[row.credit.credit_number]
                 if row.payment:
@@ -431,9 +510,13 @@ class PortfolioCsvService:
                 if row.uvr_quote:
                     await self._insert_uvr_quote(credit_id, row.uvr_quote)
                 if row.credit_adjustment:
-                    await self._insert_credit_adjustment(credit_id, row.credit_adjustment)
+                    await self._insert_credit_adjustment(
+                        credit_id, row.credit_adjustment
+                    )
         except Exception as exc:
-            logger.warning("[_finish_row_after_bulk] ERROR | fila=%d error=%s", row_number, exc)
+            logger.warning(
+                "[_finish_row_after_bulk] ERROR | fila=%d error=%s", row_number, exc
+            )
             return f"Fila {row_number} (doc: {row.debtor.document_number}): {exc}"
         return None
 
@@ -441,10 +524,14 @@ class PortfolioCsvService:
     # Upsert helpers
     # ------------------------------------------------------------------
 
-    async def _upsert_debtor(self, organization_id: uuid.UUID, data: DebtorRowData) -> DebtorModel:
+    async def _upsert_debtor(
+        self, organization_id: uuid.UUID, data: DebtorRowData
+    ) -> DebtorModel:
         logger.debug("[_upsert_debtor] START")
         doc_hash = encrypt_service.hash_document(data.document_number)
-        existing = await self.debtor_repo.get_by_document_number(organization_id, doc_hash)
+        existing = await self.debtor_repo.get_by_document_number(
+            organization_id, doc_hash
+        )
         if existing:
             existing.full_name = data.full_name
             existing.document_type = data.document_type
@@ -465,7 +552,11 @@ class PortfolioCsvService:
         return result
 
     async def _upsert_address(self, debtor_id: uuid.UUID, data: AddressRowData) -> None:
-        logger.debug("[_upsert_address] START | debtor_id=%d type=%s", debtor_id, data.address_type)
+        logger.debug(
+            "[_upsert_address] START | debtor_id=%d type=%s",
+            debtor_id,
+            data.address_type,
+        )
         existing_list = await self.address_repo.get_by_debtor_id(debtor_id)
         existing = next(
             (a for a in existing_list if a.address_type == data.address_type), None
@@ -491,14 +582,21 @@ class PortfolioCsvService:
     async def _upsert_contact_methods(
         self, debtor_id: uuid.UUID, contacts: list, phone_prefix: str | None = None
     ) -> None:
-        logger.debug("[_upsert_contact_methods] START | debtor_id=%d count=%d", debtor_id, len(contacts))
+        logger.debug(
+            "[_upsert_contact_methods] START | debtor_id=%d count=%d",
+            debtor_id,
+            len(contacts),
+        )
         existing_list = await self.contact_method_repo.get_by_debtor_id(debtor_id)
         existing_by_type = {c.contact_type: c for c in existing_list}
         for contact_data in contacts:
-            # Normalizar antes de insertar: EMAIL en minúsculas; PHONE con indicativo de país
-            # (según el país del portafolio). Así el dato importado queda comparable con el
-            # autogestionado y verificado por el titular.
-            value = normalize_contact_value(contact_data.contact_type, contact_data.contact_value, phone_prefix)
+            # Normalizar antes de insertar: EMAIL en minúsculas; PHONE con
+            # indicativo de país (según el país del portafolio). Así el dato
+            # importado queda comparable con el autogestionado y verificado por
+            # el titular.
+            value = normalize_contact_value(
+                contact_data.contact_type, contact_data.contact_value, phone_prefix
+            )
             if contact_data.contact_type in existing_by_type:
                 record = existing_by_type[contact_data.contact_type]
                 record.contact_value = value
@@ -520,38 +618,44 @@ class PortfolioCsvService:
         debtor_id: uuid.UUID,
         codebtor_id: uuid.UUID | None,
     ) -> CreditModel:
-        logger.debug("[_upsert_credit] START | credit_number=%s debtor_id=%d", data.credit_number, debtor_id)
-        fields = dict(
-            credit_number=data.credit_number,
-            credit_date=data.credit_date,
-            disbursed_date=data.disbursed_date,
-            credit_type=data.credit_type,
-            agreed_interest_rate=data.agreed_interest_rate,
-            charged_effective_annual_rate=data.charged_effective_annual_rate,
-            balance_disbursed=data.balance_disbursed,
-            court_date=data.court_date,
-            initial_term=data.initial_term,
-            total_credit_balance=data.total_credit_balance,
-            overdue_principal_balance=data.overdue_principal_balance,
-            current_interest=data.current_interest,
-            overdue_interest=data.overdue_interest,
-            other_concepts=data.other_concepts,
-            overdue_installments=data.overdue_installments,
-            days_overdue_at_cutoff=data.days_overdue_at_cutoff,
-            amortization_system=data.amortization_system,
-            pending_installments=data.pending_installments,
-            insurance_total=data.insurance_total,
-            commission_accum=data.commission_accum,
-            platform_fee_accum=data.platform_fee_accum,
-            vat_accum=data.vat_accum,
-            subproduct=data.subproduct,
-            uvr_last_quote=data.uvr_last_quote,
-            condonations_accum=data.condonations_accum,
-            portfolio_id=portfolio_id,
-            debtor_id=debtor_id,
-            codebtor_id=codebtor_id,
+        logger.debug(
+            "[_upsert_credit] START | credit_number=%s debtor_id=%d",
+            data.credit_number,
+            debtor_id,
         )
-        existing = await self.credit_repo.get_by_credit_number(data.credit_number, portfolio_id)
+        fields = {
+            "credit_number": data.credit_number,
+            "credit_date": data.credit_date,
+            "disbursed_date": data.disbursed_date,
+            "credit_type": data.credit_type,
+            "agreed_interest_rate": data.agreed_interest_rate,
+            "charged_effective_annual_rate": data.charged_effective_annual_rate,
+            "balance_disbursed": data.balance_disbursed,
+            "court_date": data.court_date,
+            "initial_term": data.initial_term,
+            "total_credit_balance": data.total_credit_balance,
+            "overdue_principal_balance": data.overdue_principal_balance,
+            "current_interest": data.current_interest,
+            "overdue_interest": data.overdue_interest,
+            "other_concepts": data.other_concepts,
+            "overdue_installments": data.overdue_installments,
+            "days_overdue_at_cutoff": data.days_overdue_at_cutoff,
+            "amortization_system": data.amortization_system,
+            "pending_installments": data.pending_installments,
+            "insurance_total": data.insurance_total,
+            "commission_accum": data.commission_accum,
+            "platform_fee_accum": data.platform_fee_accum,
+            "vat_accum": data.vat_accum,
+            "subproduct": data.subproduct,
+            "uvr_last_quote": data.uvr_last_quote,
+            "condonations_accum": data.condonations_accum,
+            "portfolio_id": portfolio_id,
+            "debtor_id": debtor_id,
+            "codebtor_id": codebtor_id,
+        }
+        existing = await self.credit_repo.get_by_credit_number(
+            data.credit_number, portfolio_id
+        )
         if existing:
             for attr, val in fields.items():
                 setattr(existing, attr, val)
@@ -591,7 +695,9 @@ class PortfolioCsvService:
         )
         logger.debug("[_insert_payment] END | credit_id=%d", credit_id)
 
-    async def _insert_uvr_quote(self, credit_id: uuid.UUID, data: UVRQuoteRowData) -> None:
+    async def _insert_uvr_quote(
+        self, credit_id: uuid.UUID, data: UVRQuoteRowData
+    ) -> None:
         logger.debug("[_insert_uvr_quote] START | credit_id=%d", credit_id)
         await self.uvr_quote_repo.add(
             UVRQuoteModel(
@@ -605,7 +711,11 @@ class PortfolioCsvService:
     async def _insert_credit_adjustment(
         self, credit_id: uuid.UUID, data: CreditAdjustmentRowData
     ) -> None:
-        logger.debug("[_insert_credit_adjustment] START | credit_id=%d type=%s", credit_id, data.adjustment_type)
+        logger.debug(
+            "[_insert_credit_adjustment] START | credit_id=%d type=%s",
+            credit_id,
+            data.adjustment_type,
+        )
         await self.credit_adjustment_repo.add(
             CreditAdjustmentModel(
                 credit_id=credit_id,
@@ -627,22 +737,34 @@ class PortfolioCsvService:
         filename: str = "",
         on_progress: Callable[[int, int], Awaitable[None]] | None = None,
     ) -> CsvProcessResult:
-        logger.info("[append_csv] START | portfolio=%s bytes=%d", portfolio_id, len(file_bytes))
+        logger.info(
+            "[append_csv] START | portfolio=%s bytes=%d", portfolio_id, len(file_bytes)
+        )
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
         if portfolio is None:
             raise ValueError(f"Portafolio {portfolio_id} no encontrado")
 
         file_data = self.parser.parse(file_bytes, filename)
-        logger.info("[append_csv] parsed | filas=%d skipped=%d", len(file_data.rows), file_data.total_skipped)
+        logger.info(
+            "[append_csv] parsed | filas=%d skipped=%d",
+            len(file_data.rows),
+            file_data.total_skipped,
+        )
 
         await self._archive_source_file(portfolio, file_bytes, filename, "append")
 
         titulares_docs = {
-            (r.debtor.document_type, encrypt_service.hash_document(r.debtor.document_number))
+            (
+                r.debtor.document_type,
+                encrypt_service.hash_document(r.debtor.document_number),
+            )
             for r in file_data.rows
         }
         codeudores_docs = {
-            (r.codebtor.document_type, encrypt_service.hash_document(r.codebtor.document_number))
+            (
+                r.codebtor.document_type,
+                encrypt_service.hash_document(r.codebtor.document_number),
+            )
             for r in file_data.rows
             if r.codebtor
         }
@@ -651,7 +773,11 @@ class PortfolioCsvService:
 
         phone_prefix = await self.country_repo.get_phone_prefix(portfolio.country)
         processed, errors = await self._process_rows(
-            file_data.rows, portfolio.id, portfolio.organization_id, phone_prefix, on_progress
+            file_data.rows,
+            portfolio.id,
+            portfolio.organization_id,
+            phone_prefix,
+            on_progress,
         )
 
         failed = len(file_data.rows) - processed
@@ -680,7 +806,9 @@ class PortfolioCsvService:
         filename: str = "",
         on_progress: Callable[[int, int], Awaitable[None]] | None = None,
     ) -> CsvProcessResult:
-        logger.info("[update_csv] START | portfolio=%s bytes=%d", portfolio_id, len(file_bytes))
+        logger.info(
+            "[update_csv] START | portfolio=%s bytes=%d", portfolio_id, len(file_bytes)
+        )
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
         if portfolio is None:
             raise ValueError(f"Portafolio {portfolio_id} no encontrado")
@@ -689,21 +817,33 @@ class PortfolioCsvService:
         # borrarse ningún crédito existente (ver update_and_notify, que atrapa
         # excepciones sin relanzar — el orden es lo único que evita perder datos).
         file_data = self.parser.parse(file_bytes, filename)
-        logger.info("[update_csv] parsed | filas=%d skipped=%d", len(file_data.rows), file_data.total_skipped)
+        logger.info(
+            "[update_csv] parsed | filas=%d skipped=%d",
+            len(file_data.rows),
+            file_data.total_skipped,
+        )
 
         existing_credits = await self.credit_repo.get_by_portfolio_id(portfolio_id)
-        logger.info("[update_csv] eliminando %d créditos existentes", len(existing_credits))
+        logger.info(
+            "[update_csv] eliminando %d créditos existentes", len(existing_credits)
+        )
         for credit in existing_credits:
             await self.credit_repo.delete(credit)
 
         await self._archive_source_file(portfolio, file_bytes, filename, "update")
 
         titulares_docs = {
-            (r.debtor.document_type, encrypt_service.hash_document(r.debtor.document_number))
+            (
+                r.debtor.document_type,
+                encrypt_service.hash_document(r.debtor.document_number),
+            )
             for r in file_data.rows
         }
         codeudores_docs = {
-            (r.codebtor.document_type, encrypt_service.hash_document(r.codebtor.document_number))
+            (
+                r.codebtor.document_type,
+                encrypt_service.hash_document(r.codebtor.document_number),
+            )
             for r in file_data.rows
             if r.codebtor
         }
@@ -712,7 +852,11 @@ class PortfolioCsvService:
 
         phone_prefix = await self.country_repo.get_phone_prefix(portfolio.country)
         processed, errors = await self._process_rows(
-            file_data.rows, portfolio.id, portfolio.organization_id, phone_prefix, on_progress
+            file_data.rows,
+            portfolio.id,
+            portfolio.organization_id,
+            phone_prefix,
+            on_progress,
         )
 
         failed = len(file_data.rows) - processed

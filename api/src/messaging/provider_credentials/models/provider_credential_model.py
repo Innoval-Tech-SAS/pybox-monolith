@@ -1,9 +1,13 @@
+"""Credenciales de un proveedor de mensajería (SMS/Email/WhatsApp) por país."""
+
 from sqlalchemy import Boolean, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import ENUM, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import BaseModel
-from messaging.provider_credentials.enums.provider_credential_enums import MessagingCredentialProvider
+from messaging.provider_credentials.enums.provider_credential_enums import (
+    MessagingCredentialProvider,
+)
 
 
 class MessagingProviderCredentialModel(BaseModel):
@@ -19,7 +23,8 @@ class MessagingProviderCredentialModel(BaseModel):
     __table_args__ = (
         Index(
             "uq_credencial_mensajeria_pais_proveedor",
-            "codigo_pais", "proveedor",
+            "codigo_pais",
+            "proveedor",
             unique=True,
             postgresql_where=text("eliminado_en IS NULL"),
         ),
@@ -37,9 +42,15 @@ class MessagingProviderCredentialModel(BaseModel):
         nullable=False,
         name="proveedor",
     )
-    secrets: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, name="secretos")
-    public_config: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, name="config_publica")
+    secrets: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, name="secretos"
+    )
+    public_config: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=dict, name="config_publica"
+    )
     lookup_key: Mapped[str | None] = mapped_column(
         String(255), nullable=True, index=True, name="clave_busqueda"
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, name="activo")
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, name="activo"
+    )

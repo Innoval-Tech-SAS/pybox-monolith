@@ -1,19 +1,23 @@
+"""Crea el usuario admin inicial (global) si todavía no existe ninguno."""
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from identity.auth.enums.auth_enums import AuthProvider
-from core.config.seed_admin_config import SeedAdminConfig
-from core.config.logger import logger
 from app_platform.countries.enums.country_enums import Nationality, UserDocumentType
+from core.config.logger import logger
+from core.config.seed_admin_config import SeedAdminConfig
 from core.security.services.encrypt_service import encrypt_service
 from core.security.services.password_hasher_service import PasswordHasherService
+from identity.auth.enums.auth_enums import AuthProvider
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.models.role_assignment_model import RoleAssignmentModel
 from identity.users.models.user_model import UserModel
 
 
 async def seed_admin(session: AsyncSession) -> None:
-    count = (await session.execute(select(func.count()).select_from(UserModel))).scalar()
+    count = (
+        await session.execute(select(func.count()).select_from(UserModel))
+    ).scalar()
     if count:
         return
 
@@ -38,10 +42,12 @@ async def seed_admin(session: AsyncSession) -> None:
     session.add(user)
     await session.flush()
 
-    session.add(RoleAssignmentModel(
-        user_id=user.id,
-        role=UserRole.ADMIN,
-        scope=UserScope.GLOBAL,
-    ))
+    session.add(
+        RoleAssignmentModel(
+            user_id=user.id,
+            role=UserRole.ADMIN,
+            scope=UserScope.GLOBAL,
+        )
+    )
     await session.commit()
     logger.info("[seed] admin_created | user_id=%s", user.id)

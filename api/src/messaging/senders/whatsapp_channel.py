@@ -1,3 +1,5 @@
+"""Adaptador de canal WhatsApp: traduce la interfaz común de envío al Cloud API."""
+
 from typing import Any
 
 from messaging.whatsapp.services.whatsapp_client import WhatsAppCloudClient
@@ -22,11 +24,15 @@ class WhatsAppChannel:
     def __init__(self, client: WhatsAppCloudClient) -> None:
         self._client = client
 
-    async def send(self, to: list[str], message: str, **kwargs: Any) -> tuple[bool, dict[str, str] | None, str | None]:
+    async def send(
+        self, to: list[str], message: str, **kwargs: Any
+    ) -> tuple[bool, dict[str, str] | None, str | None]:
         phone_number_id: str | None = kwargs.get("phone_number_id")
         language: str | None = kwargs.get("language")
         if not phone_number_id or not language:
-            raise ValueError("WhatsApp requiere 'phone_number_id' y 'language' para enviar")
+            raise ValueError(
+                "WhatsApp requiere 'phone_number_id' y 'language' para enviar"
+            )
 
         sub: list[dict] | None = kwargs.get("sub")
         variables = sub[0] if sub else None

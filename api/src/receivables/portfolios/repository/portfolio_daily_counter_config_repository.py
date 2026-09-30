@@ -1,17 +1,19 @@
+"""Acceso a datos de la configuración de contadores diarios de un portafolio."""
+
 import uuid
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from receivables.portfolios.models.portfolio_daily_counter_config_model import PortfolioDailyCounterConfigModel
+from receivables.portfolios.models.portfolio_daily_counter_config_model import (
+    PortfolioDailyCounterConfigModel,
+)
 
 
-class PortfolioDailyCounterConfigRepository(SoftDeleteRepositoryBase[PortfolioDailyCounterConfigModel]):
+class PortfolioDailyCounterConfigRepository(
+    SoftDeleteRepositoryBase[PortfolioDailyCounterConfigModel]
+):
     model_class = PortfolioDailyCounterConfigModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_by_portfolio_id(
         self, portfolio_id: uuid.UUID

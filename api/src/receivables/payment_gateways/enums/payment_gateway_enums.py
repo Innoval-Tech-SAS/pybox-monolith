@@ -1,3 +1,5 @@
+"""Pasarelas con las que una organización cobra a sus propios deudores."""
+
 from enum import StrEnum
 
 
@@ -17,7 +19,8 @@ class ReceivablesGatewayProvider(StrEnum):
 class ReceivablesPaymentAttemptStatus(StrEnum):
     """Estado de un intento de cobro contra una cuota (`PaymentModel`). Mismo
     vocabulario que usa Wompi para el estado de una transacción (ver skill
-    `wompi-gateway`, Paso 8) — no se traduce dos veces al mapear la respuesta/webhook."""
+    `wompi-gateway`, Paso 8) — no se traduce dos veces al mapear la
+    respuesta/webhook."""
 
     PENDING = "PENDING"
     APPROVED = "APPROVED"

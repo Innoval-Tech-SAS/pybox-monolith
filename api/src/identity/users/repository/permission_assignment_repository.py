@@ -1,8 +1,9 @@
-﻿import uuid
+"""Acceso a datos de los permisos granulares asignados a un usuario."""
+
+import uuid
 from datetime import datetime
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from identity.users.enums.user_enums import PermissionEffect, UserScope
@@ -10,18 +11,20 @@ from identity.users.models.permission_assignment_model import PermissionAssignme
 from identity.users.models.permission_model import PermissionModel
 
 
-class PermissionAssignmentRepository(SoftDeleteRepositoryBase[PermissionAssignmentModel]):
+class PermissionAssignmentRepository(
+    SoftDeleteRepositoryBase[PermissionAssignmentModel]
+):
     model_class = PermissionAssignmentModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_overrides_for_user_org(
         self, user_id: uuid.UUID, organization_id: uuid.UUID
     ) -> list[tuple[str, PermissionEffect]]:
         result = await self.session.execute(
             select(PermissionModel.name, PermissionAssignmentModel.effect)
-            .join(PermissionModel, PermissionAssignmentModel.permission_id == PermissionModel.id)
+            .join(
+                PermissionModel,
+                PermissionAssignmentModel.permission_id == PermissionModel.id,
+            )
             .where(
                 PermissionAssignmentModel.user_id == user_id,
                 PermissionAssignmentModel.organization_id == organization_id,
@@ -33,7 +36,9 @@ class PermissionAssignmentRepository(SoftDeleteRepositoryBase[PermissionAssignme
 
     async def get_permission_by_name(self, name: str) -> PermissionModel | None:
         result = await self.session.execute(
-            select(PermissionModel).where(PermissionModel.name == name, PermissionModel.is_active.is_(True))
+            select(PermissionModel).where(
+                PermissionModel.name == name, PermissionModel.is_active.is_(True)
+            )
         )
         return result.scalar_one_or_none()
 
@@ -83,7 +88,9 @@ class PermissionAssignmentRepository(SoftDeleteRepositoryBase[PermissionAssignme
 
     async def get_all_active_permissions(self) -> list[PermissionModel]:
         result = await self.session.execute(
-            select(PermissionModel).where(PermissionModel.is_active.is_(True)).order_by(PermissionModel.name)
+            select(PermissionModel)
+            .where(PermissionModel.is_active.is_(True))
+            .order_by(PermissionModel.name)
         )
         return list(result.scalars().all())
 
@@ -92,7 +99,10 @@ class PermissionAssignmentRepository(SoftDeleteRepositoryBase[PermissionAssignme
     ) -> list[uuid.UUID]:
         result = await self.session.execute(
             select(PermissionAssignmentModel.user_id)
-            .join(PermissionModel, PermissionAssignmentModel.permission_id == PermissionModel.id)
+            .join(
+                PermissionModel,
+                PermissionAssignmentModel.permission_id == PermissionModel.id,
+            )
             .where(
                 PermissionModel.name == permission_name,
                 PermissionAssignmentModel.organization_id == organization_id,
@@ -102,13 +112,20 @@ class PermissionAssignmentRepository(SoftDeleteRepositoryBase[PermissionAssignme
         )
         return list(result.scalars().all())
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja de los permisos por usuario otorgados/revocados dentro de la organización."""
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja de los permisos por usuario otorgados/revocados dentro de la
+        organización."""
         await self.soft_delete_where(
-            PermissionAssignmentModel.organization_id == organization_id, deleted_at=deleted_at
+            PermissionAssignmentModel.organization_id == organization_id,
+            deleted_at=deleted_at,
         )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
         await self.restore_where(
-            PermissionAssignmentModel.organization_id == organization_id, deleted_at=deleted_at
+            PermissionAssignmentModel.organization_id == organization_id,
+            deleted_at=deleted_at,
         )

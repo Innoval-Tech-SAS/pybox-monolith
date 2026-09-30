@@ -1,10 +1,14 @@
+"""Dependencia de FastAPI para inyectar el StatementService con sus repositories."""
+
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database.database import get_main_session
-from identity.organizations.repository.organization_repository import OrganizationRepository
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.debtors.repository.debtor_repository import DebtorRepository
 from receivables.payments.repository.payment_repository import PaymentRepository

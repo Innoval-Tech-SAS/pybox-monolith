@@ -1,3 +1,5 @@
+"""Endpoints de autogestión de pagos: reprogramación y comprobante de pago."""
+
 import uuid
 from typing import Annotated
 

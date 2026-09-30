@@ -1,26 +1,37 @@
-﻿import uuid
+"""Registro, login, OAuth y recuperación de contraseña de usuarios."""
+
+import uuid
 from typing import cast
 
 import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from identity.auth.enums.auth_enums import AuthProvider
-
+from app_platform.countries.enums.country_enums import DocumentScope
+from app_platform.countries.repository.country_repository import CountryRepository
+from app_platform.countries.services.country_service import CountryService
 from core.config.logger import logger
-from identity.auth.factories import get_verification_service
-from identity.auth.enums.notification_enums import VerificationChannel
-from identity.auth.exceptions import CodeAlreadyUsedException, CodeExpiredException, CodeNotFoundException
-from identity.users.repository.user_repository import UserRepository
-from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
-from identity.users.models.user_model import UserModel
-from identity.users.models.role_assignment_model import RoleAssignmentModel
-from identity.users.enums.user_enums import UserRole, UserScope
-from identity.users.services.user_service import UserService
-from identity.users.schemas.user_session_schema import mfa_verified_key, session_key
 from core.database.redis import redis_client
 from core.security.services.auth_token_service import AuthTokenService
 from core.security.services.encrypt_service import encrypt_service
 from core.security.services.password_hasher_service import PasswordHasherService
+from identity.auth.enums.auth_enums import AuthProvider
+from identity.auth.enums.notification_enums import VerificationChannel
+from identity.auth.exceptions import (
+    CodeAlreadyUsedException,
+    CodeExpiredException,
+    CodeNotFoundException,
+)
+from identity.auth.factories import get_verification_service
+from identity.users.enums.user_enums import UserRole, UserScope
+from identity.users.models.role_assignment_model import RoleAssignmentModel
+from identity.users.models.user_model import UserModel
+from identity.users.repository.role_assignment_repository import (
+    RoleAssignmentRepository,
+)
+from identity.users.repository.user_repository import UserRepository
+from identity.users.schemas.user_session_schema import mfa_verified_key, session_key
+from identity.users.services.user_service import UserService
+
 from ..schemas.auth_schemas import (
     AuthResponse,
     ProviderAuth,
@@ -28,10 +39,6 @@ from ..schemas.auth_schemas import (
     UserCreate,
     UserLogin,
 )
-from app_platform.countries.enums.country_enums import DocumentScope
-from app_platform.countries.repository.country_repository import CountryRepository
-from app_platform.countries.services.country_service import CountryService
-from .oauth_provider_service import OAuthProviderService, ProviderProfile
 from ..utils.auth_utils import (
     mask_email,
     mask_phone,
@@ -40,10 +47,10 @@ from ..utils.auth_utils import (
     require_value,
     resolve_auth_provider,
 )
+from .oauth_provider_service import OAuthProviderService, ProviderProfile
 
 
 class AuthService:
-
     def __init__(
         self,
         user_repository: UserRepository,
@@ -63,7 +70,9 @@ class AuthService:
         self._session = session
         # Validación de país/documento contra la DB (paises / paises_tipos_documento),
         # reemplaza los enums estáticos Nationality / UserDocumentType.
-        self._country_service = CountryService(CountryRepository(user_repository.session))
+        self._country_service = CountryService(
+            CountryRepository(user_repository.session)
+        )
 
     async def register_and_authenticate(
         self, user_data: UserCreate, role: UserRole, scope: UserScope
@@ -79,7 +88,9 @@ class AuthService:
         phone_number = require_value(
             user_data.phone_number, "El número de teléfono es obligatorio."
         )
-        nationality = await self._country_service.require_valid_country(user_data.nationality)
+        nationality = await self._country_service.require_valid_country(
+            user_data.nationality
+        )
         document_type = await self._country_service.require_valid_document(
             user_data.document_type, DocumentScope.PERSON, country_code=nationality
         )
@@ -91,9 +102,13 @@ class AuthService:
         if await self.user_repository.get_by_phone_number(phone_number):
             raise ValueError("El número de teléfono ya está registrado.")
 
-        document_number_hash = encrypt_service.hash_document(document_number) if document_number else None
+        document_number_hash = (
+            encrypt_service.hash_document(document_number) if document_number else None
+        )
         if document_type and document_number_hash:
-            if await self.user_repository.get_by_document(document_type, document_number_hash):
+            if await self.user_repository.get_by_document(
+                document_type, document_number_hash
+            ):
                 raise ValueError("El documento ya está registrado.")
 
         user = UserModel(
@@ -105,7 +120,11 @@ class AuthService:
             auth_provider=AuthProvider.SELF,
             nationality=nationality,
             document_type=document_type,
-            document_number=encrypt_service.encrypt_to_str(document_number) if document_number else None,
+            document_number=(
+                encrypt_service.encrypt_to_str(document_number)
+                if document_number
+                else None
+            ),
             document_number_hash=document_number_hash,
         )
 
@@ -129,7 +148,9 @@ class AuthService:
             stored_hash, password
         )
         if not is_valid:
-            logger.warning("[auth] login_failed | user_id=%s reason=invalid_password", user.id)
+            logger.warning(
+                "[auth] login_failed | user_id=%s reason=invalid_password", user.id
+            )
             raise ValueError("Credenciales inválidas.")
 
         if new_hash:
@@ -154,14 +175,25 @@ class AuthService:
         provider_profile = self.oauth_provider_service.verify_provider_token(
             provider, token
         )
-        user, is_new = await self._get_or_create_provider_user(provider_profile, provider_data)
+        user, is_new = await self._get_or_create_provider_user(
+            provider_profile, provider_data
+        )
         if not is_new:
-            logger.warning("[auth] oauth_register_failed | provider=%s reason=already_exists user_id=%s", provider.value, user.id)
-            raise ValueError("Ya tienes una cuenta registrada con este proveedor. Inicia sesión.")
+            logger.warning(
+                "[auth] oauth_register_failed | provider=%s reason=already_exists "
+                "user_id=%s",
+                provider.value,
+                user.id,
+            )
+            raise ValueError(
+                "Ya tienes una cuenta registrada con este proveedor. Inicia sesión."
+            )
         await self.role_assignment_repository.add(
             RoleAssignmentModel(user_id=user.id, role=role, scope=scope)
         )
-        logger.info("[auth] oauth_register | user_id=%s provider=%s", user.id, provider.value)
+        logger.info(
+            "[auth] oauth_register | user_id=%s provider=%s", user.id, provider.value
+        )
         return await self._build_response(user, provider)
 
     async def authenticate_existing_provider_user(
@@ -178,11 +210,17 @@ class AuthService:
         )
         user = await self._get_provider_user_or_link_email(provider_profile)
         if not user:
-            logger.warning("[auth] oauth_login_failed | provider=%s reason=user_not_found", provider.value)
-            raise ValueError(
-                "No encontramos una cuenta asociada a Google. Regístrate primero para completar tu perfil."
+            logger.warning(
+                "[auth] oauth_login_failed | provider=%s reason=user_not_found",
+                provider.value,
             )
-        logger.info("[auth] oauth_login | user_id=%s provider=%s", user.id, provider.value)
+            raise ValueError(
+                "No encontramos una cuenta asociada a Google. Regístrate primero "
+                "para completar tu perfil."
+            )
+        logger.info(
+            "[auth] oauth_login | user_id=%s provider=%s", user.id, provider.value
+        )
         return await self._build_response(user, provider)
 
     async def refresh_tokens(self, refresh_token: str) -> AuthResponse:
@@ -209,7 +247,9 @@ class AuthService:
 
         logger.info("[auth] token_refresh | user_id=%s", user_id)
         await self.token_service.revoke_refresh_token(user_id)
-        return await self._build_response(user, cast(AuthProvider, user.auth_provider), new_login=False)
+        return await self._build_response(
+            user, cast(AuthProvider, user.auth_provider), new_login=False
+        )
 
     async def logout(self, user_id: uuid.UUID) -> None:
         logger.info("[auth] logout | user_id=%s", user_id)
@@ -244,7 +284,9 @@ class AuthService:
             provider_data.document_type, DocumentScope.PERSON, country_code=nationality
         )
         doc_number = provider_data.document_number or None
-        doc_number_hash = encrypt_service.hash_document(doc_number) if doc_number else None
+        doc_number_hash = (
+            encrypt_service.hash_document(doc_number) if doc_number else None
+        )
 
         user = UserModel(
             firstname=(
@@ -264,7 +306,9 @@ class AuthService:
             provider_user_id=provider_profile.provider_user_id,
             nationality=nationality,
             document_type=doc_type,
-            document_number=encrypt_service.encrypt_to_str(doc_number) if doc_number else None,
+            document_number=(
+                encrypt_service.encrypt_to_str(doc_number) if doc_number else None
+            ),
             document_number_hash=doc_number_hash,
         )
         return await self.user_repository.add(user), True
@@ -299,9 +343,7 @@ class AuthService:
             # new_login=False: renovar el access token cada hora no debe re-pedir MFA).
             await redis_client.delete(mfa_verified_key(user.id))
         access_token = self.token_service.generate_access_token(user, auth_provider)
-        refresh_token = await self.token_service.generate_refresh_token(
-            user.id
-        )
+        refresh_token = await self.token_service.generate_refresh_token(user.id)
         if self._user_service is not None:
             await self._user_service.get_user_session(user.id)
         return AuthResponse(
@@ -311,14 +353,20 @@ class AuthService:
             auth_provider=auth_provider,
         )
 
-    async def change_password(self, user_id: uuid.UUID, current_password: str, new_password: str) -> None:
+    async def change_password(
+        self, user_id: uuid.UUID, current_password: str, new_password: str
+    ) -> None:
         user = await self.user_repository.get_by_id(user_id)
         if user is None:
             raise ValueError("Usuario no encontrado.")
         stored_hash = cast(str | None, user.hashed_password)
         if not stored_hash:
-            raise ValueError("Este usuario no tiene contraseña configurada. Usa tu proveedor OAuth.")
-        is_valid, _ = self.password_hasher.verify_and_maybe_rehash(stored_hash, current_password)
+            raise ValueError(
+                "Este usuario no tiene contraseña configurada. Usa tu proveedor OAuth."
+            )
+        is_valid, _ = self.password_hasher.verify_and_maybe_rehash(
+            stored_hash, current_password
+        )
         if not is_valid:
             raise ValueError("La contraseña actual es incorrecta.")
         user.hashed_password = self.password_hasher.hash_password(new_password)
@@ -328,7 +376,9 @@ class AuthService:
         await redis_client.delete(mfa_verified_key(user_id))
         logger.info("[auth] change_password | user_id=%s", user_id)
 
-    async def lookup_user_for_reset(self, document_type: str, document_number: str) -> dict:
+    async def lookup_user_for_reset(
+        self, document_type: str, document_number: str
+    ) -> dict:
         # Respuesta uniforme exista o no la cuenta (ambos campos en None si no existe):
         # evita que el status code / la forma de la respuesta sirvan de oráculo para
         # enumerar documentos registrados. Combinado con el rate limit del endpoint.
@@ -339,10 +389,18 @@ class AuthService:
             return {"masked_email": None, "masked_phone": None}
         return {
             "masked_email": mask_email(cast(str, user.email)) if user.email else None,
-            "masked_phone": mask_phone(cast(str, user.phone_number)) if user.phone_number else None,
+            "masked_phone": (
+                mask_phone(cast(str, user.phone_number)) if user.phone_number else None
+            ),
         }
 
-    async def verify_reset_code(self, document_type: str, document_number: str, code: str, channel: VerificationChannel) -> None:
+    async def verify_reset_code(
+        self,
+        document_type: str,
+        document_number: str,
+        code: str,
+        channel: VerificationChannel,
+    ) -> None:
         if self._session is None:
             raise RuntimeError("Session requerida para verificar OTP.")
         dt = document_type
@@ -353,15 +411,17 @@ class AuthService:
         svc = get_verification_service(channel, self._session)
         try:
             await svc.peek_code(user.id, code)
-        except CodeNotFoundException:
-            raise ValueError("Código incorrecto.")
-        except CodeExpiredException:
-            raise ValueError("El código ha expirado.")
-        except CodeAlreadyUsedException:
-            raise ValueError("El código ya fue utilizado.")
+        except CodeNotFoundException as e:
+            raise ValueError("Código incorrecto.") from e
+        except CodeExpiredException as e:
+            raise ValueError("El código ha expirado.") from e
+        except CodeAlreadyUsedException as e:
+            raise ValueError("El código ya fue utilizado.") from e
         logger.info("[auth] verify_reset_code | user_id=%s", user.id)
 
-    async def send_reset_code(self, document_type: str, document_number: str, channel: VerificationChannel) -> None:
+    async def send_reset_code(
+        self, document_type: str, document_number: str, channel: VerificationChannel
+    ) -> None:
         if self._session is None:
             raise RuntimeError("Session requerida para enviar OTP.")
         dt = document_type
@@ -371,9 +431,18 @@ class AuthService:
             raise ValueError("No encontramos una cuenta con ese documento.")
         svc = get_verification_service(channel, self._session)
         await svc.send_code(user)
-        logger.info("[auth] send_reset_code | user_id=%s channel=%s", user.id, channel.value)
+        logger.info(
+            "[auth] send_reset_code | user_id=%s channel=%s", user.id, channel.value
+        )
 
-    async def reset_password(self, document_type: str, document_number: str, code: str, channel: VerificationChannel, new_password: str) -> None:
+    async def reset_password(
+        self,
+        document_type: str,
+        document_number: str,
+        code: str,
+        channel: VerificationChannel,
+        new_password: str,
+    ) -> None:
         if self._session is None:
             raise RuntimeError("Session requerida para verificar OTP.")
         dt = document_type
@@ -384,12 +453,12 @@ class AuthService:
         svc = get_verification_service(channel, self._session)
         try:
             await svc.verify_code(user.id, code)
-        except CodeNotFoundException:
-            raise ValueError("Código no encontrado.")
-        except CodeExpiredException:
-            raise ValueError("El código ha expirado.")
-        except CodeAlreadyUsedException:
-            raise ValueError("El código ya fue utilizado.")
+        except CodeNotFoundException as e:
+            raise ValueError("Código no encontrado.") from e
+        except CodeExpiredException as e:
+            raise ValueError("El código ha expirado.") from e
+        except CodeAlreadyUsedException as e:
+            raise ValueError("El código ya fue utilizado.") from e
         user.hashed_password = self.password_hasher.hash_password(new_password)
         await self.user_repository.update(user)
         await self.token_service.revoke_refresh_token(user.id)

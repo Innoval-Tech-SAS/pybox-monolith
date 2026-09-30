@@ -1,16 +1,19 @@
+"""Acceso a datos de las notificaciones judiciales."""
+
 import uuid
 from datetime import datetime
 from typing import NamedTuple, Optional, Sequence
 
 from sqlalchemy import func, or_, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from identity.organizations.models.organization_model import OrganizationModel
 from receivables.credits.enums.credit_enums import CreditTypes
 from receivables.credits.models.credit_model import CreditModel
 from receivables.debtors.models.debtor_model import DebtorModel
-from receivables.judicial_notifications.models.judicial_notification_model import JudicialNotificationModel
+from receivables.judicial_notifications.models.judicial_notification_model import (
+    JudicialNotificationModel,
+)
 from receivables.portfolios.models.portfolio_model import PortfolioModel
 
 
@@ -23,16 +26,18 @@ class JudicialNotificationRow(NamedTuple):
     entity_name: str
 
 
-class JudicialNotificationRepository(SoftDeleteRepositoryBase[JudicialNotificationModel]):
+class JudicialNotificationRepository(
+    SoftDeleteRepositoryBase[JudicialNotificationModel]
+):
     model_class = JudicialNotificationModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     def _debtor_filter(self, debtor_ids: Sequence[uuid.UUID]):
         """El titular ve las notificaciones de sus créditos, sea como deudor o codeudor,
         en cualquiera de sus filas de deudor (una por empresa)."""
-        return or_(CreditModel.debtor_id.in_(debtor_ids), CreditModel.codebtor_id.in_(debtor_ids))
+        return or_(
+            CreditModel.debtor_id.in_(debtor_ids),
+            CreditModel.codebtor_id.in_(debtor_ids),
+        )
 
     def _with_credit_and_entity(self):
         return (
@@ -44,11 +49,16 @@ class JudicialNotificationRepository(SoftDeleteRepositoryBase[JudicialNotificati
             )
             .join(CreditModel, CreditModel.id == JudicialNotificationModel.credit_id)
             .join(PortfolioModel, PortfolioModel.id == CreditModel.portfolio_id)
-            .join(OrganizationModel, OrganizationModel.id == PortfolioModel.organization_id)
+            .join(
+                OrganizationModel,
+                OrganizationModel.id == PortfolioModel.organization_id,
+            )
             .where(JudicialNotificationModel.deleted_at.is_(None))
         )
 
-    async def get_inbox_by_debtor_ids(self, debtor_ids: Sequence[uuid.UUID]) -> list[JudicialNotificationRow]:
+    async def get_inbox_by_debtor_ids(
+        self, debtor_ids: Sequence[uuid.UUID]
+    ) -> list[JudicialNotificationRow]:
         result = await self.session.execute(
             self._with_credit_and_entity()
             .where(self._debtor_filter(debtor_ids))
@@ -86,7 +96,9 @@ class JudicialNotificationRepository(SoftDeleteRepositoryBase[JudicialNotificati
             )
         )
 
-    async def mark_all_read_by_debtor_ids(self, debtor_ids: Sequence[uuid.UUID]) -> None:
+    async def mark_all_read_by_debtor_ids(
+        self, debtor_ids: Sequence[uuid.UUID]
+    ) -> None:
         credit_ids = select(CreditModel.id).where(self._debtor_filter(debtor_ids))
         await self.session.execute(
             update(JudicialNotificationModel)
@@ -99,7 +111,9 @@ class JudicialNotificationRepository(SoftDeleteRepositoryBase[JudicialNotificati
         )
         await self.session.flush()
 
-    async def get_by_credit_id(self, credit_id: uuid.UUID) -> list[JudicialNotificationRow]:
+    async def get_by_credit_id(
+        self, credit_id: uuid.UUID
+    ) -> list[JudicialNotificationRow]:
         """Listado del lado de la entidad: lo emitido sobre un crédito."""
         result = await self.session.execute(
             self._with_credit_and_entity()
@@ -108,7 +122,9 @@ class JudicialNotificationRepository(SoftDeleteRepositoryBase[JudicialNotificati
         )
         return [JudicialNotificationRow(*row) for row in result.all()]
 
-    async def get_credit_organization_id(self, credit_id: uuid.UUID) -> Optional[uuid.UUID]:
+    async def get_credit_organization_id(
+        self, credit_id: uuid.UUID
+    ) -> Optional[uuid.UUID]:
         """Entidad dueña del crédito, para el gate de permisos al emitir."""
         return await self.session.scalar(
             select(PortfolioModel.organization_id)
@@ -132,34 +148,49 @@ class JudicialNotificationRepository(SoftDeleteRepositoryBase[JudicialNotificati
         )
         return list(result.scalars().all())
 
-    async def get_row_by_id(self, notification_id: uuid.UUID) -> Optional[JudicialNotificationRow]:
-        """Una notificación con crédito y entidad resueltos, para devolver la recién creada."""
+    async def get_row_by_id(
+        self, notification_id: uuid.UUID
+    ) -> Optional[JudicialNotificationRow]:
+        """Una notificación con crédito y entidad resueltos, para devolver la
+        recién creada."""
         result = await self.session.execute(
-            self._with_credit_and_entity().where(JudicialNotificationModel.id == notification_id)
+            self._with_credit_and_entity().where(
+                JudicialNotificationModel.id == notification_id
+            )
         )
         row = result.first()
         return JudicialNotificationRow(*row) if row else None
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de las notificaciones judiciales de los créditos de la organización."""
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de las notificaciones judiciales de los créditos de la
+        organización."""
         await self.soft_delete_where(
             JudicialNotificationModel.credit_id.in_(
                 select(CreditModel.id).where(
                     CreditModel.portfolio_id.in_(
-                        select(PortfolioModel.id).where(PortfolioModel.organization_id == organization_id)
+                        select(PortfolioModel.id).where(
+                            PortfolioModel.organization_id == organization_id
+                        )
                     )
                 )
             ),
             deleted_at=deleted_at,
         )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la
+        organización."""
         await self.restore_where(
             JudicialNotificationModel.credit_id.in_(
                 select(CreditModel.id).where(
                     CreditModel.portfolio_id.in_(
-                        select(PortfolioModel.id).where(PortfolioModel.organization_id == organization_id)
+                        select(PortfolioModel.id).where(
+                            PortfolioModel.organization_id == organization_id
+                        )
                     )
                 )
             ),

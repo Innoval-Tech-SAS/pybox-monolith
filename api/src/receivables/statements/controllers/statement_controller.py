@@ -1,3 +1,5 @@
+"""Endpoints de extractos de un deudor: generación y listado."""
+
 import uuid
 from typing import Annotated
 
@@ -19,9 +21,12 @@ router = APIRouter(prefix="/debtors/{debtor_id}/statements", tags=["Extractos"])
     "",
     response_model=StatementResponse,
     summary="Generar extracto de un deudor",
-    description="Genera un PDF con el estado de cuenta del deudor al momento de la solicitud. "
-    "Sin `creditId` en el body: consolidado con todos los créditos activos del deudor en el "
-    "portafolio. Con `creditId`: extracto de ese crédito puntual.",
+    description=(
+        "Genera un PDF con el estado de cuenta del deudor al momento de la "
+        "solicitud. Sin `creditId` en el body: consolidado con todos los "
+        "créditos activos del deudor en el portafolio. Con `creditId`: extracto "
+        "de ese crédito puntual."
+    ),
 )
 async def generate_statement(
     debtor_id: uuid.UUID,
@@ -37,7 +42,10 @@ async def generate_statement(
     "",
     response_model=StatementListResponse,
     summary="Listar extractos de un deudor",
-    description="Extractos generados para el deudor en el portafolio dado, del más reciente al más antiguo.",
+    description=(
+        "Extractos generados para el deudor en el portafolio dado, del más "
+        "reciente al más antiguo."
+    ),
 )
 async def list_statements(
     debtor_id: uuid.UUID,
@@ -61,4 +69,6 @@ async def download_statement(
     service: StatementServiceDep,
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
 ) -> Response:
-    return await service.get_content_for_org(statement_id, debtor_id, portfolio_id, session)
+    return await service.get_content_for_org(
+        statement_id, debtor_id, portfolio_id, session
+    )

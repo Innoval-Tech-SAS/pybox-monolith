@@ -1,12 +1,14 @@
+"""Dependencias de FastAPI para inyectar DdlService, DmlService e InspectorService."""
+
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.database import get_main_session
 from app_platform.schema_manager.services.ddl_service import DdlService
 from app_platform.schema_manager.services.dml_service import DmlService
 from app_platform.schema_manager.services.inspector_service import InspectorService
+from core.database.database import get_main_session
 
 
 def get_inspector_service(

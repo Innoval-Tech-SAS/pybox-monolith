@@ -1,3 +1,5 @@
+"""Webhook de WhatsApp Cloud API: verificación y recepción de eventos de Meta."""
+
 from typing import Annotated, Any
 
 from fastapi import Header, Query, Request
@@ -26,7 +28,9 @@ async def verify_whatsapp_webhook(
 async def receive_whatsapp_webhook(
     request: Request,
     service: WhatsAppWebhookServiceDep,
-    x_hub_signature_256: Annotated[str | None, Header(alias="X-Hub-Signature-256")] = None,
+    x_hub_signature_256: Annotated[
+        str | None, Header(alias="X-Hub-Signature-256")
+    ] = None,
 ) -> dict[str, bool]:
     raw_body = await request.body()
     if not verify_whatsapp_signature(raw_body, x_hub_signature_256):

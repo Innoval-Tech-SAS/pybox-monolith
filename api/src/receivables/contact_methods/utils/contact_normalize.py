@@ -1,10 +1,13 @@
+"""Normalización de valores de contacto (email/teléfono) para comparar y guardar."""
+
 import re
 
 from receivables.contact_methods.enums.contact_method_enums import ContactMethodType
 
 
 def normalize_email(value: str) -> str:
-    """Normaliza un correo para comparación/almacenamiento: sin espacios y en minúsculas."""
+    """Normaliza un correo para comparación/almacenamiento: sin espacios y en
+    minúsculas."""
     return (value or "").strip().lower()
 
 
@@ -34,7 +37,8 @@ def normalize_phone(value: str, country_prefix: str | None) -> str:
 def normalize_contact_value(
     contact_type: ContactMethodType, value: str, country_prefix: str | None
 ) -> str:
-    """Normaliza un valor de contacto según su tipo (EMAIL → minúsculas; PHONE → con prefijo)."""
+    """Normaliza un valor de contacto según su tipo (EMAIL → minúsculas; PHONE → con
+    prefijo)."""
     if contact_type == ContactMethodType.PHONE:
         return normalize_phone(value, country_prefix)
     return normalize_email(value)

@@ -1,6 +1,10 @@
+"""Validación de tamaño de los documentos que sube una organización."""
+
 from fastapi import HTTPException, status
 
-from identity.organizations.constants.organization_constants import MAX_DOCUMENT_UPLOAD_SIZE_BYTES
+from identity.organizations.constants.organization_constants import (
+    MAX_DOCUMENT_UPLOAD_SIZE_BYTES,
+)
 
 
 def require_within_size_limit(file_bytes: bytes) -> None:

@@ -1,29 +1,42 @@
+"""Gestión de usuarios: alta, permisos, preferencias y disponibilidad para chat."""
+
 from __future__ import annotations
 
 import uuid
 
 from fastapi import HTTPException, Response, UploadFile, status
 
+from app_platform.chats.websocket.connection_manager import ws_manager
 from app_platform.countries.enums.country_enums import DocumentScope
 from app_platform.countries.repository.country_repository import CountryRepository
 from app_platform.countries.services.country_service import CountryService
 from app_platform.documents.services.document_service import DocumentService
+from core.config.logger import logger
 from core.database.redis import RedisClient, redis_client
-from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
-from identity.organizations.repository.organization_repository import OrganizationRepository
-from identity.organizations.services.organization_service import OrganizationService
 from core.security.constants.permissions import ORG_USERS
 from core.security.constants.role_permissions_catalog import get_base_permissions
 from core.security.services.auth_token_service import AuthTokenService
 from core.security.services.encrypt_service import encrypt_service
-from core.config.logger import logger
+from identity.organizations.repository.organization_membership_repository import (
+    OrganizationMembershipRepository,
+)
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
+from identity.organizations.services.organization_service import OrganizationService
 from identity.users.constants.tour_keys import TOUR_KEYS
 from identity.users.enums.user_enums import PermissionEffect, UserRole, UserScope
 from identity.users.models.role_assignment_model import RoleAssignmentModel
 from identity.users.models.user_model import UserModel
-from identity.users.repository.permission_assignment_repository import PermissionAssignmentRepository
-from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
-from identity.users.repository.user_preferences_repository import UserPreferencesRepository
+from identity.users.repository.permission_assignment_repository import (
+    PermissionAssignmentRepository,
+)
+from identity.users.repository.role_assignment_repository import (
+    RoleAssignmentRepository,
+)
+from identity.users.repository.user_preferences_repository import (
+    UserPreferencesRepository,
+)
 from identity.users.repository.user_repository import (
     USER_DOCUMENT_STORAGE_DOMAIN,
     UserRepository,
@@ -31,11 +44,17 @@ from identity.users.repository.user_repository import (
 from identity.users.schemas.user_schemas import (
     AdminUserDetailSchema,
     AdminUserSummarySchema,
+    ChatAvailableUserSchema,
     ProfilePhotoSchema,
     RoleEntrySchema,
     UpdateUserSchema,
 )
-from identity.users.schemas.user_session_schema import OrgSessionEntry, UserSession, mfa_verified_key, session_key
+from identity.users.schemas.user_session_schema import (
+    OrgSessionEntry,
+    UserSession,
+    mfa_verified_key,
+    session_key,
+)
 
 
 class UserService:
@@ -68,7 +87,9 @@ class UserService:
     async def get_user_session(self, user_id: uuid.UUID) -> UserSession:
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado."
+            )
 
         assignments = await self.role_assignment_repo.get_by_user_id(user_id)
 
@@ -95,7 +116,9 @@ class UserService:
             scopes = {a.scope for a in assignments}
 
             if UserScope.GLOBAL in scopes:
-                global_assignment = next(a for a in assignments if a.scope == UserScope.GLOBAL)
+                global_assignment = next(
+                    a for a in assignments if a.scope == UserScope.GLOBAL
+                )
                 session = UserSession(
                     user_id=user_id,
                     full_name=user.full_name,
@@ -107,7 +130,9 @@ class UserService:
                     mfa_enabled=mfa_enabled,
                 )
             elif UserScope.SELF in scopes and UserScope.ORGANIZATION not in scopes:
-                self_assignment = next(a for a in assignments if a.scope == UserScope.SELF)
+                self_assignment = next(
+                    a for a in assignments if a.scope == UserScope.SELF
+                )
                 session = UserSession(
                     user_id=user_id,
                     full_name=user.full_name,
@@ -121,7 +146,9 @@ class UserService:
             else:
                 memberships = await self.membership_repo.get_by_user_id(user_id)
                 org_ids = [m.organization_id for m in memberships]
-                org_models = {str(o.id): o for o in await self.org_repo.get_by_ids(org_ids)}
+                org_models = {
+                    str(o.id): o for o in await self.org_repo.get_by_ids(org_ids)
+                }
                 assignment_by_org = {
                     str(a.organization_id): a
                     for a in assignments
@@ -134,11 +161,20 @@ class UserService:
                     org = org_models.get(org_id_str)
                     if assignment and org:
                         base = get_base_permissions(assignment.role)
-                        overrides = await self.permission_assignment_repo.get_overrides_for_user_org(
+                        perm_repo = self.permission_assignment_repo
+                        overrides = await perm_repo.get_overrides_for_user_org(
                             user_id, m.organization_id
                         )
-                        grants = {name for name, effect in overrides if effect == PermissionEffect.GRANT}
-                        revokes = {name for name, effect in overrides if effect == PermissionEffect.REVOKE}
+                        grants = {
+                            name
+                            for name, effect in overrides
+                            if effect == PermissionEffect.GRANT
+                        }
+                        revokes = {
+                            name
+                            for name, effect in overrides
+                            if effect == PermissionEffect.REVOKE
+                        }
                         orgs[org_id_str] = OrgSessionEntry(
                             role=assignment.role,
                             org_name=org.name,
@@ -178,7 +214,7 @@ class UserService:
         return user
 
     async def soft_delete_user(self, session: UserSession, user_id: uuid.UUID) -> None:
-        await self._assert_can_manage_user(session, user_id)
+        await self.assert_can_manage_user(session, user_id)
         admin_org_ids = await self.role_assignment_repo.get_admin_org_ids(user_id)
         if admin_org_ids and not session.is_global:
             # Dar de baja a quien administra una organización arrastra la organización
@@ -186,14 +222,19 @@ class UserService:
             # organización ni de quien solo gestiona usuarios.
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Solo un administrador global puede eliminar a quien administra una organización.",
+                detail=(
+                    "Solo un administrador global puede eliminar a quien "
+                    "administra una organización."
+                ),
             )
 
         for org_id in admin_org_ids:
             await self._org_service.soft_delete_organization(org_id)
 
         remaining_memberships = await self.membership_repo.get_by_user_id(user_id)
-        to_delete = [m for m in remaining_memberships if m.organization_id not in admin_org_ids]
+        to_delete = [
+            m for m in remaining_memberships if m.organization_id not in admin_org_ids
+        ]
         await self.membership_repo.delete_many(to_delete)
 
         user = await self.user_repo.get_by_id(user_id)
@@ -201,26 +242,42 @@ class UserService:
             await self.user_repo.delete(user)
         await self._revoke_sessions(user_id)
 
-    async def _build_role_entries(self, assignments: list[RoleAssignmentModel]) -> list[RoleEntrySchema]:
+    async def _build_role_entries(
+        self, assignments: list[RoleAssignmentModel]
+    ) -> list[RoleEntrySchema]:
         org_ids = [a.organization_id for a in assignments if a.organization_id]
-        orgs = {o.id: o for o in await self.org_repo.get_by_ids(org_ids)} if org_ids else {}
+        orgs = (
+            {o.id: o for o in await self.org_repo.get_by_ids(org_ids)}
+            if org_ids
+            else {}
+        )
         return [
             RoleEntrySchema(
                 role=a.role.value,
                 scope=a.scope.value,
                 org_id=str(a.organization_id) if a.organization_id else None,
-                org_name=orgs[a.organization_id].name if a.organization_id and a.organization_id in orgs else None,
+                org_name=(
+                    orgs[a.organization_id].name
+                    if a.organization_id and a.organization_id in orgs
+                    else None
+                ),
             )
             for a in assignments
         ]
 
-    async def _enrich_users(self, users: list[UserModel]) -> list[AdminUserSummarySchema]:
+    async def _enrich_users(
+        self, users: list[UserModel]
+    ) -> list[AdminUserSummarySchema]:
         if not users:
             return []
         user_ids = [u.id for u in users]
         assignments = await self.role_assignment_repo.get_by_user_ids(user_ids)
         org_ids = list({a.organization_id for a in assignments if a.organization_id})
-        orgs = {o.id: o for o in await self.org_repo.get_by_ids(org_ids)} if org_ids else {}
+        orgs = (
+            {o.id: o for o in await self.org_repo.get_by_ids(org_ids)}
+            if org_ids
+            else {}
+        )
 
         assignments_by_user: dict[uuid.UUID, list[RoleAssignmentModel]] = {}
         for a in assignments:
@@ -240,7 +297,11 @@ class UserService:
                         role=a.role.value,
                         scope=a.scope.value,
                         org_id=str(a.organization_id) if a.organization_id else None,
-                        org_name=orgs[a.organization_id].name if a.organization_id and a.organization_id in orgs else None,
+                        org_name=(
+                            orgs[a.organization_id].name
+                            if a.organization_id and a.organization_id in orgs
+                            else None
+                        ),
                     )
                     for a in assignments_by_user.get(u.id, [])
                 ],
@@ -251,28 +312,39 @@ class UserService:
     async def get_accessible_users(
         self, org_ids: list[uuid.UUID] | None = None, include_deleted: bool = False
     ) -> list[AdminUserSummarySchema]:
-        users = list(await self.user_repo.get_accessible(org_ids=org_ids, include_deleted=include_deleted))
+        users = list(
+            await self.user_repo.get_accessible(
+                org_ids=org_ids, include_deleted=include_deleted
+            )
+        )
         return await self._enrich_users(users)
 
     async def _revoke_sessions(self, user_id: uuid.UUID) -> None:
-        """Cierra la sesión cacheada y el refresh token del usuario: la sesión vive en Redis
-        (3 h renovables) sin volver a consultar la base, así que sin esto un usuario dado de
-        baja, desactivado o con permisos cambiados conserva lo que tenía."""
+        """Cierra la sesión cacheada y el refresh token del usuario: la sesión
+        vive en Redis (3 h renovables) sin volver a consultar la base, así que
+        sin esto un usuario dado de baja, desactivado o con permisos cambiados
+        conserva lo que tenía."""
         await AuthTokenService().revoke_refresh_token(user_id)
         await self.redis.delete(session_key(user_id))
         await self.redis.delete(mfa_verified_key(user_id))
 
-    async def _assert_can_manage_user(self, session: UserSession, target_user_id: uuid.UUID) -> None:
-        """El caller puede ver/editar/eliminar target_user_id si es global, es el propio
-        usuario, o gestiona a ese usuario en TODAS las organizaciones donde este figura:
-        siendo admin de la organización, o con ORG_USERS cuando el objetivo no es admin de ella.
+    async def assert_can_manage_user(
+        self, session: UserSession, target_user_id: uuid.UUID
+    ) -> None:
+        """El caller puede ver/editar/eliminar target_user_id si es global, es el
+        propio usuario, o gestiona a ese usuario en TODAS las organizaciones donde
+        este figura: siendo admin de la organización, o con ORG_USERS cuando el
+        objetivo no es admin de ella.
 
-        Un usuario que además pertenece a organizaciones que el caller no gestiona, o que es
-        personal global, no se toca desde una organización: los cambios sobre su cuenta
-        (correo, MFA, estado) afectarían a otros tenants."""
+        Un usuario que además pertenece a organizaciones que el caller no
+        gestiona, o que es personal global, no se toca desde una organización:
+        los cambios sobre su cuenta (correo, MFA, estado) afectarían a otros
+        tenants."""
         if session.is_global or session.user_id == target_user_id:
             return
-        denied = HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado.")
+        denied = HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Acceso denegado."
+        )
         if session.scope != UserScope.ORGANIZATION:
             raise denied
         if await self.role_assignment_repo.get_global_user_ids([target_user_id]):
@@ -281,7 +353,10 @@ class UserService:
         target_org_ids = {str(m.organization_id) for m in memberships}
         if not target_org_ids or not target_org_ids <= set(session.orgs):
             raise denied
-        target_admin_org_ids = {str(o) for o in await self.role_assignment_repo.get_admin_org_ids(target_user_id)}
+        target_admin_org_ids = {
+            str(o)
+            for o in await self.role_assignment_repo.get_admin_org_ids(target_user_id)
+        }
         for org_id in target_org_ids:
             entry = session.orgs[org_id]
             manages = entry.role == UserRole.ADMIN or (
@@ -289,11 +364,16 @@ class UserService:
             )
             if not manages:
                 raise denied
-    async def get_user_detail(self, session: UserSession, user_id: uuid.UUID) -> AdminUserDetailSchema:
-        await self._assert_can_manage_user(session, user_id)
+
+    async def get_user_detail(
+        self, session: UserSession, user_id: uuid.UUID
+    ) -> AdminUserDetailSchema:
+        await self.assert_can_manage_user(session, user_id)
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado."
+            )
         assignments = await self.role_assignment_repo.get_by_user_id(user_id)
         roles = await self._build_role_entries(assignments)
         return AdminUserDetailSchema(
@@ -305,7 +385,11 @@ class UserService:
             phone_number=user.phone_number,
             auth_provider=user.auth_provider.value,
             document_type=user.document_type,
-            document_number=encrypt_service.decrypt_to_str(user.document_number) if user.document_number else None,
+            document_number=(
+                encrypt_service.decrypt_to_str(user.document_number)
+                if user.document_number
+                else None
+            ),
             is_active=user.is_active,
             is_email_verified=user.is_email_verified,
             is_phone_verified=user.is_phone_verified,
@@ -320,10 +404,12 @@ class UserService:
     async def update_user(
         self, session: UserSession, user_id: uuid.UUID, data: UpdateUserSchema
     ) -> AdminUserDetailSchema:
-        await self._assert_can_manage_user(session, user_id)
+        await self.assert_can_manage_user(session, user_id)
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado."
+            )
         if data.firstname is not None:
             user.firstname = data.firstname
         if data.lastname is not None:
@@ -344,8 +430,12 @@ class UserService:
                 user.document_number = None
                 user.document_number_hash = None
             else:
-                user.document_number = encrypt_service.encrypt_to_str(data.document_number)
-                user.document_number_hash = encrypt_service.hash_document(data.document_number)
+                user.document_number = encrypt_service.encrypt_to_str(
+                    data.document_number
+                )
+                user.document_number_hash = encrypt_service.hash_document(
+                    data.document_number
+                )
         if data.mfa_enabled is not None:
             user.mfa_enabled = data.mfa_enabled
         await self.user_repo.update(user)
@@ -355,7 +445,9 @@ class UserService:
             await self._revoke_sessions(user_id)
         return await self.get_user_detail(session, user_id)
 
-    async def update_profile_photo(self, user_id: uuid.UUID, file: UploadFile) -> ProfilePhotoSchema:
+    async def update_profile_photo(
+        self, user_id: uuid.UUID, file: UploadFile
+    ) -> ProfilePhotoSchema:
         """Sustituye la foto de perfil.
 
         La anterior se borra al final y no antes: si la subida de la nueva falla, el
@@ -363,10 +455,13 @@ class UserService:
         """
         user = await self.user_repo.get_by_id(user_id)
         if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado."
+            )
 
-        # Caso 1:1: la foto la apunta `usuarios.id_documento_foto_perfil`, así que no hay
-        # tabla de unión ni categoría — la columna que la referencia ya dice qué es.
+        # Caso 1:1: la foto la apunta `usuarios.id_documento_foto_perfil`, así que
+        # no hay tabla de unión ni categoría — la columna que la referencia ya
+        # dice qué es.
         document = await self._document_service.store(
             file=file,
             domain=USER_DOCUMENT_STORAGE_DOMAIN,
@@ -383,7 +478,9 @@ class UserService:
 
         await self.get_user_session(user_id)
         logger.debug(
-            "[profile-photo] service update done user_id=%s document_id=%s", user_id, document.id
+            "[profile-photo] service update done user_id=%s document_id=%s",
+            user_id,
+            document.id,
         )
         return ProfilePhotoSchema(profile_photo_url=user.profile_photo_url)
 
@@ -391,13 +488,17 @@ class UserService:
         user = await self.user_repo.get_by_id(user_id)
         if user is None or user.profile_photo_document_id is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="El usuario no tiene foto de perfil."
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="El usuario no tiene foto de perfil.",
             )
         # El ownership ya está resuelto: el id salió de la propia fila del usuario.
-        document = await self._document_service.get_by_id(user.profile_photo_document_id)
+        document = await self._document_service.get_by_id(
+            user.profile_photo_document_id
+        )
         if document is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="El usuario no tiene foto de perfil."
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="El usuario no tiene foto de perfil.",
             )
         return await self._document_service.to_content_response(document)
 
@@ -435,18 +536,18 @@ class UserService:
         admin_org_ids = await self.role_assignment_repo.get_admin_org_ids(user_id)
         for org_id in admin_org_ids:
             await self._org_service.restore_organization(org_id)
-        all_memberships = await self.membership_repo.get_by_user_id_including_deleted(user_id)
+        all_memberships = await self.membership_repo.get_by_user_id_including_deleted(
+            user_id
+        )
         to_restore = [
-            m for m in all_memberships
+            m
+            for m in all_memberships
             if m.organization_id not in admin_org_ids and m.deleted_at is not None
         ]
         await self.membership_repo.restore_many(to_restore)
         return user
 
     async def get_available_for_chat(self, session: UserSession) -> list:
-        from app_platform.chats.websocket.connection_manager import ws_manager
-        from identity.users.schemas.user_schemas import ChatAvailableUserSchema
-
         role = session.role
         scope = session.scope
         self_id = session.user_id
@@ -457,7 +558,9 @@ class UserService:
         elif scope == UserScope.ORGANIZATION:
             org_ids = [uuid.UUID(oid) for oid in session.orgs.keys()]
             if role == UserRole.CUSTOMER_SERVICE:
-                users = await self.user_repo.get_cs_org_members_and_global_cs(self_id, org_ids)
+                users = await self.user_repo.get_cs_org_members_and_global_cs(
+                    self_id, org_ids
+                )
             else:
                 users = await self.user_repo.get_active_org_members(self_id, org_ids)
 
@@ -488,4 +591,6 @@ class UserService:
 
     @property
     def _org_service(self) -> OrganizationService:
-        return OrganizationService(self.org_repo, self.membership_repo, self.role_assignment_repo)
+        return OrganizationService(
+            self.org_repo, self.membership_repo, self.role_assignment_repo
+        )

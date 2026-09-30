@@ -1,7 +1,8 @@
+"""Acceso a datos de los errores de envío de WhatsApp."""
+
 import uuid
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.contacts.models.contact_model import ContactModel
@@ -10,9 +11,6 @@ from messaging.whatsapp.models.whatsapp_send_error_model import WhatsAppSendErro
 
 class WhatsAppSendErrorRepository(SoftDeleteRepositoryBase[WhatsAppSendErrorModel]):
     model_class = WhatsAppSendErrorModel
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
 
     async def get_by_wamid(self, wamid: str) -> WhatsAppSendErrorModel | None:
         result = await self.session.execute(
@@ -23,7 +21,9 @@ class WhatsAppSendErrorRepository(SoftDeleteRepositoryBase[WhatsAppSendErrorMode
         )
         return result.scalar_one_or_none()
 
-    async def get_by_wamid_and_code(self, wamid: str, error_code: int) -> WhatsAppSendErrorModel | None:
+    async def get_by_wamid_and_code(
+        self, wamid: str, error_code: int
+    ) -> WhatsAppSendErrorModel | None:
         result = await self.session.execute(
             select(WhatsAppSendErrorModel).where(
                 WhatsAppSendErrorModel.wamid == wamid,
@@ -46,9 +46,12 @@ class WhatsAppSendErrorRepository(SoftDeleteRepositoryBase[WhatsAppSendErrorMode
                 WhatsAppSendErrorModel.deleted_at.is_(None),
             )
         )
-        total: int = await self.session.scalar(
-            select(func.count()).select_from(query.subquery())
-        ) or 0
+        total: int = (
+            await self.session.scalar(
+                select(func.count()).select_from(query.subquery())
+            )
+            or 0
+        )
         result = await self.session.execute(
             query.order_by(WhatsAppSendErrorModel.occurred_at.desc())
             .offset((page - 1) * page_size)

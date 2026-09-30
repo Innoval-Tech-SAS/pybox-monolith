@@ -1,3 +1,5 @@
+"""Chats directos y grupales entre usuarios: mensajería, lectura y membresías."""
+
 from __future__ import annotations
 
 import uuid
@@ -7,6 +9,7 @@ from fastapi import HTTPException, status
 
 from app_platform.chats.enums.chat_enums import ChatType, MemberRole
 from app_platform.chats.models.chat_member_model import ChatMemberModel
+from app_platform.chats.models.chat_model import ChatModel
 from app_platform.chats.models.message_model import MessageModel
 from app_platform.chats.models.message_status_model import MessageStatusModel
 from app_platform.chats.repository.chat_repository import ChatRepository
@@ -21,7 +24,9 @@ from identity.organizations.repository.organization_membership_repository import
     OrganizationMembershipRepository,
 )
 from identity.users.models.user_model import UserModel
-from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
+from identity.users.repository.role_assignment_repository import (
+    RoleAssignmentRepository,
+)
 from identity.users.repository.user_repository import UserRepository
 from identity.users.schemas.user_session_schema import UserSession
 
@@ -44,8 +49,6 @@ class ChatService:
     async def find_or_create_direct_chat(
         self, user_a: uuid.UUID, user_b: uuid.UUID
     ) -> ChatSummarySchema:
-        from app_platform.chats.models.chat_model import ChatModel
-
         dm_key = ChatModel.build_dm_key(user_a, user_b)
         chat = await self.chat_repo.get_by_dm_key(dm_key)
         if not chat:
@@ -66,8 +69,12 @@ class ChatService:
 
         chat_ids = [chat.id for chat in chats]
         members_by_chat = await self.chat_repo.get_active_members_for_chats(chat_ids)
-        last_messages_by_chat = await self.msg_repo.get_last_messages_for_chats(chat_ids)
-        unread_by_chat = await self.msg_repo.get_unread_counts_for_chats(chat_ids, user_id)
+        last_messages_by_chat = await self.msg_repo.get_last_messages_for_chats(
+            chat_ids
+        )
+        unread_by_chat = await self.msg_repo.get_unread_counts_for_chats(
+            chat_ids, user_id
+        )
 
         peer_user_ids = {
             member.user_id
@@ -80,7 +87,12 @@ class ChatService:
 
         return [
             self._build_summary_from_batches(
-                chat, user_id, members_by_chat, last_messages_by_chat, unread_by_chat, peer_users
+                chat,
+                user_id,
+                members_by_chat,
+                last_messages_by_chat,
+                unread_by_chat,
+                peer_users,
             )
             for chat in chats
         ]
@@ -234,7 +246,9 @@ class ChatService:
 
         for msg in rows:
             if msg.sender_id not in sender_cache:
-                sender_cache[msg.sender_id] = await self.user_repo.get_by_id(msg.sender_id)
+                sender_cache[msg.sender_id] = await self.user_repo.get_by_id(
+                    msg.sender_id
+                )
             sender = sender_cache[msg.sender_id]
 
             msg_statuses = statuses_map.get(msg.id, [])
@@ -304,7 +318,9 @@ class ChatService:
         else:
             common = None
 
-        global_ids = await self.role_assignment_repo.get_global_user_ids(list(candidate_ids))
+        global_ids = await self.role_assignment_repo.get_global_user_ids(
+            list(candidate_ids)
+        )
         non_global = candidate_ids - global_ids
         if not non_global:
             return existing_org_id
@@ -326,13 +342,18 @@ class ChatService:
 
         return existing_org_id or next(iter(sorted(common)))
 
-    async def _require_group_admin(self, chat_id: uuid.UUID, user_id: uuid.UUID) -> ChatMemberModel:
+    async def _require_group_admin(
+        self, chat_id: uuid.UUID, user_id: uuid.UUID
+    ) -> ChatMemberModel:
         member = await self.chat_repo.get_member(chat_id, user_id)
         if not member or member.left_at is not None:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "No eres miembro de este chat.")
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN, "No eres miembro de este chat."
+            )
         if member.role not in (MemberRole.ADMIN, MemberRole.OWNER):
             raise HTTPException(
-                status.HTTP_403_FORBIDDEN, "Solo un administrador del grupo puede realizar esta acción."
+                status.HTTP_403_FORBIDDEN,
+                "Solo un administrador del grupo puede realizar esta acción.",
             )
         return member
 
@@ -345,24 +366,32 @@ class ChatService:
     async def create_group_chat(
         self, actor_session: UserSession, title: str, member_ids: list[uuid.UUID]
     ) -> ChatSummarySchema:
-        from app_platform.chats.models.chat_model import ChatModel
-
         title = title.strip()
         if not title:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "El grupo necesita un nombre.")
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "El grupo necesita un nombre."
+            )
 
         others = {uid for uid in member_ids if uid != actor_session.user_id}
         if not others:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Selecciona al menos un miembro más.")
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "Selecciona al menos un miembro más."
+            )
 
         all_ids = others | {actor_session.user_id}
-        organization_id = await self._resolve_pinned_organization(actor_session, None, all_ids)
+        organization_id = await self._resolve_pinned_organization(
+            actor_session, None, all_ids
+        )
 
-        chat = ChatModel(type=ChatType.GROUP, title=title, organization_id=organization_id)
+        chat = ChatModel(
+            type=ChatType.GROUP, title=title, organization_id=organization_id
+        )
         chat = await self.chat_repo.add(chat)
 
         await self.chat_repo.add_member(
-            ChatMemberModel(chat_id=chat.id, user_id=actor_session.user_id, role=MemberRole.OWNER)
+            ChatMemberModel(
+                chat_id=chat.id, user_id=actor_session.user_id, role=MemberRole.OWNER
+            )
         )
         for uid in others:
             await self.chat_repo.add_member(
@@ -379,7 +408,9 @@ class ChatService:
 
         existing = await self.chat_repo.get_member(chat_id, candidate_id)
         if existing and existing.left_at is None:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Ese usuario ya es miembro del grupo.")
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "Ese usuario ya es miembro del grupo."
+            )
 
         organization_id = await self._resolve_pinned_organization(
             actor_session, chat.organization_id, {candidate_id}
@@ -393,7 +424,9 @@ class ChatService:
             await self.chat_repo.reactivate_member(chat_id, candidate_id, now)
         else:
             await self.chat_repo.add_member(
-                ChatMemberModel(chat_id=chat_id, user_id=candidate_id, role=MemberRole.MEMBER)
+                ChatMemberModel(
+                    chat_id=chat_id, user_id=candidate_id, role=MemberRole.MEMBER
+                )
             )
 
         members = await self.chat_repo.get_active_members(chat_id)
@@ -409,33 +442,49 @@ class ChatService:
 
         target_member = await self.chat_repo.get_member(chat_id, target_id)
         if not target_member or target_member.left_at is not None:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Ese usuario no es miembro del grupo.")
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "Ese usuario no es miembro del grupo."
+            )
 
         if target_id != actor_id:
             actor_member = await self._require_group_admin(chat_id, actor_id)
-            if target_member.role == MemberRole.OWNER and actor_member.role != MemberRole.OWNER:
+            if (
+                target_member.role == MemberRole.OWNER
+                and actor_member.role != MemberRole.OWNER
+            ):
                 raise HTTPException(
-                    status.HTTP_403_FORBIDDEN, "Solo el propietario del grupo puede removerlo."
+                    status.HTTP_403_FORBIDDEN,
+                    "Solo el propietario del grupo puede removerlo.",
                 )
 
         members_before = await self.chat_repo.get_active_members(chat_id)
         recipient_ids = [m.user_id for m in members_before if m.user_id != target_id]
-        await self.chat_repo.set_member_left(chat_id, target_id, datetime.now(timezone.utc))
+        await self.chat_repo.set_member_left(
+            chat_id, target_id, datetime.now(timezone.utc)
+        )
         return recipient_ids
 
-    async def get_chat_summary_for(self, chat_id: uuid.UUID, user_id: uuid.UUID) -> ChatSummarySchema:
+    async def get_chat_summary_for(
+        self, chat_id: uuid.UUID, user_id: uuid.UUID
+    ) -> ChatSummarySchema:
         chat = await self._require_group_chat(chat_id)
         return await self._build_summary(chat, user_id)
 
-    async def list_members(self, chat_id: uuid.UUID, user_id: uuid.UUID) -> list[ChatMemberSchema]:
+    async def list_members(
+        self, chat_id: uuid.UUID, user_id: uuid.UUID
+    ) -> list[ChatMemberSchema]:
         await self.assert_member(chat_id, user_id)
         members = await self.chat_repo.get_active_members(chat_id)
         users = await self.user_repo.get_by_ids([m.user_id for m in members])
         return [
             ChatMemberSchema(
                 user_id=m.user_id,
-                full_name=users[m.user_id].full_name if m.user_id in users else "Usuario",
-                profile_photo_url=users[m.user_id].profile_photo_url if m.user_id in users else None,
+                full_name=(
+                    users[m.user_id].full_name if m.user_id in users else "Usuario"
+                ),
+                profile_photo_url=(
+                    users[m.user_id].profile_photo_url if m.user_id in users else None
+                ),
                 role=m.role,
             )
             for m in members

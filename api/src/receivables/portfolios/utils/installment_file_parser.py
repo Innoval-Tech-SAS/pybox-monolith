@@ -17,11 +17,13 @@ from receivables.portfolios.constants.portfolio_csv_constants import (
     INSTALLMENT_REQUIRED_COLUMNS,
     NULL_STRINGS,
 )
-from receivables.portfolios.schemas.portfolio_file_schemas import InstallmentFileData, InstallmentRowData
+from receivables.portfolios.schemas.portfolio_file_schemas import (
+    InstallmentFileData,
+    InstallmentRowData,
+)
 
 
 class InstallmentFileParser:
-
     @staticmethod
     def _as_utf8(file_bytes: bytes) -> bytes:
         try:
@@ -37,7 +39,12 @@ class InstallmentFileParser:
         is_xlsx = filename.lower().endswith(".xlsx") or file_bytes[:4] == b"PK\x03\x04"
         if is_xlsx:
             df = pl.read_excel(BytesIO(file_bytes))
-            df = df.select([pl.col(c).cast(pl.String, strict=False) for c in df.columns])
+            # pylint infiere mal el retorno de pl.read_excel (stubs con
+            # @overload de polars) y marca esto como código inalcanzable; sí
+            # se ejecuta.
+            df = df.select(  # pylint: disable=unreachable
+                [pl.col(c).cast(pl.String, strict=False) for c in df.columns]
+            )
         else:
             df = pl.read_csv(
                 BytesIO(self._as_utf8(file_bytes)),
@@ -63,7 +70,8 @@ class InstallmentFileParser:
         missing = INSTALLMENT_REQUIRED_COLUMNS - columns
         if missing:
             raise ValueError(
-                f"El archivo no tiene las columnas requeridas: {', '.join(sorted(missing))}"
+                "El archivo no tiene las columnas requeridas: "
+                f"{', '.join(sorted(missing))}"
             )
 
     def _build_row(self, raw: dict[str, Any]) -> InstallmentRowData | None:
@@ -72,7 +80,9 @@ class InstallmentFileParser:
             return None
 
         is_full_settlement = self._to_bool(raw.get("Pago total del credito"))
-        installment_number = self._to_int_or_none(raw.get("Numero de la cuota que se cancela"))
+        installment_number = self._to_int_or_none(
+            raw.get("Numero de la cuota que se cancela")
+        )
         if not is_full_settlement and installment_number is None:
             return None
 
@@ -135,7 +145,7 @@ class InstallmentFileParser:
             return None
         try:
             return int(Decimal(s.replace(",", "")))
-        except (InvalidOperation, ValueError):
+        except InvalidOperation, ValueError:
             return None
 
     def _parse_date(self, value: Any) -> datetime | None:

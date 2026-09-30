@@ -1,19 +1,23 @@
+"""Crea o actualiza el catálogo de países soportados y sus tipos de documento."""
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.countries.enums.country_enums import (
     DOCUMENT_TYPE_LABELS,
     DOCUMENTS_BY_NATIONALITY,
-    DocumentScope,
     NATIONALITY_CURRENCY_CODE,
     NATIONALITY_NAMES,
     NATIONALITY_PHONE_PREFIX,
     NATIONALITY_TIMEZONE,
-    Nationality,
     ORG_FISCAL_DOCUMENT_BY_NATIONALITY,
     ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY,
+    DocumentScope,
+    Nationality,
 )
-from app_platform.countries.models.country_document_type_model import CountryDocumentTypeModel
+from app_platform.countries.models.country_document_type_model import (
+    CountryDocumentTypeModel,
+)
 from app_platform.countries.models.country_model import CountryModel
 from app_platform.countries.models.document_type_model import DocumentTypeModel
 from core.config.logger import logger
@@ -29,7 +33,10 @@ def _document_labels() -> dict[str, str]:
     for docs in DOCUMENTS_BY_NATIONALITY.values():
         codes.update(doc.value for doc in docs)
     codes.update(fiscal.value for fiscal in ORG_FISCAL_DOCUMENT_BY_NATIONALITY.values())
-    codes.update(mercantile.value for mercantile in ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY.values())
+    codes.update(
+        mercantile.value
+        for mercantile in ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY.values()
+    )
     for code in codes:
         labels[code] = DOCUMENT_TYPE_LABELS.get(code, code)
     return labels
@@ -45,7 +52,9 @@ def _country_document_rows() -> list[tuple[str, str, DocumentScope]]:
             rows.append((nationality.value, fiscal.value, DocumentScope.ORG_FISCAL))
         mercantile = ORG_MERCANTILE_DOCUMENT_BY_NATIONALITY.get(nationality)
         if mercantile is not None:
-            rows.append((nationality.value, mercantile.value, DocumentScope.ORG_MERCANTILE))
+            rows.append(
+                (nationality.value, mercantile.value, DocumentScope.ORG_MERCANTILE)
+            )
     return rows
 
 
@@ -79,7 +88,9 @@ async def seed_countries(session: AsyncSession) -> None:
             session.add(DocumentTypeModel(code=code, label=label))
         else:
             await session.execute(
-                update(DocumentTypeModel).where(DocumentTypeModel.code == code).values(label=label)
+                update(DocumentTypeModel)
+                .where(DocumentTypeModel.code == code)
+                .values(label=label)
             )
 
     await session.flush()

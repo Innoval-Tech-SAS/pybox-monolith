@@ -1,3 +1,5 @@
+"""Proveedores de autenticación soportados."""
+
 from enum import StrEnum
 
 

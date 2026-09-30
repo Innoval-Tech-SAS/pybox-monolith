@@ -1,8 +1,12 @@
+"""Endpoints admin de DDL/DML dinámico sobre bases de datos gestionadas."""
+
 from fastapi import HTTPException, status
 
-from core.config.api_router import APIRouter
-from core.config.database_config import db_config
-from app_platform.schema_manager.dependencies import DdlServiceDep, DmlServiceDep, InspectorServiceDep
+from app_platform.schema_manager.dependencies import (
+    DdlServiceDep,
+    DmlServiceDep,
+    InspectorServiceDep,
+)
 from app_platform.schema_manager.schemas.database_schemas import (
     AlterTableRequest,
     CreateDatabaseRequest,
@@ -12,8 +16,13 @@ from app_platform.schema_manager.schemas.database_schemas import (
     FieldInfo,
     OperationResponse,
 )
+from core.config.api_router import APIRouter
+from core.config.database_config import db_config
 from core.security.dependencies import CurrentSession
-from core.security.policies.security_policies import require_global_admin, require_org_or_global
+from core.security.policies.security_policies import (
+    require_global_admin,
+    require_org_or_global,
+)
 
 router = APIRouter(prefix="/databases", tags=["Bases de datos"])
 
@@ -29,13 +38,20 @@ router = APIRouter(prefix="/databases", tags=["Bases de datos"])
 # de portfolio/organización antes — no pasan por este router HTTP.
 # ------------------------------------------------------------------
 
+
 @router.get("/schemas", response_model=list[str], summary="Listar esquemas")
-async def list_schemas(session: CurrentSession, service: InspectorServiceDep) -> list[str]:
+async def list_schemas(
+    session: CurrentSession, service: InspectorServiceDep
+) -> list[str]:
     require_global_admin(session)
     return await service.get_schemas()
 
 
-@router.get("/schemas/{schema_name}/tables", response_model=list[str], summary="Listar tablas de un esquema")
+@router.get(
+    "/schemas/{schema_name}/tables",
+    response_model=list[str],
+    summary="Listar tablas de un esquema",
+)
 async def list_tables(
     schema_name: str,
     session: CurrentSession,
@@ -63,7 +79,9 @@ async def list_table_fields(
     require_org_or_global(session)
     raw = await service.get_table_fields(schema_name, table_name)
     return [
-        FieldInfo(name=col["name"], type=str(col["type"]), enum_values=col["enum_values"])
+        FieldInfo(
+            name=col["name"], type=str(col["type"]), enum_values=col["enum_values"]
+        )
         for col in raw
     ]
 
@@ -72,7 +90,10 @@ async def list_table_fields(
 # Consulta dinámica (global only, ver nota arriba)
 # ------------------------------------------------------------------
 
-@router.post("/query", response_model=DynamicQueryResponse, summary="Ejecutar consulta dinámica")
+
+@router.post(
+    "/query", response_model=DynamicQueryResponse, summary="Ejecutar consulta dinámica"
+)
 async def execute_query(
     body: DynamicQueryRequest,
     session: CurrentSession,
@@ -102,7 +123,13 @@ async def execute_query(
 # pybox donde cada dominio tenía su propia BD.
 # ------------------------------------------------------------------
 
-@router.post("/", response_model=OperationResponse, status_code=status.HTTP_201_CREATED, summary="Crear base de datos")
+
+@router.post(
+    "/",
+    response_model=OperationResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear base de datos",
+)
 async def create_database(
     body: CreateDatabaseRequest,
     session: CurrentSession,
@@ -126,7 +153,9 @@ async def create_table(
     service: DdlServiceDep,
 ) -> OperationResponse:
     require_global_admin(session)
-    result = await service.create_table(db_config.database_name, schema_name, body.table_name, body.columns)
+    result = await service.create_table(
+        db_config.database_name, schema_name, body.table_name, body.columns
+    )
     if not result["success"]:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, result["message"])
     return OperationResponse(**result)

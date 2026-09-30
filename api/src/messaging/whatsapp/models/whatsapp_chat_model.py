@@ -1,3 +1,5 @@
+"""Hilo de conversación de WhatsApp de un número dentro de una organización."""
+
 import uuid
 from datetime import datetime
 
@@ -16,7 +18,9 @@ class WhatsAppChatModel(BaseModel):
 
     __tablename__ = "whatsapp_chats"
     __table_args__ = (
-        UniqueConstraint("id_organizacion", "telefono", name="uq_whatsapp_chats_org_telefono"),
+        UniqueConstraint(
+            "id_organizacion", "telefono", name="uq_whatsapp_chats_org_telefono"
+        ),
     )
 
     organization_id: Mapped[uuid.UUID] = mapped_column(
@@ -27,9 +31,11 @@ class WhatsAppChatModel(BaseModel):
         name="id_organizacion",
     )
 
-    # Portafolio y campaña del ContactModel más reciente que le escribió a este telefono
-    # al momento en que se creó el hilo — ver whatsapp_webhook_service._handle_message.
-    # Nullable: un deudor puede escribir primero sin que exista un envío previo asociado.
+    # Portafolio y campaña del ContactModel más reciente que le escribió a
+    # este telefono al momento en que se creó el hilo — ver
+    # whatsapp_webhook_service._handle_message.
+    # Nullable: un deudor puede escribir primero sin que exista un envío previo
+    # asociado.
     portfolio_id: Mapped[uuid.UUID | None] = mapped_column(
         PgUUID(as_uuid=True),
         ForeignKey("portafolios.id"),
@@ -56,7 +62,12 @@ class WhatsAppChatModel(BaseModel):
     )
 
     debtor_id: Mapped[uuid.UUID | None] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("deudores.id"), nullable=True, name="id_deudor", index=True)
+        PgUUID(as_uuid=True),
+        ForeignKey("deudores.id"),
+        nullable=True,
+        name="id_deudor",
+        index=True,
+    )
 
     assigned_user_id: Mapped[uuid.UUID | None] = mapped_column(
         PgUUID(as_uuid=True),

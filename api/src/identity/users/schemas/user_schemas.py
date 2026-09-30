@@ -1,3 +1,5 @@
+"""Schemas de usuario: resumen, detalle admin y disponibilidad para chat."""
+
 from __future__ import annotations
 
 import uuid
@@ -17,8 +19,12 @@ class UserSummarySchema(BaseSchema):
 class ChatAvailableUserSchema(BaseSchema):
     id: uuid.UUID = Field(description="ID del usuario")
     full_name: str = Field(description="Nombre completo")
-    profile_photo_url: str | None = Field(default=None, description="URL de la foto de perfil")
-    is_online: bool = Field(default=False, description="Indica si el usuario está en línea")
+    profile_photo_url: str | None = Field(
+        default=None, description="URL de la foto de perfil"
+    )
+    is_online: bool = Field(
+        default=False, description="Indica si el usuario está en línea"
+    )
 
 
 class RoleEntrySchema(BaseSchema):
@@ -36,7 +42,8 @@ class AdminUserSummarySchema(BaseSchema):
     is_active: bool = Field(description="Indica si la cuenta está activa")
     created_at: datetime | None = Field(description="Fecha de creación")
     deleted_at: datetime | None = Field(
-        default=None, description="Fecha de baja lógica; null si el usuario está vigente"
+        default=None,
+        description="Fecha de baja lógica; null si el usuario está vigente",
     )
     roles: list[RoleEntrySchema] = Field(default=[], description="Roles del usuario")
 
@@ -53,7 +60,9 @@ class AdminUserDetailSchema(AdminUserSummarySchema):
     mfa_enabled: bool = Field(description="MFA habilitado")
     is_active_sessions: bool = Field(description="Tiene sesiones activas")
     updated_at: datetime | None = Field(description="Última actualización")
-    profile_photo_url: str | None = Field(default=None, description="URL de foto de perfil")
+    profile_photo_url: str | None = Field(
+        default=None, description="URL de foto de perfil"
+    )
 
 
 class UpdateUserSchema(BaseSchema):
@@ -61,11 +70,19 @@ class UpdateUserSchema(BaseSchema):
     lastname: str | None = Field(default=None, description="Apellido")
     email: str | None = Field(default=None, description="Correo electrónico")
     phone_number: str | None = Field(default=None, description="Teléfono")
-    is_active: bool | None = Field(default=None, description="Activar o desactivar cuenta")
-    document_type: str | None = Field(default=None, description="Código del tipo de documento")
+    is_active: bool | None = Field(
+        default=None, description="Activar o desactivar cuenta"
+    )
+    document_type: str | None = Field(
+        default=None, description="Código del tipo de documento"
+    )
     document_number: str | None = Field(default=None, description="Número de documento")
-    mfa_enabled: bool | None = Field(default=None, description="Habilitar o deshabilitar MFA")
+    mfa_enabled: bool | None = Field(
+        default=None, description="Habilitar o deshabilitar MFA"
+    )
 
 
 class ProfilePhotoSchema(BaseSchema):
-    profile_photo_url: str = Field(description="URL pública de la foto de perfil actualizada")
+    profile_photo_url: str = Field(
+        description="URL pública de la foto de perfil actualizada"
+    )

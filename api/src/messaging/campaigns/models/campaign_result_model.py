@@ -1,3 +1,5 @@
+"""Resultado agregado del cierre real de una ejecución de campaña."""
+
 import uuid
 from datetime import datetime
 
@@ -9,7 +11,6 @@ from core.base.audit_model import BaseModel
 
 
 class CampaignResultModel(BaseModel):
-
     __tablename__ = "resultados_campanias"
 
     campaign_id: Mapped[uuid.UUID] = mapped_column(
@@ -42,13 +43,16 @@ class CampaignResultModel(BaseModel):
 
     failure_count: Mapped[int] = mapped_column(Integer, default=0, name="con_errores")
 
-    unique_customers: Mapped[int] = mapped_column(Integer, default=0, name="clientes_unicos")
+    unique_customers: Mapped[int] = mapped_column(
+        Integer, default=0, name="clientes_unicos"
+    )
 
     sent_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=func.now(), name="fecha_envio"
     )
 
-    # Id del envío de 360NRS (sendingId) reconciliado. Null para el resultado agregado inicial post-envío.
+    # Id del envío de 360NRS (sendingId) reconciliado. Null para el
+    # resultado agregado inicial post-envío.
     sending_id: Mapped[str | None] = mapped_column(
         String(255), nullable=True, index=True, name="id_envio"
     )

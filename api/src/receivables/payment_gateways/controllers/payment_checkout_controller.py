@@ -1,3 +1,5 @@
+"""Endpoints de checkout: fuentes de pago guardadas y creación de transacciones."""
+
 import uuid
 
 from fastapi import status
@@ -44,7 +46,9 @@ def _to_gateway_payment_method(body: TransactionRequest) -> PaymentMethodInput:
     if isinstance(body, NequiTransactionRequest):
         return NequiPaymentMethod(phone_number=body.phone_number)
     if isinstance(body, BancolombiaTransferTransactionRequest):
-        return BancolombiaTransferPaymentMethod(payment_description=body.payment_description)
+        return BancolombiaTransferPaymentMethod(
+            payment_description=body.payment_description
+        )
     raise ValueError(f"Tipo de método de pago no soportado: {type(body)!r}")
 
 
@@ -85,7 +89,14 @@ async def create_card_source(
     service: PaymentSourceServiceDep,
 ) -> PaymentSourceResponse:
     source = await service.create_card_source(
-        session, payment_id, body.number, body.cvc, body.exp_month, body.exp_year, body.card_holder, body.customer_email
+        session,
+        payment_id,
+        body.number,
+        body.cvc,
+        body.exp_month,
+        body.exp_year,
+        body.card_holder,
+        body.customer_email,
     )
     return _to_source_response(source)
 
@@ -102,7 +113,9 @@ async def create_nequi_source(
     session: RequireSelfForPaymentGateways,
     service: PaymentSourceServiceDep,
 ) -> PaymentSourceResponse:
-    source = await service.create_nequi_source(session, payment_id, body.phone_number, body.customer_email)
+    source = await service.create_nequi_source(
+        session, payment_id, body.phone_number, body.customer_email
+    )
     return _to_source_response(source)
 
 

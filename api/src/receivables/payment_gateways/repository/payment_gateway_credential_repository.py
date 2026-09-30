@@ -1,18 +1,22 @@
+"""Acceso a datos de las credenciales de pasarela de cobro de una organización."""
+
 import uuid
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from receivables.payment_gateways.enums.payment_gateway_enums import ReceivablesGatewayProvider
-from receivables.payment_gateways.models.payment_gateway_credential_model import OrganizationGatewayCredentialModel
+from receivables.payment_gateways.enums.payment_gateway_enums import (
+    ReceivablesGatewayProvider,
+)
+from receivables.payment_gateways.models.payment_gateway_credential_model import (
+    OrganizationGatewayCredentialModel,
+)
 
 
-class OrganizationGatewayCredentialRepository(SoftDeleteRepositoryBase[OrganizationGatewayCredentialModel]):
+class OrganizationGatewayCredentialRepository(
+    SoftDeleteRepositoryBase[OrganizationGatewayCredentialModel]
+):
     model_class = OrganizationGatewayCredentialModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_by_organization_and_provider(
         self, organization_id: uuid.UUID, provider: ReceivablesGatewayProvider
@@ -26,7 +30,9 @@ class OrganizationGatewayCredentialRepository(SoftDeleteRepositoryBase[Organizat
         )
         return result.scalar_one_or_none()
 
-    async def list_by_organization(self, organization_id: uuid.UUID) -> list[OrganizationGatewayCredentialModel]:
+    async def list_by_organization(
+        self, organization_id: uuid.UUID
+    ) -> list[OrganizationGatewayCredentialModel]:
         result = await self.session.execute(
             select(OrganizationGatewayCredentialModel).where(
                 OrganizationGatewayCredentialModel.organization_id == organization_id,

@@ -1,7 +1,14 @@
+"""Resuelve las variables de personalización de un mensaje para un deudor."""
+
 import uuid
 from typing import Any
 
-from messaging.campaigns.constants import CREDIT_TABLE, DEBTOR_TABLE, PAYMENT_STRATEGY_SUFFIXES, PAYMENT_TABLE
+from messaging.campaigns.constants import (
+    CREDIT_TABLE,
+    DEBTOR_TABLE,
+    PAYMENT_STRATEGY_SUFFIXES,
+    PAYMENT_TABLE,
+)
 from messaging.campaigns.utils.model_introspection_utils import column_attr_map
 from receivables.credits.models.credit_model import CreditModel
 from receivables.credits.repository.credit_repository import CreditRepository
@@ -21,11 +28,12 @@ _PAYMENT_FETCHERS: dict[str, str] = {
 
 class PersonalizationService:
     """
-    Resuelve los valores de las variables que usa el mensaje de una campaña, por destinatario.
+    Resuelve los valores de las variables que usa el mensaje de una
+    campaña, por destinatario.
 
-    Independiente del segmento: el segmento define la poblacion (que deudores matchean
-    el filtro), esto solo trae las columnas que el mensaje referencia, vía los repositorios
-    de deudores/creditos/pagos.
+    Independiente del segmento: el segmento define la poblacion (que
+    deudores matchean el filtro), esto solo trae las columnas que el
+    mensaje referencia, vía los repositorios de deudores/creditos/pagos.
     """
 
     def __init__(
@@ -60,13 +68,16 @@ class PersonalizationService:
                     if attr:
                         values[field] = getattr(debtor, attr)
 
-        # Los pagos cuelgan del crédito, no del deudor directamente — si se pidió algo
-        # de pagos, hace falta el crédito vigente igual que si se hubiera pedido credit_fields.
+        # Los pagos cuelgan del crédito, no del deudor directamente — si
+        # se pidió algo de pagos, hace falta el crédito vigente igual
+        # que si se hubiera pedido credit_fields.
         credits_by_debtor: dict[uuid.UUID, CreditModel] = {}
         if credit_fields or payment_fields:
             credits_by_debtor = {
                 credit.debtor_id: credit
-                for credit in await self._credit_repo.get_latest_by_debtor_ids(debtor_ids)
+                for credit in await self._credit_repo.get_latest_by_debtor_ids(
+                    debtor_ids
+                )
             }
 
         if credit_fields:
@@ -100,13 +111,17 @@ class PersonalizationService:
             for suffix in PAYMENT_STRATEGY_SUFFIXES:
                 if qualified_field.endswith(f"_{suffix}"):
                     base_field = qualified_field[: -(len(suffix) + 1)]
-                    fields_by_strategy.setdefault(suffix, set()).add((base_field, qualified_field))
+                    fields_by_strategy.setdefault(suffix, set()).add(
+                        (base_field, qualified_field)
+                    )
                     break
 
         if not fields_by_strategy:
             return
 
-        credit_id_to_debtor = {credit.id: debtor_id for debtor_id, credit in credits_by_debtor.items()}
+        credit_id_to_debtor = {
+            credit.id: debtor_id for debtor_id, credit in credits_by_debtor.items()
+        }
         credit_ids = list(credit_id_to_debtor.keys())
         attr_by_column = column_attr_map(PaymentModel)
 

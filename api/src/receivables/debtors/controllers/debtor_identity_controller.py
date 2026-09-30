@@ -1,3 +1,5 @@
+"""Endpoints internos (n8n) de verificación de identidad del deudor."""
+
 from fastapi import Depends
 
 from core.config.api_router import APIRouter
@@ -10,8 +12,8 @@ from receivables.debtors.schemas.debtor_identity_schemas import (
     IdentityVerifyResponse,
 )
 
-# Solo lo consume n8n, autenticado con la llave de servicio (sin sesión de usuario). No se
-# publica en el esquema OpenAPI, igual que los webhooks.
+# Solo lo consume n8n, autenticado con la llave de servicio (sin sesión de usuario).
+# No se publica en el esquema OpenAPI, igual que los webhooks.
 router = APIRouter(
     prefix="/internal/debtor-identity",
     tags=["Identidad del deudor (interno)"],
@@ -36,5 +38,7 @@ async def request_challenge(
     response_model=IdentityVerifyResponse,
     summary="Verifica el dato que escribió el titular",
 )
-async def verify(data: IdentityVerifyRequest, service: DebtorIdentityServiceDep) -> IdentityVerifyResponse:
+async def verify(
+    data: IdentityVerifyRequest, service: DebtorIdentityServiceDep
+) -> IdentityVerifyResponse:
     return await service.verify(data)

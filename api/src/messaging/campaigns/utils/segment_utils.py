@@ -1,3 +1,5 @@
+"""Extracción de ids de deudor y su columna a partir de un criterio de segmento."""
+
 import uuid
 from typing import Any
 
@@ -11,7 +13,7 @@ def debtor_id_column(criteria: dict[str, Any]) -> str:
     tables = criteria.get("tables") or []
     multi = len(tables) > 1
     for table in tables:
-        name = str(table.get("name") or "").split(".")[-1]
+        name = str(table.get("name") or "").rsplit(".", maxsplit=1)[-1]
         if name == "deudores":
             alias = table.get("alias") or name
             return f"{alias}_id" if multi else "id"
@@ -19,7 +21,8 @@ def debtor_id_column(criteria: dict[str, Any]) -> str:
 
 
 def extract_debtor_ids(rows: list[dict], criteria: dict[str, Any]) -> list[uuid.UUID]:
-    """Ids de deudor únicos de las filas del segmento, preservando el orden de la consulta.
+    """Ids de deudor únicos de las filas del segmento, preservando el orden
+    de la consulta.
 
     Las filas que no traen un UUID válido en la columna del deudor se descartan.
     """

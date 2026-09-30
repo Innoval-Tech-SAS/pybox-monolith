@@ -1,3 +1,5 @@
+"""Categoría de un documento colgado de un deudor."""
+
 from enum import StrEnum
 
 

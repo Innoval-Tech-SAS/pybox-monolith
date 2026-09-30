@@ -17,9 +17,10 @@ No hay ciclo de FK: `entidades` no referencia `chats`, así que no hace falta
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "a1b2c3d4e5f6"
 down_revision: Union[str, None] = "4822ccda7e9b"

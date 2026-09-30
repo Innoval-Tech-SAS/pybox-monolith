@@ -1,7 +1,11 @@
+"""Firma de integridad y verificación de eventos webhook de Wompi."""
+
 import hmac
 from typing import Any
 
-from core.payment_gateways.integrity_signature import build_concatenated_sha256_signature
+from core.payment_gateways.integrity_signature import (
+    build_concatenated_sha256_signature,
+)
 
 
 def build_integrity_signature(
@@ -11,9 +15,9 @@ def build_integrity_signature(
     integrity_secret: str,
     expiration_time: str | None = None,
 ) -> str:
-    """SHA256(reference + amount_in_cents + currency + [expiration_time +] secret), sin
-    separadores (skill `wompi-gateway`, Paso 8). Se calcula SIEMPRE en el servidor: nunca
-    en el frontend, expondria `integrity_secret`."""
+    """SHA256(reference + amount_in_cents + currency + [expiration_time +]
+    secret), sin separadores (skill `wompi-gateway`, Paso 8). Se calcula SIEMPRE
+    en el servidor: nunca en el frontend, expondria `integrity_secret`."""
     parts = [reference, str(amount_in_cents), currency]
     if expiration_time is not None:
         parts.append(expiration_time)
@@ -52,9 +56,13 @@ def verify_webhook_checksum(event_body: dict[str, Any], events_secret: str) -> b
         return False
 
     try:
-        concatenated_values = "".join(str(_resolve_dotted_path(data, prop)) for prop in properties)
+        concatenated_values = "".join(
+            str(_resolve_dotted_path(data, prop)) for prop in properties
+        )
     except KeyError:
         return False
 
-    computed_checksum = build_concatenated_sha256_signature(concatenated_values, str(timestamp), events_secret)
+    computed_checksum = build_concatenated_sha256_signature(
+        concatenated_values, str(timestamp), events_secret
+    )
     return hmac.compare_digest(computed_checksum.lower(), received_checksum.lower())

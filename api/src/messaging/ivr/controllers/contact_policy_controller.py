@@ -1,3 +1,5 @@
+"""Proxy de lectura hacia las políticas de contacto de Helena (IVR)."""
+
 from typing import Any
 
 import httpx
@@ -30,10 +32,14 @@ async def list_contact_policies(
         detail = exc.response.text[:300] if exc.response is not None else ""
         logger.error("[ivr] contact_policies_http_error | body=%s", detail)
         raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY, f"Helena rechazó la consulta de políticas: {detail or exc}"
-        )
-    except Exception as exc:  # noqa: BLE001
+            status.HTTP_502_BAD_GATEWAY,
+            f"Helena rechazó la consulta de políticas: {detail or exc}",
+        ) from exc
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        # Cualquier falla no-HTTP de Helena (timeout, conexión) también debe
+        # volver como 502 y no como 500 sin manejar.
         logger.error("[ivr] contact_policies_error | error=%s", exc)
         raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY, "No se pudieron consultar las políticas de contacto."
-        )
+            status.HTTP_502_BAD_GATEWAY,
+            "No se pudieron consultar las políticas de contacto.",
+        ) from exc

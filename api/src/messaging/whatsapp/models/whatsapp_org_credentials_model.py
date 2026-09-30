@@ -1,3 +1,5 @@
+"""Credenciales de WhatsApp Business Cloud API de una organización."""
+
 import uuid
 
 from sqlalchemy import Boolean, ForeignKey, String, UniqueConstraint
@@ -8,10 +10,11 @@ from core.base.audit_model import BaseModel
 
 
 class WhatsAppOrgCredentialsModel(BaseModel):
-
     __tablename__ = "whatsapp_credenciales_organizacion"
     __table_args__ = (
-        UniqueConstraint("id_organizacion", name="uq_whatsapp_credenciales_organizacion"),
+        UniqueConstraint(
+            "id_organizacion", name="uq_whatsapp_credenciales_organizacion"
+        ),
     )
 
     organization_id: Mapped[uuid.UUID] = mapped_column(

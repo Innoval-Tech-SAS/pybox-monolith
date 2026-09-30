@@ -1,3 +1,5 @@
+"""Parser del CSV/XLSX de carga masiva de portafolio (deudores + créditos)."""
+
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
@@ -5,7 +7,10 @@ from typing import Any
 
 import polars as pl
 
-from app_platform.countries.enums.country_enums import DOCUMENT_TYPE_BY_CODE, UserDocumentType
+from app_platform.countries.enums.country_enums import (
+    DOCUMENT_TYPE_BY_CODE,
+    UserDocumentType,
+)
 from receivables.contact_methods.enums.contact_method_enums import ContactMethodType
 from receivables.credits.enums.credit_enums import CREDIT_TYPE_ALIASES, CreditTypes
 from receivables.debtors.enums.debtor_enums import DebtorType
@@ -28,7 +33,6 @@ from receivables.portfolios.schemas.portfolio_file_schemas import (
 
 
 class PortfolioFileParser:
-
     @staticmethod
     def _as_utf8(file_bytes: bytes) -> bytes:
         """
@@ -50,7 +54,12 @@ class PortfolioFileParser:
         is_xlsx = filename.lower().endswith(".xlsx") or file_bytes[:4] == b"PK\x03\x04"
         if is_xlsx:
             df = pl.read_excel(BytesIO(file_bytes))
-            df = df.select([pl.col(c).cast(pl.String, strict=False) for c in df.columns])
+            # pylint infiere mal el retorno de pl.read_excel (stubs con
+            # @overload de polars) y marca esto como código inalcanzable; sí
+            # se ejecuta.
+            df = df.select(  # pylint: disable=unreachable
+                [pl.col(c).cast(pl.String, strict=False) for c in df.columns]
+            )
         else:
             df = pl.read_csv(
                 BytesIO(self._as_utf8(file_bytes)),
@@ -80,7 +89,8 @@ class PortfolioFileParser:
         missing = REQUIRED_COLUMNS - columns
         if missing:
             raise ValueError(
-                f"El archivo no tiene las columnas requeridas: {', '.join(sorted(missing))}"
+                "El archivo no tiene las columnas requeridas: "
+                f"{', '.join(sorted(missing))}"
             )
 
     # ------------------------------------------------------------------
@@ -98,11 +108,11 @@ class PortfolioFileParser:
         codebtor = self._build_codebtor(raw)
         primary_address = self._build_address(raw, "PRIMARY")
         secondary_address = self._build_secondary_address(raw)
-        debtor_contacts = self._build_contacts(
-            raw, "Telefono", "Correo Electronico"
-        )
+        debtor_contacts = self._build_contacts(raw, "Telefono", "Correo Electronico")
         codebtor_contacts = (
-            self._build_contacts(raw, "Telefono codeudor", "Correo Electronico codeudor")
+            self._build_contacts(
+                raw, "Telefono codeudor", "Correo Electronico codeudor"
+            )
             if codebtor
             else []
         )
@@ -197,12 +207,16 @@ class PortfolioFileParser:
             disbursed_date=disbursed_date,
             credit_type=self._map_credit_type(raw.get("Tipo de producto")),
             agreed_interest_rate=self._to_decimal(raw.get("Tasa de interes pactada")),
-            charged_effective_annual_rate=self._to_decimal_or_none(raw.get("Tasa de interes cobrada")),
+            charged_effective_annual_rate=self._to_decimal_or_none(
+                raw.get("Tasa de interes cobrada")
+            ),
             balance_disbursed=self._to_decimal(raw.get("Saldo Desembolso")),
             court_date=court_date,
             initial_term=self._to_int(raw.get("plazo inicial")),
             total_credit_balance=self._to_decimal(raw.get("saldo total del credito")),
-            overdue_principal_balance=self._to_decimal(raw.get("Saldo Capital en mora")),
+            overdue_principal_balance=self._to_decimal(
+                raw.get("Saldo Capital en mora")
+            ),
             current_interest=self._to_decimal(raw.get("Intereses Corrientes")),
             overdue_interest=self._to_decimal(raw.get("Intereses Mora")),
             other_concepts=self._to_decimal(raw.get("Otros Conceptos")),
@@ -216,7 +230,9 @@ class PortfolioFileParser:
             vat_accum=self._to_decimal(raw.get("IVA")),
             subproduct=self._normalize_str(raw.get("SUBPRODUCTO")),
             uvr_last_quote=self._to_decimal_or_none(raw.get("Cotizacion de UVR")),
-            condonations_accum=self._to_decimal(raw.get("Condonaciones y/o descuentos")),
+            condonations_accum=self._to_decimal(
+                raw.get("Condonaciones y/o descuentos")
+            ),
         )
 
     def _build_payment(self, raw: dict[str, Any]) -> PaymentRowData | None:
@@ -228,7 +244,9 @@ class PortfolioFileParser:
             payment_date=payment_date,
             limit_pay_date=limit_date,
             payment_amount=self._to_decimal(raw.get("total")),
-            installment_number=self._to_int_or_none(raw.get("Numero de la cuota que se cancela")),
+            installment_number=self._to_int_or_none(
+                raw.get("Numero de la cuota que se cancela")
+            ),
             principal_payment=self._to_decimal(raw.get("abono a capital")),
             current_interest_amount=self._to_decimal(raw.get("interes corriente")),
             overdue_interest_amount=self._to_decimal(raw.get("interes mora")),
@@ -249,7 +267,9 @@ class PortfolioFileParser:
             return None
         return UVRQuoteRowData(quote_value=value, quote_date=quote_date)
 
-    def _build_credit_adjustment(self, raw: dict[str, Any]) -> CreditAdjustmentRowData | None:
+    def _build_credit_adjustment(
+        self, raw: dict[str, Any]
+    ) -> CreditAdjustmentRowData | None:
         amount = self._to_decimal_or_none(raw.get("Condonaciones y/o descuentos"))
         if amount is None:
             return None
@@ -314,7 +334,7 @@ class PortfolioFileParser:
             return None
         try:
             return int(Decimal(s.replace(",", "")))
-        except (InvalidOperation, ValueError):
+        except InvalidOperation, ValueError:
             return None
 
     def _parse_date(self, value: Any) -> datetime | None:

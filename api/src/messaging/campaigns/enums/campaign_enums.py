@@ -1,3 +1,5 @@
+"""Estado y periodicidad de una campaña de mensajería."""
+
 from enum import StrEnum
 
 

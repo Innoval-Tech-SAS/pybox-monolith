@@ -1,3 +1,5 @@
+"""Mapeo de estado de transacción de Wompi a ReceivablesPaymentAttemptStatus."""
+
 from receivables.payment_gateways.enums.payment_gateway_enums import (
     PaymentSourceStatus,
     ReceivablesPaymentAttemptStatus,

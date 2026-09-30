@@ -1,3 +1,5 @@
+"""Categoría de un documento colgado de un portafolio."""
+
 from enum import StrEnum
 
 

@@ -1,4 +1,6 @@
-﻿from __future__ import annotations
+"""Cifrado simétrico (AES-GCM) para datos sensibles en reposo, con versión de clave."""
+
+from __future__ import annotations
 
 import base64
 import hashlib
@@ -7,6 +9,7 @@ import secrets
 from typing import Optional
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
 from core.tools.config_tools import get_or_throw
 
 
@@ -78,7 +81,9 @@ class EncryptService:
         return self._decrypt(token, **kwargs).decode("utf-8")
 
     def hash_document(self, value: str) -> str:
-        return hmac.new(self._hash_key, value.encode("utf-8"), hashlib.sha256).hexdigest()
+        return hmac.new(
+            self._hash_key, value.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
 
 
 encrypt_service = EncryptService()

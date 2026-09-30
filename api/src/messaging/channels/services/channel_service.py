@@ -1,3 +1,5 @@
+"""Alta, edición y consulta de canales de mensajería."""
+
 import uuid
 from typing import Sequence
 
@@ -5,11 +7,13 @@ from fastapi import HTTPException, status
 
 from messaging.channels.models.channel_model import ChannelModel
 from messaging.channels.repository.channel_repository import ChannelRepository
-from messaging.channels.schemas.channel_schemas import ChannelCreateRequest, ChannelUpdateRequest
+from messaging.channels.schemas.channel_schemas import (
+    ChannelCreateRequest,
+    ChannelUpdateRequest,
+)
 
 
 class ChannelService:
-
     def __init__(self, repo: ChannelRepository) -> None:
         self._repo = repo
 
@@ -25,7 +29,9 @@ class ChannelService:
     async def create(self, data: ChannelCreateRequest) -> ChannelModel:
         existing = await self._repo.get_by_name(data.name)
         if existing is not None:
-            raise HTTPException(status.HTTP_409_CONFLICT, f"El canal '{data.name}' ya existe")
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, f"El canal '{data.name}' ya existe"
+            )
         channel = ChannelModel(
             name=data.name,
             label=data.label,
@@ -35,7 +41,9 @@ class ChannelService:
         )
         return await self._repo.add(channel)
 
-    async def update(self, channel_id: uuid.UUID, data: ChannelUpdateRequest) -> ChannelModel:
+    async def update(
+        self, channel_id: uuid.UUID, data: ChannelUpdateRequest
+    ) -> ChannelModel:
         channel = await self.get_by_id(channel_id)
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():

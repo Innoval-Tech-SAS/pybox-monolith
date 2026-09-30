@@ -1,4 +1,6 @@
-﻿from sqlalchemy import select
+"""Acceso a datos de los canales de mensajería."""
+
+from sqlalchemy import select
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.channels.enums.channel_enums import ChannelName

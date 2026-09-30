@@ -1,3 +1,5 @@
+"""Cron diario de contadores de cartera, uno por zona horaria de país."""
+
 import asyncio
 from functools import partial
 from zoneinfo import ZoneInfo
@@ -6,8 +8,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config.logger import logger
 from app_platform.countries.repository.country_repository import CountryRepository
+from core.config.logger import logger
 from core.database.database import db
 from receivables.portfolios.services.daily_counters_service import DailyCountersService
 
@@ -18,7 +20,9 @@ async def _job(country_code: str, tz_str: str) -> None:
         async with db.get_session() as session:
             await DailyCountersService(session).run_for_country(country_code, tz_str)
     except asyncio.CancelledError:
-        logger.info("[daily_counters] cancelado (apagado en curso) | país=%s", country_code)
+        logger.info(
+            "[daily_counters] cancelado (apagado en curso) | país=%s", country_code
+        )
     except Exception:
         logger.exception("[daily_counters] error | país=%s", country_code)
 

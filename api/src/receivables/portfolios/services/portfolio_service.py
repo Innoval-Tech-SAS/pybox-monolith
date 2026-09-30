@@ -1,35 +1,56 @@
+"""Alta, edición y estadísticas de portafolios de una organización."""
+
 import uuid
 from datetime import date, datetime, timezone
 
 from fastapi import HTTPException, status
 from pydantic import TypeAdapter
 
-from app_platform.dashboard.schemas.dashboard_schemas import MonthlySendsPoint, MonthlySendsResponse, SendStatusCountItem, SendStatusCountsResponse
+from app_platform.dashboard.schemas.dashboard_schemas import (
+    MonthlySendsPoint,
+    MonthlySendsResponse,
+    SendStatusCountItem,
+    SendStatusCountsResponse,
+)
 from app_platform.dashboard.utils.dashboard_utils import last_n_months
 from core.cache.cache_service import cache_service
-from identity.organizations.repository.organization_repository import OrganizationRepository
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
+from identity.users.enums.user_enums import UserRole
+from identity.users.schemas.user_session_schema import UserSession
 from messaging.campaigns.repository.campaign_repository import CampaignRepository
 from messaging.contacts.repository.contact_repository import ContactRepository
 from receivables.credits.repository.credit_repository import CreditRepository
-from receivables.portfolios.models.portfolio_daily_counter_config_model import PortfolioDailyCounterConfigModel
+from receivables.portfolios.models.portfolio_daily_counter_config_model import (
+    PortfolioDailyCounterConfigModel,
+)
 from receivables.portfolios.models.portfolio_model import PortfolioModel
-from receivables.portfolios.repository.portfolio_daily_counter_config_repository import PortfolioDailyCounterConfigRepository
+from receivables.portfolios.repository.portfolio_daily_counter_config_repository import (  # pylint: disable=line-too-long
+    PortfolioDailyCounterConfigRepository,
+)
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from receivables.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
+from receivables.portfolios.repository.portfolio_user_access_repository import (
+    PortfolioUserAccessRepository,
+)
 from receivables.portfolios.schemas.portfolio_schemas import (
     PortfolioDailyCounterConfigSyncRequest,
     PortfolioDailyCounterConfigUpdateRequest,
     PortfolioStatsResponse,
     PortfolioUpdateRequest,
 )
-from identity.users.enums.user_enums import UserRole
-from identity.users.schemas.user_session_schema import UserSession
 
 _MONTHLY_SENDS_WINDOW = 12
 
-_stats_adapter: TypeAdapter[PortfolioStatsResponse] = TypeAdapter(PortfolioStatsResponse)
-_send_status_adapter: TypeAdapter[SendStatusCountsResponse] = TypeAdapter(SendStatusCountsResponse)
-_monthly_sends_adapter: TypeAdapter[MonthlySendsResponse] = TypeAdapter(MonthlySendsResponse)
+_stats_adapter: TypeAdapter[PortfolioStatsResponse] = TypeAdapter(
+    PortfolioStatsResponse
+)
+_send_status_adapter: TypeAdapter[SendStatusCountsResponse] = TypeAdapter(
+    SendStatusCountsResponse
+)
+_monthly_sends_adapter: TypeAdapter[MonthlySendsResponse] = TypeAdapter(
+    MonthlySendsResponse
+)
 
 
 class PortfolioService:
@@ -79,7 +100,9 @@ class PortfolioService:
     async def get_stats(self, portfolio_id: uuid.UUID) -> PortfolioStatsResponse:
         async def _fetch() -> PortfolioStatsResponse:
             stats = await self._credit_repo.get_portfolio_stats(portfolio_id)
-            usuarios_con_acceso = await self._access_repo.count_active_users_for_portfolio(portfolio_id)
+            usuarios_con_acceso = (
+                await self._access_repo.count_active_users_for_portfolio(portfolio_id)
+            )
             return PortfolioStatsResponse(
                 creditos=stats.creditos,
                 titulares=stats.titulares,
@@ -90,6 +113,7 @@ class PortfolioService:
                 creditos_cargados=stats.creditos,
                 usuarios_con_acceso=usuarios_con_acceso,
             )
+
         return await cache_service.get_or_set(
             key=f"portfolio:stats:{portfolio_id}",
             fetch=_fetch,
@@ -97,12 +121,19 @@ class PortfolioService:
             ttl=120,
         )
 
-    async def get_monthly_sends(self, portfolio_id: uuid.UUID, campaign_id: uuid.UUID) -> MonthlySendsResponse:
+    async def get_monthly_sends(
+        self, portfolio_id: uuid.UUID, campaign_id: uuid.UUID
+    ) -> MonthlySendsResponse:
         async def _fetch() -> MonthlySendsResponse:
             portfolio = await self.get_by_id(portfolio_id)
-            campaign = await self._campaign_repo.get_by_id_and_portfolio(campaign_id, portfolio_id)
+            campaign = await self._campaign_repo.get_by_id_and_portfolio(
+                campaign_id, portfolio_id
+            )
             if campaign is None:
-                raise HTTPException(status.HTTP_404_NOT_FOUND, "Campaña no encontrada en este portafolio")
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND,
+                    "Campaña no encontrada en este portafolio",
+                )
             months = last_n_months(_MONTHLY_SENDS_WINDOW)
             period_start = datetime(months[0][0], months[0][1], 1, tzinfo=timezone.utc)
             rows = await self._contact_repo.get_monthly_sends_by_campaign(
@@ -110,10 +141,16 @@ class PortfolioService:
             )
             counts_by_month = {(d.year, d.month): count for d, count in rows}
             points = [
-                MonthlySendsPoint(period=f"{year}-{month:02d}", count=counts_by_month.get((year, month), 0))
+                MonthlySendsPoint(
+                    period=f"{year}-{month:02d}",
+                    count=counts_by_month.get((year, month), 0),
+                )
                 for year, month in months
             ]
-            return MonthlySendsResponse(campaign_id=campaign.id, campaign_name=campaign.name, points=points)
+            return MonthlySendsResponse(
+                campaign_id=campaign.id, campaign_name=campaign.name, points=points
+            )
+
         return await cache_service.get_or_set(
             key=f"portfolio:monthly-sends:{portfolio_id}:{campaign_id}",
             fetch=_fetch,
@@ -121,13 +158,18 @@ class PortfolioService:
             ttl=300,
         )
 
-    async def get_send_status_counts(self, portfolio_id: uuid.UUID) -> SendStatusCountsResponse:
+    async def get_send_status_counts(
+        self, portfolio_id: uuid.UUID
+    ) -> SendStatusCountsResponse:
         async def _fetch() -> SendStatusCountsResponse:
             portfolio = await self.get_by_id(portfolio_id)
-            rows = await self._contact_repo.get_send_status_counts(portfolio.organization_id, portfolio_id)
+            rows = await self._contact_repo.get_send_status_counts(
+                portfolio.organization_id, portfolio_id
+            )
             return SendStatusCountsResponse(
                 items=[SendStatusCountItem(status=s, count=c) for s, c in rows]
             )
+
         return await cache_service.get_or_set(
             key=f"portfolio:send-status:{portfolio_id}",
             fetch=_fetch,
@@ -138,7 +180,9 @@ class PortfolioService:
     async def get_by_id(self, portfolio_id: uuid.UUID) -> PortfolioModel:
         portfolio = await self.portfolio_repo.get_by_id(portfolio_id)
         if portfolio is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Portafolio no encontrado")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Portafolio no encontrado"
+            )
         return portfolio
 
     async def update_portfolio(
@@ -158,22 +202,32 @@ class PortfolioService:
         campañas que ya estaban dados de baja por otra vía."""
         portfolio = await self.get_by_id(portfolio_id)
         deleted = await self.portfolio_repo.delete(portfolio)
-        await self._cascade_delete([portfolio_id], deleted.deleted_at)  # type: ignore[arg-type]
+        await self._cascade_delete(  # type: ignore[arg-type]
+            [portfolio_id], deleted.deleted_at
+        )
 
     async def restore_portfolio(self, portfolio_id: uuid.UUID) -> PortfolioModel:
         portfolio = await self.portfolio_repo.get_by_id_including_deleted(portfolio_id)
         if portfolio is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Portafolio no encontrado")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Portafolio no encontrado"
+            )
         if portfolio.deleted_at is None:
             return portfolio
 
-        # Un portafolio vivo bajo una organización eliminada quedaría accesible por
-        # id sin dueño: primero se restaura la organización (que arrastra sus portafolios).
-        organization = await OrganizationRepository(self.portfolio_repo.session).get_by_id(portfolio.organization_id)
+        # Un portafolio vivo bajo una organización eliminada quedaría accesible
+        # por id sin dueño: primero se restaura la organización (que arrastra sus
+        # portafolios).
+        organization = await OrganizationRepository(
+            self.portfolio_repo.session
+        ).get_by_id(portfolio.organization_id)
         if organization is None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="La organización de este portafolio está eliminada; restáurala primero",
+                detail=(
+                    "La organización de este portafolio está eliminada; "
+                    "restáurala primero"
+                ),
             )
 
         deleted_at = portfolio.deleted_at
@@ -181,32 +235,48 @@ class PortfolioService:
         await self._cascade_restore([portfolio_id], deleted_at)
         return restored
 
-    async def delete_for_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Cascada de la baja de una organización: sus portafolios vivos caen con el sello
-        de la organización, y con ellos sus créditos y campañas."""
-        portfolio_ids = await self.portfolio_repo.soft_delete_by_organization(organization_id, deleted_at)
+    async def delete_for_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Cascada de la baja de una organización: sus portafolios vivos caen con
+        el sello de la organización, y con ellos sus créditos y campañas."""
+        portfolio_ids = await self.portfolio_repo.soft_delete_by_organization(
+            organization_id, deleted_at
+        )
         await self._cascade_delete(portfolio_ids, deleted_at)
 
-    async def restore_for_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        portfolio_ids = await self.portfolio_repo.restore_by_organization(organization_id, deleted_at)
+    async def restore_for_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        portfolio_ids = await self.portfolio_repo.restore_by_organization(
+            organization_id, deleted_at
+        )
         await self._cascade_restore(portfolio_ids, deleted_at)
 
-    async def _cascade_delete(self, portfolio_ids: list[uuid.UUID], deleted_at: datetime) -> None:
+    async def _cascade_delete(
+        self, portfolio_ids: list[uuid.UUID], deleted_at: datetime
+    ) -> None:
         await self._credit_repo.soft_delete_by_portfolios(portfolio_ids, deleted_at)
         await self._campaign_repo.soft_delete_by_portfolios(portfolio_ids, deleted_at)
         await self._bust_portfolio_caches(portfolio_ids)
 
-    async def _cascade_restore(self, portfolio_ids: list[uuid.UUID], deleted_at: datetime) -> None:
+    async def _cascade_restore(
+        self, portfolio_ids: list[uuid.UUID], deleted_at: datetime
+    ) -> None:
         await self._credit_repo.restore_by_portfolios(portfolio_ids, deleted_at)
         await self._campaign_repo.restore_by_portfolios(portfolio_ids, deleted_at)
         await self._bust_portfolio_caches(portfolio_ids)
 
     @staticmethod
     async def _bust_portfolio_caches(portfolio_ids: list[uuid.UUID]) -> None:
-        """Las estadísticas cacheadas (2-5 min) seguirían mostrando el portafolio como si
-        conservara sus créditos justo después de darlo de baja o restaurarlo."""
+        """Las estadísticas cacheadas (2-5 min) seguirían mostrando el portafolio
+        como si conservara sus créditos justo después de darlo de baja o
+        restaurarlo."""
         for portfolio_id in portfolio_ids:
-            await cache_service.bust(f"portfolio:stats:{portfolio_id}", f"portfolio:send-status:{portfolio_id}")
+            await cache_service.bust(
+                f"portfolio:stats:{portfolio_id}",
+                f"portfolio:send-status:{portfolio_id}",
+            )
             await cache_service.bust_prefix(f"portfolio:monthly-sends:{portfolio_id}")
 
     async def get_daily_counter_config(
@@ -245,10 +315,11 @@ class PortfolioService:
         if config is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No existe configuración de contador diario para este portafolio",
+                detail=(
+                    "No existe configuración de contador diario para este portafolio"
+                ),
             )
         config.last_synced_at = datetime.now(timezone.utc)
         config.last_synced_cutoff_date = data.target_date or date.today()
         config.updated_by = updated_by
         return await self.daily_counter_repo.update(config)
-

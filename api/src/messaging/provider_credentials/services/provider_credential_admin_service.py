@@ -1,9 +1,14 @@
+"""Gestión admin (alta/edición/borrado) de credenciales de proveedor de mensajería."""
+
 import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from messaging.provider_credentials.models.provider_credential_model import MessagingProviderCredentialModel
+from core.security.services.encrypt_service import encrypt_service
+from messaging.provider_credentials.models.provider_credential_model import (
+    MessagingProviderCredentialModel,
+)
 from messaging.provider_credentials.repository.provider_credential_repository import (
     MessagingProviderCredentialRepository,
 )
@@ -11,7 +16,6 @@ from messaging.provider_credentials.schemas.provider_credential_schemas import (
     MessagingProviderCredentialResponse,
     MessagingProviderCredentialUpsert,
 )
-from core.security.services.encrypt_service import encrypt_service
 
 
 class MessagingProviderCredentialAdminService:
@@ -25,7 +29,9 @@ class MessagingProviderCredentialAdminService:
         rows = await self._repo.list_all()
         return [self._to_response(row) for row in rows]
 
-    async def upsert(self, data: MessagingProviderCredentialUpsert) -> MessagingProviderCredentialResponse:
+    async def upsert(
+        self, data: MessagingProviderCredentialUpsert
+    ) -> MessagingProviderCredentialResponse:
         # Solo se cifran los secretos con valor: un secreto vacío no se toca (permite
         # editar public_config/lookup_key sin reenviar los secretos ya guardados).
         encrypted = {
@@ -59,7 +65,9 @@ class MessagingProviderCredentialAdminService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Credencial no encontrada")
         await self._repo.delete(row)
 
-    async def restore(self, credential_id: uuid.UUID) -> MessagingProviderCredentialResponse:
+    async def restore(
+        self, credential_id: uuid.UUID
+    ) -> MessagingProviderCredentialResponse:
         row = await self._repo.get_by_id_including_deleted(credential_id)
         if row is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Credencial no encontrada")
@@ -67,7 +75,9 @@ class MessagingProviderCredentialAdminService:
         return self._to_response(restored)
 
     @staticmethod
-    def _to_response(row: MessagingProviderCredentialModel) -> MessagingProviderCredentialResponse:
+    def _to_response(
+        row: MessagingProviderCredentialModel,
+    ) -> MessagingProviderCredentialResponse:
         return MessagingProviderCredentialResponse(
             id=row.id,
             country_code=row.country_code,

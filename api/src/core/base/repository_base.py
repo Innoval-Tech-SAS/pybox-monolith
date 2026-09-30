@@ -1,3 +1,5 @@
+"""Repository genérico con las operaciones CRUD comunes a todos los modelos."""
+
 from typing import Generic, List, Optional, Sequence, Type, TypeVar
 
 from sqlalchemy import select

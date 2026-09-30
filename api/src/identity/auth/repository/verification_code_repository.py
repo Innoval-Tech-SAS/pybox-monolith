@@ -1,24 +1,22 @@
-﻿import uuid
+"""Acceso a datos de los códigos de verificación (OTP) y su ciclo de vida."""
+
+import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from identity.auth.models.verification_code_model import VerificationCodeModel
 from identity.auth.enums.notification_enums import VerificationChannel
 from identity.auth.exceptions import (
     CodeAlreadyUsedException,
     CodeExpiredException,
     CodeNotFoundException,
 )
+from identity.auth.models.verification_code_model import VerificationCodeModel
 
 
 class VerificationCodeRepository(SoftDeleteRepositoryBase[VerificationCodeModel]):
     model_class = VerificationCodeModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_active_by_user_and_channel(
         self, user_id: uuid.UUID, code: str, channel: VerificationChannel
@@ -55,6 +53,8 @@ class VerificationCodeRepository(SoftDeleteRepositoryBase[VerificationCodeModel]
 
         return record
 
-    async def mark_consumed(self, record: VerificationCodeModel) -> VerificationCodeModel:
+    async def mark_consumed(
+        self, record: VerificationCodeModel
+    ) -> VerificationCodeModel:
         record.consumed_at = datetime.now(timezone.utc)
         return await self.update(record)

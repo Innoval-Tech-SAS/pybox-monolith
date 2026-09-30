@@ -1,3 +1,5 @@
+"""Papelera global de documentos: listado y restauración a través de dominios."""
+
 import uuid
 from datetime import datetime, timezone
 from typing import Sequence
@@ -12,16 +14,22 @@ from app_platform.documents.schemas.admin_document_schemas import (
     TrashedDocumentResponse,
 )
 from app_platform.documents.services.document_service import DocumentService
-from app_platform.support.repository.ticket_document_repository import TicketDocumentRepository
+from app_platform.support.repository.ticket_document_repository import (
+    TicketDocumentRepository,
+)
 from core.config.logger import logger
-from receivables.debtors.repository.debtor_document_repository import DebtorDocumentRepository
-from receivables.judicial_notifications.repository.judicial_notification_document_repository import (
+from receivables.debtors.repository.debtor_document_repository import (
+    DebtorDocumentRepository,
+)
+from receivables.judicial_notifications.repository.judicial_notification_document_repository import (  # pylint: disable=line-too-long
     JudicialNotificationDocumentRepository,
 )
 from receivables.portfolios.repository.portfolio_document_repository import (
     PortfolioDocumentRepository,
 )
-from receivables.reports.repository.report_execution_repository import ReportExecutionRepository
+from receivables.reports.repository.report_execution_repository import (
+    ReportExecutionRepository,
+)
 
 _EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
@@ -29,17 +37,19 @@ _EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 class AdminDocumentService:
     """Papelera de documentos para Admin Global: listar lo dado de baja y restaurarlo.
 
-    No tiene SQL propio. Orquesta los Repositories de cada dominio, que son los que saben
-    de qué cuelga cada documento — exactamente la razón por la que la asociación
-    polimórfica se reemplazó por una tabla de unión por relación: esta vista es el único
-    lugar del sistema que necesita mirar las cinco a la vez, y lo hace con cinco consultas
-    acotadas en vez de con un `WHERE ambito = ...` sobre una tabla gigante.
+    No tiene SQL propio. Orquesta los Repositories de cada dominio, que son los que
+    saben de qué cuelga cada documento — exactamente la razón por la que la
+    asociación polimórfica se reemplazó por una tabla de unión por relación: esta
+    vista es el único lugar del sistema que necesita mirar las cinco a la vez, y lo
+    hace con cinco consultas acotadas en vez de con un `WHERE ambito = ...` sobre
+    una tabla gigante.
 
-    El listado usa `get_deleted()` de `SoftDeleteRepositoryBase` (agregado para esto) y no
-    `get_all_including_deleted()` filtrado en Python: filtrar en memoria obliga a traer la
-    tabla completa para descartar casi todo, que es over-fetching sobre tablas de
-    crecimiento no acotado. Con el `WHERE eliminado_en IS NOT NULL` en SQL, el motor
-    devuelve solo el subconjunto chico que la papelera muestra.
+    El listado usa `get_deleted()` de `SoftDeleteRepositoryBase` (agregado para
+    esto) y no `get_all_including_deleted()` filtrado en Python: filtrar en memoria
+    obliga a traer la tabla completa para descartar casi todo, que es
+    over-fetching sobre tablas de crecimiento no acotado. Con el
+    `WHERE eliminado_en IS NOT NULL` en SQL, el motor devuelve solo el subconjunto
+    chico que la papelera muestra.
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -131,12 +141,14 @@ class AdminDocumentService:
             for execution in await self._report_execution_repo.get_deleted()
         ]
 
-    async def _trashed_organization_documents(self) -> Sequence[TrashedDocumentResponse]:
+    async def _trashed_organization_documents(
+        self,
+    ) -> Sequence[TrashedDocumentResponse]:
         """Documentos sin tabla de unión que quedaron dados de baja en `documentos`.
 
-        Son los casos 1:1 de la entidad (fiscal, mercantil, representante) y la foto de
-        perfil: su baja la produce la sustitución del documento anterior, no un enlace de
-        dominio. Acá el id de restauración ES el del propio documento.
+        Son los casos 1:1 de la entidad (fiscal, mercantil, representante) y la foto
+        de perfil: su baja la produce la sustitución del documento anterior, no un
+        enlace de dominio. Acá el id de restauración ES el del propio documento.
         """
         return [
             TrashedDocumentResponse(
@@ -152,20 +164,28 @@ class AdminDocumentService:
 
     # ── Restauración ─────────────────────────────────────────────────────────
 
-    async def restore(self, domain: TrashedDocumentDomain, entity_id: uuid.UUID) -> None:
+    async def restore(
+        self, domain: TrashedDocumentDomain, entity_id: uuid.UUID
+    ) -> None:
         """Deshace la baja lógica del enlace de dominio y de su fila `documentos`.
 
-        Alcanza con limpiar `eliminado_en` en las dos filas porque el borrado nunca toca el
-        almacén: los bytes siguen ahí hasta que los barra el proceso de purga (fuera de
-        este alcance).
+        Alcanza con limpiar `eliminado_en` en las dos filas porque el borrado nunca
+        toca el almacén: los bytes siguen ahí hasta que los barra el proceso de
+        purga (fuera de este alcance).
         """
         if domain is TrashedDocumentDomain.ORGANIZATION:
             # Caso 1:1 sin enlace: el id es el del documento.
             document = await self._document_repo.get_by_id_including_deleted(entity_id)
             if document is None:
-                raise HTTPException(status.HTTP_404_NOT_FOUND, "Documento no encontrado")
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND, "Documento no encontrado"
+                )
             await self._document_service.restore(document)
-            logger.info("[documents] restaurado | dominio=%s documento=%s", domain.value, entity_id)
+            logger.info(
+                "[documents] restaurado | dominio=%s documento=%s",
+                domain.value,
+                entity_id,
+            )
             return
 
         repo = self._repo_for(domain)

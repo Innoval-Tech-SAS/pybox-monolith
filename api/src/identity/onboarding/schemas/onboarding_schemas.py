@@ -1,3 +1,5 @@
+"""Schemas del flujo de onboarding: OTP, datos de registro y estado."""
+
 from enum import Enum
 
 from pydantic import Field, field_validator
@@ -10,7 +12,9 @@ from identity.users.enums.user_enums import IdentityVerificationStatus
 
 
 class RequestOtpSchema(BaseSchema):
-    channel: VerificationChannel = Field(description="Canal de envío del OTP: EMAIL o PHONE")
+    channel: VerificationChannel = Field(
+        description="Canal de envío del OTP: EMAIL o PHONE"
+    )
 
 
 class VerifyOtpSchema(BaseSchema):
@@ -19,7 +23,8 @@ class VerifyOtpSchema(BaseSchema):
 
 
 class UpdateProfileSchema(BaseSchema):
-    # Códigos validados contra la DB en el servicio (paises_tipos_documento), no enum estático.
+    # Códigos validados contra la DB en el servicio (paises_tipos_documento),
+    # no enum estático.
     document_type: str = Field(description="Código del tipo de documento de identidad")
     document_number: str = Field(description="Número de documento")
     nationality: str = Field(description="Código de país de la nacionalidad")
@@ -35,13 +40,26 @@ class OrganizationOnboardingSchema(BaseSchema):
     sector: EntitySectors = Field(description="Sector al que pertenece la entidad")
     country: str = Field(description="Código de país de la organización")
     fiscal_document_number: str = Field(description="Número de documento fiscal")
-    representative_mode: OnboardingRepMode = Field(description="Modo del representante: self (el mismo usuario) o create (nuevo usuario)")
-    rep_firstname: str | None = Field(default=None, description="Nombre del representante (si mode=create)")
-    rep_lastname: str | None = Field(default=None, description="Apellido del representante")
+    representative_mode: OnboardingRepMode = Field(
+        description="Modo del representante: self (el mismo usuario) "
+        "o create (nuevo usuario)"
+    )
+    rep_firstname: str | None = Field(
+        default=None, description="Nombre del representante (si mode=create)"
+    )
+    rep_lastname: str | None = Field(
+        default=None, description="Apellido del representante"
+    )
     rep_email: str | None = Field(default=None, description="Correo del representante")
-    rep_document_type: str | None = Field(default=None, description="Código del tipo de documento del representante")
-    rep_document_number: str | None = Field(default=None, description="Número de documento del representante")
-    rep_password: str | None = Field(default=None, description="Contraseña del representante (si mode=create)")
+    rep_document_type: str | None = Field(
+        default=None, description="Código del tipo de documento del representante"
+    )
+    rep_document_number: str | None = Field(
+        default=None, description="Número de documento del representante"
+    )
+    rep_password: str | None = Field(
+        default=None, description="Contraseña del representante (si mode=create)"
+    )
 
     @field_validator("rep_password")
     @classmethod
@@ -61,7 +79,9 @@ class SetOnboardingPasswordSchema(BaseSchema):
 
 
 class SetPhoneSchema(BaseSchema):
-    phone_number: str = Field(description="Número de teléfono con prefijo internacional")
+    phone_number: str = Field(
+        description="Número de teléfono con prefijo internacional"
+    )
 
 
 class OnboardingStatusSchema(BaseSchema):
@@ -69,13 +89,19 @@ class OnboardingStatusSchema(BaseSchema):
     phone_set: bool = Field(description="Teléfono registrado")
     phone_verified: bool = Field(description="Teléfono verificado")
     document_complete: bool = Field(description="Documento de identidad completado")
-    org_complete: bool | None = Field(description="Organización creada (solo para administradores)")
+    org_complete: bool | None = Field(
+        description="Organización creada (solo para administradores)"
+    )
     identity_verification_status: IdentityVerificationStatus | None = Field(
         default=None,
         description="Estado de verificación de identidad (solo para titulares SELF)",
     )
-    must_change_password: bool = Field(description="El usuario debe cambiar su contraseña")
-    is_complete: bool = Field(description="Indica si el onboarding está completamente terminado")
+    must_change_password: bool = Field(
+        description="El usuario debe cambiar su contraseña"
+    )
+    is_complete: bool = Field(
+        description="Indica si el onboarding está completamente terminado"
+    )
     missing_steps: list[str] = Field(description="Lista de pasos pendientes")
 
 

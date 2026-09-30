@@ -1,6 +1,14 @@
-from app_platform.schema_manager.constants.ddl_constants import NUMERIC_DEFAULT_RE, SAFE_DEFAULT_KEYWORDS
+"""Construcción y validación de fragmentos de DDL (columnas, tipos, defaults)."""
+
+from app_platform.schema_manager.constants.ddl_constants import (
+    NUMERIC_DEFAULT_RE,
+    SAFE_DEFAULT_KEYWORDS,
+)
 from app_platform.schema_manager.constants.query_constants import IDENTIFIER_RE
-from app_platform.schema_manager.schemas.database_schemas import ColumnDataType, ColumnDefinition
+from app_platform.schema_manager.schemas.database_schemas import (
+    ColumnDataType,
+    ColumnDefinition,
+)
 from app_platform.schema_manager.utils.query_utils import sql_literal
 
 

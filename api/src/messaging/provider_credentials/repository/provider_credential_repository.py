@@ -1,25 +1,31 @@
+"""Acceso a datos de las credenciales de proveedor de mensajería."""
+
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from messaging.provider_credentials.enums.provider_credential_enums import MessagingCredentialProvider
-from messaging.provider_credentials.models.provider_credential_model import MessagingProviderCredentialModel
+from messaging.provider_credentials.enums.provider_credential_enums import (
+    MessagingCredentialProvider,
+)
+from messaging.provider_credentials.models.provider_credential_model import (
+    MessagingProviderCredentialModel,
+)
 
 
-class MessagingProviderCredentialRepository(SoftDeleteRepositoryBase[MessagingProviderCredentialModel]):
+class MessagingProviderCredentialRepository(
+    SoftDeleteRepositoryBase[MessagingProviderCredentialModel]
+):
     model_class = MessagingProviderCredentialModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get(
         self, country_code: str | None, provider: MessagingCredentialProvider
     ) -> MessagingProviderCredentialModel | None:
         stmt = select(MessagingProviderCredentialModel).where(
             MessagingProviderCredentialModel.provider == provider,
-            MessagingProviderCredentialModel.country_code == country_code
-            if country_code is not None
-            else MessagingProviderCredentialModel.country_code.is_(None),
+            (
+                MessagingProviderCredentialModel.country_code == country_code
+                if country_code is not None
+                else MessagingProviderCredentialModel.country_code.is_(None)
+            ),
             MessagingProviderCredentialModel.deleted_at.is_(None),
         )
         result = await self.session.execute(stmt)
@@ -49,6 +55,8 @@ class MessagingProviderCredentialRepository(SoftDeleteRepositoryBase[MessagingPr
 
     async def list_all(self) -> list[MessagingProviderCredentialModel]:
         result = await self.session.execute(
-            select(MessagingProviderCredentialModel).where(MessagingProviderCredentialModel.deleted_at.is_(None))
+            select(MessagingProviderCredentialModel).where(
+                MessagingProviderCredentialModel.deleted_at.is_(None)
+            )
         )
         return list(result.scalars().all())

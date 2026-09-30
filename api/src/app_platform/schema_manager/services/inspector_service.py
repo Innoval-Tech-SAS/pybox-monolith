@@ -1,4 +1,6 @@
-﻿from typing import Any
+"""Inspección administrativa del esquema real vía information_schema/pg_catalog."""
+
+from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +19,8 @@ class InspectorService:
         result = await self._session.execute(
             text(
                 "SELECT schema_name FROM information_schema.schemata "
-                "WHERE schema_name != 'information_schema' AND schema_name NOT LIKE 'pg\\_%' ESCAPE '\\' "
+                "WHERE schema_name != 'information_schema' AND schema_name NOT "
+                "LIKE 'pg\\_%' ESCAPE '\\' "
                 "ORDER BY schema_name"
             )
         )
@@ -38,7 +41,8 @@ class InspectorService:
         # `enum_values` se resuelve en la misma query (subselect correlacionado sobre
         # pg_enum, en orden de declaración) para no hacer un round-trip por columna.
         # Es NULL para toda columna que no sea un enum de PostgreSQL. `data_type` de
-        # un enum es "USER-DEFINED": el nombre real del tipo está en udt_name/udt_schema.
+        # un enum es "USER-DEFINED": el nombre real del tipo está en
+        # udt_name/udt_schema.
         result = await self._session.execute(
             text(
                 "SELECT c.column_name AS name, c.data_type AS type, "
@@ -46,7 +50,8 @@ class InspectorService:
                 "   FROM pg_type t "
                 "   JOIN pg_namespace n ON n.oid = t.typnamespace "
                 "   JOIN pg_enum e ON e.enumtypid = t.oid "
-                "   WHERE t.typname = c.udt_name AND n.nspname = c.udt_schema) AS enum_values "
+                "   WHERE t.typname = c.udt_name AND n.nspname = c.udt_schema) "
+                "AS enum_values "
                 "FROM information_schema.columns c "
                 "WHERE c.table_schema = :schema AND c.table_name = :table "
                 "ORDER BY c.ordinal_position"

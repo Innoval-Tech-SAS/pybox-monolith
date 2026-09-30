@@ -1,3 +1,5 @@
+"""Cálculo de la próxima fecha/hora de envío de una campaña recurrente."""
+
 import calendar
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -6,21 +8,25 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 def _assert_valid_timezone(tz_str: str) -> ZoneInfo:
     try:
         return ZoneInfo(tz_str)
-    except (ZoneInfoNotFoundError, KeyError):
-        raise ValueError(f"Timezone IANA inválido: {tz_str!r}")
+    except (ZoneInfoNotFoundError, KeyError) as e:
+        raise ValueError(f"Timezone IANA inválido: {tz_str!r}") from e
 
 
 def _parse_time_to_send(time_to_send: str) -> tuple[int, int, int]:
     parts = time_to_send.split(":")
     if len(parts) < 2:
-        raise ValueError(f"time_to_send inválido: {time_to_send!r}. Formato: HH:MM o HH:MM:SS")
+        raise ValueError(
+            f"time_to_send inválido: {time_to_send!r}. Formato: HH:MM o HH:MM:SS"
+        )
     h, m, s = int(parts[0]), int(parts[1]), int(parts[2]) if len(parts) > 2 else 0
     if not (0 <= h <= 23 and 0 <= m <= 59 and 0 <= s <= 59):
         raise ValueError(f"time_to_send fuera de rango: {time_to_send!r}")
     return h, m, s
 
 
-def _to_utc(year: int, month: int, day: int, hour: int, minute: int, second: int, tz: ZoneInfo) -> datetime:
+def _to_utc(
+    year: int, month: int, day: int, hour: int, minute: int, second: int, tz: ZoneInfo
+) -> datetime:
     local_dt = datetime(year, month, day, hour, minute, second, tzinfo=tz)
     return local_dt.astimezone(timezone.utc)
 
@@ -49,7 +55,9 @@ def calculate_next_execution(
 ) -> datetime:
     p = periodicity.strip().lower()
     if p in ("una_vez", "inmediato"):
-        raise ValueError(f"periodicity={periodicity!r} no admite recálculo de nextExecution")
+        raise ValueError(
+            f"periodicity={periodicity!r} no admite recálculo de nextExecution"
+        )
 
     tz = _assert_valid_timezone(timezone_iana)
     h, m, s = _parse_time_to_send(time_to_send)
@@ -107,14 +115,18 @@ def project_occurrences(
     day_of_month: int | None = None,
     max_occurrences: int = 100,
 ) -> list[datetime]:
-    """Proyecta todas las ejecuciones de una campaña recurrente dentro de [range_start, range_end].
+    """Proyecta todas las ejecuciones de una campaña recurrente dentro de
+    [range_start, range_end].
 
-    Reutiliza ``calculate_next_execution`` iterando con ``from_dt`` hasta superar el rango o
-    el límite ``max_occurrences``. Todas las fechas se devuelven en UTC.
+    Reutiliza ``calculate_next_execution`` iterando con ``from_dt`` hasta
+    superar el rango o el límite ``max_occurrences``. Todas las fechas se
+    devuelven en UTC.
     """
     p = periodicity.strip().lower()
     if p in ("una_vez", "inmediato"):
-        raise ValueError(f"periodicity={periodicity!r} no admite proyección de ocurrencias")
+        raise ValueError(
+            f"periodicity={periodicity!r} no admite proyección de ocurrencias"
+        )
 
     occurrences: list[datetime] = []
     cursor = range_start.astimezone(timezone.utc)

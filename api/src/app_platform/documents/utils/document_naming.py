@@ -1,3 +1,5 @@
+"""Nombre de archivo, content-type y clave de objeto para documentos subidos."""
+
 import hashlib
 import os
 import re
@@ -46,7 +48,9 @@ def safe_original_name(name: str | None) -> str:
     return cleaned[:255] or "documento"
 
 
-def generate_uuid7_filename(original_name: str | None, default_ext: str = ".pdf") -> str:
+def generate_uuid7_filename(
+    original_name: str | None, default_ext: str = ".pdf"
+) -> str:
     """Nombre `<uuid7><ext>` para un archivo recién subido. UUID7 en vez de UUID4: es
     ordenable por tiempo de creación, útil para listar/depurar objetos en el almacén.
 

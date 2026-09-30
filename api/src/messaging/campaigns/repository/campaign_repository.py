@@ -1,9 +1,10 @@
+"""Acceso a datos de campañas de mensajería."""
+
 import uuid
 from datetime import datetime
 from typing import Sequence
 
-from sqlalchemy import func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.campaigns.enums.campaign_enums import CampaignStatus
@@ -15,9 +16,6 @@ _MANUAL_DESCRIPTION = "__manual__"
 
 class CampaignRepository(SoftDeleteRepositoryBase[CampaignModel]):
     model_class = CampaignModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def list_by_portfolio(
         self,
@@ -41,11 +39,16 @@ class CampaignRepository(SoftDeleteRepositoryBase[CampaignModel]):
             "status": CampaignModel.status,
         }
         sort_col = _sort_cols.get(sort_by, CampaignModel.name)
-        query = query.order_by(sort_col.desc() if sort_order == "desc" else sort_col.asc())
+        query = query.order_by(
+            sort_col.desc() if sort_order == "desc" else sort_col.asc()
+        )
 
-        total: int = await self.session.scalar(
-            select(func.count()).select_from(query.subquery())
-        ) or 0
+        total: int = (
+            await self.session.scalar(
+                select(func.count()).select_from(query.subquery())
+            )
+            or 0
+        )
 
         result = await self.session.execute(
             query.offset((page - 1) * page_size).limit(page_size)
@@ -64,7 +67,9 @@ class CampaignRepository(SoftDeleteRepositoryBase[CampaignModel]):
         )
         return result.scalar_one_or_none()
 
-    async def list_by_organization_id(self, organization_id: uuid.UUID) -> list[CampaignModel]:
+    async def list_by_organization_id(
+        self, organization_id: uuid.UUID
+    ) -> list[CampaignModel]:
         result = await self.session.execute(
             select(CampaignModel)
             .join(PortfolioModel, PortfolioModel.id == CampaignModel.portfolio_id)
@@ -119,12 +124,20 @@ class CampaignRepository(SoftDeleteRepositoryBase[CampaignModel]):
         )
         return result.scalar_one_or_none()
 
-    async def soft_delete_by_portfolios(self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime) -> None:
+    async def soft_delete_by_portfolios(
+        self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime
+    ) -> None:
         """Baja en cascada de las campañas vivas de esos portafolios (mismo sello que el
         portafolio: se restauran juntas sin resucitar campañas eliminadas antes)."""
         if portfolio_ids:
-            await self.soft_delete_where(CampaignModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at)
+            await self.soft_delete_where(
+                CampaignModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at
+            )
 
-    async def restore_by_portfolios(self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime) -> None:
+    async def restore_by_portfolios(
+        self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime
+    ) -> None:
         if portfolio_ids:
-            await self.restore_where(CampaignModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at)
+            await self.restore_where(
+                CampaignModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at
+            )

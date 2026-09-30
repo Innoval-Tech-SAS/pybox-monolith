@@ -1,3 +1,5 @@
+"""Consulta, creación y cobro de facturas de suscripción por organización."""
+
 import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -7,16 +9,24 @@ from fastapi import HTTPException, status
 from httpx import HTTPStatusError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config.logger import logger
 from billing.gateways.resolver import PaymentGatewayResolver
 from billing.invoices.constants.billing_constants import ATTEMPT_TTL, billing_config
-from billing.invoices.enums.invoice_enums import InvoiceStatus, PaymentAttemptStatus, PaymentProvider
-from billing.invoices.models.invoice_model import InvoiceModel
+from billing.invoices.enums.invoice_enums import (
+    InvoiceStatus,
+    PaymentAttemptStatus,
+    PaymentProvider,
+)
 from billing.invoices.models.invoice_item_model import InvoiceItemModel
+from billing.invoices.models.invoice_model import InvoiceModel
 from billing.invoices.models.payment_attempt_model import InvoicePaymentAttemptModel
 from billing.invoices.repository.invoice_repository import InvoiceRepository
-from billing.invoices.repository.payment_attempt_repository import InvoicePaymentAttemptRepository
-from billing.invoices.schemas.invoice_params_schemas import CreateInvoiceParams, InvoiceItemInput
+from billing.invoices.repository.payment_attempt_repository import (
+    InvoicePaymentAttemptRepository,
+)
+from billing.invoices.schemas.invoice_params_schemas import (
+    CreateInvoiceParams,
+    InvoiceItemInput,
+)
 from billing.invoices.schemas.invoice_schemas import (
     AdminInvoiceResponse,
     AdminListInvoicesResponse,
@@ -24,13 +34,23 @@ from billing.invoices.schemas.invoice_schemas import (
     ListInvoicesResponse,
     PaymentLinkResponse,
 )
-from billing.invoices.status_transitions import attempt_status_to_invoice_transition, is_attempt_reusable
+from billing.invoices.status_transitions import (
+    attempt_status_to_invoice_transition,
+    is_attempt_reusable,
+)
 from billing.invoices.utils.invoice_utils import round_pesos, to_base36
-from billing.mercadopago.services.mercadopago_client import MercadoPagoClient
 from billing.mercadopago.enums.mercadopago_enums import MercadoPagoOrderStatus
-from billing.mercadopago.utils.mercadopago_credentials import resolve_credentials_for_country
-from billing.mercadopago.utils.mercadopago_status_mapper import mercadopago_order_status_to_attempt_status
-from identity.organizations.repository.organization_repository import OrganizationRepository
+from billing.mercadopago.services.mercadopago_client import MercadoPagoClient
+from billing.mercadopago.utils.mercadopago_credentials import (
+    resolve_credentials_for_country,
+)
+from billing.mercadopago.utils.mercadopago_status_mapper import (
+    mercadopago_order_status_to_attempt_status,
+)
+from core.config.logger import logger
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
 from messaging.contacts.repository.contact_repository import ContactRepository
 
 
@@ -54,11 +74,17 @@ class InvoiceService:
 
     # -- Consulta --------------------------------------------------------------
 
-    async def get_current_invoice(self, organization_id: uuid.UUID) -> InvoiceModel | None:
+    async def get_current_invoice(
+        self, organization_id: uuid.UUID
+    ) -> InvoiceModel | None:
         return await self._invoice_repo.get_current_by_organization_id(organization_id)
 
-    async def list_invoices(self, organization_id: uuid.UUID, page: int, limit: int) -> ListInvoicesResponse:
-        invoices, total = await self._invoice_repo.list_by_organization_id(organization_id, page, limit)
+    async def list_invoices(
+        self, organization_id: uuid.UUID, page: int, limit: int
+    ) -> ListInvoicesResponse:
+        invoices, total = await self._invoice_repo.list_by_organization_id(
+            organization_id, page, limit
+        )
         return ListInvoicesResponse(
             invoices=invoices,  # type: ignore[arg-type]
             total=total,
@@ -67,8 +93,12 @@ class InvoiceService:
             total_pages=-(-total // limit) if limit else 0,
         )
 
-    async def get_invoice(self, id: uuid.UUID, organization_id: uuid.UUID) -> InvoiceModel:
-        invoice = await self._invoice_repo.get_by_id_and_organization_id(id, organization_id)
+    async def get_invoice(
+        self, id: uuid.UUID, organization_id: uuid.UUID
+    ) -> InvoiceModel:
+        invoice = await self._invoice_repo.get_by_id_and_organization_id(
+            id, organization_id
+        )
         if invoice is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Factura no encontrada")
         return invoice
@@ -88,7 +118,9 @@ class InvoiceService:
     async def list_invoices_admin(
         self, page: int, limit: int, organization_id: uuid.UUID | None = None
     ) -> AdminListInvoicesResponse:
-        rows, total = await self._invoice_repo.list_all_with_organization_name(page, limit, organization_id)
+        rows, total = await self._invoice_repo.list_all_with_organization_name(
+            page, limit, organization_id
+        )
         invoices = [
             AdminInvoiceResponse(
                 **InvoiceResponse.model_validate(invoice).model_dump(),
@@ -110,13 +142,16 @@ class InvoiceService:
         self, organization_id: uuid.UUID, period_start: datetime, period_end: datetime
     ) -> list[InvoiceItemInput]:
         """
-        Desglose detallado de consumo por campaña para el periodo [period_start, period_end),
-        listo para pasar como `items` a create_or_skip. Una fila por campaña enviada en el
-        periodo, con su cantidad de mensajes y el costo real (suma de los precios snapshot
-        de cada envio, no precio_unitario * cantidad, ya que el precio del canal puede haber
-        cambiado durante el periodo).
+        Desglose detallado de consumo por campaña para el periodo
+        [period_start, period_end), listo para pasar como `items` a
+        create_or_skip. Una fila por campaña enviada en el periodo, con su
+        cantidad de mensajes y el costo real (suma de los precios snapshot
+        de cada envio, no precio_unitario * cantidad, ya que el precio del
+        canal puede haber cambiado durante el periodo).
         """
-        usage = await self._contact_repo.get_billing_usage(organization_id, period_start, period_end)
+        usage = await self._contact_repo.get_billing_usage(
+            organization_id, period_start, period_end
+        )
         return [
             InvoiceItemInput(
                 campaign_id=row.campaign_id,
@@ -139,7 +174,9 @@ class InvoiceService:
         if existing is not None:
             logger.info(
                 "[billing] factura ya existe | org=%s periodo=%s-%s",
-                params.organization_id, params.period_year, params.period_month,
+                params.organization_id,
+                params.period_year,
+                params.period_month,
             )
             return None
 
@@ -183,7 +220,11 @@ class InvoiceService:
                     channel_id=item.channel_id,
                     channel_name=item.channel_name,
                     base_currency=item.base_currency,
-                    unit_price_base=(item.subtotal_base / item.quantity) if item.quantity else Decimal("0"),
+                    unit_price_base=(
+                        (item.subtotal_base / item.quantity)
+                        if item.quantity
+                        else Decimal("0")
+                    ),
                     quantity=item.quantity,
                     subtotal_base=item.subtotal_base,
                 )
@@ -193,8 +234,12 @@ class InvoiceService:
         result = await self._invoice_repo.add(invoice)
         logger.info(
             "[billing] factura creada | id=%s org=%s periodo=%s-%s moneda=%s total=%s",
-            result.id, params.organization_id, params.period_year, params.period_month,
-            params.billing_currency, total_billing,
+            result.id,
+            params.organization_id,
+            params.period_year,
+            params.period_month,
+            params.billing_currency,
+            total_billing,
         )
         return result
 
@@ -217,10 +262,15 @@ class InvoiceService:
         invoice = await self.get_invoice(invoice_id, organization_id)
 
         if invoice.status in (InvoiceStatus.PAID, InvoiceStatus.CANCELLED):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, f"La factura ya esta {invoice.status.value}")
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"La factura ya esta {invoice.status.value}",
+            )
 
         org = await self._organization_repo.get_by_id(organization_id)
-        gateway = await self._gateway_resolver.get_for_country(org.country if org else None, self._session)
+        gateway = await self._gateway_resolver.get_for_country(
+            org.country if org else None, self._session
+        )
 
         amount = round_pesos(invoice.total_amount)
         currency = invoice.billing_currency
@@ -257,7 +307,13 @@ class InvoiceService:
         reference = f"INV-{short_id}-{attempt_number}-{ts}"[:60]
 
         link = await gateway.create_payment_link(
-            reference, amount, currency, description, invoice.tax_type, invoice.tax_rate, payer_email
+            reference,
+            amount,
+            currency,
+            description,
+            invoice.tax_type,
+            invoice.tax_rate,
+            payer_email,
         )
 
         attempt = await self._attempt_repo.add(
@@ -274,7 +330,9 @@ class InvoiceService:
             )
         )
 
-        transition = attempt_status_to_invoice_transition(attempt.status, invoice.status)
+        transition = attempt_status_to_invoice_transition(
+            attempt.status, invoice.status
+        )
         if transition is not None:
             invoice.status = transition
             await self._invoice_repo.update(invoice)
@@ -315,7 +373,9 @@ class InvoiceService:
             provider_payload=provider_payload,
         )
 
-    async def sync_invoice_payment_status(self, invoice_id: uuid.UUID, organization_id: uuid.UUID) -> InvoiceModel:
+    async def sync_invoice_payment_status(
+        self, invoice_id: uuid.UUID, organization_id: uuid.UUID
+    ) -> InvoiceModel:
         # El estado solo se actualiza via webhook del proveedor; el backend no
         # consulta proactivamente el estado de pago ante el proveedor.
         return await self.get_invoice(invoice_id, organization_id)
@@ -328,15 +388,23 @@ class InvoiceService:
         payload: dict[str, Any],
     ) -> None:
         """
-        Punto de entrada para webhooks de proveedores que confirman el pago por la
-        referencia que nosotros generamos (ej. Bold, que la devuelve en data.metadata.reference).
+        Punto de entrada para webhooks de proveedores que confirman el pago
+        por la referencia que nosotros generamos (ej. Bold, que la devuelve
+        en data.metadata.reference).
         """
-        # for_update=True: dos entregas concurrentes del mismo webhook (reintento típico
-        # de los proveedores) no deben poder pasar ambas el check de "ya está pagado" —
-        # la segunda espera el lock y lee el estado ya actualizado por la primera.
-        attempt = await self._attempt_repo.get_by_provider_reference(reference, for_update=True)
+        # for_update=True: dos entregas concurrentes del mismo webhook
+        # (reintento típico de los proveedores) no deben poder pasar ambas
+        # el check de "ya está pagado" — la segunda espera el lock y lee el
+        # estado ya actualizado por la primera.
+        attempt = await self._attempt_repo.get_by_provider_reference(
+            reference, for_update=True
+        )
         if attempt is None:
-            logger.warning("[billing] sin intento para referencia %s | proveedor=%s", reference, provider)
+            logger.warning(
+                "[billing] sin intento para referencia %s | proveedor=%s",
+                reference,
+                provider,
+            )
             return
         await self._mark_attempt_paid(provider, attempt, reported_amount, payload)
 
@@ -344,23 +412,32 @@ class InvoiceService:
         self,
         provider: str,
         link_id: str,
-        status: PaymentAttemptStatus,
+        new_status: PaymentAttemptStatus,
         reported_amount: Decimal | None,
         payload: dict[str, Any],
     ) -> None:
         """
-        Punto de entrada para webhooks de proveedores que solo identifican el recurso por su
-        propio id (ej. Mercado Pago Orders API, que entrega `data.id` en vez de nuestra referencia).
-        A diferencia de `mark_attempt_paid`, aqui tambien se propagan estados intermedios
+        Punto de entrada para webhooks de proveedores que solo identifican el
+        recurso por su propio id (ej. Mercado Pago Orders API, que entrega
+        `data.id` en vez de nuestra referencia). A diferencia de
+        `mark_attempt_paid`, aqui tambien se propagan estados intermedios
         (PROCESSING, EXPIRED, REJECTED, CANCELLED), no solo el pago aprobado.
         """
         # Mismo motivo que en mark_attempt_paid: lock de fila para que dos webhooks
         # concurrentes no pisen la transición de estado.
-        attempt = await self._attempt_repo.get_by_provider_link_id(link_id, for_update=True)
+        attempt = await self._attempt_repo.get_by_provider_link_id(
+            link_id, for_update=True
+        )
         if attempt is None:
-            logger.warning("[billing] sin intento para link_id %s | proveedor=%s", link_id, provider)
+            logger.warning(
+                "[billing] sin intento para link_id %s | proveedor=%s",
+                link_id,
+                provider,
+            )
             return
-        await self._apply_attempt_status(provider, attempt, status, reported_amount, payload)
+        await self._apply_attempt_status(
+            provider, attempt, new_status, reported_amount, payload
+        )
 
     async def charge_mercadopago_attempt(
         self,
@@ -381,30 +458,49 @@ class InvoiceService:
         """
         invoice = await self.get_invoice(invoice_id, organization_id)
         attempt = next((a for a in invoice.attempts if a.id == attempt_id), None)
-        if attempt is None or attempt.provider != PaymentProvider.MERCADO_PAGO or not attempt.provider_link_id:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Intento de pago de Mercado Pago no encontrado")
+        if (
+            attempt is None
+            or attempt.provider != PaymentProvider.MERCADO_PAGO
+            or not attempt.provider_link_id
+        ):
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                "Intento de pago de Mercado Pago no encontrado",
+            )
         if attempt.status == PaymentAttemptStatus.PAID:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Este intento ya fue pagado")
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "Este intento ya fue pagado"
+            )
 
         org = await self._organization_repo.get_by_id(organization_id)
-        credentials = await resolve_credentials_for_country(self._session, org.country if org else None)
+        credentials = await resolve_credentials_for_country(
+            self._session, org.country if org else None
+        )
         if credentials is None:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Mercado Pago no esta configurado para este pais")
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "Mercado Pago no esta configurado para este pais",
+            )
 
-        # La Order de MP es de un solo uso: una vez que sale de `created` (procesada,
-        # fallida, cancelada o expirada) ya no admite otro `/process` (MP responde 400
-        # invalid_order_mode_for_operation). Si el intento se reintenta sobre una Order ya
-        # terminal, se mapea su estado al intento (failed -> REJECTED) y se corta aqui: eso
-        # lo vuelve no-reutilizable (ver is_attempt_reusable) para que el proximo intento
-        # genere una Order nueva, en vez de reprocesar la muerta y explotar en 500.
-        order = await self._mp_client.get_order(credentials.access_token, attempt.provider_link_id)
+        # La Order de MP es de un solo uso: una vez que sale de `created`
+        # (procesada, fallida, cancelada o expirada) ya no admite otro
+        # `/process` (MP responde 400 invalid_order_mode_for_operation). Si
+        # el intento se reintenta sobre una Order ya terminal, se mapea su
+        # estado al intento (failed -> REJECTED) y se corta aqui: eso lo
+        # vuelve no-reutilizable (ver is_attempt_reusable) para que el
+        # proximo intento genere una Order nueva, en vez de reprocesar la
+        # muerta y explotar en 500.
+        order = await self._mp_client.get_order(
+            credentials.access_token, attempt.provider_link_id
+        )
         if order.get("status", "") != MercadoPagoOrderStatus.CREATED.value:
             await self._sync_mercadopago_order_to_attempt(attempt, order)
             return await self.get_invoice(invoice_id, organization_id)
 
-        # La Order solo acepta una transaccion: si un intento anterior ya la agrego pero se
-        # cayo antes de procesar (ej. error de red, restart), reintentar `add_transaction`
-        # responde 409 sin importar la Idempotency-Key. Solo se agrega si todavia no tiene.
+        # La Order solo acepta una transaccion: si un intento anterior ya la
+        # agrego pero se cayo antes de procesar (ej. error de red, restart),
+        # reintentar `add_transaction` responde 409 sin importar la
+        # Idempotency-Key. Solo se agrega si todavia no tiene.
         has_transaction = bool((order.get("transactions") or {}).get("payments"))
         if not has_transaction:
             await self._mp_client.add_transaction(
@@ -423,12 +519,15 @@ class InvoiceService:
                 credentials.access_token, attempt.provider_link_id, str(uuid.uuid4())
             )
         except HTTPStatusError:
-            # MP puede rechazar el cobro (ej. invalid_users_involved, fondos, issuer) y
-            # devolverlo como error HTTP en vez de una Order con status "failed". La Order
-            # igual queda en su estado terminal en MP, asi que se re-lee: si ya salio de
-            # `created` fue un rechazo legitimo -> se mapea a REJECTED y no se propaga el
-            # error; si sigue `created` fue un fallo real de la request y se re-lanza.
-            order = await self._mp_client.get_order(credentials.access_token, attempt.provider_link_id)
+            # MP puede rechazar el cobro (ej. invalid_users_involved, fondos,
+            # issuer) y devolverlo como error HTTP en vez de una Order con
+            # status "failed". La Order igual queda en su estado terminal en
+            # MP, asi que se re-lee: si ya salio de `created` fue un rechazo
+            # legitimo -> se mapea a REJECTED y no se propaga el error; si
+            # sigue `created` fue un fallo real de la request y se re-lanza.
+            order = await self._mp_client.get_order(
+                credentials.access_token, attempt.provider_link_id
+            )
             if order.get("status", "") == MercadoPagoOrderStatus.CREATED.value:
                 raise
 
@@ -439,39 +538,46 @@ class InvoiceService:
         self, attempt: InvoicePaymentAttemptModel, order: dict[str, Any]
     ) -> None:
         """
-        Mapea el estado de una Order de MP al intento (failed -> REJECTED, processed ->
-        PAID, etc.) y lo persiste. Los estados sin transicion de intento
-        (REFUNDED/CHARGED_BACK/desconocidos) se ignoran: son casos que maneja el webhook.
+        Mapea el estado de una Order de MP al intento (failed -> REJECTED,
+        processed -> PAID, etc.) y lo persiste. Los estados sin transicion de
+        intento (REFUNDED/CHARGED_BACK/desconocidos) se ignoran: son casos
+        que maneja el webhook.
         """
-        attempt_status = mercadopago_order_status_to_attempt_status(order.get("status", ""))
+        attempt_status = mercadopago_order_status_to_attempt_status(
+            order.get("status", "")
+        )
         if attempt_status is None:
             return
         payments = (order.get("transactions") or {}).get("payments") or []
         reported_amount = Decimal(str(payments[0]["amount"])) if payments else None
-        await self._apply_attempt_status("MERCADO_PAGO", attempt, attempt_status, reported_amount, order)
+        await self._apply_attempt_status(
+            "MERCADO_PAGO", attempt, attempt_status, reported_amount, order
+        )
 
     async def _apply_attempt_status(
         self,
         provider: str,
         attempt: InvoicePaymentAttemptModel,
-        status: PaymentAttemptStatus,
+        new_status: PaymentAttemptStatus,
         reported_amount: Decimal | None,
         payload: dict[str, Any],
     ) -> None:
-        if status == PaymentAttemptStatus.PAID:
+        if new_status == PaymentAttemptStatus.PAID:
             await self._mark_attempt_paid(provider, attempt, reported_amount, payload)
             return
 
-        if attempt.status == status or attempt.status == PaymentAttemptStatus.PAID:
+        if attempt.status in (new_status, PaymentAttemptStatus.PAID):
             return
 
-        attempt.status = status
+        attempt.status = new_status
         attempt.provider_payload = payload
         await self._attempt_repo.update(attempt)
 
         invoice = await self._invoice_repo.get_by_id(attempt.invoice_id)
         if invoice is not None:
-            transition = attempt_status_to_invoice_transition(status, invoice.status)
+            transition = attempt_status_to_invoice_transition(
+                new_status, invoice.status
+            )
             if transition is not None:
                 invoice.status = transition
                 await self._invoice_repo.update(invoice)
@@ -489,12 +595,16 @@ class InvoiceService:
         if attempt.expected_amount is not None and reported_amount is not None:
             try:
                 reported_amount_int = round_pesos(reported_amount)
-            except (TypeError, ValueError, ArithmeticError):
+            except TypeError, ValueError, ArithmeticError:
                 reported_amount_int = None
             if reported_amount_int != attempt.expected_amount:
                 logger.warning(
-                    "[billing] monto del webhook no coincide | proveedor=%s id=%s esperado=%s reportado=%s",
-                    provider, attempt.id, attempt.expected_amount, reported_amount,
+                    "[billing] monto del webhook no coincide | proveedor=%s "
+                    "id=%s esperado=%s reportado=%s",
+                    provider,
+                    attempt.id,
+                    attempt.expected_amount,
+                    reported_amount,
                 )
                 return
 

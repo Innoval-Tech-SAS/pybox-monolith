@@ -1,3 +1,5 @@
+"""Schema de un documento del repositorio documental de un deudor."""
+
 from pydantic import Field
 
 from app_platform.documents.schemas.document_schemas import DocumentResponse
@@ -9,7 +11,9 @@ class DebtorDocumentResponse(DocumentResponse):
     """Metadatos de archivo (heredados) + la categoría, que vive en `documentos_deudor`
     y no en `documentos`."""
 
-    category: DebtorDocumentCategory = Field(description="Categoría del documento del deudor")
+    category: DebtorDocumentCategory = Field(
+        description="Categoría del documento del deudor"
+    )
 
 
 class DebtorDocumentListResponse(BaseSchema):

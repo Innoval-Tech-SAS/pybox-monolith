@@ -1,4 +1,6 @@
-﻿from sqlalchemy.ext.asyncio import AsyncSession
+"""Fábrica del VerificationService según el canal (email o SMS)."""
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from identity.auth.enums.notification_enums import VerificationChannel
 from identity.auth.services.email_verification_service import EmailVerificationService

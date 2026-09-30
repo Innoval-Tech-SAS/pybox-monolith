@@ -1,3 +1,5 @@
+"""Construcción del PDF de extracto de cuenta con reportlab."""
+
 import io
 from dataclasses import dataclass
 from datetime import datetime
@@ -64,12 +66,18 @@ def build_statement_pdf(
         title=f"Extracto de cuenta - {debtor_name}",
     )
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle("StatementTitle", parent=styles["Title"], fontSize=16, spaceAfter=4)
+    title_style = ParagraphStyle(
+        "StatementTitle", parent=styles["Title"], fontSize=16, spaceAfter=4
+    )
     subtitle_style = ParagraphStyle(
         "StatementSubtitle", parent=styles["Normal"], fontSize=10, textColor=colors.grey
     )
     section_style = ParagraphStyle(
-        "StatementSection", parent=styles["Heading2"], fontSize=12, spaceBefore=14, spaceAfter=6
+        "StatementSection",
+        parent=styles["Heading2"],
+        fontSize=12,
+        spaceBefore=14,
+        spaceAfter=6,
     )
 
     story = [
@@ -83,13 +91,21 @@ def build_statement_pdf(
     ]
 
     for line in credits:
-        story.append(Paragraph(f"Crédito {line.credit_number} — {line.credit_type_label}", section_style))
+        story.append(
+            Paragraph(
+                f"Crédito {line.credit_number} — {line.credit_type_label}",
+                section_style,
+            )
+        )
 
         summary_data = [
             ["Concepto", "Valor"],
             ["Fecha de desembolso", _date(line.disbursed_date)],
             ["Saldo total", _money(line.total_credit_balance, currency_code)],
-            ["Saldo en mora (capital)", _money(line.overdue_principal_balance, currency_code)],
+            [
+                "Saldo en mora (capital)",
+                _money(line.overdue_principal_balance, currency_code),
+            ],
             ["Días de mora al corte", str(line.days_overdue_at_cutoff)],
             ["Cuotas pendientes", str(line.pending_installments)],
             ["Cuotas en mora", str(line.overdue_installments)],
@@ -100,9 +116,23 @@ def build_statement_pdf(
         story.append(Spacer(1, 8))
 
         if line.payments:
-            payments_data = [["Cuota", "Fecha límite", "Fecha de pago", "Monto", "Capital", "Interés", "Estado"]] + [
+            payments_data = [
                 [
-                    str(p.installment_number) if p.installment_number is not None else "-",
+                    "Cuota",
+                    "Fecha límite",
+                    "Fecha de pago",
+                    "Monto",
+                    "Capital",
+                    "Interés",
+                    "Estado",
+                ]
+            ] + [
+                [
+                    (
+                        str(p.installment_number)
+                        if p.installment_number is not None
+                        else "-"
+                    ),
                     _date(p.limit_pay_date),
                     _date(p.payment_date),
                     _money(p.payment_amount, currency_code),
@@ -131,7 +161,12 @@ def _summary_table_style() -> TableStyle:
             ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
             ("TOPPADDING", (0, 0), (-1, -1), 5),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#d1d5db")),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f9fafb")]),
+            (
+                "ROWBACKGROUNDS",
+                (0, 1),
+                (-1, -1),
+                [colors.white, colors.HexColor("#f9fafb")],
+            ),
         ]
     )
 
@@ -146,6 +181,11 @@ def _payments_table_style() -> TableStyle:
             ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
             ("TOPPADDING", (0, 0), (-1, -1), 4),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#d1d5db")),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f9fafb")]),
+            (
+                "ROWBACKGROUNDS",
+                (0, 1),
+                (-1, -1),
+                [colors.white, colors.HexColor("#f9fafb")],
+            ),
         ]
     )

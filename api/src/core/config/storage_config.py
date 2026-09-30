@@ -1,3 +1,5 @@
+"""Configuración de conexión al almacén de objetos (S3/SeaweedFS)."""
+
 from dataclasses import dataclass, field
 
 from core.tools.config_tools import get_or_default, get_or_throw
@@ -19,8 +21,12 @@ class StorageConfig:
     endpoint: str = field(default_factory=lambda: get_or_throw("STORAGE_ENDPOINT"))
     access_key: str = field(default_factory=lambda: get_or_throw("STORAGE_ACCESS_KEY"))
     secret_key: str = field(default_factory=lambda: get_or_throw("STORAGE_SECRET_KEY"))
-    bucket: str = field(default_factory=lambda: get_or_default("STORAGE_BUCKET", DEFAULT_STORAGE_BUCKET))
-    region: str = field(default_factory=lambda: get_or_default("STORAGE_REGION", DEFAULT_STORAGE_REGION))
+    bucket: str = field(
+        default_factory=lambda: get_or_default("STORAGE_BUCKET", DEFAULT_STORAGE_BUCKET)
+    )
+    region: str = field(
+        default_factory=lambda: get_or_default("STORAGE_REGION", DEFAULT_STORAGE_REGION)
+    )
 
     # Ventanas de validez de las URLs firmadas. Cortas a propósito: son credenciales de
     # un solo uso, y el navegador las consume de inmediato.

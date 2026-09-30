@@ -1,10 +1,14 @@
+"""Resuelve qué pasarela de facturación usar según el país de la organización."""
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from billing.gateways.base import PaymentGateway
 from billing.gateways.bold.bold_gateway import BoldGateway
 from billing.gateways.mercadopago.mercadopago_gateway import MercadoPagoGateway
 from billing.gateways.unsupported_gateway import UnsupportedGateway
-from billing.mercadopago.utils.mercadopago_credentials import resolve_credentials_for_country
+from billing.mercadopago.utils.mercadopago_credentials import (
+    resolve_credentials_for_country,
+)
 
 _bold = BoldGateway()
 _unsupported = UnsupportedGateway()

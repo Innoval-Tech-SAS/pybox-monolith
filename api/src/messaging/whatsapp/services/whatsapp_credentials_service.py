@@ -1,24 +1,36 @@
+"""Alta y consulta de las credenciales de WhatsApp Business de una organización."""
+
 import uuid
 
 from fastapi import HTTPException, status
 
 from core.security.policies.security_policies import require_org_admin
 from identity.users.schemas.user_session_schema import UserSession
-from messaging.whatsapp.models.whatsapp_org_credentials_model import WhatsAppOrgCredentialsModel
-from messaging.whatsapp.repository.whatsapp_org_credentials_repository import WhatsAppOrgCredentialsRepository
-from messaging.whatsapp.schemas.whatsapp_credentials_schemas import WhatsAppOrgCredentialsRequest
+from messaging.whatsapp.models.whatsapp_org_credentials_model import (
+    WhatsAppOrgCredentialsModel,
+)
+from messaging.whatsapp.repository.whatsapp_org_credentials_repository import (
+    WhatsAppOrgCredentialsRepository,
+)
+from messaging.whatsapp.schemas.whatsapp_credentials_schemas import (
+    WhatsAppOrgCredentialsRequest,
+)
 
 
 class WhatsAppCredentialsService:
-
     def __init__(self, repo: WhatsAppOrgCredentialsRepository) -> None:
         self._repo = repo
 
-    async def get(self, organization_id: uuid.UUID, user_session: UserSession) -> WhatsAppOrgCredentialsModel:
+    async def get(
+        self, organization_id: uuid.UUID, user_session: UserSession
+    ) -> WhatsAppOrgCredentialsModel:
         require_org_admin(user_session, str(organization_id))
         credentials = await self._repo.get_by_organization(organization_id)
         if credentials is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "La organización no tiene un número de WhatsApp configurado")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                "La organización no tiene un número de WhatsApp configurado",
+            )
         return credentials
 
     async def upsert(

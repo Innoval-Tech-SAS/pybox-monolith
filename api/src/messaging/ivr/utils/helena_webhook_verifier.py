@@ -1,3 +1,5 @@
+"""Verificación HMAC de la firma del webhook de Helena."""
+
 import hashlib
 import hmac
 
@@ -26,7 +28,9 @@ def verify_helena_signature(raw_body: bytes, signature: str | None) -> bool:
 
     secret = get_or_default("HELENA_WEBHOOK_SECRET", UNSET).strip()
     if not secret:
-        logger.error("[ivr_webhook] HELENA_WEBHOOK_SECRET no configurada: se rechaza el evento")
+        logger.error(
+            "[ivr_webhook] HELENA_WEBHOOK_SECRET no configurada: se rechaza el evento"
+        )
         return False
 
     digest = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()

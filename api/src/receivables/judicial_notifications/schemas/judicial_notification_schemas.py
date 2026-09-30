@@ -1,3 +1,5 @@
+"""Schemas de notificaciones judiciales: alta, buzón del deudor y panel de entidad."""
+
 import uuid
 from datetime import datetime
 
@@ -5,24 +7,37 @@ from pydantic import Field
 
 from core.base.schema_base import BaseSchema
 from receivables.credits.enums.credit_enums import CreditTypes
-from receivables.judicial_notifications.enums.judicial_notification_enums import JudicialPriority
+from receivables.judicial_notifications.enums.judicial_notification_enums import (
+    JudicialPriority,
+)
 
 
 class JudicialPriorityOption(BaseSchema):
-    """Opción de prioridad para el select del panel de la entidad y el chip del buzón."""
+    """Opción de prioridad para el select del panel de la entidad y el chip del
+    buzón."""
 
-    value: str = Field(description="Código de la prioridad (urgente, media, baja, informativa)")
+    value: str = Field(
+        description="Código de la prioridad (urgente, media, baja, informativa)"
+    )
     label: str = Field(description="Etiqueta para mostrar (p. ej. 'Urgente')")
 
 
 class JudicialNotificationCreate(BaseSchema):
-    credit_id: uuid.UUID = Field(description="Crédito sobre el que se emite la notificación")
-    title: str = Field(min_length=1, max_length=255, description="Título de la notificación")
-    body: str = Field(min_length=1, max_length=1000, description="Detalle de la notificación")
+    credit_id: uuid.UUID = Field(
+        description="Crédito sobre el que se emite la notificación"
+    )
+    title: str = Field(
+        min_length=1, max_length=255, description="Título de la notificación"
+    )
+    body: str = Field(
+        min_length=1, max_length=1000, description="Detalle de la notificación"
+    )
     priority: JudicialPriority = Field(description="Urgencia de la notificación")
     notified_at: datetime | None = Field(
         default=None,
-        description="Fecha del hecho judicial. Si se omite, se usa la fecha de captura.",
+        description=(
+            "Fecha del hecho judicial. Si se omite, se usa la fecha de captura."
+        ),
     )
 
 
@@ -52,5 +67,7 @@ class JudicialNotificationResponse(BaseSchema):
 class JudicialInboxResponse(BaseSchema):
     """Buzón del titular: las notificaciones más el contador que pinta el badge."""
 
-    items: list[JudicialNotificationResponse] = Field(description="Notificaciones, de la más reciente a la más antigua")
+    items: list[JudicialNotificationResponse] = Field(
+        description="Notificaciones, de la más reciente a la más antigua"
+    )
     unread_count: int = Field(description="Cantidad de notificaciones sin leer")

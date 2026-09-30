@@ -1,3 +1,5 @@
+"""Canal de verificación de identidad del deudor."""
+
 from enum import StrEnum
 
 

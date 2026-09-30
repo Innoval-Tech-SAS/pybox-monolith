@@ -28,14 +28,18 @@ async def ensure_webhook_registered() -> None:
     """
     public_url = get_or_default("HELENA_PUBLIC_WEBHOOK_URL", UNSET).strip()
     if not public_url:
-        logger.info("[ivr_webhook] HELENA_PUBLIC_WEBHOOK_URL no definida: no se registra webhook")
+        logger.info(
+            "[ivr_webhook] HELENA_PUBLIC_WEBHOOK_URL no definida: no se "
+            "registra webhook"
+        )
         return
 
     secret = get_or_default("HELENA_WEBHOOK_SECRET", UNSET).strip()
     if not secret:
         logger.error(
-            "[ivr_webhook] HELENA_PUBLIC_WEBHOOK_URL definida pero falta HELENA_WEBHOOK_SECRET: "
-            "no se registra el webhook (los eventos entrantes se rechazarían por firma)"
+            "[ivr_webhook] HELENA_PUBLIC_WEBHOOK_URL definida pero falta "
+            "HELENA_WEBHOOK_SECRET: no se registra el webhook (los eventos "
+            "entrantes se rechazarían por firma)"
         )
         return
 
@@ -67,9 +71,10 @@ async def ensure_webhook_registered() -> None:
             public_url,
         )
 
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         logger.warning(
-            "[ivr_webhook] no se pudo registrar el webhook en Helena (se continúa): %s", exc
+            "[ivr_webhook] no se pudo registrar el webhook en Helena (se continúa): %s",
+            exc,
         )
 
 

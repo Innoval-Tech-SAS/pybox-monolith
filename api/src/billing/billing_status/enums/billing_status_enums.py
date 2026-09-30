@@ -1,3 +1,5 @@
+"""Niveles de bloqueo de una organización por atraso en la facturación."""
+
 from enum import Enum
 
 

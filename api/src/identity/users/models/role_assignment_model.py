@@ -1,15 +1,17 @@
-﻿import uuid
+"""Rol de un usuario en un scope (global u organización)."""
+
+import uuid
 
 from sqlalchemy import CheckConstraint, ForeignKey, Index, text
-from sqlalchemy.dialects.postgresql import ENUM, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from core.base.audit_model import BaseModel
-from identity.users.enums.user_enums import UserRole, UserScope, VALID_ROLE_SCOPE
+from identity.users.enums.user_enums import VALID_ROLE_SCOPE, UserRole, UserScope
 
 _CHECK_SQL = " OR ".join(
-    f"(rol = '{r.value}' AND alcance = '{s.value}')"
-    for r, s in VALID_ROLE_SCOPE
+    f"(rol = '{r.value}' AND alcance = '{s.value}')" for r, s in VALID_ROLE_SCOPE
 )
 
 
@@ -30,15 +32,24 @@ class RoleAssignmentModel(BaseModel):
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, name="id_usuario"
+        PgUUID(as_uuid=True),
+        ForeignKey("usuarios.id"),
+        nullable=False,
+        name="id_usuario",
     )
     role: Mapped[UserRole] = mapped_column(
-        ENUM(UserRole, name="rol_usuario", values_callable=lambda e: [m.value for m in e]),
+        ENUM(
+            UserRole, name="rol_usuario", values_callable=lambda e: [m.value for m in e]
+        ),
         nullable=False,
         name="rol",
     )
     scope: Mapped[UserScope] = mapped_column(
-        ENUM(UserScope, name="alcance_usuario", values_callable=lambda e: [m.value for m in e]),
+        ENUM(
+            UserScope,
+            name="alcance_usuario",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=False,
         name="alcance",
     )
@@ -51,9 +62,15 @@ class RoleAssignmentModel(BaseModel):
     )
 
     @validates("role", "scope")
-    def validate_role_scope(self, key: str, value: UserRole | UserScope) -> UserRole | UserScope:
+    def validate_role_scope(
+        self, key: str, value: UserRole | UserScope
+    ) -> UserRole | UserScope:
         role = value if key == "role" else self.role
         scope = value if key == "scope" else self.scope
-        if role is not None and scope is not None and (role, scope) not in VALID_ROLE_SCOPE:
+        if (
+            role is not None
+            and scope is not None
+            and (role, scope) not in VALID_ROLE_SCOPE
+        ):
             raise ValueError(f"Combinación inválida: {role} + {scope}")
         return value

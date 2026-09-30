@@ -1,3 +1,5 @@
+"""Adaptador de Helena para el envío masivo de llamadas IVR."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -100,7 +102,9 @@ class HelenaCallProvider:
                 detail,
             )
             return False, None, None
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            # Cualquier falla no-HTTP (timeout, conexión) degrada igual a
+            # "no se pudo enviar" en vez de tumbar el llamador.
             logger.error("[helena] bulk_error | campaign=%s error=%s", campaign_id, exc)
             return False, None, None
 

@@ -1,3 +1,5 @@
+"""Mapeo de canal de envío al tipo de método de contacto que necesita."""
+
 from messaging.channels.enums.channel_enums import ChannelName
 from receivables.contact_methods.enums.contact_method_enums import ContactMethodType
 

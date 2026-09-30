@@ -1,4 +1,6 @@
-﻿import uuid
+"""Schemas de métodos de pago manuales: alta, edición y respuesta."""
+
+import uuid
 from datetime import datetime
 
 from pydantic import Field
@@ -21,7 +23,9 @@ class PaymentMethodResponse(BaseSchema):
     qr_image_url: str | None = Field(default=None, description="URL de imagen QR")
     is_active: bool = Field(description="Indica si el método está activo")
     created_at: datetime = Field(description="Fecha de creación")
-    updated_at: datetime | None = Field(default=None, description="Fecha de actualización")
+    updated_at: datetime | None = Field(
+        default=None, description="Fecha de actualización"
+    )
 
 
 class PaymentMethodCreateRequest(BaseSchema):
@@ -39,7 +43,9 @@ class PaymentMethodCreateRequest(BaseSchema):
 
 class PaymentMethodUpdateRequest(BaseSchema):
     name: str | None = Field(default=None, description="Nombre del método de pago")
-    type: PaymentMethodType | None = Field(default=None, description="Tipo de método de pago")
+    type: PaymentMethodType | None = Field(
+        default=None, description="Tipo de método de pago"
+    )
     description: str | None = Field(default=None, description="Descripción")
     instructions: str | None = Field(default=None, description="Instrucciones de pago")
     bank_name: str | None = Field(default=None, description="Nombre del banco")

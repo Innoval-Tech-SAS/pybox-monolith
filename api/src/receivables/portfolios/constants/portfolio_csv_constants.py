@@ -1,3 +1,5 @@
+"""Límites y flags de la carga masiva de portafolio vía CSV/XLSX."""
+
 MAX_ERRORS = 50
 
 # Feature flag (leída con get_or_default EN CADA LLAMADA, no cacheada a nivel de

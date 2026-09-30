@@ -1,10 +1,15 @@
+"""Alta, edición y borrado de credenciales de pasarela de cobro de una organización."""
+
 import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from receivables.payment_gateways.models.payment_gateway_credential_model import OrganizationGatewayCredentialModel
-from receivables.payment_gateways.repository.payment_gateway_credential_repository import (
+from core.security.services.encrypt_service import encrypt_service
+from receivables.payment_gateways.models.payment_gateway_credential_model import (
+    OrganizationGatewayCredentialModel,
+)
+from receivables.payment_gateways.repository.payment_gateway_credential_repository import (  # pylint: disable=line-too-long
     OrganizationGatewayCredentialRepository,
 )
 from receivables.payment_gateways.schemas.payment_gateway_credential_schemas import (
@@ -12,7 +17,6 @@ from receivables.payment_gateways.schemas.payment_gateway_credential_schemas imp
     OrganizationGatewayCredentialResponse,
     OrganizationGatewayCredentialUpdateRequest,
 )
-from core.security.services.encrypt_service import encrypt_service
 
 
 class OrganizationGatewayCredentialManagementService:
@@ -26,33 +30,48 @@ class OrganizationGatewayCredentialManagementService:
     def __init__(self, session: AsyncSession) -> None:
         self._repo = OrganizationGatewayCredentialRepository(session)
 
-    async def list(self, organization_id: uuid.UUID) -> list[OrganizationGatewayCredentialResponse]:
+    async def list(
+        self, organization_id: uuid.UUID
+    ) -> list[OrganizationGatewayCredentialResponse]:
         rows = await self._repo.list_by_organization(organization_id)
         return [self._to_response(row) for row in rows]
 
-    async def _get_owned(self, credential_id: uuid.UUID, organization_id: uuid.UUID) -> OrganizationGatewayCredentialModel:
+    async def _get_owned(
+        self, credential_id: uuid.UUID, organization_id: uuid.UUID
+    ) -> OrganizationGatewayCredentialModel:
         row = await self._repo.get_by_id(credential_id)
         if row is None or row.organization_id != organization_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Credencial no encontrada")
         return row
 
-    async def get(self, credential_id: uuid.UUID, organization_id: uuid.UUID) -> OrganizationGatewayCredentialResponse:
+    async def get(
+        self, credential_id: uuid.UUID, organization_id: uuid.UUID
+    ) -> OrganizationGatewayCredentialResponse:
         row = await self._get_owned(credential_id, organization_id)
         return self._to_response(row)
 
     async def create(
-        self, organization_id: uuid.UUID, data: OrganizationGatewayCredentialCreateRequest
+        self,
+        organization_id: uuid.UUID,
+        data: OrganizationGatewayCredentialCreateRequest,
     ) -> OrganizationGatewayCredentialResponse:
-        existing = await self._repo.get_by_organization_and_provider(organization_id, data.provider)
+        existing = await self._repo.get_by_organization_and_provider(
+            organization_id, data.provider
+        )
         if existing is not None:
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
-                f"Ya existe una credencial de {data.provider.value} para esta organización — edítala en vez de crear otra.",
+                f"Ya existe una credencial de {data.provider.value} para esta "
+                "organización — edítala en vez de crear otra.",
             )
         row = OrganizationGatewayCredentialModel(
             organization_id=organization_id,
             provider=data.provider,
-            secrets={key: encrypt_service.encrypt_to_str(value) for key, value in data.secrets.items() if value},
+            secrets={
+                key: encrypt_service.encrypt_to_str(value)
+                for key, value in data.secrets.items()
+                if value
+            },
             public_config=data.public_config,
             lookup_key=data.lookup_key,
             is_active=data.is_active,
@@ -70,7 +89,11 @@ class OrganizationGatewayCredentialManagementService:
         if data.secrets:
             # Merge de secretos: los enviados rotan; los omitidos se conservan (igual
             # contrato que las otras dos tablas de credenciales del proyecto).
-            encrypted = {key: encrypt_service.encrypt_to_str(value) for key, value in data.secrets.items() if value}
+            encrypted = {
+                key: encrypt_service.encrypt_to_str(value)
+                for key, value in data.secrets.items()
+                if value
+            }
             row.secrets = {**(row.secrets or {}), **encrypted}
         if data.public_config is not None:
             row.public_config = data.public_config
@@ -81,11 +104,15 @@ class OrganizationGatewayCredentialManagementService:
         saved = await self._repo.update(row)
         return self._to_response(saved)
 
-    async def delete(self, credential_id: uuid.UUID, organization_id: uuid.UUID) -> None:
+    async def delete(
+        self, credential_id: uuid.UUID, organization_id: uuid.UUID
+    ) -> None:
         row = await self._get_owned(credential_id, organization_id)
         await self._repo.delete(row)
 
-    async def restore(self, credential_id: uuid.UUID) -> OrganizationGatewayCredentialResponse:
+    async def restore(
+        self, credential_id: uuid.UUID
+    ) -> OrganizationGatewayCredentialResponse:
         """Solo Admin Global: sin scope de organización, ya autorizado por policy."""
         row = await self._repo.get_by_id_including_deleted(credential_id)
         if row is None:
@@ -94,7 +121,9 @@ class OrganizationGatewayCredentialManagementService:
         return self._to_response(restored)
 
     @staticmethod
-    def _to_response(row: OrganizationGatewayCredentialModel) -> OrganizationGatewayCredentialResponse:
+    def _to_response(
+        row: OrganizationGatewayCredentialModel,
+    ) -> OrganizationGatewayCredentialResponse:
         return OrganizationGatewayCredentialResponse(
             id=row.id,
             organization_id=row.organization_id,

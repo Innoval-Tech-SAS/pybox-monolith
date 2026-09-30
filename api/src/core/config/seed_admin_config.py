@@ -1,4 +1,6 @@
-﻿from dataclasses import dataclass
+"""Datos del usuario admin inicial, leídos desde variables de entorno."""
+
+from dataclasses import dataclass
 
 from dotenv import load_dotenv
 

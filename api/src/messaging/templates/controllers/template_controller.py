@@ -1,3 +1,5 @@
+"""Endpoints de plantillas de mensajería: alta, edición y variables disponibles."""
+
 import uuid
 from typing import Annotated
 
@@ -6,7 +8,10 @@ from fastapi import Query, status
 from core.config.api_router import APIRouter
 from core.security.dependencies import CurrentSession
 from core.security.policies.security_policies import require_global_admin
-from messaging.templates.dependencies import TemplateServiceDep, TemplateVariableServiceDep
+from messaging.templates.dependencies import (
+    TemplateServiceDep,
+    TemplateVariableServiceDep,
+)
 from messaging.templates.enums.template_enums import TemplateChannel
 from messaging.templates.schemas.template_schemas import (
     TemplateCreateRequest,
@@ -23,7 +28,9 @@ from messaging.templates.schemas.template_schemas import (
 router = APIRouter(prefix="/templates", tags=["Plantillas"])
 
 
-@router.get("/", response_model=TemplateListResponse, summary="Listar plantillas del portafolio")
+@router.get(
+    "/", response_model=TemplateListResponse, summary="Listar plantillas del portafolio"
+)
 async def list_templates(
     session: CurrentSession,
     service: TemplateServiceDep,
@@ -31,11 +38,17 @@ async def list_templates(
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(alias="pageSize", ge=1, le=100)] = 20,
     channel: Annotated[TemplateChannel | None, Query(alias="channel")] = None,
-    search: Annotated[str | None, Query(description="Búsqueda por nombre de plantilla")] = None,
+    search: Annotated[
+        str | None, Query(description="Búsqueda por nombre de plantilla")
+    ] = None,
     sort: Annotated[str, Query(description="Campo de orden: name | status")] = "name",
-    sort_order: Annotated[str, Query(alias="sort_order", pattern="^(asc|desc)$")] = "asc",
+    sort_order: Annotated[
+        str, Query(alias="sort_order", pattern="^(asc|desc)$")
+    ] = "asc",
 ) -> TemplateListResponse:
-    templates, total = await service.list_by_org(portfolio_id, page, page_size, session, channel, search, sort, sort_order)
+    templates, total = await service.list_by_org(
+        portfolio_id, page, page_size, session, channel, search, sort, sort_order
+    )
     return TemplateListResponse(
         items=[TemplateResponse.model_validate(t) for t in templates],
         total=total,
@@ -50,7 +63,7 @@ async def list_templates(
     summary="Listar variables disponibles para construir el contenido de una plantilla",
 )
 async def list_template_variables(
-    session: CurrentSession,
+    _session: CurrentSession,
     service: TemplateVariableServiceDep,
 ) -> list[TemplateVariableOption]:
     return await service.list_available_variables()
@@ -71,7 +84,11 @@ async def list_template_options(
     return [TemplateResponse.model_validate(t) for t in templates]
 
 
-@router.get("/{template_id}", response_model=TemplateResponse, summary="Obtener plantilla por ID")
+@router.get(
+    "/{template_id}",
+    response_model=TemplateResponse,
+    summary="Obtener plantilla por ID",
+)
 async def get_template(
     template_id: uuid.UUID,
     session: CurrentSession,
@@ -98,7 +115,9 @@ async def create_template(
     return TemplateResponse.model_validate(template)
 
 
-@router.patch("/{template_id}", response_model=TemplateResponse, summary="Actualizar plantilla")
+@router.patch(
+    "/{template_id}", response_model=TemplateResponse, summary="Actualizar plantilla"
+)
 async def update_template(
     template_id: uuid.UUID,
     body: TemplateUpdateRequest,

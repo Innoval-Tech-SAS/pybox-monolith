@@ -1,10 +1,14 @@
+"""Schemas de credenciales de proveedor de mensajería."""
+
 import uuid
 from datetime import datetime
 
 from pydantic import Field
 
 from core.base.schema_base import BaseSchema
-from messaging.provider_credentials.enums.provider_credential_enums import MessagingCredentialProvider
+from messaging.provider_credentials.enums.provider_credential_enums import (
+    MessagingCredentialProvider,
+)
 
 
 class MessagingProviderCredentialUpsert(BaseSchema):
@@ -15,7 +19,10 @@ class MessagingProviderCredentialUpsert(BaseSchema):
     provider: MessagingCredentialProvider = Field(description="Proveedor de mensajería")
     secrets: dict[str, str] = Field(
         default_factory=dict,
-        description="Valores secretos en claro (se cifran al guardar). Vacío = conservar los existentes. Enviar un valor rota ese secreto.",
+        description=(
+            "Valores secretos en claro (se cifran al guardar). Vacío = "
+            "conservar los existentes. Enviar un valor rota ese secreto."
+        ),
     )
     public_config: dict[str, str] = Field(
         default_factory=dict,

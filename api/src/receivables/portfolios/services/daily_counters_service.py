@@ -1,11 +1,13 @@
+"""Recalcula los contadores diarios de cartera (por país) usados en el dashboard."""
+
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app_platform.countries.repository.country_repository import CountryRepository
 from core.config.logger import logger
 from core.database.advisory_lock import try_advisory_lock
-from app_platform.countries.repository.country_repository import CountryRepository
 from receivables.credits.repository.credit_repository import CreditRepository
 
 
@@ -22,15 +24,25 @@ class DailyCountersService:
         # sola guardia.
         async with try_advisory_lock(f"daily_counters:{country_code}") as acquired:
             if not acquired:
-                logger.info("[daily_counters] %s: saltado, otro worker ya lo está ejecutando", country_code)
+                logger.info(
+                    "[daily_counters] %s: saltado, otro worker ya lo está ejecutando",
+                    country_code,
+                )
                 return 0
 
             tz = ZoneInfo(tz_str)
             today = datetime.now(tz).date()
             now = datetime.now(timezone.utc)
 
-            updated = await self._credit_repo.bulk_advance_overdue_days(country_code, tz_str, today, now)
-            logger.info("[daily_counters] %s (%s) | créditos actualizados=%d", country_code, tz_str, updated)
+            updated = await self._credit_repo.bulk_advance_overdue_days(
+                country_code, tz_str, today, now
+            )
+            logger.info(
+                "[daily_counters] %s (%s) | créditos actualizados=%d",
+                country_code,
+                tz_str,
+                updated,
+            )
             return updated
 
     async def run_all_nationalities(self) -> int:

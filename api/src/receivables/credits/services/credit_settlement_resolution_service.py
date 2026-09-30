@@ -1,10 +1,14 @@
+"""Aplica el resultado de un ticket de liquidación (settlement) sobre el crédito."""
+
 import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from receivables.credits.repository.credit_repository import CreditRepository
-from receivables.credits.repository.credit_settlement_ticket_repository import CreditSettlementTicketRepository
+from receivables.credits.repository.credit_settlement_ticket_repository import (
+    CreditSettlementTicketRepository,
+)
 from receivables.payments.enums.payment_enums import PaymentStatus
 from receivables.payments.models.payment_model import PaymentModel
 from receivables.payments.repository.payment_repository import PaymentRepository
@@ -23,7 +27,9 @@ class CreditSettlementResolutionService:
         self._payment_repo = PaymentRepository(session)
         self._settlement_ticket_repo = CreditSettlementTicketRepository(session)
 
-    async def apply_settlement_resolution(self, ticket_id: uuid.UUID, approved: bool) -> None:
+    async def apply_settlement_resolution(
+        self, ticket_id: uuid.UUID, approved: bool
+    ) -> None:
         link = await self._settlement_ticket_repo.get_by_ticket_id(ticket_id)
         if link is None:
             return

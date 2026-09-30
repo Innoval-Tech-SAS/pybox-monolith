@@ -1,3 +1,5 @@
+"""Implementación de ObjectStorage sobre la API S3 (SeaweedFS en este proyecto)."""
+
 from contextlib import AsyncExitStack
 from typing import Any, Optional
 
@@ -7,7 +9,11 @@ from botocore.exceptions import ClientError
 
 from core.config.logger import logger
 from core.config.storage_config import StorageConfig
-from core.storage.object_storage import ObjectMetadata, ObjectStorage, ObjectStorageError
+from core.storage.object_storage import (
+    ObjectMetadata,
+    ObjectStorage,
+    ObjectStorageError,
+)
 
 
 class S3ObjectStorage(ObjectStorage):
@@ -40,7 +46,9 @@ class S3ObjectStorage(ObjectStorage):
                 aws_secret_access_key=self._config.secret_key,
                 region_name=self._config.region,
                 # path-style: SeaweedFS no resuelve buckets como subdominio.
-                config=Config(s3={"addressing_style": "path"}, signature_version="s3v4"),
+                config=Config(
+                    s3={"addressing_style": "path"}, signature_version="s3v4"
+                ),
             )
         )
         self._stack = stack
@@ -60,7 +68,9 @@ class S3ObjectStorage(ObjectStorage):
             return
         except ClientError as error:
             if self._status(error) not in (403, 404):
-                raise ObjectStorageError(f"No se pudo verificar el bucket: {error}") from error
+                raise ObjectStorageError(
+                    f"No se pudo verificar el bucket: {error}"
+                ) from error
 
         try:
             await client.create_bucket(Bucket=self.bucket)
@@ -82,7 +92,9 @@ class S3ObjectStorage(ObjectStorage):
                 Bucket=self.bucket, Key=key, Body=data, ContentType=content_type
             )
         except ClientError as error:
-            raise ObjectStorageError(f"No se pudo guardar el objeto '{key}': {error}") from error
+            raise ObjectStorageError(
+                f"No se pudo guardar el objeto '{key}': {error}"
+            ) from error
         return str(response.get("ETag", "")).strip('"')
 
     async def get(self, key: str) -> bytes:
@@ -94,7 +106,9 @@ class S3ObjectStorage(ObjectStorage):
         except ClientError as error:
             if self._status(error) == 404:
                 raise ObjectStorageError(f"El objeto '{key}' no existe") from error
-            raise ObjectStorageError(f"No se pudo leer el objeto '{key}': {error}") from error
+            raise ObjectStorageError(
+                f"No se pudo leer el objeto '{key}': {error}"
+            ) from error
 
     async def head(self, key: str) -> ObjectMetadata | None:
         client = self._require()
@@ -103,7 +117,9 @@ class S3ObjectStorage(ObjectStorage):
         except ClientError as error:
             if self._status(error) in (403, 404):
                 return None
-            raise ObjectStorageError(f"No se pudo consultar el objeto '{key}': {error}") from error
+            raise ObjectStorageError(
+                f"No se pudo consultar el objeto '{key}': {error}"
+            ) from error
 
         return ObjectMetadata(
             size_bytes=int(response.get("ContentLength", 0)),
@@ -116,7 +132,9 @@ class S3ObjectStorage(ObjectStorage):
         try:
             await client.delete_object(Bucket=self.bucket, Key=key)
         except ClientError as error:
-            raise ObjectStorageError(f"No se pudo borrar el objeto '{key}': {error}") from error
+            raise ObjectStorageError(
+                f"No se pudo borrar el objeto '{key}': {error}"
+            ) from error
 
     # ── Internos ─────────────────────────────────────────────────────────────
 

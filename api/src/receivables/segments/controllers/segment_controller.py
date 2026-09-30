@@ -1,3 +1,5 @@
+"""Endpoints de segmentos de cartera: alta, edición y ejecución dinámica."""
+
 import uuid
 from typing import Annotated
 
@@ -20,7 +22,12 @@ from receivables.segments.schemas.segment_schemas import (
 router = APIRouter(prefix="/segments", tags=["Segmentos"])
 
 
-@router.post("/", response_model=SegmentResponse, status_code=status.HTTP_201_CREATED, summary="Crear segmento")
+@router.post(
+    "/",
+    response_model=SegmentResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear segmento",
+)
 async def create_segment(
     body: SegmentCreateRequest,
     session: CurrentSession,
@@ -31,7 +38,9 @@ async def create_segment(
     return SegmentResponse.model_validate(segment)
 
 
-@router.get("/", response_model=SegmentListResponse, summary="Listar segmentos del portafolio")
+@router.get(
+    "/", response_model=SegmentListResponse, summary="Listar segmentos del portafolio"
+)
 async def list_segments(
     session: CurrentSession,
     service: SegmentServiceDep,
@@ -61,7 +70,9 @@ async def list_segment_options(
     return await service.list_all_by_org(portfolio_id, session)
 
 
-@router.get("/{segment_id}", response_model=SegmentResponse, summary="Obtener segmento por ID")
+@router.get(
+    "/{segment_id}", response_model=SegmentResponse, summary="Obtener segmento por ID"
+)
 async def get_segment(
     segment_id: uuid.UUID,
     session: CurrentSession,
@@ -72,7 +83,9 @@ async def get_segment(
     return SegmentResponse.model_validate(segment)
 
 
-@router.patch("/{segment_id}", response_model=SegmentResponse, summary="Actualizar segmento")
+@router.patch(
+    "/{segment_id}", response_model=SegmentResponse, summary="Actualizar segmento"
+)
 async def update_segment(
     segment_id: uuid.UUID,
     body: SegmentUpdateRequest,
@@ -84,7 +97,9 @@ async def update_segment(
     return SegmentResponse.model_validate(segment)
 
 
-@router.delete("/{segment_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar segmento")
+@router.delete(
+    "/{segment_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar segmento"
+)
 async def delete_segment(
     segment_id: uuid.UUID,
     session: CurrentSession,
@@ -111,7 +126,11 @@ async def restore_segment(
     return SegmentResponse.model_validate(segment)
 
 
-@router.post("/{segment_id}/execute", response_model=SegmentExecuteResponse, summary="Ejecutar segmento")
+@router.post(
+    "/{segment_id}/execute",
+    response_model=SegmentExecuteResponse,
+    summary="Ejecutar segmento",
+)
 async def execute_segment(
     segment_id: uuid.UUID,
     body: SegmentExecuteRequest,
@@ -119,7 +138,9 @@ async def execute_segment(
     service: SegmentServiceDep,
     portfolio_id: Annotated[uuid.UUID, Query(alias="portfolioId")],
 ) -> SegmentExecuteResponse:
-    result = await service.execute(segment_id, portfolio_id, body, session.user_id, session)
+    result = await service.execute(
+        segment_id, portfolio_id, body, session.user_id, session
+    )
     return SegmentExecuteResponse(**result)
 
 

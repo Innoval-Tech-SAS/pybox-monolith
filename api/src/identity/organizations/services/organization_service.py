@@ -1,51 +1,73 @@
+"""Alta, edición y verificación de organizaciones, y sus documentos legales."""
+
 import uuid
 from datetime import datetime
-from pathlib import Path
 from typing import Sequence
-
-from core.config.logger import logger
 
 from fastapi import HTTPException, status
 
-from app_platform.documents.repository.document_repository import DocumentRepository
-from app_platform.documents.services.document_service import DocumentService
-from app_platform.documents.utils.document_naming import resolve_content_type
-from core.database.redis import redis_client
 from app_platform.countries.enums.country_enums import DocumentScope
 from app_platform.countries.repository.country_repository import CountryRepository
 from app_platform.countries.services.country_service import CountryService
-from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
+from app_platform.documents.repository.document_repository import DocumentRepository
+from app_platform.documents.services.document_service import DocumentService
+from app_platform.documents.utils.document_naming import resolve_content_type
+from core.config.logger import logger
+from core.database.redis import redis_client
+from core.security.policies.security_policies import (
+    require_org_access,
+    require_verified_org,
+)
+from core.security.services.encrypt_service import encrypt_service
+from identity.organizations.enums.organization_enums import (
+    ENTITY_SECTOR_LABELS,
+    EntitySectors,
+)
+from identity.organizations.models.organization_membership_model import (
+    OrganizationMembershipModel,
+)
 from identity.organizations.models.organization_model import OrganizationModel
-from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
+from identity.organizations.repository.organization_membership_repository import (
+    OrganizationMembershipRepository,
+)
 from identity.organizations.repository.organization_repository import (
     ORGANIZATION_DOCUMENT_STORAGE_DOMAIN,
     OrganizationRepository,
 )
-from identity.organizations.enums.organization_enums import ENTITY_SECTOR_LABELS, EntitySectors
 from identity.organizations.schemas.organization_schemas import (
     EntitySectorOption,
-    OrgRegisterResponse,
     OrganizationCreate,
     OrganizationResponse,
     OrganizationUpdate,
+    OrgRegisterResponse,
     RepresentativeMode,
 )
-from identity.organizations.services.organization_cascade_service import OrganizationCascadeService
-from core.security.policies.security_policies import require_org_access, require_verified_org
-from core.security.services.encrypt_service import encrypt_service
+from identity.organizations.services.organization_cascade_service import (
+    OrganizationCascadeService,
+)
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.models.role_assignment_model import RoleAssignmentModel
 from identity.users.models.user_model import UserModel
-from identity.users.repository.permission_assignment_repository import PermissionAssignmentRepository
-from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
+from identity.users.repository.permission_assignment_repository import (
+    PermissionAssignmentRepository,
+)
+from identity.users.repository.role_assignment_repository import (
+    RoleAssignmentRepository,
+)
 from identity.users.repository.user_repository import UserRepository
 from identity.users.schemas.user_session_schema import UserSession, session_key
 from messaging.campaigns.repository.campaign_repository import CampaignRepository
 from messaging.contacts.repository.contact_repository import ContactRepository
 from receivables.credits.repository.credit_repository import CreditRepository
-from receivables.portfolios.repository.portfolio_daily_counter_config_repository import PortfolioDailyCounterConfigRepository
+
+# pylint: disable-next=line-too-long
+from receivables.portfolios.repository.portfolio_daily_counter_config_repository import (
+    PortfolioDailyCounterConfigRepository,
+)
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from receivables.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
+from receivables.portfolios.repository.portfolio_user_access_repository import (
+    PortfolioUserAccessRepository,
+)
 from receivables.portfolios.services.portfolio_service import PortfolioService
 
 
@@ -65,7 +87,9 @@ class OrganizationService:
         self._country_service = CountryService(self._country_repo)
         self._document_service = DocumentService(org_repo.session)
         self._document_repo = DocumentRepository(org_repo.session)
-        self._permission_assignment_repo = PermissionAssignmentRepository(org_repo.session)
+        self._permission_assignment_repo = PermissionAssignmentRepository(
+            org_repo.session
+        )
         # Dar de baja una organización arrastra sus portafolios (y con ellos créditos y
         # campañas): esa cascada la conoce el dominio dueño de los portafolios.
         self._portfolio_service = PortfolioService(
@@ -92,7 +116,9 @@ class OrganizationService:
     async def get_all(self) -> Sequence[OrganizationModel]:
         return await self.org_repo.get_all()
 
-    async def get_for_user(self, user_id: uuid.UUID, scope: UserScope) -> Sequence[OrganizationModel]:
+    async def get_for_user(
+        self, user_id: uuid.UUID, scope: UserScope
+    ) -> Sequence[OrganizationModel]:
         if scope == UserScope.GLOBAL:
             return await self.org_repo.get_all()
         if scope == UserScope.ORGANIZATION:
@@ -104,32 +130,38 @@ class OrganizationService:
     async def get_by_id(self, org_id: uuid.UUID) -> OrganizationModel:
         org = await self.org_repo.get_by_id(org_id)
         if not org:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organización no encontrada")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Organización no encontrada",
+            )
         return org
 
     # ── Documentos de verificación de la entidad (casos 1:1) ─────────────────
     # Fiscal, mercantil y representante NO usan tabla de unión: cada uno lo apunta su
     # propia columna de `entidades` (`id_documento_fiscal` / `_mercantil` /
     # `_representante`), que además tiene FK compuesta contra
-    # `(documentos.id, documentos.id_organizacion)` — Postgres ya rechaza que una entidad
-    # apunte a un documento de otra. El único scope de tenant que necesita la lectura es,
-    # por eso, `documentos.id_organizacion`.
+    # `(documentos.id, documentos.id_organizacion)` — Postgres ya rechaza que una
+    # entidad apunte a un documento de otra. El único scope de tenant que necesita
+    # la lectura es, por eso, `documentos.id_organizacion`.
 
     async def get_document_content(
         self, session: UserSession, org_id: uuid.UUID, document_id: uuid.UUID
     ):
         """Entrega el archivo de un documento de la entidad.
 
-        Antes vivía en `DocumentService.get_organization_document`; se movió al dominio
-        dueño del recurso. La autorización no cambió: gate de acceso a la organización
-        (política pura) + filtro por organización en el repo, y 404 si el documento no es
-        de esa entidad (no se confirma su existencia fuera del alcance).
+        Antes vivía en `DocumentService.get_organization_document`; se movió al
+        dominio dueño del recurso. La autorización no cambió: gate de acceso a la
+        organización (política pura) + filtro por organización en el repo, y 404
+        si el documento no es de esa entidad (no se confirma su existencia fuera
+        del alcance).
         """
         require_org_access(session, str(org_id))
         document = await self._document_repo.get_by_organization(document_id, org_id)
         if document is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Documento no encontrado")
-        return await self._document_service.to_content_response(document, session.user_id)
+        return await self._document_service.to_content_response(
+            document, session.user_id
+        )
 
     async def replace_document(
         self,
@@ -182,7 +214,9 @@ class OrganizationService:
             country=org.country,
             fiscal_document_type=org.fiscal_document_type,
             fiscal_document_number=(
-                encrypt_service.decrypt_to_str(org.fiscal_document_number) if org.fiscal_document_number else None
+                encrypt_service.decrypt_to_str(org.fiscal_document_number)
+                if org.fiscal_document_number
+                else None
             ),
             fiscal_document_id=org.fiscal_document_id,
             mercantile_document_type=org.mercantile_document_type,
@@ -203,7 +237,9 @@ class OrganizationService:
             country=org.country,
             fiscal_document_type=org.fiscal_document_type,
             fiscal_document_number=(
-                encrypt_service.decrypt_to_str(org.fiscal_document_number) if org.fiscal_document_number else None
+                encrypt_service.decrypt_to_str(org.fiscal_document_number)
+                if org.fiscal_document_number
+                else None
             ),
             mercantile_document_type=org.mercantile_document_type,
             representative_document_id=org.representative_document_id,
@@ -212,7 +248,7 @@ class OrganizationService:
 
     # ── Ownership helper ─────────────────────────────────────────────────────
 
-    async def _assert_admin_of_org(self, user_id: uuid.UUID, org_id: uuid.UUID) -> None:
+    async def assert_admin_of_org(self, user_id: uuid.UUID, org_id: uuid.UUID) -> None:
         admin_org_ids = await self.role_assignment_repo.get_admin_org_ids(user_id)
         if org_id not in admin_org_ids:
             raise HTTPException(
@@ -228,17 +264,24 @@ class OrganizationService:
         created_by_user_id: uuid.UUID,
         scope: UserScope,
     ) -> OrganizationModel:
-        # Validación contra DB (paises / paises_tipos_documento) en vez de enum estático.
-        country = await self._country_service.require_valid_country(data.country, required=False)
+        # Validación contra DB (paises / paises_tipos_documento) en vez de enum
+        # estático.
+        country = await self._country_service.require_valid_country(
+            data.country, required=False
+        )
         await self._country_service.require_valid_document(
             data.fiscal_document_type, DocumentScope.ORG_FISCAL, country_code=country
         )
         await self._country_service.require_valid_document(
-            data.mercantile_document_type, DocumentScope.ORG_MERCANTILE, country_code=country
+            data.mercantile_document_type,
+            DocumentScope.ORG_MERCANTILE,
+            country_code=country,
         )
         org_data = data.model_dump()
         if org_data.get("fiscal_document_number"):
-            org_data["fiscal_document_number"] = encrypt_service.encrypt_to_str(org_data["fiscal_document_number"])
+            org_data["fiscal_document_number"] = encrypt_service.encrypt_to_str(
+                org_data["fiscal_document_number"]
+            )
         org = OrganizationModel(**org_data)
         org = await self.org_repo.add(org)
 
@@ -250,7 +293,9 @@ class OrganizationService:
             )
             await self.membership_repo.add(membership)
 
-            pending = await self.role_assignment_repo.get_pending_org_admin(created_by_user_id)
+            pending = await self.role_assignment_repo.get_pending_org_admin(
+                created_by_user_id
+            )
             if pending:
                 pending.organization_id = org.id
                 await self.role_assignment_repo.update(pending)
@@ -265,7 +310,12 @@ class OrganizationService:
 
             await redis_client.delete(session_key(created_by_user_id))
 
-        logger.info("[org] create | org_id=%s user_id=%s scope=%s", org.id, created_by_user_id, scope.value)
+        logger.info(
+            "[org] create | org_id=%s user_id=%s scope=%s",
+            org.id,
+            created_by_user_id,
+            scope.value,
+        )
         return org
 
     async def register_with_representative(
@@ -294,7 +344,8 @@ class OrganizationService:
         if self.user_repo is None:
             raise RuntimeError("user_repo is required for register_with_representative")
 
-        # Validación de país contra DB (falla rápido antes de crear usuario/subir archivos).
+        # Validación de país contra DB (falla rápido antes de crear usuario/subir
+        # archivos).
         country = await self._country_service.require_valid_country(country)
 
         # 1. Resolve legal representative user_id
@@ -319,32 +370,52 @@ class OrganizationService:
                 if not field:
                     raise HTTPException(
                         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=f"El campo '{label}' es obligatorio para crear un representante.",
+                        detail=(
+                            f"El campo '{label}' es obligatorio para crear un "
+                            "representante."
+                        ),
                     )
-            existing = await self.user_repo.get_by_email(rep_email)  # type: ignore[arg-type]
+            existing = await self.user_repo.get_by_email(  # type: ignore[arg-type]
+                rep_email
+            )
             if existing:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="Ya existe un usuario con ese correo electrónico.",
                 )
             await self._country_service.require_valid_document(
-                rep_document_type, DocumentScope.PERSON, country_code=country, required=True
+                rep_document_type,
+                DocumentScope.PERSON,
+                country_code=country,
+                required=True,
             )
-            rep_doc_hash = encrypt_service.hash_document(rep_document_number) if rep_document_number else None
+            rep_doc_hash = (
+                encrypt_service.hash_document(rep_document_number)
+                if rep_document_number
+                else None
+            )
             new_user = UserModel(
                 firstname=rep_firstname,
                 lastname=rep_lastname,
                 email=rep_email,
                 document_type=rep_document_type,
-                document_number=encrypt_service.encrypt_to_str(rep_document_number) if rep_document_number else None,
+                document_number=(
+                    encrypt_service.encrypt_to_str(rep_document_number)
+                    if rep_document_number
+                    else None
+                ),
                 document_number_hash=rep_doc_hash,
             )
             new_user = await self.user_repo.add(new_user)
             rep_user_id = new_user.id  # type: ignore[assignment]
 
         # 2. Resolve doc types from country (desde DB)
-        fiscal_doc_type = await self._country_repo.get_document_code(country, DocumentScope.ORG_FISCAL)
-        mercantile_doc_type = await self._country_repo.get_document_code(country, DocumentScope.ORG_MERCANTILE)
+        fiscal_doc_type = await self._country_repo.get_document_code(
+            country, DocumentScope.ORG_FISCAL
+        )
+        mercantile_doc_type = await self._country_repo.get_document_code(
+            country, DocumentScope.ORG_MERCANTILE
+        )
 
         # 3. Create organization (sin documentos todavía: hacen falta el id para el FK
         # `organization_id` de cada fila `documentos`).
@@ -354,15 +425,19 @@ class OrganizationService:
             description=description,
             country=country,
             fiscal_document_type=fiscal_doc_type,
-            fiscal_document_number=encrypt_service.encrypt_to_str(fiscal_document_number) if fiscal_document_number else None,
+            fiscal_document_number=(
+                encrypt_service.encrypt_to_str(fiscal_document_number)
+                if fiscal_document_number
+                else None
+            ),
             mercantile_document_type=mercantile_doc_type,
         )
         org = await self.org_repo.add(org)
 
-        # 4. Subir los 3 documentos al almacén de objetos, ya con el id de la organización.
-        # El nombre real del archivo subido se conserva como `original_name` (para mostrar
-        # y descargar); la clave del objeto en el almacén siempre es un UUID (build_object_key),
-        # nunca este nombre.
+        # 4. Subir los 3 documentos al almacén de objetos, ya con el id de la
+        # organización. El nombre real del archivo subido se conserva como
+        # `original_name` (para mostrar y descargar); la clave del objeto en el
+        # almacén siempre es un UUID (build_object_key), nunca este nombre.
         rep_filename = representative_filename
 
         fiscal_doc = await self._document_service.store_generated(
@@ -397,7 +472,12 @@ class OrganizationService:
         org.mercantile_document_id = mercantile_doc.id
         org.representative_document_id = rep_doc.id
         org = await self.org_repo.update(org)
-        logger.info("[org] register_with_rep | org_id=%s mode=%s user_id=%s", org.id, representative_mode.value, created_by_user_id)
+        logger.info(
+            "[org] register_with_rep | org_id=%s mode=%s user_id=%s",
+            org.id,
+            representative_mode.value,
+            created_by_user_id,
+        )
 
         # 6. Membership for legal representative (always with flag)
         rep_membership = OrganizationMembershipModel(
@@ -419,7 +499,9 @@ class OrganizationService:
 
         # 8. Role assignment for creator
         if scope == UserScope.ORGANIZATION:
-            pending = await self.role_assignment_repo.get_pending_org_admin(created_by_user_id)
+            pending = await self.role_assignment_repo.get_pending_org_admin(
+                created_by_user_id
+            )
             if pending:
                 pending.organization_id = org.id
                 await self.role_assignment_repo.update(pending)
@@ -445,7 +527,7 @@ class OrganizationService:
         scope: UserScope,
     ) -> OrganizationModel:
         if scope == UserScope.ORGANIZATION:
-            await self._assert_admin_of_org(requesting_user_id, org_id)
+            await self.assert_admin_of_org(requesting_user_id, org_id)
 
         org = await self.get_by_id(org_id)
 
@@ -465,7 +547,7 @@ class OrganizationService:
         scope: UserScope,
     ) -> None:
         if scope == UserScope.ORGANIZATION:
-            await self._assert_admin_of_org(requesting_user_id, org_id)
+            await self.assert_admin_of_org(requesting_user_id, org_id)
 
         await self.get_by_id(org_id)  # raises 404 if not found
         await self.soft_delete_organization(org_id)
@@ -477,9 +559,9 @@ class OrganizationService:
         """Baja lógica de la organización y, en cascada, de todo lo que le pertenece:
         membresías, roles y permisos de sus usuarios, portafolios (con sus créditos y
         campañas), deudores (con sus contactos, direcciones y documentos), extractos,
-        notificaciones judiciales, chats y credenciales de WhatsApp, IVR, resultados de campañas,
-        reportes, documentos y accesos a portafolios. Facturas y tickets de soporte no
-        se tocan.
+        notificaciones judiciales, chats y credenciales de WhatsApp, IVR,
+        resultados de campañas, reportes, documentos y accesos a portafolios.
+        Facturas y tickets de soporte no se tocan.
 
         Los usuarios NO se eliminan: quedan sin organización (los que no tengan otra
         vuelven a la sesión sin roles, la del titular). Toda la cascada lleva el mismo
@@ -494,9 +576,13 @@ class OrganizationService:
         deleted_at = deleted.deleted_at
         assert deleted_at is not None
 
-        user_ids = await self.membership_repo.soft_delete_by_organization(org_id, deleted_at)
+        user_ids = await self.membership_repo.soft_delete_by_organization(
+            org_id, deleted_at
+        )
         await self.role_assignment_repo.soft_delete_by_organization(org_id, deleted_at)
-        await self._permission_assignment_repo.soft_delete_by_organization(org_id, deleted_at)
+        await self._permission_assignment_repo.soft_delete_by_organization(
+            org_id, deleted_at
+        )
         await self._portfolio_service.delete_for_organization(org_id, deleted_at)
         await self._cascade_service.soft_delete_for_organization(org_id, deleted_at)
         await self._invalidate_sessions(user_ids)
@@ -509,9 +595,13 @@ class OrganizationService:
         deleted_at: datetime = org.deleted_at
         await self.org_repo.restore(org)
 
-        user_ids = await self.membership_repo.restore_by_organization(org_id, deleted_at)
+        user_ids = await self.membership_repo.restore_by_organization(
+            org_id, deleted_at
+        )
         await self.role_assignment_repo.restore_by_organization(org_id, deleted_at)
-        await self._permission_assignment_repo.restore_by_organization(org_id, deleted_at)
+        await self._permission_assignment_repo.restore_by_organization(
+            org_id, deleted_at
+        )
         await self._portfolio_service.restore_for_organization(org_id, deleted_at)
         await self._cascade_service.restore_for_organization(org_id, deleted_at)
         await self._invalidate_sessions(user_ids)

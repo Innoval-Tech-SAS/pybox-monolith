@@ -1,3 +1,5 @@
+"""Resuelve el proveedor y normaliza el teléfono según el canal de la campaña."""
+
 import re
 
 from messaging.campaigns.constants import NRS360_CHANNELS

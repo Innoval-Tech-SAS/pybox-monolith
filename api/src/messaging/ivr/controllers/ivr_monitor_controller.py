@@ -1,3 +1,5 @@
+"""Endpoints de monitoreo IVR en vivo: listado de llamadas y stream SSE."""
+
 import asyncio
 import uuid
 from typing import Annotated
@@ -105,7 +107,9 @@ async def stream_campaign(
         try:
             while True:
                 try:
-                    yield await asyncio.wait_for(queue.get(), timeout=_HEARTBEAT_SECONDS)
+                    yield await asyncio.wait_for(
+                        queue.get(), timeout=_HEARTBEAT_SECONDS
+                    )
                 except asyncio.TimeoutError:
                     yield {"event": EVENT_HEARTBEAT, "data": "{}"}
         except asyncio.CancelledError:

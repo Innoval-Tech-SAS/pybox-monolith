@@ -1,13 +1,36 @@
+"""Constantes de validación de queries dinámicas: identificadores y operadores."""
+
 import re
 
 IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 VALID_WHERE_OPERATORS: set[str] = {
-    "=", "!=", "<>", ">", "<", ">=", "<=",
-    "in", "not_in", "like", "ilike", "between", "is_null", "is_not_null",
+    "=",
+    "!=",
+    "<>",
+    ">",
+    "<",
+    ">=",
+    "<=",
+    "in",
+    "not_in",
+    "like",
+    "ilike",
+    "between",
+    "is_null",
+    "is_not_null",
 }
 VALID_HAVING_OPERATORS: set[str] = {
-    "=", "!=", "<>", ">", "<", ">=", "<=", "in", "not_in", "between",
+    "=",
+    "!=",
+    "<>",
+    ">",
+    "<",
+    ">=",
+    "<=",
+    "in",
+    "not_in",
+    "between",
 }
 JOIN_SQL_KEYWORDS: dict[str, str] = {
     "inner": "INNER JOIN",
@@ -29,11 +52,13 @@ TENANT_SCOPED_TABLES: dict[str, str] = {
         "AND __sc.id_portafolio IN ({portfolio_ids}) AND __sc.eliminado_en IS NULL)"
     ),
     "public.metodos_contacto": (
-        "EXISTS (SELECT 1 FROM public.creditos __sc WHERE __sc.id_deudor = {alias}.id_deudor "
+        "EXISTS (SELECT 1 FROM public.creditos __sc WHERE "
+        "__sc.id_deudor = {alias}.id_deudor "
         "AND __sc.id_portafolio IN ({portfolio_ids}) AND __sc.eliminado_en IS NULL)"
     ),
     "public.direcciones": (
-        "EXISTS (SELECT 1 FROM public.creditos __sc WHERE __sc.id_deudor = {alias}.id_deudor "
+        "EXISTS (SELECT 1 FROM public.creditos __sc WHERE "
+        "__sc.id_deudor = {alias}.id_deudor "
         "AND __sc.id_portafolio IN ({portfolio_ids}) AND __sc.eliminado_en IS NULL)"
     ),
     "public.creditos": "{alias}.id_portafolio IN ({portfolio_ids})",
@@ -43,7 +68,8 @@ TENANT_SCOPED_TABLES: dict[str, str] = {
     ),
     "public.metodos_pago": "{alias}.id_organizacion IN ({organization_ids})",
     "public.contactos": (
-        "({alias}.id_portafolio IN ({portfolio_ids}) OR {alias}.id_organizacion IN ({organization_ids}))"
+        "({alias}.id_portafolio IN ({portfolio_ids}) OR "
+        "{alias}.id_organizacion IN ({organization_ids}))"
     ),
 }
 
@@ -54,11 +80,19 @@ TENANT_SCOPED_TABLES: dict[str, str] = {
 HASHED_FILTER_COLUMNS: dict[str, dict[str, str]] = {
     "public.deudores": {"numero_documento": "numero_documento_hash"},
 }
-HASHED_FILTER_OPERATORS: set[str] = {"=", "!=", "<>", "in", "not_in", "is_null", "is_not_null"}
+HASHED_FILTER_OPERATORS: set[str] = {
+    "=",
+    "!=",
+    "<>",
+    "in",
+    "not_in",
+    "is_null",
+    "is_not_null",
+}
 
-# Columnas que se guardan cifradas y que `execute_query(decrypt_sensitive=True)` devuelve
-# en claro. Es una decisión del caller (según el permiso del usuario sobre el dato): por
-# defecto salen tal cual están en la base (token `v1:...`).
+# Columnas que se guardan cifradas y que `execute_query(decrypt_sensitive=True)`
+# devuelve en claro. Es una decisión del caller (según el permiso del usuario sobre
+# el dato): por defecto salen tal cual están en la base (token `v1:...`).
 ENCRYPTED_COLUMNS: dict[str, set[str]] = {
     "public.deudores": {"numero_documento"},
 }
@@ -68,23 +102,33 @@ ENCRYPTED_COLUMNS: dict[str, set[str]] = {
 INVALID_QUERY_STATUS_CODE = 422
 QUERY_FAILURE_STATUS_CODE = 500
 
-# SQLSTATE de Postgres -> qué le pasó a la consulta, en términos del usuario. Solo los
-# errores que se arreglan cambiando la configuración de la consulta (422); cualquier otro
-# SQLSTATE se reporta como fallo del servidor con su código. Al final se anexa el mensaje
-# del servidor (nunca el SQL), que nombra la columna/operador/valor exacto.
+# SQLSTATE de Postgres -> qué le pasó a la consulta, en términos del usuario. Solo
+# los errores que se arreglan cambiando la configuración de la consulta (422);
+# cualquier otro SQLSTATE se reporta como fallo del servidor con su código. Al
+# final se anexa el mensaje del servidor (nunca el SQL), que nombra la
+# columna/operador/valor exacto.
 DB_ERROR_MESSAGES: dict[str, str] = {
     "42703": "Una de las columnas configuradas no existe en su tabla.",
     "42P01": "Una de las tablas configuradas no existe.",
     "42702": "Una columna es ambigua: hay que indicar a qué tabla pertenece.",
-    "42803": "Toda columna que no sea una agregación debe estar en la agrupación (GROUP BY).",
-    "42883": "El operador del filtro no es compatible con el tipo de dato de la columna.",
+    "42803": (
+        "Toda columna que no sea una agregación debe estar en la agrupación (GROUP BY)."
+    ),
+    "42883": (
+        "El operador del filtro no es compatible con el tipo de dato de la columna."
+    ),
     "42804": "El tipo del valor no coincide con el tipo de la columna.",
-    "22P02": "El valor del filtro no tiene un formato válido para el tipo de la columna.",
+    "22P02": (
+        "El valor del filtro no tiene un formato válido para el tipo de la columna."
+    ),
     "22007": "Uno de los filtros tiene una fecha u hora con formato inválido.",
     "22008": "Uno de los filtros tiene una fecha u hora fuera de rango.",
     "22003": "Un valor numérico está fuera del rango permitido.",
     "22012": "La consulta produjo una división por cero.",
-    "57014": "La consulta tardó demasiado y fue cancelada; agrega filtros o reduce el límite de filas.",
+    "57014": (
+        "La consulta tardó demasiado y fue cancelada; agrega filtros o reduce "
+        "el límite de filas."
+    ),
 }
 
 OPERATOR_ALIASES: dict[str, str] = {

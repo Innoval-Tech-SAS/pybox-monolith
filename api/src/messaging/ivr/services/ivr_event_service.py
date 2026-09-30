@@ -26,7 +26,10 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config.logger import logger
-from messaging.campaigns.repository.campaign_result_repository import CampaignResultRepository
+from messaging.campaigns.models.campaign_model import CampaignModel
+from messaging.campaigns.repository.campaign_result_repository import (
+    CampaignResultRepository,
+)
 from messaging.contacts.enums.contact_enums import ContactStatus
 from messaging.contacts.repository.contact_repository import ContactRepository
 from messaging.ivr.enums.ivr_enums import (
@@ -40,10 +43,12 @@ from messaging.ivr.enums.ivr_enums import (
 )
 from messaging.ivr.models.ivr_interaction_model import IvrInteractionModel
 from messaging.ivr.repository.ivr_execution_repository import IvrExecutionRepository
-from messaging.ivr.repository.ivr_interaction_repository import IvrInteractionRepository
 from messaging.ivr.repository.ivr_flow_repository import IvrFlowRepository
-from messaging.ivr.schemas.ivr_monitor_schemas import IvrCallSchema, IvrCampaignStatsSchema
-from messaging.ivr.services.outcome_resolver import resolve_outcome
+from messaging.ivr.repository.ivr_interaction_repository import IvrInteractionRepository
+from messaging.ivr.schemas.ivr_monitor_schemas import (
+    IvrCallSchema,
+    IvrCampaignStatsSchema,
+)
 from messaging.ivr.services.ivr_stream_emitter import (
     EVENT_CALL_UPDATED,
     EVENT_CAMPAIGN_STATUS,
@@ -52,6 +57,7 @@ from messaging.ivr.services.ivr_stream_emitter import (
     ivr_stream,
     organization_topic,
 )
+from messaging.ivr.services.outcome_resolver import resolve_outcome
 from messaging.ivr.utils.interaction_mapper import (
     append_unique,
     as_int,
@@ -94,7 +100,6 @@ _bulk_context_cache: dict[str, BulkContext] = {}
 
 
 class IvrEventService:
-
     def __init__(
         self,
         session: AsyncSession,
@@ -128,8 +133,10 @@ class IvrEventService:
             elif isinstance(body.get("interaction"), dict):
                 await self._handle_interaction_event(event, body)
             else:
-                logger.warning("[ivr_webhook] evento no procesado=%s (sin interaction)", event)
-        except Exception:
+                logger.warning(
+                    "[ivr_webhook] evento no procesado=%s (sin interaction)", event
+                )
+        except Exception:  # pylint: disable=broad-exception-caught
             # Rollback explícito: el controlador se traga el error para devolver
             # 200, y sin esto la sesión haría commit de un estado a medias.
             await self._session.rollback()
@@ -177,7 +184,7 @@ class IvrEventService:
         was_terminal = row.status in TERMINAL_CALL_STATUSES
 
         self._apply_common_fields(row, interaction)
-        self._apply_event_fields(row, event, interaction, data, body)
+        self._apply_event_fields(row, event, data, body)
 
         row.last_event = event[:60]
         row.raw_payload = body
@@ -217,7 +224,9 @@ class IvrEventService:
             row.campaign_id,
         )
 
-    def _apply_common_fields(self, row: IvrInteractionModel, interaction: dict[str, Any]) -> None:
+    def _apply_common_fields(
+        self, row: IvrInteractionModel, interaction: dict[str, Any]
+    ) -> None:
         """Campos que cualquier evento puede traer actualizados.
 
         Solo se escriben cuando el evento trae un valor: un evento posterior con
@@ -233,9 +242,13 @@ class IvrEventService:
             row.customer_document = doc
         if (started := parse_helena_datetime(interaction.get("startedAt"))) is not None:
             row.started_at = started
-        if (answered := parse_helena_datetime(interaction.get("answeredAt"))) is not None:
+        if (
+            answered := parse_helena_datetime(interaction.get("answeredAt"))
+        ) is not None:
             row.answered_at = answered
-        if (transfer := parse_helena_datetime(interaction.get("transferStartedAt"))) is not None:
+        if (
+            transfer := parse_helena_datetime(interaction.get("transferStartedAt"))
+        ) is not None:
             row.transfer_started_at = transfer
         if (ended := parse_helena_datetime(interaction.get("endedAt"))) is not None:
             row.ended_at = ended
@@ -269,7 +282,6 @@ class IvrEventService:
         self,
         row: IvrInteractionModel,
         event: str,
-        interaction: dict[str, Any],
         data: dict[str, Any],
         body: dict[str, Any],
     ) -> None:
@@ -289,7 +301,9 @@ class IvrEventService:
             if (cause := as_str(data.get("amdCause"), 50)) is not None:
                 row.amd_cause = cause
             if row.answered_at is None:
-                row.answered_at = parse_helena_datetime(data.get("answeredAt")) or fallback_ts
+                row.answered_at = (
+                    parse_helena_datetime(data.get("answeredAt")) or fallback_ts
+                )
 
         elif event == HelenaEvent.IVR_MENU_SELECTED:
             row.dtmf_events = append_unique(
@@ -323,7 +337,10 @@ class IvrEventService:
         elif event == HelenaEvent.IVR_TRANSFER_ANSWERED:
             row.transferred = True
 
-        elif event in (HelenaEvent.IVR_TRANSFER_ENDED, HelenaEvent.IVR_TRANSFER_NO_ANSWER):
+        elif event in (
+            HelenaEvent.IVR_TRANSFER_ENDED,
+            HelenaEvent.IVR_TRANSFER_NO_ANSWER,
+        ):
             if (status := as_str(data.get("transferDialStatus"), 50)) is not None:
                 row.transfer_dial_status = status
 
@@ -359,21 +376,28 @@ class IvrEventService:
 
             if label is None:
                 logger.info(
-                    "[ivr_webhook] sin etiqueta configurada | interaction=%s nodo=%s clave=%s",
+                    "[ivr_webhook] sin etiqueta configurada | interaction=%s "
+                    "nodo=%s clave=%s",
                     row.interaction_id,
                     row.ivr_end_node_id or "__call_level__",
                     key,
                 )
-        except Exception:  # noqa: BLE001
+        except Exception:  # pylint: disable=broad-exception-caught
             # Tipificar es informativo: si falla, la llamada igual se cierra.
             logger.exception(
                 "[ivr_webhook] fallo resolviendo el resultado de %s", row.interaction_id
             )
 
-    async def _resolve_flow(self, row: IvrInteractionModel, interaction: dict[str, Any]):
+    async def _resolve_flow(
+        self, row: IvrInteractionModel, interaction: dict[str, Any]
+    ):
         """Flujo IVR de la llamada: primero el id que viajó en `customFields`."""
         custom_fields = interaction.get("customFields") or {}
-        raw_id = as_str(custom_fields.get("ivrFlowId")) if isinstance(custom_fields, dict) else None
+        raw_id = (
+            as_str(custom_fields.get("ivrFlowId"))
+            if isinstance(custom_fields, dict)
+            else None
+        )
 
         if raw_id is None and row.campaign_id is not None:
             # Fallback: la llamada salió antes de que se enviara el id, o el
@@ -390,8 +414,6 @@ class IvrEventService:
             return None
 
     async def _campaign_flow_id(self, campaign_id: uuid.UUID) -> uuid.UUID | None:
-        from messaging.campaigns.models.campaign_model import CampaignModel
-
         campaign = await self._session.get(CampaignModel, campaign_id)
         return campaign.ivr_flow_id if campaign else None
 
@@ -414,7 +436,8 @@ class IvrEventService:
 
         if contact is None:
             logger.warning(
-                "[ivr_webhook] bulk=%s sin contactos en Pybox; la interacción queda sin campaña",
+                "[ivr_webhook] bulk=%s sin contactos en Pybox; la interacción "
+                "queda sin campaña",
                 bulk_id,
             )
             return BulkContext(campaign_id=None, organization_id=None)
@@ -427,7 +450,8 @@ class IvrEventService:
         return context
 
     async def _resolve_bulk_context_for_campaign(self, bulk_id: str) -> BulkContext:
-        """Contexto de un bulk cuando el evento no trae teléfono (eventos CAMPAIGN_*)."""
+        """Contexto de un bulk cuando el evento no trae teléfono (eventos
+        CAMPAIGN_*)."""
         cached = _bulk_context_cache.get(bulk_id)
         if cached is not None:
             return cached
@@ -445,10 +469,13 @@ class IvrEventService:
 
     async def _propagate_to_contact(self, row: IvrInteractionModel) -> None:
         """Lleva el resultado final de la llamada al contacto del envío."""
-        contact = await self._contacts.get_by_sending_and_recipient(row.bulk_id, row.phone)
+        contact = await self._contacts.get_by_sending_and_recipient(
+            row.bulk_id, row.phone
+        )
         if contact is None:
             logger.warning(
-                "[ivr_webhook] sin contacto para bulk=%s phone=%s; no se propaga el estado",
+                "[ivr_webhook] sin contacto para bulk=%s phone=%s; no se "
+                "propaga el estado",
                 row.bulk_id,
                 row.phone,
             )
@@ -463,7 +490,11 @@ class IvrEventService:
         # que termine: `attemptNumber` 1 puede cerrar después que el 2 si los
         # webhooks se cruzan.
         latest = await self._interactions.get_latest_attempt_for_contact(contact.id)
-        winner = row if latest is None or row.attempt_number >= latest.attempt_number else latest
+        winner = (
+            row
+            if latest is None or row.attempt_number >= latest.attempt_number
+            else latest
+        )
 
         new_status = _CALL_TO_CONTACT_STATUS.get(winner.status)
         if new_status is None or contact.status == new_status:
@@ -475,7 +506,9 @@ class IvrEventService:
 
     # ── Emisión en tiempo real ────────────────────────────────────────────────
 
-    async def _emit_call_updated(self, row: IvrInteractionModel, include_stats: bool) -> None:
+    async def _emit_call_updated(
+        self, row: IvrInteractionModel, include_stats: bool
+    ) -> None:
         """Empuja la llamada al monitor.
 
         Se emite DESPUÉS de escribir en base de datos, nunca antes: lo que el
@@ -494,7 +527,9 @@ class IvrEventService:
             return
 
         try:
-            payload = IvrCallSchema.from_model(row).model_dump(by_alias=True, mode="json")
+            payload = IvrCallSchema.from_model(row).model_dump(
+                by_alias=True, mode="json"
+            )
             await ivr_stream.emit_many(topics, EVENT_CALL_UPDATED, payload)
 
             if include_stats and row.campaign_id is not None:
@@ -502,9 +537,11 @@ class IvrEventService:
                 await ivr_stream.emit_many(
                     topics,
                     EVENT_STATS_UPDATED,
-                    IvrCampaignStatsSchema(**stats).model_dump(by_alias=True, mode="json"),
+                    IvrCampaignStatsSchema(**stats).model_dump(
+                        by_alias=True, mode="json"
+                    ),
                 )
-        except Exception:  # noqa: BLE001
+        except Exception:  # pylint: disable=broad-exception-caught
             logger.exception(
                 "[ivr_stream] fallo emitiendo la interacción %s", row.interaction_id
             )
@@ -514,7 +551,11 @@ class IvrEventService:
     ) -> None:
         topics = [
             campaign_topic(context.campaign_id) if context.campaign_id else None,
-            organization_topic(context.organization_id) if context.organization_id else None,
+            (
+                organization_topic(context.organization_id)
+                if context.organization_id
+                else None
+            ),
         ]
         if not any(topics):
             return
@@ -523,15 +564,19 @@ class IvrEventService:
                 topics,
                 EVENT_CAMPAIGN_STATUS,
                 {
-                    "campaignId": str(context.campaign_id) if context.campaign_id else None,
+                    "campaignId": (
+                        str(context.campaign_id) if context.campaign_id else None
+                    ),
                     "bulkId": bulk_id,
                     "status": body.get("status"),
                     "quantity": body.get("quantity"),
                     "timestamp": body.get("timestamp"),
                 },
             )
-        except Exception:  # noqa: BLE001
-            logger.exception("[ivr_stream] fallo emitiendo el estado del bulk %s", bulk_id)
+        except Exception:  # pylint: disable=broad-exception-caught
+            logger.exception(
+                "[ivr_stream] fallo emitiendo el estado del bulk %s", bulk_id
+            )
 
     # ── Eventos de ciclo de vida de la campaña ────────────────────────────────
 
@@ -556,9 +601,11 @@ class IvrEventService:
         if event != HelenaEvent.CAMPAIGN_FINISHED:
             return
 
-        await self._record_campaign_result(bulk_id, body)
+        await self._record_campaign_result(bulk_id)
 
-    async def _update_execution_status(self, bulk_id: str, body: dict[str, Any]) -> None:
+    async def _update_execution_status(
+        self, bulk_id: str, body: dict[str, Any]
+    ) -> None:
         """Refleja el `status` del payload en `ejecuciones_ivr`.
 
         Es la fuente de verdad final: si alguien pausa o cancela desde la
@@ -570,7 +617,9 @@ class IvrEventService:
         new_status = HELENA_STATUS_TO_EXECUTION_STATUS.get((raw_status or "").lower())
         if new_status is None:
             logger.warning(
-                "[ivr_webhook] status de campaña desconocido=%r | bulk=%s", raw_status, bulk_id
+                "[ivr_webhook] status de campaña desconocido=%r | bulk=%s",
+                raw_status,
+                bulk_id,
             )
             return
 
@@ -585,12 +634,12 @@ class IvrEventService:
 
         execution.status = new_status
         if new_status in TERMINAL_EXECUTION_STATUSES and execution.finished_at is None:
-            execution.finished_at = parse_helena_datetime(body.get("timestamp")) or datetime.now(
-                timezone.utc
-            )
+            execution.finished_at = parse_helena_datetime(
+                body.get("timestamp")
+            ) or datetime.now(timezone.utc)
         await self._executions.update(execution)
 
-    async def _record_campaign_result(self, bulk_id: str, body: dict[str, Any]) -> None:
+    async def _record_campaign_result(self, bulk_id: str) -> None:
         """Inserta la fila reconciliada en `resultados_campanias`.
 
         Mismo rol que cumple `reconciliation_service._insert_campaign_result`
@@ -598,7 +647,9 @@ class IvrEventService:
         """
         counts = await self._interactions.count_by_status_for_bulk(bulk_id)
         if not counts:
-            logger.warning("[ivr_webhook] CAMPAIGN_FINISHED bulk=%s sin interacciones", bulk_id)
+            logger.warning(
+                "[ivr_webhook] CAMPAIGN_FINISHED bulk=%s sin interacciones", bulk_id
+            )
             return
 
         # `organizationId` del payload es el id de la organización en Helena, no
@@ -608,7 +659,8 @@ class IvrEventService:
             contacts = await self._contacts.get_by_sending_id(bulk_id)
             if not contacts:
                 logger.warning(
-                    "[ivr_webhook] CAMPAIGN_FINISHED bulk=%s sin contactos, no se agrega resultado",
+                    "[ivr_webhook] CAMPAIGN_FINISHED bulk=%s sin contactos, "
+                    "no se agrega resultado",
                     bulk_id,
                 )
                 return
@@ -619,7 +671,8 @@ class IvrEventService:
 
         if context.campaign_id is None or context.organization_id is None:
             logger.warning(
-                "[ivr_webhook] CAMPAIGN_FINISHED bulk=%s sin campaña/organización resuelta",
+                "[ivr_webhook] CAMPAIGN_FINISHED bulk=%s sin campaña/"
+                "organización resuelta",
                 bulk_id,
             )
             return
@@ -633,7 +686,9 @@ class IvrEventService:
                 IvrCallStatus.CANCELLED,
             )
         )
-        unique_customers = await self._interactions.count_unique_phones_for_bulk(bulk_id)
+        unique_customers = await self._interactions.count_unique_phones_for_bulk(
+            bulk_id
+        )
 
         # Si el bulk quedó trazado en `ejecuciones_ivr` (fase 7), se reusa su
         # `campaign_time_id`: identifica qué disparo del cron generó este envío.
@@ -652,7 +707,8 @@ class IvrEventService:
         )
 
         logger.info(
-            "[ivr_webhook] resultado de campaña registrado | bulk=%s exitosas=%d fallidas=%d",
+            "[ivr_webhook] resultado de campaña registrado | bulk=%s "
+            "exitosas=%d fallidas=%d",
             bulk_id,
             success,
             failure,

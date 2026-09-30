@@ -1,24 +1,34 @@
+"""Endpoints admin para gestionar las credenciales de pasarela de la plataforma."""
+
 import uuid
 
 from fastapi import status
 
-from core.config.api_router import APIRouter
-from core.security.dependencies import CurrentSession
-from core.security.policies.security_policies import require_global_admin
-from billing.provider_credentials.dependencies import PlatformGatewayCredentialAdminServiceDep
+from billing.provider_credentials.dependencies import (
+    PlatformGatewayCredentialAdminServiceDep,
+)
 from billing.provider_credentials.schemas.provider_credential_schemas import (
     PlatformGatewayCredentialResponse,
     PlatformGatewayCredentialUpsert,
 )
+from core.config.api_router import APIRouter
+from core.security.dependencies import CurrentSession
+from core.security.policies.security_policies import require_global_admin
 
-router = APIRouter(prefix="/admin/platform-gateway-credentials", tags=["Credenciales de Pasarela de Plataforma (Admin)"])
+router = APIRouter(
+    prefix="/admin/platform-gateway-credentials",
+    tags=["Credenciales de Pasarela de Plataforma (Admin)"],
+)
 
 
 @router.get(
     "",
     response_model=list[PlatformGatewayCredentialResponse],
     summary="Listar credenciales de pasarela de la plataforma",
-    description="Lista todas las credenciales configuradas. Los secretos NO se devuelven descifrados. Solo ADMIN GLOBAL.",
+    description=(
+        "Lista todas las credenciales configuradas. Los secretos NO se devuelven "
+        "descifrados. Solo ADMIN GLOBAL."
+    ),
 )
 async def list_credentials(
     session: CurrentSession,
@@ -32,7 +42,10 @@ async def list_credentials(
     "",
     response_model=PlatformGatewayCredentialResponse,
     summary="Crear o actualizar una credencial (upsert por país+proveedor)",
-    description="Cifra los secretos enviados. Secretos vacíos conservan los existentes (rotar = enviar valor). Solo ADMIN GLOBAL.",
+    description=(
+        "Cifra los secretos enviados. Secretos vacíos conservan los existentes "
+        "(rotar = enviar valor). Solo ADMIN GLOBAL."
+    ),
 )
 async def upsert_credential(
     body: PlatformGatewayCredentialUpsert,

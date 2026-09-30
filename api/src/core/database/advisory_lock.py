@@ -1,3 +1,5 @@
+"""Advisory lock de Postgres para coordinar jobs recurrentes entre workers."""
+
 import zlib
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator

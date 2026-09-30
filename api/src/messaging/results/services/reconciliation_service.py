@@ -1,3 +1,5 @@
+"""Reconciliación periódica de eventos de envío (SMS/email) contra 360NRS."""
+
 from __future__ import annotations
 
 import io
@@ -7,7 +9,9 @@ import polars as pl
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config.logger import logger
-from messaging.campaigns.repository.campaign_result_repository import CampaignResultRepository
+from messaging.campaigns.repository.campaign_result_repository import (
+    CampaignResultRepository,
+)
 from messaging.channels.enums.channel_enums import ChannelName
 from messaging.contacts.enums.contact_enums import ContactStatus
 from messaging.contacts.models.contact_model import ContactModel
@@ -43,7 +47,6 @@ def make_reconciliation_service(session: AsyncSession) -> ReconciliationService:
 
 
 class ReconciliationService:
-
     def __init__(
         self,
         contact_repo: ContactRepository,
@@ -64,10 +67,14 @@ class ReconciliationService:
                 if await self._reconcile_sending(sending_id, channel_name):
                     reconciled += 1
             except Exception:
-                logger.exception("[results_reconciliation] error en sending_id=%s", sending_id)
+                logger.exception(
+                    "[results_reconciliation] error en sending_id=%s", sending_id
+                )
         return reconciled
 
-    async def _reconcile_sending(self, sending_id: str, channel_name: ChannelName) -> bool:
+    async def _reconcile_sending(
+        self, sending_id: str, channel_name: ChannelName
+    ) -> bool:
         if channel_name == ChannelName.SMS:
             provider = self._sms_provider
         elif channel_name == ChannelName.EMAIL:
@@ -94,7 +101,11 @@ class ReconciliationService:
             try:
                 new_status = ContactStatus(event.upper())
             except ValueError:
-                logger.warning("[results_reconciliation] evento desconocido=%s sending_id=%s", event, sending_id)
+                logger.warning(
+                    "[results_reconciliation] evento desconocido=%s sending_id=%s",
+                    event,
+                    sending_id,
+                )
                 continue
             if contact.status == new_status:
                 continue
@@ -104,9 +115,10 @@ class ReconciliationService:
         if not changed:
             return False
 
-        # Los `contact` en `changed` ya salieron de la sesión activa (get_by_sending_id):
-        # ya están dirty-tracked, no hace falta merge()+refresh() por fila — un solo
-        # flush() emite todos los UPDATE de esta reconciliación.
+        # Los `contact` en `changed` ya salieron de la sesión activa
+        # (get_by_sending_id): ya están dirty-tracked, no hace falta
+        # merge()+refresh() por fila — un solo flush() emite todos los
+        # UPDATE de esta reconciliación.
         await self._contact_repo.session.flush()
 
         await self._insert_campaign_result(sending_id, contacts)
@@ -117,12 +129,16 @@ class ReconciliationService:
         if df.is_empty():
             return None
 
-        df = df.with_columns(pl.coalesce([pl.col("phone"), pl.col("email")]).alias("recipient"))
+        df = df.with_columns(
+            pl.coalesce([pl.col("phone"), pl.col("email")]).alias("recipient")
+        )
         df = df.filter(pl.col("recipient").is_not_null())
         last = df.sort("createdAt").unique(subset=["recipient"], keep="last")
         return dict(zip(last["recipient"].to_list(), last["event"].to_list()))
 
-    async def _insert_campaign_result(self, sending_id: str, contacts: list[ContactModel]) -> None:
+    async def _insert_campaign_result(
+        self, sending_id: str, contacts: list[ContactModel]
+    ) -> None:
         if not contacts:
             return
 

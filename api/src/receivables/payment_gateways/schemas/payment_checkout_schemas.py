@@ -1,3 +1,5 @@
+"""Schemas de checkout: métodos de pago y transacciones contra la pasarela."""
+
 import uuid
 from typing import Annotated, Literal, Union
 
@@ -8,7 +10,11 @@ from core.base.schema_base import BaseSchema
 
 class CardTransactionRequest(BaseSchema):
     payment_method_type: Literal["CARD"] = "CARD"
-    token: str = Field(description="Token de la tarjeta ya tokenizada en el frontend (widget o /tokens/cards)")
+    token: str = Field(
+        description=(
+            "Token de la tarjeta ya tokenizada en el frontend (widget o /tokens/cards)"
+        )
+    )
     installments: int = Field(default=1, ge=1)
     customer_email: EmailStr
 
@@ -36,7 +42,12 @@ class BancolombiaTransferTransactionRequest(BaseSchema):
 
 
 TransactionRequest = Annotated[
-    Union[CardTransactionRequest, PseTransactionRequest, NequiTransactionRequest, BancolombiaTransferTransactionRequest],
+    Union[
+        CardTransactionRequest,
+        PseTransactionRequest,
+        NequiTransactionRequest,
+        BancolombiaTransferTransactionRequest,
+    ],
     Field(discriminator="payment_method_type"),
 ]
 

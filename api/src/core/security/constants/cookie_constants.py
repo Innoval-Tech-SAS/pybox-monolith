@@ -1,3 +1,5 @@
+"""Nombres y path de las cookies httpOnly de autenticación."""
+
 ACCESS_TOKEN_COOKIE = "access_token"
 REFRESH_TOKEN_COOKIE = "refresh_token"
 

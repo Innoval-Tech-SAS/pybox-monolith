@@ -13,9 +13,10 @@ Create Date: 2026-09-28 12:05:00.000000
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "d4e5f6a7b8c9"
 down_revision: Union[str, None] = "c1d2e3f4a5b6"
@@ -38,7 +39,7 @@ def upgrade() -> None:
             postgresql.ENUM(
                 *_ORG_GATEWAY_PROVIDERS,
                 name="proveedor_pasarela_organizacion",
-                create_type=False
+                create_type=False,
             ),
             nullable=False,
         ),

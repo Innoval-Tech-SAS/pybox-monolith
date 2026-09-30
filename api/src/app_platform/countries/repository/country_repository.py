@@ -1,18 +1,18 @@
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+"""Acceso a datos de países y sus tipos de documento."""
 
-from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
+from sqlalchemy import select
+
 from app_platform.countries.enums.country_enums import DocumentScope
-from app_platform.countries.models.country_document_type_model import CountryDocumentTypeModel
+from app_platform.countries.models.country_document_type_model import (
+    CountryDocumentTypeModel,
+)
 from app_platform.countries.models.country_model import CountryModel
 from app_platform.countries.models.document_type_model import DocumentTypeModel
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 
 
 class CountryRepository(SoftDeleteRepositoryBase[CountryModel]):
     model_class = CountryModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def list_active(self) -> list[CountryModel]:
         result = await self.session.execute(
@@ -30,7 +30,9 @@ class CountryRepository(SoftDeleteRepositoryBase[CountryModel]):
         facturación) que hoy iteran el enum, sin hacer N+1."""
         return {country.code: country for country in await self.list_active()}
 
-    async def get_currency_code(self, country_code: str | None, default: str = "COP") -> str:
+    async def get_currency_code(
+        self, country_code: str | None, default: str = "COP"
+    ) -> str:
         if not country_code:
             return default
         country = await self.get_by_code(country_code)
@@ -64,6 +66,9 @@ class CountryRepository(SoftDeleteRepositoryBase[CountryModel]):
         result = await self.session.execute(
             select(DocumentTypeModel.code, DocumentTypeModel.label)
         )
+        # dict(result.all()) confunde al type checker sobre el tipo de Row; se
+        # deja la comprehension explícita a propósito.
+        # pylint: disable-next=unnecessary-comprehension
         return {code: label for code, label in result.all()}
 
     async def list_document_map(self, scope: DocumentScope) -> dict[str, list[str]]:
@@ -80,7 +85,9 @@ class CountryRepository(SoftDeleteRepositoryBase[CountryModel]):
             mapping.setdefault(country_code, []).append(document_code)
         return mapping
 
-    async def get_document_code(self, country_code: str, scope: DocumentScope) -> str | None:
+    async def get_document_code(
+        self, country_code: str, scope: DocumentScope
+    ) -> str | None:
         """Primer (y único, para fiscal/mercantil) código de documento de un país en
         un alcance dado. Reemplaza a ORG_FISCAL/MERCANTILE_DOCUMENT_BY_NATIONALITY."""
         codes = await self.list_document_codes_for_country(country_code, scope)

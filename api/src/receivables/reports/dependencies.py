@@ -1,12 +1,16 @@
+"""Dependencia de FastAPI para inyectar el ReportService con sus repositories."""
+
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.database import get_main_session
 from app_platform.schema_manager.services.dml_service import DmlService
+from core.database.database import get_main_session
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from receivables.reports.repository.report_execution_repository import ReportExecutionRepository
+from receivables.reports.repository.report_execution_repository import (
+    ReportExecutionRepository,
+)
 from receivables.reports.repository.report_repository import ReportRepository
 from receivables.reports.services.report_service import ReportService
 

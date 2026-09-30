@@ -1,9 +1,13 @@
+"""Gestión admin (alta/edición/borrado) de credenciales de pasarela de la plataforma."""
+
 import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from billing.provider_credentials.models.provider_credential_model import PlatformGatewayCredentialModel
+from billing.provider_credentials.models.provider_credential_model import (
+    PlatformGatewayCredentialModel,
+)
 from billing.provider_credentials.repository.provider_credential_repository import (
     PlatformGatewayCredentialRepository,
 )
@@ -25,7 +29,9 @@ class PlatformGatewayCredentialAdminService:
         rows = await self._repo.list_all()
         return [self._to_response(row) for row in rows]
 
-    async def upsert(self, data: PlatformGatewayCredentialUpsert) -> PlatformGatewayCredentialResponse:
+    async def upsert(
+        self, data: PlatformGatewayCredentialUpsert
+    ) -> PlatformGatewayCredentialResponse:
         # Solo se cifran los secretos con valor: un secreto vacío no se toca (permite
         # editar public_config/lookup_key sin reenviar los secretos ya guardados).
         encrypted = {
@@ -59,7 +65,9 @@ class PlatformGatewayCredentialAdminService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Credencial no encontrada")
         await self._repo.delete(row)
 
-    async def restore(self, credential_id: uuid.UUID) -> PlatformGatewayCredentialResponse:
+    async def restore(
+        self, credential_id: uuid.UUID
+    ) -> PlatformGatewayCredentialResponse:
         row = await self._repo.get_by_id_including_deleted(credential_id)
         if row is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Credencial no encontrada")
@@ -67,7 +75,9 @@ class PlatformGatewayCredentialAdminService:
         return self._to_response(restored)
 
     @staticmethod
-    def _to_response(row: PlatformGatewayCredentialModel) -> PlatformGatewayCredentialResponse:
+    def _to_response(
+        row: PlatformGatewayCredentialModel,
+    ) -> PlatformGatewayCredentialResponse:
         return PlatformGatewayCredentialResponse(
             id=row.id,
             country_code=row.country_code,

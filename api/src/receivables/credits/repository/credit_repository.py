@@ -1,16 +1,19 @@
+"""Acceso a datos de créditos, con las consultas agregadas de cartera."""
+
 import uuid
 from datetime import date, datetime, timezone
 from typing import NamedTuple, Sequence
 
 from sqlalchemy import case, cast, func, or_, select, union, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.types import Date as SADate
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.credits.models.credit_model import CreditModel
 from receivables.debtors.models.debtor_model import DebtorModel
-from receivables.portfolios.models.portfolio_daily_counter_config_model import PortfolioDailyCounterConfigModel
+from receivables.portfolios.models.portfolio_daily_counter_config_model import (
+    PortfolioDailyCounterConfigModel,
+)
 from receivables.portfolios.models.portfolio_model import PortfolioModel
 
 
@@ -26,17 +29,21 @@ class PortfolioCreditStats(NamedTuple):
 class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
     model_class = CreditModel
 
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
-
-    async def get_portfolio_stats(self, portfolio_id: uuid.UUID) -> PortfolioCreditStats:
+    async def get_portfolio_stats(
+        self, portfolio_id: uuid.UUID
+    ) -> PortfolioCreditStats:
         result = await self.session.execute(
             select(
                 func.count(CreditModel.id).label("creditos"),
                 func.count(func.distinct(CreditModel.debtor_id)).label("titulares"),
                 func.count(func.distinct(CreditModel.codebtor_id)).label("codeudores"),
-                func.coalesce(func.sum(CreditModel.overdue_principal_balance), 0).label("total_mora"),
-            ).where(CreditModel.portfolio_id == portfolio_id, CreditModel.deleted_at.is_(None))
+                func.coalesce(func.sum(CreditModel.overdue_principal_balance), 0).label(
+                    "total_mora"
+                ),
+            ).where(
+                CreditModel.portfolio_id == portfolio_id,
+                CreditModel.deleted_at.is_(None),
+            )
         )
         row = result.one()
 
@@ -49,11 +56,12 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
             CreditModel.codebtor_id.is_not(None),
         )
         all_ids = union(debtors_q, codebtors_q).subquery()
-        clientes_unicos: int = await self.session.scalar(
-            select(func.count()).select_from(all_ids)
-        ) or 0
+        clientes_unicos: int = (
+            await self.session.scalar(select(func.count()).select_from(all_ids)) or 0
+        )
 
-        # Conteo de (tipo_documento, numero_documento) únicos entre titulares + codeudores.
+        # Conteo de (tipo_documento, numero_documento) únicos entre titulares +
+        # codeudores.
         documentos_unicos: int = await self._count_unique_documents(all_ids)
 
         return PortfolioCreditStats(
@@ -66,24 +74,32 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         )
 
     async def _count_unique_documents(self, debtor_ids_subq) -> int:
-        """Cuenta combinaciones únicas (tipo_documento, numero_documento) de los deudores
-        referenciados por ``debtor_ids_subq`` (subquery con columna ``id``)."""
+        """Cuenta combinaciones únicas (tipo_documento, numero_documento) de los
+        deudores referenciados por ``debtor_ids_subq`` (subquery con columna
+        ``id``)."""
         docs_subq = (
             select(DebtorModel.document_type, DebtorModel.document_number_hash)
             .where(DebtorModel.id.in_(select(debtor_ids_subq.c.id)))
             .distinct()
             .subquery()
         )
-        return await self.session.scalar(select(func.count()).select_from(docs_subq)) or 0
+        return (
+            await self.session.scalar(select(func.count()).select_from(docs_subq)) or 0
+        )
 
-    async def get_organization_stats(self, organization_id: uuid.UUID) -> PortfolioCreditStats:
-        """Igual que get_portfolio_stats pero agregado a nivel organizacion (todos sus portafolios)."""
+    async def get_organization_stats(
+        self, organization_id: uuid.UUID
+    ) -> PortfolioCreditStats:
+        """Igual que get_portfolio_stats pero agregado a nivel organizacion (todos
+        sus portafolios)."""
         result = await self.session.execute(
             select(
                 func.count(CreditModel.id).label("creditos"),
                 func.count(func.distinct(CreditModel.debtor_id)).label("titulares"),
                 func.count(func.distinct(CreditModel.codebtor_id)).label("codeudores"),
-                func.coalesce(func.sum(CreditModel.overdue_principal_balance), 0).label("total_mora"),
+                func.coalesce(func.sum(CreditModel.overdue_principal_balance), 0).label(
+                    "total_mora"
+                ),
             )
             .join(PortfolioModel, PortfolioModel.id == CreditModel.portfolio_id)
             .where(
@@ -114,9 +130,9 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
             )
         )
         all_ids = union(debtors_q, codebtors_q).subquery()
-        clientes_unicos: int = await self.session.scalar(
-            select(func.count()).select_from(all_ids)
-        ) or 0
+        clientes_unicos: int = (
+            await self.session.scalar(select(func.count()).select_from(all_ids)) or 0
+        )
 
         documentos_unicos: int = await self._count_unique_documents(all_ids)
 
@@ -129,7 +145,9 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
             total_mora=float(row.total_mora),
         )
 
-    async def get_by_credit_number(self, credit_number: str, portfolio_id: uuid.UUID) -> CreditModel | None:
+    async def get_by_credit_number(
+        self, credit_number: str, portfolio_id: uuid.UUID
+    ) -> CreditModel | None:
         result = await self.session.execute(
             select(CreditModel).where(
                 CreditModel.credit_number == credit_number,
@@ -139,7 +157,9 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         )
         return result.scalars().first()
 
-    async def bulk_upsert_by_credit_number(self, credits: list[dict]) -> dict[str, uuid.UUID]:
+    async def bulk_upsert_by_credit_number(
+        self, credits: list[dict]
+    ) -> dict[str, uuid.UUID]:
         """Un solo `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` para varios créditos
         a la vez (Fase 4 de la auditoría), en vez de un SELECT+INSERT/UPDATE por cada
         uno. ``credits``: dicts con los campos de `CreditRowData` (nombres de atributo)
@@ -187,10 +207,15 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
             "codebtor_id": "id_codeudor",
         }
         values = [
-            {"numero_credito": c["credit_number"], **{column_by_attr[k]: v for k, v in c.items() if k != "credit_number"}}
+            {
+                "numero_credito": c["credit_number"],
+                **{column_by_attr[k]: v for k, v in c.items() if k != "credit_number"},
+            }
             for c in credits
         ]
-        update_columns = [col for col in column_by_attr.values() if col != "id_portafolio"]
+        update_columns = [
+            col for col in column_by_attr.values() if col != "id_portafolio"
+        ]
         stmt = pg_insert(table).values(values)
         set_clause = {col: getattr(stmt.excluded, col) for col in update_columns}
         set_clause["eliminado_en"] = None
@@ -203,7 +228,9 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         result = await self.session.execute(stmt)
         return {row.numero_credito: row.id for row in result}
 
-    async def get_by_credit_numbers(self, credit_numbers: list[str], portfolio_id: uuid.UUID) -> list[CreditModel]:
+    async def get_by_credit_numbers(
+        self, credit_numbers: list[str], portfolio_id: uuid.UUID
+    ) -> list[CreditModel]:
         """Versión en lote de `get_by_credit_number`, para precargar en 1 query los
         créditos que va a necesitar la carga de plan de cuotas por CSV, en vez de un
         SELECT por fila (Fase 4 de la auditoría)."""
@@ -236,7 +263,9 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         )
         return list(result.scalars().all())
 
-    async def get_by_debtor_and_portfolio(self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID) -> list[CreditModel]:
+    async def get_by_debtor_and_portfolio(
+        self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID
+    ) -> list[CreditModel]:
         result = await self.session.execute(
             select(CreditModel).where(
                 CreditModel.debtor_id == debtor_id,
@@ -255,26 +284,39 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         )
         return list(result.scalars().all())
 
-    async def get_codebtor_ids(self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID) -> set[uuid.UUID]:
-        """Codeudores de los creditos donde ``debtor_id`` es titular, dentro del portafolio."""
+    async def get_codebtor_ids(
+        self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID
+    ) -> set[uuid.UUID]:
+        """Codeudores de los creditos donde ``debtor_id`` es titular, dentro del
+        portafolio."""
         result = await self.session.execute(
-            select(CreditModel.codebtor_id).where(
+            select(CreditModel.codebtor_id)
+            .where(
                 CreditModel.debtor_id == debtor_id,
                 CreditModel.codebtor_id.is_not(None),
                 CreditModel.portfolio_id == portfolio_id,
                 CreditModel.deleted_at.is_(None),
-            ).distinct()
+            )
+            .distinct()
         )
         return {cid for cid in result.scalars().all() if cid}
 
-    async def debtor_belongs_to_portfolio(self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID) -> bool:
-        """True si el deudor participa (como titular o codeudor) en algun credito del portafolio."""
+    async def debtor_belongs_to_portfolio(
+        self, debtor_id: uuid.UUID, portfolio_id: uuid.UUID
+    ) -> bool:
+        """True si el deudor participa (como titular o codeudor) en algun credito
+        del portafolio."""
         result = await self.session.execute(
-            select(CreditModel.id).where(
-                or_(CreditModel.debtor_id == debtor_id, CreditModel.codebtor_id == debtor_id),
+            select(CreditModel.id)
+            .where(
+                or_(
+                    CreditModel.debtor_id == debtor_id,
+                    CreditModel.codebtor_id == debtor_id,
+                ),
                 CreditModel.portfolio_id == portfolio_id,
                 CreditModel.deleted_at.is_(None),
-            ).limit(1)
+            )
+            .limit(1)
         )
         return result.scalar() is not None
 
@@ -286,7 +328,10 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         todavía no se actualizó hoy."""
         enabled_portfolios = (
             select(PortfolioDailyCounterConfigModel.portfolio_id)
-            .join(PortfolioModel, PortfolioModel.id == PortfolioDailyCounterConfigModel.portfolio_id)
+            .join(
+                PortfolioModel,
+                PortfolioModel.id == PortfolioDailyCounterConfigModel.portfolio_id,
+            )
             .where(
                 PortfolioDailyCounterConfigModel.enabled.is_(True),
                 PortfolioModel.country == country_code,
@@ -331,25 +376,38 @@ class CreditRepository(SoftDeleteRepositoryBase[CreditModel]):
         )
         return result.rowcount  # type: ignore[union-attr]
 
-    async def get_latest_by_debtor_ids(self, debtor_ids: list[uuid.UUID]) -> list[CreditModel]:
-        """Un deudor puede tener varios creditos: retorna el desembolsado mas reciente por deudor."""
+    async def get_latest_by_debtor_ids(
+        self, debtor_ids: list[uuid.UUID]
+    ) -> list[CreditModel]:
+        """Un deudor puede tener varios creditos: retorna el desembolsado mas
+        reciente por deudor."""
         if not debtor_ids:
             return []
         result = await self.session.execute(
             select(CreditModel)
-            .where(CreditModel.debtor_id.in_(debtor_ids), CreditModel.deleted_at.is_(None))
+            .where(
+                CreditModel.debtor_id.in_(debtor_ids), CreditModel.deleted_at.is_(None)
+            )
             .distinct(CreditModel.debtor_id)
             .order_by(CreditModel.debtor_id, CreditModel.disbursed_date.desc())
         )
         return list(result.scalars().all())
 
-    async def soft_delete_by_portfolios(self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime) -> None:
+    async def soft_delete_by_portfolios(
+        self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime
+    ) -> None:
         """Baja en cascada de los créditos vivos de esos portafolios (mismo sello que el
         portafolio, para poder restaurarlos juntos sin resucitar créditos dados de baja
         antes por otra vía, p. ej. la recarga del CSV en modo update)."""
         if portfolio_ids:
-            await self.soft_delete_where(CreditModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at)
+            await self.soft_delete_where(
+                CreditModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at
+            )
 
-    async def restore_by_portfolios(self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime) -> None:
+    async def restore_by_portfolios(
+        self, portfolio_ids: Sequence[uuid.UUID], deleted_at: datetime
+    ) -> None:
         if portfolio_ids:
-            await self.restore_where(CreditModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at)
+            await self.restore_where(
+                CreditModel.portfolio_id.in_(portfolio_ids), deleted_at=deleted_at
+            )

@@ -1,14 +1,20 @@
+"""Resuelve y descifra la credencial de pasarela de cobro de una organización."""
+
 import uuid
 from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from receivables.payment_gateways.enums.payment_gateway_enums import ReceivablesGatewayProvider
-from receivables.payment_gateways.models.payment_gateway_credential_model import OrganizationGatewayCredentialModel
-from receivables.payment_gateways.repository.payment_gateway_credential_repository import (
+from core.security.services.encrypt_service import encrypt_service
+from receivables.payment_gateways.enums.payment_gateway_enums import (
+    ReceivablesGatewayProvider,
+)
+from receivables.payment_gateways.models.payment_gateway_credential_model import (
+    OrganizationGatewayCredentialModel,
+)
+from receivables.payment_gateways.repository.payment_gateway_credential_repository import (  # pylint: disable=line-too-long
     OrganizationGatewayCredentialRepository,
 )
-from core.security.services.encrypt_service import encrypt_service
 
 
 @dataclass(frozen=True)
@@ -27,8 +33,9 @@ class DecryptedGatewayCredential:
 
 class OrganizationGatewayCredentialService:
     """Lectura/descifrado para uso de los adaptadores de pasarela (ver
-    `billing/gateways/base.py` y skill `wompi-gateway`) — no CRUD. El CRUD administrado
-    por la propia organización vive en `OrganizationGatewayCredentialManagementService`."""
+    `billing/gateways/base.py` y skill `wompi-gateway`) — no CRUD. El CRUD
+    administrado por la propia organización vive en
+    `OrganizationGatewayCredentialManagementService`."""
 
     def __init__(self, session: AsyncSession) -> None:
         self._repo = OrganizationGatewayCredentialRepository(session)
@@ -36,7 +43,9 @@ class OrganizationGatewayCredentialService:
     async def get_decrypted(
         self, organization_id: uuid.UUID, provider: ReceivablesGatewayProvider
     ) -> DecryptedGatewayCredential | None:
-        row = await self._repo.get_by_organization_and_provider(organization_id, provider)
+        row = await self._repo.get_by_organization_and_provider(
+            organization_id, provider
+        )
         return self._to_decrypted(row)
 
     async def resolve_by_lookup_key(
@@ -46,11 +55,16 @@ class OrganizationGatewayCredentialService:
         return self._to_decrypted(row)
 
     @staticmethod
-    def _to_decrypted(row: OrganizationGatewayCredentialModel | None) -> DecryptedGatewayCredential | None:
+    def _to_decrypted(
+        row: OrganizationGatewayCredentialModel | None,
+    ) -> DecryptedGatewayCredential | None:
         if row is None or not row.is_active:
             return None
         decrypted = {
-            key: encrypt_service.decrypt_to_str(token) for key, token in (row.secrets or {}).items()
+            key: encrypt_service.decrypt_to_str(token)
+            for key, token in (row.secrets or {}).items()
         }
         values = {**(row.public_config or {}), **decrypted}
-        return DecryptedGatewayCredential(row.organization_id, row.provider, values, row.lookup_key)
+        return DecryptedGatewayCredential(
+            row.organization_id, row.provider, values, row.lookup_key
+        )

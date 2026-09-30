@@ -1,4 +1,6 @@
-﻿from datetime import datetime, timezone
+"""Repository base para modelos con borrado lógico (`deleted_at`)."""
+
+from datetime import datetime, timezone
 from typing import Optional, Sequence
 
 from sqlalchemy import select, update
@@ -15,7 +17,9 @@ class SoftDeleteRepositoryBase(RepositoryBase[T]):
 
     async def get_by_id(self, id: object) -> Optional[T]:
         instance = await self.session.get(self.model_class, id)
-        if instance is None or instance.deleted_at is not None:  # type: ignore[union-attr]
+        if instance is None:
+            return None
+        if instance.deleted_at is not None:  # type: ignore[union-attr]
             return None
         return instance
 
@@ -48,7 +52,9 @@ class SoftDeleteRepositoryBase(RepositoryBase[T]):
         if not ids:
             return
         await self.session.execute(
-            update(self.model_class).where(self.model_class.id.in_(ids)).values(deleted_at=datetime.now(timezone.utc))  # type: ignore[attr-defined]
+            update(self.model_class)
+            .where(self.model_class.id.in_(ids))
+            .values(deleted_at=datetime.now(timezone.utc))  # type: ignore[attr-defined]
         )
         await self.session.flush()
 
@@ -58,7 +64,9 @@ class SoftDeleteRepositoryBase(RepositoryBase[T]):
         if not ids:
             return
         await self.session.execute(
-            update(self.model_class).where(self.model_class.id.in_(ids)).values(deleted_at=None)  # type: ignore[attr-defined]
+            update(self.model_class)
+            .where(self.model_class.id.in_(ids))
+            .values(deleted_at=None)  # type: ignore[attr-defined]
         )
         await self.session.flush()
 
@@ -66,12 +74,15 @@ class SoftDeleteRepositoryBase(RepositoryBase[T]):
         """Baja en cascada de las filas VIVAS que cumplen ``conditions``, todas con el
         mismo ``deleted_at``.
 
-        Ese sello compartido es lo que permite deshacer la cascada sin resucitar lo que
-        ya estaba dado de baja antes: ``restore_where`` solo revive las filas marcadas con
-        exactamente ese instante (el del padre que se eliminó/restaura)."""
+        Ese sello compartido es lo que permite deshacer la cascada sin resucitar lo
+        que ya estaba dado de baja antes: ``restore_where`` solo revive las filas
+        marcadas con exactamente ese instante (el del padre que se eliminó/restaura)."""
         await self.session.execute(
             update(self.model_class)
-            .where(self.model_class.deleted_at.is_(None), *conditions)  # type: ignore[union-attr]
+            .where(
+                self.model_class.deleted_at.is_(None),  # type: ignore[union-attr]
+                *conditions,
+            )
             .values(deleted_at=deleted_at)
         )
         await self.session.flush()
@@ -81,7 +92,10 @@ class SoftDeleteRepositoryBase(RepositoryBase[T]):
         cascada (mismo ``deleted_at``), no las que ya estaban eliminadas antes."""
         await self.session.execute(
             update(self.model_class)
-            .where(self.model_class.deleted_at == deleted_at, *conditions)  # type: ignore[union-attr]
+            .where(
+                self.model_class.deleted_at == deleted_at,  # type: ignore[union-attr]
+                *conditions,
+            )
             .values(deleted_at=None)
         )
         await self.session.flush()

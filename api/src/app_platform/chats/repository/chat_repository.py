@@ -1,19 +1,17 @@
+"""Acceso a datos de chats y sus miembros."""
+
 import uuid
 from datetime import datetime
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from app_platform.chats.models.chat_member_model import ChatMemberModel
 from app_platform.chats.models.chat_model import ChatModel
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 
 
 class ChatRepository(SoftDeleteRepositoryBase[ChatModel]):
     model_class = ChatModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_by_dm_key(self, dm_key: str) -> ChatModel | None:
         result = await self.session.execute(
@@ -39,7 +37,9 @@ class ChatRepository(SoftDeleteRepositoryBase[ChatModel]):
         await self.session.refresh(member)
         return member
 
-    async def get_member(self, chat_id: uuid.UUID, user_id: uuid.UUID) -> ChatMemberModel | None:
+    async def get_member(
+        self, chat_id: uuid.UUID, user_id: uuid.UUID
+    ) -> ChatMemberModel | None:
         result = await self.session.execute(
             select(ChatMemberModel).where(
                 ChatMemberModel.chat_id == chat_id,
@@ -73,7 +73,9 @@ class ChatRepository(SoftDeleteRepositoryBase[ChatModel]):
             out.setdefault(member.chat_id, []).append(member)
         return out
 
-    async def set_member_left(self, chat_id: uuid.UUID, user_id: uuid.UUID, when: datetime) -> None:
+    async def set_member_left(
+        self, chat_id: uuid.UUID, user_id: uuid.UUID, when: datetime
+    ) -> None:
         member = await self.get_member(chat_id, user_id)
         if member is not None:
             member.left_at = when

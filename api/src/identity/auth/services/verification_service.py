@@ -1,4 +1,6 @@
-﻿import secrets
+"""Base común de generación/verificación de OTP, compartida por email y SMS."""
+
+import secrets
 import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
@@ -14,7 +16,9 @@ from identity.auth.exceptions import (
     CodeNotFoundException,
 )
 from identity.auth.models.verification_code_model import VerificationCodeModel
-from identity.auth.repository.verification_code_repository import VerificationCodeRepository
+from identity.auth.repository.verification_code_repository import (
+    VerificationCodeRepository,
+)
 
 EXPIRATION_MINUTES = 5
 
@@ -51,7 +55,12 @@ class VerificationService(ABC):
         )
 
         if get_or_throw("ENV") == "development":
-            logger.info("[verification] code_sent_dev | user_id=%s channel=%s code=%s", user.id, self.channel.value, code)
+            logger.info(
+                "[verification] code_sent_dev | user_id=%s channel=%s code=%s",
+                user.id,
+                self.channel.value,
+                code,
+            )
             return
 
         logger.info(
@@ -89,7 +98,9 @@ class VerificationService(ABC):
         ) as exc:
             logger.warning(
                 "[verification] verify_failed | user_id=%s channel=%s error=%s",
-                user_id, self.channel.value, type(exc).__name__,
+                user_id,
+                self.channel.value,
+                type(exc).__name__,
             )
             raise
 
@@ -104,7 +115,9 @@ class VerificationService(ABC):
         ) as exc:
             logger.warning(
                 "[verification] peek_failed | user_id=%s channel=%s error=%s",
-                user_id, self.channel.value, type(exc).__name__,
+                user_id,
+                self.channel.value,
+                type(exc).__name__,
             )
             raise
 

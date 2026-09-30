@@ -1,13 +1,21 @@
+"""Gestión de accesos delegados de usuarios a portafolios específicos."""
+
 import uuid
 from datetime import datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from identity.organizations.repository.organization_membership_repository import OrganizationMembershipRepository
-from receivables.portfolios.models.portfolio_user_access_model import PortfolioUserAccessModel
+from identity.organizations.repository.organization_membership_repository import (
+    OrganizationMembershipRepository,
+)
+from receivables.portfolios.models.portfolio_user_access_model import (
+    PortfolioUserAccessModel,
+)
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from receivables.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
+from receivables.portfolios.repository.portfolio_user_access_repository import (
+    PortfolioUserAccessRepository,
+)
 
 
 class PortfolioUserAccessService:
@@ -16,26 +24,35 @@ class PortfolioUserAccessService:
         self._portfolio_repo = PortfolioRepository(session)
         self._membership_repo = OrganizationMembershipRepository(session)
 
-    async def _require_portfolio_of_org(self, portfolio_id: uuid.UUID, organization_id: uuid.UUID) -> None:
-        """El controller valida que el llamante sea admin de `organization_id`, pero el
-        `portfolio_id` viene del path: sin esto, un admin de la org A podría operar sobre
-        un portafolio de la org B. 404 (no 403) para no confirmar que existe."""
+    async def _require_portfolio_of_org(
+        self, portfolio_id: uuid.UUID, organization_id: uuid.UUID
+    ) -> None:
+        """El controller valida que el llamante sea admin de `organization_id`,
+        pero el `portfolio_id` viene del path: sin esto, un admin de la org A
+        podría operar sobre un portafolio de la org B. 404 (no 403) para no
+        confirmar que existe."""
         portfolio = await self._portfolio_repo.get_by_id(portfolio_id)
         if portfolio is None or portfolio.organization_id != organization_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Portafolio no encontrado")
 
-    async def _require_member(self, user_id: uuid.UUID, organization_id: uuid.UUID) -> None:
+    async def _require_member(
+        self, user_id: uuid.UUID, organization_id: uuid.UUID
+    ) -> None:
         memberships = await self._membership_repo.get_by_user_id(user_id)
         if not any(m.organization_id == organization_id for m in memberships):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Miembro no encontrado")
 
-    async def check_access(self, user_id: uuid.UUID, portfolio_id: uuid.UUID, org_id: str) -> bool:
+    async def check_access(
+        self, user_id: uuid.UUID, portfolio_id: uuid.UUID, org_id: str
+    ) -> bool:
         try:
             organization_id = uuid.UUID(str(org_id))
             portfolio_uuid = uuid.UUID(str(portfolio_id))
         except ValueError:
             return False
-        return await self._repo.check_active_access(user_id, portfolio_uuid, organization_id)
+        return await self._repo.check_active_access(
+            user_id, portfolio_uuid, organization_id
+        )
 
     async def grant_access(
         self,
@@ -57,12 +74,14 @@ class PortfolioUserAccessService:
             existing.granted_at = datetime.utcnow()
             return await self._repo.update(existing)
 
-        return await self._repo.add(PortfolioUserAccessModel(
-            user_id=user_id,
-            portfolio_id=portfolio_id,
-            organization_id=organization_id,
-            granted_by=granted_by,
-        ))
+        return await self._repo.add(
+            PortfolioUserAccessModel(
+                user_id=user_id,
+                portfolio_id=portfolio_id,
+                organization_id=organization_id,
+                granted_by=granted_by,
+            )
+        )
 
     async def revoke_access(
         self, user_id: uuid.UUID, portfolio_id: uuid.UUID, organization_id: uuid.UUID
@@ -94,8 +113,12 @@ class PortfolioUserAccessService:
         self, user_id: uuid.UUID, organization_id: uuid.UUID
     ) -> list[tuple[uuid.UUID, str, bool]]:
         await self._require_member(user_id, organization_id)
-        all_portfolios = await self._portfolio_repo.get_active_by_organization_id(organization_id)
-        active_accesses = await self._repo.get_active_by_user_and_org(user_id, organization_id)
+        all_portfolios = await self._portfolio_repo.get_active_by_organization_id(
+            organization_id
+        )
+        active_accesses = await self._repo.get_active_by_user_and_org(
+            user_id, organization_id
+        )
         granted_ids = {a.portfolio_id for a in active_accesses}
         return [(p.id, p.name, p.id in granted_ids) for p in all_portfolios]
 
@@ -121,7 +144,9 @@ class PortfolioUserAccessService:
 
         result = []
         for user_id in user_ids:
-            access = await self.grant_access(user_id, portfolio_id, organization_id, granted_by)
+            access = await self.grant_access(
+                user_id, portfolio_id, organization_id, granted_by
+            )
             result.append(access)
 
         return result

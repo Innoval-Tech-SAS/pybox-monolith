@@ -1,3 +1,5 @@
+"""Rate limiting por IP para endpoints públicos sensibles a fuerza bruta."""
+
 from fastapi import HTTPException, Request, status
 
 from core.database.redis import redis_client
@@ -16,7 +18,10 @@ def rate_limit(key_prefix: str, max_attempts: int, window_seconds: int):
         if attempts > max_attempts:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Demasiados intentos. Espera un momento antes de volver a intentarlo.",
+                detail=(
+                    "Demasiados intentos. Espera un momento antes de volver a "
+                    "intentarlo."
+                ),
             )
 
     return _check

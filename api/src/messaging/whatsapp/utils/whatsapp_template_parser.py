@@ -1,3 +1,5 @@
+"""Extracción de las variables nombradas ({{variable}}) del cuerpo de una plantilla."""
+
 import re
 from typing import Any, NamedTuple
 
@@ -13,7 +15,9 @@ class TemplateVariableSlot(NamedTuple):
     example: str
 
 
-def extract_variable_slots(components: list[dict[str, Any]]) -> list[TemplateVariableSlot]:
+def extract_variable_slots(
+    components: list[dict[str, Any]],
+) -> list[TemplateVariableSlot]:
     """Extrae las variables nombradas ({{nombre}}) de los componentes BODY/HEADER que
     Meta devuelve para una plantilla aprobada, con su ejemplo si Meta lo trae en
     `example.body_text_named_params` / `example.header_text_named_params`.
@@ -30,7 +34,11 @@ def extract_variable_slots(components: list[dict[str, Any]]) -> list[TemplateVar
 
         examples = _extract_named_examples(component, comp_type)
         for name in names:
-            slots.append(TemplateVariableSlot(component=comp_type, name=name, example=examples.get(name, "")))
+            slots.append(
+                TemplateVariableSlot(
+                    component=comp_type, name=name, example=examples.get(name, "")
+                )
+            )
     return slots
 
 
@@ -44,8 +52,16 @@ def _ordered_unique(items: list[str]) -> list[str]:
     return ordered
 
 
-def _extract_named_examples(component: dict[str, Any], comp_type: str) -> dict[str, str]:
+def _extract_named_examples(
+    component: dict[str, Any], comp_type: str
+) -> dict[str, str]:
     example = component.get("example") or {}
-    key = "body_text_named_params" if comp_type == "BODY" else "header_text_named_params"
+    key = (
+        "body_text_named_params" if comp_type == "BODY" else "header_text_named_params"
+    )
     raw = example.get(key) or []
-    return {item["param_name"]: str(item.get("example", "")) for item in raw if item.get("param_name")}
+    return {
+        item["param_name"]: str(item.get("example", ""))
+        for item in raw
+        if item.get("param_name")
+    }

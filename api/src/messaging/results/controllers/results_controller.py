@@ -1,3 +1,8 @@
+"""Webhook de notificación de eventos de 360NRS (SMS/Email).
+
+Ver skill `nrs360-provider` para el contrato completo del payload.
+"""
+
 from typing import Annotated
 
 from fastapi import Form, HTTPException, Query, status
@@ -19,15 +24,21 @@ async def receive_event(
     token: Annotated[str | None, Query()] = None,
     id: Annotated[str, Form()] = "",
     event: Annotated[str, Form()] = "",
-    channel: Annotated[str, Form()] = "",
-    contactId: Annotated[str, Form()] = "",
-    campaignId: Annotated[str, Form()] = "",
-    campaignName: Annotated[str, Form()] = "",
-    formId: Annotated[str, Form()] = "",
-    extra: Annotated[str, Form()] = "",
-    smtpResponse: Annotated[str, Form()] = "",
-    eventDate: Annotated[str, Form()] = "",
+    _channel: Annotated[str, Form(alias="channel")] = "",
+    _contact_id: Annotated[str, Form(alias="contactId")] = "",
+    _campaign_id: Annotated[str, Form(alias="campaignId")] = "",
+    _campaign_name: Annotated[str, Form(alias="campaignName")] = "",
+    _form_id: Annotated[str, Form(alias="formId")] = "",
+    _extra: Annotated[str, Form(alias="extra")] = "",
+    _smtp_response: Annotated[str, Form(alias="smtpResponse")] = "",
+    _event_date: Annotated[str, Form(alias="eventDate")] = "",
 ) -> dict:
+    """Recibe el evento y actualiza `ContactModel.status`.
+
+    Solo `id`/`event` se usan hoy (ver `WebhookService.handle_event`); el
+    resto de los campos que manda 360NRS se aceptan para no romper el POST
+    pero no se consumen todavía.
+    """
     if not verify_nrs360_webhook_token(token):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
 

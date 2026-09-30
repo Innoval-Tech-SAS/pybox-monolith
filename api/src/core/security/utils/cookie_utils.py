@@ -1,6 +1,12 @@
+"""Set/clear de las cookies httpOnly de acceso y refresh."""
+
 from fastapi import Response
 
-from core.security.constants.cookie_constants import ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_PATH
+from core.security.constants.cookie_constants import (
+    ACCESS_TOKEN_COOKIE,
+    REFRESH_TOKEN_COOKIE,
+    REFRESH_TOKEN_PATH,
+)
 from core.security.services.auth_token_service import AuthTokenService
 from core.tools.config_tools import get_or_throw
 
@@ -34,4 +40,6 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
 def clear_auth_cookies(response: Response) -> None:
     domain = get_or_throw("COOKIE_DOMAIN")
     response.delete_cookie(key=ACCESS_TOKEN_COOKIE, path="/", domain=domain)
-    response.delete_cookie(key=REFRESH_TOKEN_COOKIE, path=REFRESH_TOKEN_PATH, domain=domain)
+    response.delete_cookie(
+        key=REFRESH_TOKEN_COOKIE, path=REFRESH_TOKEN_PATH, domain=domain
+    )

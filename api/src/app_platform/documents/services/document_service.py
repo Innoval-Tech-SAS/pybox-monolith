@@ -1,3 +1,5 @@
+"""Subida, descarga y borrado de documentos contra el almacén de objetos."""
+
 import uuid
 from typing import Optional
 from urllib.parse import quote
@@ -69,7 +71,9 @@ class DocumentService:
         content_type = resolve_content_type(file.filename, file.content_type)
 
         if not content:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "El archivo está vacío")
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY, "El archivo está vacío"
+            )
         if len(content) > MAX_DOCUMENT_SIZE_BYTES:
             limit_mb = MAX_DOCUMENT_SIZE_BYTES // (1024 * 1024)
             raise HTTPException(
@@ -139,7 +143,9 @@ class DocumentService:
         try:
             content = await self._storage.get(document.object_key)
         except ObjectStorageError as error:
-            logger.error("[documents] fallo al leer | id=%s error=%s", document.id, error)
+            logger.error(
+                "[documents] fallo al leer | id=%s error=%s", document.id, error
+            )
             raise HTTPException(
                 status.HTTP_503_SERVICE_UNAVAILABLE, "No se pudo recuperar el documento"
             ) from error
@@ -154,7 +160,9 @@ class DocumentService:
             content=content,
             media_type=document.content_type,
             headers={
-                "Content-Disposition": f"inline; filename*=UTF-8''{quote(document.original_name)}",
+                "Content-Disposition": (
+                    f"inline; filename*=UTF-8''{quote(document.original_name)}"
+                ),
                 "Cache-Control": "no-store, private",
             },
         )
@@ -179,8 +187,8 @@ class DocumentService:
             await self.delete(document)
 
     async def restore(self, document: DocumentModel) -> None:
-        """Deshace el soft delete. No hay nada que recuperar del almacén porque `delete()`
-        nunca borró el objeto."""
+        """Deshace el soft delete. No hay nada que recuperar del almacén porque
+        `delete()` nunca borró el objeto."""
         await self._repo.restore(document)
 
     async def restore_by_id(self, document_id: uuid.UUID) -> None:
@@ -207,7 +215,9 @@ class DocumentService:
         try:
             etag = await self._storage.put(object_key, content, content_type)
         except ObjectStorageError as error:
-            logger.error("[documents] fallo al subir | key=%s error=%s", object_key, error)
+            logger.error(
+                "[documents] fallo al subir | key=%s error=%s", object_key, error
+            )
             raise HTTPException(
                 status.HTTP_503_SERVICE_UNAVAILABLE, "No se pudo guardar el documento"
             ) from error
@@ -248,7 +258,9 @@ class DocumentService:
         try:
             await self._storage.delete(object_key)
         except ObjectStorageError as error:
-            logger.error("[documents] objeto huérfano | key=%s error=%s", object_key, error)
+            logger.error(
+                "[documents] objeto huérfano | key=%s error=%s", object_key, error
+            )
 
     @staticmethod
     def to_response(document: DocumentModel) -> DocumentResponse:

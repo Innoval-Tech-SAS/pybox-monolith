@@ -1,3 +1,5 @@
+"""Registro de un extracto de cuenta generado para un deudor."""
+
 import uuid
 from datetime import datetime
 
@@ -20,24 +22,49 @@ class StatementModel(BaseModel):
     __tablename__ = "extractos"
 
     debtor_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("deudores.id"), nullable=False, index=True, name="id_deudor"
+        PgUUID(as_uuid=True),
+        ForeignKey("deudores.id"),
+        nullable=False,
+        index=True,
+        name="id_deudor",
     )
     portfolio_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("portafolios.id"), nullable=False, index=True, name="id_portafolio"
+        PgUUID(as_uuid=True),
+        ForeignKey("portafolios.id"),
+        nullable=False,
+        index=True,
+        name="id_portafolio",
     )
     # Denormalizado desde el portafolio: aísla por organización sin tener que resolver
     # el portafolio en cada consulta, mismo criterio que DocumentModel.organization_id.
     organization_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("entidades.id"), nullable=False, index=True, name="id_organizacion"
+        PgUUID(as_uuid=True),
+        ForeignKey("entidades.id"),
+        nullable=False,
+        index=True,
+        name="id_organizacion",
     )
     credit_id: Mapped[uuid.UUID | None] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("creditos.id"), nullable=True, index=True, name="id_credito"
+        PgUUID(as_uuid=True),
+        ForeignKey("creditos.id"),
+        nullable=True,
+        index=True,
+        name="id_credito",
     )
     cutoff_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, name="fecha_corte"
     )
     document_id: Mapped[uuid.UUID] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("documentos.id"), nullable=False, unique=True, name="id_documento"
+        PgUUID(as_uuid=True),
+        ForeignKey("documentos.id"),
+        nullable=False,
+        unique=True,
+        name="id_documento",
     )
     generated_by: Mapped[uuid.UUID | None] = mapped_column(
-        PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True, name="generado_por", index=True)
+        PgUUID(as_uuid=True),
+        ForeignKey("usuarios.id"),
+        nullable=True,
+        name="generado_por",
+        index=True,
+    )

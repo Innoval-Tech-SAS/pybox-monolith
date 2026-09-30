@@ -1,3 +1,9 @@
+"""Plantillas de email y SMS para el código de verificación (OTP)."""
+
+# HTML/CSS de un solo bloque para máxima compatibilidad con clientes de correo
+# (estilos inline, sin hoja de estilos externa); envolver las líneas no aporta nada
+# y arriesga romper algún atributo, así que se deja tal cual.
+# pylint: disable=line-too-long
 EMAIL_BODY = """<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -40,6 +46,10 @@ EMAIL_BODY = """<!DOCTYPE html>
   </table>
 </body>
 </html>"""
+# pylint: enable=line-too-long
 
 
-SMS_TEMPLATE = "Su código de verificación es {code}. Válido por 5 minutos. Por seguridad, no lo comparta con nadie."
+SMS_TEMPLATE = (
+    "Su código de verificación es {code}. Válido por 5 minutos. "
+    "Por seguridad, no lo comparta con nadie."
+)

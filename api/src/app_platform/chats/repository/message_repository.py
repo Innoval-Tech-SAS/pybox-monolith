@@ -1,19 +1,17 @@
+"""Acceso a datos de mensajes de chat y su estado de lectura."""
+
 import uuid
 from datetime import datetime
 
 from sqlalchemy import func, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from app_platform.chats.models.message_model import MessageModel
 from app_platform.chats.models.message_status_model import MessageStatusModel
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 
 
 class MessageRepository(SoftDeleteRepositoryBase[MessageModel]):
     model_class = MessageModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get_chat_messages(
         self, chat_id: uuid.UUID, before_ts: datetime | None, limit: int
@@ -73,7 +71,9 @@ class MessageRepository(SoftDeleteRepositoryBase[MessageModel]):
         self.session.add_all(statuses)
         await self.session.flush()
 
-    async def mark_read(self, message_id: uuid.UUID, user_id: uuid.UUID, now: datetime) -> None:
+    async def mark_read(
+        self, message_id: uuid.UUID, user_id: uuid.UUID, now: datetime
+    ) -> None:
         await self.session.execute(
             update(MessageStatusModel)
             .where(
@@ -97,7 +97,9 @@ class MessageRepository(SoftDeleteRepositoryBase[MessageModel]):
         )
         return result.scalar() or 0
 
-    async def get_unread_message_ids(self, chat_id: uuid.UUID, user_id: uuid.UUID) -> list[uuid.UUID]:
+    async def get_unread_message_ids(
+        self, chat_id: uuid.UUID, user_id: uuid.UUID
+    ) -> list[uuid.UUID]:
         result = await self.session.execute(
             select(MessageStatusModel.message_id)
             .join(MessageModel, MessageModel.id == MessageStatusModel.message_id)
@@ -110,7 +112,9 @@ class MessageRepository(SoftDeleteRepositoryBase[MessageModel]):
         )
         return list(result.scalars().all())
 
-    async def mark_all_read(self, chat_id: uuid.UUID, user_id: uuid.UUID, now: datetime) -> None:
+    async def mark_all_read(
+        self, chat_id: uuid.UUID, user_id: uuid.UUID, now: datetime
+    ) -> None:
         await self.session.execute(
             update(MessageStatusModel)
             .where(

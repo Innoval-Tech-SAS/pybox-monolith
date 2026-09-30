@@ -1,3 +1,5 @@
+"""Chat directo o grupal entre usuarios de la plataforma."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, SmallInteger, String, UniqueConstraint

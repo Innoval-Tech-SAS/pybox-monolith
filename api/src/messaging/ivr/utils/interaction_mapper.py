@@ -45,8 +45,10 @@ def _helena_tz() -> ZoneInfo:
     name = get_or_default("HELENA_TIMEZONE", DEFAULT_TIMEZONE)
     try:
         return ZoneInfo(name)
-    except (ZoneInfoNotFoundError, ValueError):
-        logger.warning("[ivr] HELENA_TIMEZONE inválida=%s, se usa %s", name, DEFAULT_TIMEZONE)
+    except ZoneInfoNotFoundError, ValueError:
+        logger.warning(
+            "[ivr] HELENA_TIMEZONE inválida=%s, se usa %s", name, DEFAULT_TIMEZONE
+        )
         return ZoneInfo(DEFAULT_TIMEZONE)
 
 
@@ -87,7 +89,7 @@ def as_int(value: Any) -> int | None:
         return None
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 

@@ -1,3 +1,5 @@
+"""Canales de mensajería disponibles y monedas en que se pueden costear."""
+
 from enum import StrEnum
 
 

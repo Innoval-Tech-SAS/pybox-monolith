@@ -1,3 +1,5 @@
+"""Endpoints admin de la papelera global de documentos (todos los dominios)."""
+
 import uuid
 
 from fastapi import status
@@ -18,9 +20,12 @@ router = APIRouter(prefix="/admin/documents", tags=["Documentos (Admin Global)"]
     "/trash",
     response_model=TrashedDocumentListResponse,
     summary="Papelera de documentos",
-    description="Documentos dados de baja en cualquiera de los dominios (deudor, ticket, "
-    "portafolio, notificación judicial, ejecución de reporte) más los de la entidad sin "
-    "tabla de unión. Solo administradores globales.",
+    description=(
+        "Documentos dados de baja en cualquiera de los dominios (deudor, "
+        "ticket, portafolio, notificación judicial, ejecución de reporte) "
+        "más los de la entidad sin tabla de unión. Solo administradores "
+        "globales."
+    ),
 )
 async def list_trash(
     session: CurrentSession,
@@ -34,9 +39,11 @@ async def list_trash(
     "/{domain}/{entity_id}/restore",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Restaurar un documento de la papelera",
-    description="Deshace la baja lógica del enlace de dominio y de su fila de metadatos. "
-    "Los bytes nunca se borraron al dar de baja, así que la restauración es completa. "
-    "Solo administradores globales.",
+    description=(
+        "Deshace la baja lógica del enlace de dominio y de su fila de "
+        "metadatos. Los bytes nunca se borraron al dar de baja, así que la "
+        "restauración es completa. Solo administradores globales."
+    ),
 )
 async def restore_document(
     domain: TrashedDocumentDomain,

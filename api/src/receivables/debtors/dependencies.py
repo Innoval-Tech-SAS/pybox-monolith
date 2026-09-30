@@ -1,3 +1,5 @@
+"""Dependencias de FastAPI para inyectar los servicios de deudores."""
+
 from typing import Annotated
 
 from fastapi import Depends
@@ -7,10 +9,14 @@ from core.database.database import get_main_session
 from core.security.dependencies import CurrentSession
 from core.security.policies.security_policies import require_self
 from identity.users.schemas.user_session_schema import UserSession
-from receivables.contact_methods.repository.contact_method_repository import ContactMethodRepository
+from receivables.contact_methods.repository.contact_method_repository import (
+    ContactMethodRepository,
+)
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.debtors.repository.address_repository import AddressRepository
-from receivables.debtors.repository.debtor_document_repository import DebtorDocumentRepository
+from receivables.debtors.repository.debtor_document_repository import (
+    DebtorDocumentRepository,
+)
 from receivables.debtors.repository.debtor_repository import DebtorRepository
 from receivables.debtors.services.debtor_document_service import DebtorDocumentService
 from receivables.debtors.services.debtor_identity_service import DebtorIdentityService
@@ -58,6 +64,10 @@ def require_self_session(session: CurrentSession) -> UserSession:
 
 
 DebtorServiceDep = Annotated[DebtorService, Depends(get_debtor_service)]
-DebtorDocumentServiceDep = Annotated[DebtorDocumentService, Depends(get_debtor_document_service)]
-DebtorIdentityServiceDep = Annotated[DebtorIdentityService, Depends(get_debtor_identity_service)]
+DebtorDocumentServiceDep = Annotated[
+    DebtorDocumentService, Depends(get_debtor_document_service)
+]
+DebtorIdentityServiceDep = Annotated[
+    DebtorIdentityService, Depends(get_debtor_identity_service)
+]
 RequireSelf = Annotated[UserSession, Depends(require_self_session)]

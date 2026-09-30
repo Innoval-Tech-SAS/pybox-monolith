@@ -6,7 +6,8 @@ enum único global — cada dominio declara el suyo, acotado a sus propios casos
 
 - `receivables/debtors/enums/debtor_document_enums.py` → `DebtorDocumentCategory`
 - `app_platform/support/enums/support_enums.py` → `TicketDocumentCategory`
-- `receivables/portfolios/enums/portfolio_document_enums.py` → `PortfolioDocumentCategory`
+- `receivables/portfolios/enums/portfolio_document_enums.py` →
+  `PortfolioDocumentCategory`
 
 Los casos 1:1 (documento fiscal/mercantil/representante de una entidad, foto de perfil
 de un usuario, extracto, notificación judicial, ejecución de reporte) no necesitan

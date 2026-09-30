@@ -1,3 +1,5 @@
+"""Schemas de autogestión de pagos: reprogramación y comprobante."""
+
 from datetime import datetime
 
 from pydantic import Field
@@ -6,7 +8,12 @@ from core.base.schema_base import BaseSchema
 
 
 class RescheduleRequest(BaseSchema):
-    new_date: datetime = Field(description="Nueva fecha de pago elegida por el titular (dentro de los próximos 30 días)")
+    new_date: datetime = Field(
+        description=(
+            "Nueva fecha de pago elegida por el titular (dentro de los "
+            "próximos 30 días)"
+        )
+    )
 
 
 class PaymentRequestResponse(BaseSchema):

@@ -1,3 +1,5 @@
+"""Interfaz abstracta del almacén de objetos, independiente del proveedor."""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 

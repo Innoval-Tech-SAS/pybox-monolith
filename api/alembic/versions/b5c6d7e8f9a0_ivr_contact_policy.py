@@ -18,6 +18,7 @@ NO se ejecuta automaticamente -- generada para ejecucion manual por el usuario
 from typing import Sequence, Union
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "b5c6d7e8f9a0"

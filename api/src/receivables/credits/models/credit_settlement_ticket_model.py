@@ -1,3 +1,5 @@
+"""Vínculo entre un ticket de soporte y el crédito que el titular pide dar de baja."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, Numeric
@@ -40,4 +42,6 @@ class CreditSettlementTicketModel(BaseModel):
         PgUUID(as_uuid=True),
         ForeignKey("pagos.id"),
         nullable=True,
-        name="id_pago", index=True)
+        name="id_pago",
+        index=True,
+    )

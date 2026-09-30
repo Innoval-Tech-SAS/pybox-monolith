@@ -1,14 +1,18 @@
-﻿from sqlalchemy.ext.asyncio import AsyncSession
+"""Envío del código de verificación (OTP) por SMS."""
 
-from messaging.provider_credentials.services.provider_credential_service import MessagingProviderCredentialService
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from core.config.logger import logger
-from identity.auth.enums.notification_enums import VerificationChannel
 from identity.auth.constants.verification_constants import SMS_TEMPLATE as _SMS_TEMPLATE
+from identity.auth.enums.notification_enums import VerificationChannel
 from identity.auth.services.verification_service import VerificationService
 from messaging.channels.enums.channel_enums import ChannelName
 from messaging.contacts.enums.contact_enums import ContactStatus, ProviderType
 from messaging.contacts.models.contact_model import ContactModel
 from messaging.dispatcher import MessageDispatcher
+from messaging.provider_credentials.services.provider_credential_service import (
+    MessagingProviderCredentialService,
+)
 from messaging.providers.sms_provider import _sub_shape
 
 
@@ -27,7 +31,8 @@ class SMSVerificationService(VerificationService):
         recipient = user.phone_number.lstrip("+")
         sub = [{"code": code}]
         logger.info(
-            "[verification_sms] dispatch_provider_start | user_id=%s recipient=%s sub_shape=%s",
+            "[verification_sms] dispatch_provider_start | user_id=%s "
+            "recipient=%s sub_shape=%s",
             user.id,
             recipient,
             _sub_shape(sub),
@@ -41,7 +46,8 @@ class SMSVerificationService(VerificationService):
             sub=sub,
         )
         logger.info(
-            "[verification_sms] dispatch_provider_result | user_id=%s recipient=%s ok=%s sending_id=%s",
+            "[verification_sms] dispatch_provider_result | user_id=%s "
+            "recipient=%s ok=%s sending_id=%s",
             user.id,
             recipient,
             ok,

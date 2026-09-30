@@ -1,7 +1,10 @@
+"""Ejecución guardada (auditoría) de un reporte de cartera."""
+
 import uuid
 
 from sqlalchemy import ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import BaseModel
@@ -19,9 +22,17 @@ class ReportExecutionModel(BaseModel):
 
     __tablename__ = "ejecuciones_reportes"
 
-    report_id: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), ForeignKey("reportes.id"), nullable=False, index=True, name="id_reporte")
+    report_id: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("reportes.id"),
+        nullable=False,
+        index=True,
+        name="id_reporte",
+    )
     mode: Mapped[str] = mapped_column(String, nullable=False, name="modo")
-    file_name: Mapped[str | None] = mapped_column(String, nullable=True, name="nombre_archivo")
+    file_name: Mapped[str | None] = mapped_column(
+        String, nullable=True, name="nombre_archivo"
+    )
     document_id: Mapped[uuid.UUID | None] = mapped_column(
         PgUUID(as_uuid=True),
         ForeignKey("documentos.id"),
@@ -32,4 +43,10 @@ class ReportExecutionModel(BaseModel):
     )
     rows: Mapped[int] = mapped_column(Integer, nullable=False, name="filas")
     columns: Mapped[list] = mapped_column(JSONB, nullable=False, name="columnas")
-    executed_by: Mapped[uuid.UUID] = mapped_column(PgUUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=False, name="ejecutado_por", index=True)
+    executed_by: Mapped[uuid.UUID] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("usuarios.id"),
+        nullable=False,
+        name="ejecutado_por",
+        index=True,
+    )

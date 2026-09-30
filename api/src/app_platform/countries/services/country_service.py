@@ -1,3 +1,5 @@
+"""Listado de países y tipos de documento en el formato que consume el frontend."""
+
 from app_platform.countries.enums.country_enums import DocumentScope
 from app_platform.countries.repository.country_repository import CountryRepository
 from app_platform.countries.schemas.countries_schemas import (
@@ -23,7 +25,9 @@ class CountryService:
         countries = await self.repository.list_active()
         person_docs = await self.repository.list_document_map(DocumentScope.PERSON)
         fiscal_docs = await self.repository.list_document_map(DocumentScope.ORG_FISCAL)
-        mercantile_docs = await self.repository.list_document_map(DocumentScope.ORG_MERCANTILE)
+        mercantile_docs = await self.repository.list_document_map(
+            DocumentScope.ORG_MERCANTILE
+        )
         return [
             NationalityOption(
                 code=country.code,
@@ -40,9 +44,9 @@ class CountryService:
         ]
 
     async def get_document_types(self) -> DocumentTypesResponse:
-        """Labels (código→etiqueta) + grupos de documentos de persona por país, para
-        que el frontend deje de depender de su dict estático. Los códigos comunes a
-        TODOS los países (p. ej. PASAPORTE) se agrupan en 'Universal'."""
+        """Labels (código→etiqueta) + grupos de documentos de persona por país,
+        para que el frontend deje de depender de su dict estático. Los códigos
+        comunes a TODOS los países (p. ej. PASAPORTE) se agrupan en 'Universal'."""
         countries = await self.repository.list_active()
         person_map = await self.repository.list_document_map(DocumentScope.PERSON)
         labels = await self.repository.get_document_labels()
@@ -52,19 +56,25 @@ class CountryService:
         universal = {
             code
             for code in all_person_codes
-            if country_codes and all(code in person_map.get(cc, []) for cc in country_codes)
+            if country_codes
+            and all(code in person_map.get(cc, []) for cc in country_codes)
         }
 
         groups: list[DocumentTypeGroup] = []
         for country in countries:
             options = [
-                DocumentTypeOption(value=code, label=f"{code} – {labels.get(code, code)}")
+                DocumentTypeOption(
+                    value=code, label=f"{code} – {labels.get(code, code)}"
+                )
                 for code in person_map.get(country.code, [])
                 if code not in universal
             ]
             if options:
                 groups.append(
-                    DocumentTypeGroup(group=f"{_flag_emoji(country.code)} {country.name}", options=options)
+                    DocumentTypeGroup(
+                        group=f"{_flag_emoji(country.code)} {country.name}",
+                        options=options,
+                    )
                 )
         if universal:
             groups.append(
@@ -82,9 +92,13 @@ class CountryService:
     async def is_document_valid_for_country(
         self, country_code: str, document_code: str, scope: DocumentScope
     ) -> bool:
-        return await self.repository.is_document_valid_for_country(country_code, document_code, scope)
+        return await self.repository.is_document_valid_for_country(
+            country_code, document_code, scope
+        )
 
-    async def require_valid_country(self, code: str | None, *, required: bool = True) -> str | None:
+    async def require_valid_country(
+        self, code: str | None, *, required: bool = True
+    ) -> str | None:
         """Valida contra DB que el código sea un país activo. Devuelve el código o lanza
         ValueError. Reemplaza la validación contra el StrEnum estático `Nationality`."""
         if not code:
@@ -104,22 +118,28 @@ class CountryService:
         *,
         required: bool = False,
     ) -> str | None:
-        """Valida contra DB un código de documento. Si se da `country_code`, exige que el
-        documento aplique a ese país en el alcance dado (`paises_tipos_documento`); si no,
-        solo exige que el código exista en el catálogo `tipos_documento`. Reemplaza la
-        validación contra `DOCUMENTS_BY_NATIONALITY` / `UserDocumentType`."""
+        """Valida contra DB un código de documento. Si se da `country_code`,
+        exige que el documento aplique a ese país en el alcance dado
+        (`paises_tipos_documento`); si no, solo exige que el código exista en el
+        catálogo `tipos_documento`. Reemplaza la validación contra
+        `DOCUMENTS_BY_NATIONALITY` / `UserDocumentType`."""
         if not document_code:
             if required:
                 raise ValueError("El tipo de documento es obligatorio.")
             return None
         if country_code:
-            valid = await self.repository.is_document_valid_for_country(country_code, document_code, scope)
+            valid = await self.repository.is_document_valid_for_country(
+                country_code, document_code, scope
+            )
             if not valid:
                 raise ValueError(
-                    f"El tipo de documento '{document_code}' no es válido para el país '{country_code}'."
+                    f"El tipo de documento '{document_code}' no es válido para "
+                    f"el país '{country_code}'."
                 )
         else:
             labels = await self.repository.get_document_labels()
             if document_code not in labels:
-                raise ValueError(f"El tipo de documento '{document_code}' no es válido.")
+                raise ValueError(
+                    f"El tipo de documento '{document_code}' no es válido."
+                )
         return document_code

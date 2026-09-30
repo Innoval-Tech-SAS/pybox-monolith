@@ -1,3 +1,5 @@
+"""Nacionalidades soportadas y alcance de los tipos de documento por país."""
+
 from enum import StrEnum
 
 

@@ -1,11 +1,13 @@
+"""Dependencia de FastAPI para inyectar el CountryService."""
+
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.database.database import get_main_session
 from app_platform.countries.repository.country_repository import CountryRepository
 from app_platform.countries.services.country_service import CountryService
+from core.database.database import get_main_session
 
 
 def get_country_service(

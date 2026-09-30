@@ -1,3 +1,5 @@
+"""Configuración de conexión a Helena, cargada de forma perezosa."""
+
 from dataclasses import dataclass
 
 from core.tools.config_tools import get_or_default, get_or_throw
@@ -29,4 +31,6 @@ def load_helena_config() -> HelenaConfig:
     except ValueError:
         timeout_seconds = int(DEFAULT_TIMEOUT_SECONDS)
 
-    return HelenaConfig(base_url=base_url, api_key=api_key, timeout_seconds=timeout_seconds)
+    return HelenaConfig(
+        base_url=base_url, api_key=api_key, timeout_seconds=timeout_seconds
+    )

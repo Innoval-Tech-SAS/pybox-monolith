@@ -1,3 +1,5 @@
+"""Estado de una cuota/pago del cronograma de un crédito."""
+
 from enum import StrEnum
 
 

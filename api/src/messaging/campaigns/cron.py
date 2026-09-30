@@ -1,3 +1,5 @@
+"""Job periódico que dispara las automatizaciones de campañas vencidas."""
+
 import asyncio
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -8,19 +10,25 @@ from core.database.advisory_lock import try_advisory_lock
 from core.database.database import db
 from messaging.campaigns.services.automation_service import make_automation_service
 
-_running = False
+
+class _JobState:
+    running = False
+
+
+_state = _JobState()
 
 
 async def _job() -> None:
-    global _running
-    if _running:
+    if _state.running:
         logger.debug("[campaigns_cron] tick saltado: ejecución previa en curso")
         return
-    _running = True
+    _state.running = True
     try:
         async with try_advisory_lock("campaigns_automation") as acquired:
             if not acquired:
-                logger.debug("[campaigns_cron] tick saltado: otro worker ya lo está ejecutando")
+                logger.debug(
+                    "[campaigns_cron] tick saltado: otro worker ya lo está ejecutando"
+                )
                 return
             async with db.get_session() as session:
                 processed = await make_automation_service(session).tick()
@@ -30,10 +38,10 @@ async def _job() -> None:
         # limpio en vez del traceback de CancelledError y no se re-lanza a propósito
         # (el proceso ya está terminando).
         logger.info("[campaigns_cron] tick cancelado (apagado en curso)")
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         logger.exception("[campaigns_cron] error en tick")
     finally:
-        _running = False
+        _state.running = False
 
 
 def create_campaigns_scheduler() -> AsyncIOScheduler:

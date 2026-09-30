@@ -1,3 +1,5 @@
+"""Un bulk de llamadas IVR despachado a Helena."""
+
 import uuid
 from datetime import datetime
 

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Sistema de logging con rotación diaria y organización mensual de archivos.
 
 Este módulo proporciona un sistema de logging personalizado que organiza los logs
@@ -9,8 +9,9 @@ de todas las operaciones del microservicio de administración de usuarios.
 
 import logging
 import os
-from logging.handlers import TimedRotatingFileHandler
 from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
+
 from core.tools.config_tools import get_or_throw
 
 
@@ -110,7 +111,6 @@ class Logger:
         self.logger = logging.getLogger("TEMPLATE")
 
         if not self.logger.hasHandlers():
-
             self.formatter = logging.Formatter(
                 "%(asctime)s - %(levelname)s - %(message)s", "%Y-%m-%d %H:%M:%S"
             )

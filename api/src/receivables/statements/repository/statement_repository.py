@@ -1,9 +1,10 @@
+"""Acceso a datos de los extractos generados para un deudor."""
+
 import uuid
 from datetime import datetime
 from typing import Optional, Sequence
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.statements.models.statement_model import StatementModel
@@ -11,9 +12,6 @@ from receivables.statements.models.statement_model import StatementModel
 
 class StatementRepository(SoftDeleteRepositoryBase[StatementModel]):
     model_class = StatementModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     def _visible(self):
         return select(StatementModel).where(StatementModel.deleted_at.is_(None))
@@ -31,7 +29,9 @@ class StatementRepository(SoftDeleteRepositoryBase[StatementModel]):
         )
         return list(result.scalars().all())
 
-    async def list_by_debtor(self, debtor_ids: Sequence[uuid.UUID]) -> list[StatementModel]:
+    async def list_by_debtor(
+        self, debtor_ids: Sequence[uuid.UUID]
+    ) -> list[StatementModel]:
         """Extractos de las filas de deudor del titular (una por empresa) — para el
         portal del titular."""
         result = await self.session.execute(
@@ -61,10 +61,20 @@ class StatementRepository(SoftDeleteRepositoryBase[StatementModel]):
             )
         )
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de los extractos de la organización con el sello de la organización."""
-        await self.soft_delete_where(StatementModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de los extractos de la organización con el sello de la
+        organización."""
+        await self.soft_delete_where(
+            StatementModel.organization_id == organization_id, deleted_at=deleted_at
+        )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
-        await self.restore_where(StatementModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la
+        organización."""
+        await self.restore_where(
+            StatementModel.organization_id == organization_id, deleted_at=deleted_at
+        )

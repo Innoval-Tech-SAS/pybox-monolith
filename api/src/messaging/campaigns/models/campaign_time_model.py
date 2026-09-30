@@ -1,18 +1,22 @@
+"""Programación (horario/frecuencia) de una campaña recurrente."""
+
 import uuid
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, UniqueConstraint
-from sqlalchemy.dialects.postgresql import ARRAY, INTEGER, UUID as PgUUID
+from sqlalchemy.dialects.postgresql import ARRAY, INTEGER
+from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.base.audit_model import BaseModel
 
 
 class CampaignTimeModel(BaseModel):
-
     __tablename__ = "programacion_campanias"
     __table_args__ = (
-        UniqueConstraint("id_campania", "hora_de_envio", "es_inmediato", name="uq_campaign_time"),
+        UniqueConstraint(
+            "id_campania", "hora_de_envio", "es_inmediato", name="uq_campaign_time"
+        ),
     )
 
     campaign_id: Mapped[uuid.UUID] = mapped_column(
@@ -49,6 +53,10 @@ class CampaignTimeModel(BaseModel):
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, name="esta_activo")
 
-    is_immediate: Mapped[bool] = mapped_column(Boolean, default=False, name="es_inmediato")
+    is_immediate: Mapped[bool] = mapped_column(
+        Boolean, default=False, name="es_inmediato"
+    )
 
-    time_to_send: Mapped[str | None] = mapped_column(String(8), nullable=True, name="hora_de_envio")
+    time_to_send: Mapped[str | None] = mapped_column(
+        String(8), nullable=True, name="hora_de_envio"
+    )

@@ -1,3 +1,5 @@
+"""Acceso a datos de los bulks de llamadas IVR despachados a Helena."""
+
 import uuid
 from datetime import datetime
 from typing import Sequence
@@ -17,7 +19,9 @@ class IvrExecutionRepository(SoftDeleteRepositoryBase[IvrExecutionModel]):
         )
         return result.scalar_one_or_none()
 
-    async def list_by_campaign(self, campaign_id: uuid.UUID) -> Sequence[IvrExecutionModel]:
+    async def list_by_campaign(
+        self, campaign_id: uuid.UUID
+    ) -> Sequence[IvrExecutionModel]:
         result = await self.session.execute(
             select(IvrExecutionModel)
             .where(IvrExecutionModel.campaign_id == campaign_id)
@@ -25,7 +29,9 @@ class IvrExecutionRepository(SoftDeleteRepositoryBase[IvrExecutionModel]):
         )
         return result.scalars().all()
 
-    async def get_latest_for_campaign(self, campaign_id: uuid.UUID) -> IvrExecutionModel | None:
+    async def get_latest_for_campaign(
+        self, campaign_id: uuid.UUID
+    ) -> IvrExecutionModel | None:
         """El bulk más reciente de la campaña (activo o no).
 
         Con envíos grandes troceados en varios bulks (`BATCH_SIZE`), "el más
@@ -40,10 +46,20 @@ class IvrExecutionRepository(SoftDeleteRepositoryBase[IvrExecutionModel]):
         )
         return result.scalar_one_or_none()
 
-    async def soft_delete_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Baja en cascada de las ejecuciones IVR de la organización con el sello de la organización."""
-        await self.soft_delete_where(IvrExecutionModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def soft_delete_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Baja en cascada de las ejecuciones IVR de la organización con
+        el sello de la organización."""
+        await self.soft_delete_where(
+            IvrExecutionModel.organization_id == organization_id, deleted_at=deleted_at
+        )
 
-    async def restore_by_organization(self, organization_id: uuid.UUID, deleted_at: datetime) -> None:
-        """Inverso de ``soft_delete_by_organization``: solo lo que cayó con la organización."""
-        await self.restore_where(IvrExecutionModel.organization_id == organization_id, deleted_at=deleted_at)
+    async def restore_by_organization(
+        self, organization_id: uuid.UUID, deleted_at: datetime
+    ) -> None:
+        """Inverso de ``soft_delete_by_organization``: solo lo que cayó
+        con la organización."""
+        await self.restore_where(
+            IvrExecutionModel.organization_id == organization_id, deleted_at=deleted_at
+        )

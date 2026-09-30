@@ -1,7 +1,8 @@
+"""Acceso a datos de las plantillas de mensajería de un portafolio."""
+
 import uuid
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from messaging.templates.enums.template_enums import TemplateChannel
@@ -10,9 +11,6 @@ from messaging.templates.models.template_model import TemplateModel
 
 class TemplateRepository(SoftDeleteRepositoryBase[TemplateModel]):
     model_class = TemplateModel
-
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session)
 
     async def list_all_by_portfolio(
         self,
@@ -25,7 +23,9 @@ class TemplateRepository(SoftDeleteRepositoryBase[TemplateModel]):
         )
         if channel is not None:
             query = query.where(TemplateModel.channel == channel)
-        result = await self.session.execute(query.order_by(TemplateModel.created_at.desc()))
+        result = await self.session.execute(
+            query.order_by(TemplateModel.created_at.desc())
+        )
         return list(result.scalars().all())
 
     async def list_by_portfolio(
@@ -52,11 +52,16 @@ class TemplateRepository(SoftDeleteRepositoryBase[TemplateModel]):
             "status": TemplateModel.status,
         }
         sort_col = _sort_cols.get(sort_by, TemplateModel.name)
-        query = query.order_by(sort_col.desc() if sort_order == "desc" else sort_col.asc())
+        query = query.order_by(
+            sort_col.desc() if sort_order == "desc" else sort_col.asc()
+        )
 
-        total: int = await self.session.scalar(
-            select(func.count()).select_from(query.subquery())
-        ) or 0
+        total: int = (
+            await self.session.scalar(
+                select(func.count()).select_from(query.subquery())
+            )
+            or 0
+        )
 
         result = await self.session.execute(
             query.offset((page - 1) * page_size).limit(page_size)

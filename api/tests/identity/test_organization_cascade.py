@@ -15,7 +15,7 @@ from messaging.campaigns.repository.campaign_repository import CampaignRepositor
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 from tests.messaging.campaigns.conftest import build_campaign, get_channel_id
-from tests.receivables.conftest import (  # noqa: F401 -- real_admin_user_id es un fixture
+from tests.receivables.conftest import (
     add_organization,
     build_credit,
     build_debtor,

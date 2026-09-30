@@ -1,3 +1,5 @@
+"""Defaults y sentinela de configuración no establecida para el canal IVR (Helena)."""
+
 # Defaults de la configuración opcional del canal IVR (Helena) -- nombrados para no
 # repetir el literal en cada `get_or_default`, no para desactivar la lectura de la
 # variable de entorno: siguen siendo overrideables.

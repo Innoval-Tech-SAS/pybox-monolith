@@ -1,25 +1,31 @@
+"""Acceso a datos de las credenciales de pasarela de facturación de la plataforma."""
+
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from billing.provider_credentials.enums.provider_credential_enums import (
+    PlatformGatewayProvider,
+)
+from billing.provider_credentials.models.provider_credential_model import (
+    PlatformGatewayCredentialModel,
+)
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from billing.provider_credentials.enums.provider_credential_enums import PlatformGatewayProvider
-from billing.provider_credentials.models.provider_credential_model import PlatformGatewayCredentialModel
 
 
-class PlatformGatewayCredentialRepository(SoftDeleteRepositoryBase[PlatformGatewayCredentialModel]):
+class PlatformGatewayCredentialRepository(
+    SoftDeleteRepositoryBase[PlatformGatewayCredentialModel]
+):
     model_class = PlatformGatewayCredentialModel
-
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
 
     async def get(
         self, country_code: str | None, provider: PlatformGatewayProvider
     ) -> PlatformGatewayCredentialModel | None:
         stmt = select(PlatformGatewayCredentialModel).where(
             PlatformGatewayCredentialModel.provider == provider,
-            PlatformGatewayCredentialModel.country_code == country_code
-            if country_code is not None
-            else PlatformGatewayCredentialModel.country_code.is_(None),
+            (
+                PlatformGatewayCredentialModel.country_code == country_code
+                if country_code is not None
+                else PlatformGatewayCredentialModel.country_code.is_(None)
+            ),
             PlatformGatewayCredentialModel.deleted_at.is_(None),
         )
         result = await self.session.execute(stmt)
@@ -49,6 +55,8 @@ class PlatformGatewayCredentialRepository(SoftDeleteRepositoryBase[PlatformGatew
 
     async def list_all(self) -> list[PlatformGatewayCredentialModel]:
         result = await self.session.execute(
-            select(PlatformGatewayCredentialModel).where(PlatformGatewayCredentialModel.deleted_at.is_(None))
+            select(PlatformGatewayCredentialModel).where(
+                PlatformGatewayCredentialModel.deleted_at.is_(None)
+            )
         )
         return list(result.scalars().all())

@@ -1,11 +1,13 @@
+"""Dependencia de FastAPI para inyectar el ChannelService."""
+
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.database.database import get_main_session
 from messaging.channels.repository.channel_repository import ChannelRepository
 from messaging.channels.services.channel_service import ChannelService
-from core.database.database import get_main_session
 
 
 def get_channel_service(

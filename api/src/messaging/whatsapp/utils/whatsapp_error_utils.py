@@ -1,3 +1,5 @@
+"""Traduce errores de la Graph API de WhatsApp a mensajes claros para el cliente."""
+
 from typing import Any
 
 import httpx
@@ -47,7 +49,8 @@ def _http_status_to_exception(exc: httpx.HTTPStatusError) -> HTTPException:
     meta_error = _parse_meta_error(response)
     code = meta_error.get("code")
     logger.error(
-        "[whatsapp] meta_api_error | status=%s code=%s subcode=%s fbtrace_id=%s message=%s",
+        "[whatsapp] meta_api_error | status=%s code=%s subcode=%s "
+        "fbtrace_id=%s message=%s",
         response.status_code,
         code,
         meta_error.get("error_subcode"),
@@ -55,20 +58,36 @@ def _http_status_to_exception(exc: httpx.HTTPStatusError) -> HTTPException:
         meta_error.get("message") or response.text[:200],
     )
 
-    if response.status_code == status.HTTP_401_UNAUTHORIZED or code in META_AUTH_ERROR_CODES:
-        # 502 y no 401: es la credencial de la plataforma ante Meta, no la sesión del usuario,
-        # y un 401 propio dispararía el manejo de sesión expirada del cliente.
+    if (
+        response.status_code == status.HTTP_401_UNAUTHORIZED
+        or code in META_AUTH_ERROR_CODES
+    ):
+        # 502 y no 401: es la credencial de la plataforma ante Meta, no
+        # la sesión del usuario, y un 401 propio dispararía el manejo de
+        # sesión expirada del cliente.
         return HTTPException(status.HTTP_502_BAD_GATEWAY, META_ERROR_AUTH_MESSAGE)
-    if response.status_code == status.HTTP_403_FORBIDDEN or code in META_PERMISSION_ERROR_CODES:
+    if (
+        response.status_code == status.HTTP_403_FORBIDDEN
+        or code in META_PERMISSION_ERROR_CODES
+    ):
         return HTTPException(status.HTTP_502_BAD_GATEWAY, META_ERROR_PERMISSION_MESSAGE)
-    if response.status_code == status.HTTP_429_TOO_MANY_REQUESTS or code in META_RATE_LIMIT_ERROR_CODES:
-        return HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, META_ERROR_RATE_LIMIT_MESSAGE)
+    if (
+        response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+        or code in META_RATE_LIMIT_ERROR_CODES
+    ):
+        return HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS, META_ERROR_RATE_LIMIT_MESSAGE
+        )
     if response.status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
-        return HTTPException(status.HTTP_502_BAD_GATEWAY, META_ERROR_UNAVAILABLE_MESSAGE)
+        return HTTPException(
+            status.HTTP_502_BAD_GATEWAY, META_ERROR_UNAVAILABLE_MESSAGE
+        )
 
     detail = _rejection_detail(meta_error)
     message = (
-        META_ERROR_REJECTED_MESSAGE.format(detail=detail) if detail else META_ERROR_REJECTED_NO_DETAIL_MESSAGE
+        META_ERROR_REJECTED_MESSAGE.format(detail=detail)
+        if detail
+        else META_ERROR_REJECTED_NO_DETAIL_MESSAGE
     )
     return HTTPException(status.HTTP_400_BAD_REQUEST, message)
 
@@ -78,5 +97,7 @@ def meta_error_to_http_exception(exc: httpx.HTTPError) -> HTTPException:
     `HTTPException` con mensaje en español para el usuario final."""
     if isinstance(exc, httpx.HTTPStatusError):
         return _http_status_to_exception(exc)
-    logger.error("[whatsapp] meta_unreachable | error=%s detail=%s", type(exc).__name__, exc)
+    logger.error(
+        "[whatsapp] meta_unreachable | error=%s detail=%s", type(exc).__name__, exc
+    )
     return HTTPException(status.HTTP_502_BAD_GATEWAY, META_ERROR_UNREACHABLE_MESSAGE)

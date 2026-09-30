@@ -1,3 +1,6 @@
+"""Generación y ejecución de reportes de cartera, con auditoría en almacenamiento."""
+
+import json
 import re
 import uuid
 from datetime import datetime, timezone
@@ -6,10 +9,10 @@ from typing import Any, Sequence
 import polars as pl
 from fastapi import HTTPException, status
 
-from core.config.logger import logger
 from app_platform.documents.enums.document_enums import CSV_CONTENT_TYPE
 from app_platform.documents.services.document_service import DocumentService
 from app_platform.schema_manager.services.dml_service import DmlService
+from core.config.logger import logger
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 from receivables.reports.models.report_execution_model import ReportExecutionModel
 from receivables.reports.models.report_model import ReportModel
@@ -18,11 +21,14 @@ from receivables.reports.repository.report_execution_repository import (
     ReportExecutionRepository,
 )
 from receivables.reports.repository.report_repository import ReportRepository
-from receivables.reports.schemas.report_schemas import ReportCreateRequest, ReportExecuteRequest, ReportUpdateRequest
+from receivables.reports.schemas.report_schemas import (
+    ReportCreateRequest,
+    ReportExecuteRequest,
+    ReportUpdateRequest,
+)
 
 
 class ReportService:
-
     def __init__(
         self,
         report_repo: ReportRepository,
@@ -37,7 +43,9 @@ class ReportService:
         # El CSV lo guarda el modulo de documentos: aca solo se persiste el id.
         self._document_service = DocumentService(report_repo.session)
 
-    async def create(self, organization_id: uuid.UUID, data: ReportCreateRequest) -> ReportModel:
+    async def create(
+        self, organization_id: uuid.UUID, data: ReportCreateRequest
+    ) -> ReportModel:
         report = ReportModel(
             name=data.name,
             description=data.description,
@@ -49,15 +57,24 @@ class ReportService:
     async def list_by_org(
         self, organization_id: uuid.UUID, page: int, page_size: int
     ) -> tuple[list[ReportModel], int]:
-        return await self._report_repo.get_by_organization_id(organization_id, page, page_size)
+        return await self._report_repo.get_by_organization_id(
+            organization_id, page, page_size
+        )
 
-    async def get(self, report_id: uuid.UUID, organization_id: uuid.UUID) -> ReportModel:
+    async def get(
+        self, report_id: uuid.UUID, organization_id: uuid.UUID
+    ) -> ReportModel:
         report = await self._report_repo.get_by_id(report_id)
         if not report or report.organization_id != organization_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Reporte no encontrado")
         return report
 
-    async def update(self, report_id: uuid.UUID, organization_id: uuid.UUID, data: ReportUpdateRequest) -> ReportModel:
+    async def update(
+        self,
+        report_id: uuid.UUID,
+        organization_id: uuid.UUID,
+        data: ReportUpdateRequest,
+    ) -> ReportModel:
         report = await self.get(report_id, organization_id)
         if data.name is not None:
             report.name = data.name
@@ -105,8 +122,15 @@ class ReportService:
         )
 
         if not result["success"]:
-            logger.error("[ReportService] Error ejecutando reporte %s: %s", report_id, result["error"])
-            raise HTTPException(result.get("status_code", status.HTTP_500_INTERNAL_SERVER_ERROR), result["error"])
+            logger.error(
+                "[ReportService] Error ejecutando reporte %s: %s",
+                report_id,
+                result["error"],
+            )
+            raise HTTPException(
+                result.get("status_code", status.HTTP_500_INTERNAL_SERVER_ERROR),
+                result["error"],
+            )
 
         df = self._to_dataframe(result)
         file_name: str | None = None
@@ -140,12 +164,13 @@ class ReportService:
             "document_id": document_id,
         }
 
-    async def list_executions(self, report_id: uuid.UUID, organization_id: uuid.UUID) -> Sequence[ReportExecutionModel]:
+    async def list_executions(
+        self, report_id: uuid.UUID, organization_id: uuid.UUID
+    ) -> Sequence[ReportExecutionModel]:
         await self.get(report_id, organization_id)
         return await self._execution_repo.get_by_report(report_id)
 
     def _to_dataframe(self, result: dict[str, Any]) -> pl.DataFrame:
-        import json
         data = json.loads(result["data"])
         if not data:
             return pl.DataFrame(schema={col: pl.Utf8 for col in result["columns"]})
@@ -161,9 +186,10 @@ class ReportService:
         """Guarda el CSV de auditoria en el almacen de objetos.
 
         Devuelve (nombre, id del documento). El id se persiste en
-        `ejecuciones_reportes.id_documento`, que es una FK real contra `documentos`: antes
-        iba dentro de la columna de texto `ruta_archivo`, sin ninguna integridad detras.
-        No hace falta tabla de union porque la relacion es 1:1.
+        `ejecuciones_reportes.id_documento`, que es una FK real contra
+        `documentos`: antes iba dentro de la columna de texto `ruta_archivo`, sin
+        ninguna integridad detras. No hace falta tabla de union porque la relacion
+        es 1:1.
         """
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", report_name)

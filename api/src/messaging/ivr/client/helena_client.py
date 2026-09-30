@@ -1,3 +1,5 @@
+"""Cliente HTTP asíncrono para la API externa de Helena (llamadas IVR)."""
+
 from __future__ import annotations
 
 from typing import Any, Literal
@@ -64,7 +66,9 @@ class HelenaClient:
             body["scheduledTime"] = scheduled_time
 
         async with httpx.AsyncClient(timeout=self._cfg.timeout_seconds) as client:
-            resp = await client.post(url, json=body, headers=self._headers(content_type="json"))
+            resp = await client.post(
+                url, json=body, headers=self._headers(content_type="json")
+            )
         resp.raise_for_status()
         return resp.json()
 
@@ -228,7 +232,9 @@ class HelenaClient:
         resp.raise_for_status()
         return resp.json()
 
-    async def update_webhook(self, webhook_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+    async def update_webhook(
+        self, webhook_id: str, payload: dict[str, Any]
+    ) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=self._cfg.timeout_seconds) as client:
             resp = await client.patch(
                 f"{self._base_url}/reporting/webhooks/{webhook_id}",
@@ -292,7 +298,8 @@ class HelenaClient:
         name = audio_name if audio_name.endswith(".wav") else f"{audio_name}.wav"
         async with httpx.AsyncClient(timeout=self._cfg.timeout_seconds) as client:
             resp = await client.delete(
-                f"{self._base_url}/sounds/{name}", headers=self._headers(content_type="json")
+                f"{self._base_url}/sounds/{name}",
+                headers=self._headers(content_type="json"),
             )
         resp.raise_for_status()
         return resp.json()
@@ -314,7 +321,12 @@ class HelenaClient:
             )
         forwarded = {
             key: resp.headers[key]
-            for key in ("content-type", "content-range", "accept-ranges", "content-length")
+            for key in (
+                "content-type",
+                "content-range",
+                "accept-ranges",
+                "content-length",
+            )
             if key in resp.headers
         }
         return resp.status_code, forwarded, resp.content

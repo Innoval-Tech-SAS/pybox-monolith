@@ -1,35 +1,70 @@
+"""Endpoints de tickets de soporte: creación, mensajes, resolución y adjuntos."""
+
 import uuid
 from typing import Annotated
+
 from fastapi import APIRouter, File, Response, UploadFile
 
-from core.security.dependencies import CurrentSession
 from app_platform.support.dependencies import SupportAccessFilter, SupportServiceDep
-from app_platform.support.schemas.support_schemas import AssignTicketSchema, CreateMessageSchema, CreateTicketSchema, OrgDocsSchema, ResolveTicketSchema, SupportTicketSchema, TicketAttachmentSchema, TicketCategorySchema, TicketEventSchema, TicketMessageSchema, TicketMetricsSchema, TicketOrgSchema, UpdateTicketPrioritySchema, UpdateTicketStatusSchema
+from app_platform.support.schemas.support_schemas import (
+    AssignTicketSchema,
+    CreateMessageSchema,
+    CreateTicketSchema,
+    OrgDocsSchema,
+    ResolveTicketSchema,
+    SupportTicketSchema,
+    TicketAttachmentSchema,
+    TicketCategorySchema,
+    TicketEventSchema,
+    TicketMessageSchema,
+    TicketMetricsSchema,
+    TicketOrgSchema,
+    UpdateTicketPrioritySchema,
+    UpdateTicketStatusSchema,
+)
+from core.security.dependencies import CurrentSession
 
 router = APIRouter(prefix="/cs/tickets", tags=["Soporte"])
 
 
-@router.get("/metrics", response_model=TicketMetricsSchema, summary="Métricas de tickets")
+@router.get(
+    "/metrics", response_model=TicketMetricsSchema, summary="Métricas de tickets"
+)
 async def get_metrics(f: SupportAccessFilter, service: SupportServiceDep):
     return await service.get_metrics(f)
 
 
-@router.get("/categories", response_model=list[TicketCategorySchema], summary="Listar categorías de tickets")
+@router.get(
+    "/categories",
+    response_model=list[TicketCategorySchema],
+    summary="Listar categorías de tickets",
+)
 async def get_ticket_categories(session: CurrentSession, service: SupportServiceDep):
     return service.get_categories(session)
 
 
-@router.get("/orgs", response_model=list[TicketOrgSchema], summary="Listar organizaciones con tickets")
+@router.get(
+    "/orgs",
+    response_model=list[TicketOrgSchema],
+    summary="Listar organizaciones con tickets",
+)
 async def get_ticket_orgs(session: CurrentSession, service: SupportServiceDep):
     return await service.get_ticket_orgs(session)
 
 
-@router.get("", response_model=list[SupportTicketSchema], summary="Listar tickets de soporte")
+@router.get(
+    "", response_model=list[SupportTicketSchema], summary="Listar tickets de soporte"
+)
 async def list_tickets(f: SupportAccessFilter, service: SupportServiceDep):
     return await service.get_all_tickets(f)
 
 
-@router.post("", response_model=SupportTicketSchema, status_code=201, summary="Crear ticket de soporte")
+@router.post(
+    "",
+    response_model=SupportTicketSchema,
+    status_code=201,
+    summary="Crear ticket de soporte",
+)
 async def create_ticket(
     body: CreateTicketSchema,
     f: SupportAccessFilter,
@@ -39,8 +74,14 @@ async def create_ticket(
     return await service.create_ticket(session.user_id, body, f)
 
 
-@router.get("/{ticket_number}", response_model=SupportTicketSchema, summary="Obtener ticket por número")
-async def get_ticket(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+@router.get(
+    "/{ticket_number}",
+    response_model=SupportTicketSchema,
+    summary="Obtener ticket por número",
+)
+async def get_ticket(
+    ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep
+):
     return await service.get_ticket(ticket_number, f)
 
 
@@ -49,7 +90,9 @@ async def get_ticket(ticket_number: int, f: SupportAccessFilter, service: Suppor
     response_model=OrgDocsSchema,
     summary="Obtener documentos de la organización del ticket",
 )
-async def get_org_docs(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+async def get_org_docs(
+    ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep
+):
     return await service.get_org_docs(ticket_number, f)
 
 
@@ -88,7 +131,9 @@ async def assign_ticket(
     response_model=list[TicketAttachmentSchema],
     summary="Listar adjuntos del ticket",
 )
-async def list_attachments(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+async def list_attachments(
+    ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep
+):
     return await service.list_attachments(ticket_number, f)
 
 
@@ -111,7 +156,9 @@ async def upload_attachments(
     response_model=list[TicketAttachmentSchema],
     summary="Listar adjuntos de cierre del ticket",
 )
-async def list_closure_attachments(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+async def list_closure_attachments(
+    ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep
+):
     return await service.list_closure_attachments(ticket_number, f)
 
 
@@ -148,7 +195,9 @@ async def get_ticket_document_content(
     response_model=list[TicketMessageSchema],
     summary="Listar mensajes del ticket",
 )
-async def list_messages(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+async def list_messages(
+    ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep
+):
     return await service.list_messages(ticket_number, f)
 
 
@@ -173,7 +222,9 @@ async def create_message(
     response_model=list[TicketEventSchema],
     summary="Historial de cambios del ticket",
 )
-async def list_events(ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep):
+async def list_events(
+    ticket_number: int, f: SupportAccessFilter, service: SupportServiceDep
+):
     return await service.list_events(ticket_number, f)
 
 

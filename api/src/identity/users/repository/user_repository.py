@@ -1,3 +1,5 @@
+"""Acceso a datos de usuarios: búsqueda, disponibilidad para chat y sesiones activas."""
+
 from __future__ import annotations
 
 import uuid
@@ -5,18 +7,20 @@ from datetime import datetime, timedelta, timezone
 from typing import Sequence
 
 from sqlalchemy import or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app_platform.chats.models.chat_member_model import ChatMemberModel
 from app_platform.chats.models.message_model import MessageModel
-from identity.auth.enums.auth_enums import AuthProvider
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
-from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
+from identity.auth.enums.auth_enums import AuthProvider
+from identity.organizations.models.organization_membership_model import (
+    OrganizationMembershipModel,
+)
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.models.role_assignment_model import RoleAssignmentModel
 from receivables.credits.models.credit_model import CreditModel
 from receivables.debtors.models.debtor_model import DebtorModel
 from receivables.portfolios.models.portfolio_model import PortfolioModel
+
 from ..models.user_model import UserModel
 
 # Prefijo del dominio en la clave del objeto (`<dominio>/<dueno>/<uuid><ext>`) para la
@@ -28,10 +32,9 @@ USER_DOCUMENT_STORAGE_DOMAIN = "usuario"
 class UserRepository(SoftDeleteRepositoryBase[UserModel]):
     model_class = UserModel
 
-    def __init__(self, session: AsyncSession):
-        super().__init__(session)
-
-    async def get_by_ids(self, user_ids: Sequence[uuid.UUID]) -> dict[uuid.UUID, UserModel]:
+    async def get_by_ids(
+        self, user_ids: Sequence[uuid.UUID]
+    ) -> dict[uuid.UUID, UserModel]:
         if not user_ids:
             return {}
         result = await self.session.execute(
@@ -103,7 +106,10 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
     ) -> Sequence[UserModel]:
         result = await self.session.execute(
             select(UserModel)
-            .join(OrganizationMembershipModel, OrganizationMembershipModel.user_id == UserModel.id)
+            .join(
+                OrganizationMembershipModel,
+                OrganizationMembershipModel.user_id == UserModel.id,
+            )
             .where(
                 OrganizationMembershipModel.organization_id.in_(org_ids),
                 OrganizationMembershipModel.deleted_at.is_(None),
@@ -119,19 +125,13 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
     async def get_cs_org_members_and_global_cs(
         self, self_id: uuid.UUID, org_ids: list[uuid.UUID]
     ) -> Sequence[UserModel]:
-        org_members_subq = (
-            select(OrganizationMembershipModel.user_id)
-            .where(
-                OrganizationMembershipModel.organization_id.in_(org_ids),
-                OrganizationMembershipModel.deleted_at.is_(None),
-            )
+        org_members_subq = select(OrganizationMembershipModel.user_id).where(
+            OrganizationMembershipModel.organization_id.in_(org_ids),
+            OrganizationMembershipModel.deleted_at.is_(None),
         )
-        global_cs_subq = (
-            select(RoleAssignmentModel.user_id)
-            .where(
-                RoleAssignmentModel.role == UserRole.CUSTOMER_SERVICE,
-                RoleAssignmentModel.scope == UserScope.GLOBAL,
-            )
+        global_cs_subq = select(RoleAssignmentModel.user_id).where(
+            RoleAssignmentModel.role == UserRole.CUSTOMER_SERVICE,
+            RoleAssignmentModel.scope == UserScope.GLOBAL,
         )
         result = await self.session.execute(
             select(UserModel)
@@ -148,7 +148,9 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
         )
         return result.scalars().all()
 
-    async def get_cs_agents_for_self_user(self, self_id: uuid.UUID) -> Sequence[UserModel]:
+    async def get_cs_agents_for_self_user(
+        self, self_id: uuid.UUID
+    ) -> Sequence[UserModel]:
         doc_hash_subq = (
             select(UserModel.document_number_hash)
             .where(UserModel.id == self_id)
@@ -161,13 +163,10 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
             .where(DebtorModel.document_number_hash == doc_hash_subq)
             .distinct()
         )
-        cs_user_ids_subq = (
-            select(RoleAssignmentModel.user_id)
-            .where(
-                RoleAssignmentModel.role == UserRole.CUSTOMER_SERVICE,
-                RoleAssignmentModel.scope == UserScope.ORGANIZATION,
-                RoleAssignmentModel.organization_id.in_(org_ids_subq),
-            )
+        cs_user_ids_subq = select(RoleAssignmentModel.user_id).where(
+            RoleAssignmentModel.role == UserRole.CUSTOMER_SERVICE,
+            RoleAssignmentModel.scope == UserScope.ORGANIZATION,
+            RoleAssignmentModel.organization_id.in_(org_ids_subq),
         )
         result = await self.session.execute(
             select(UserModel)
@@ -185,16 +184,12 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
         self, self_id: uuid.UUID, hours: int = 48
     ) -> Sequence[UserModel]:
         cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
-        my_chat_ids_subq = (
-            select(ChatMemberModel.chat_id)
-            .where(ChatMemberModel.user_id == self_id, ChatMemberModel.left_at.is_(None))
+        my_chat_ids_subq = select(ChatMemberModel.chat_id).where(
+            ChatMemberModel.user_id == self_id, ChatMemberModel.left_at.is_(None)
         )
-        admin_ids_subq = (
-            select(RoleAssignmentModel.user_id)
-            .where(
-                RoleAssignmentModel.role == UserRole.ADMIN,
-                RoleAssignmentModel.scope == UserScope.GLOBAL,
-            )
+        admin_ids_subq = select(RoleAssignmentModel.user_id).where(
+            RoleAssignmentModel.role == UserRole.ADMIN,
+            RoleAssignmentModel.scope == UserScope.GLOBAL,
         )
         recent_senders_subq = (
             select(MessageModel.sender_id)
@@ -206,8 +201,7 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
             .distinct()
         )
         result = await self.session.execute(
-            select(UserModel)
-            .where(
+            select(UserModel).where(
                 UserModel.id.in_(recent_senders_subq),
                 UserModel.id != self_id,
                 UserModel.is_active.is_(True),
@@ -234,9 +228,11 @@ class UserRepository(SoftDeleteRepositoryBase[UserModel]):
                 conditions.append(UserModel.deleted_at.is_(None))
             result = await self.session.execute(
                 select(UserModel)
-                .join(OrganizationMembershipModel, OrganizationMembershipModel.user_id == UserModel.id)
+                .join(
+                    OrganizationMembershipModel,
+                    OrganizationMembershipModel.user_id == UserModel.id,
+                )
                 .where(*conditions)
                 .distinct()
             )
         return result.scalars().all()
-
