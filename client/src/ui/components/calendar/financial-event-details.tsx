@@ -5,6 +5,7 @@ import { PAYMENT_STATUS } from "@/credits/types/credit-types";
 import { formatCreditCurrency, formatPaymentDate } from "@/credits/utils/financial-calendar-utils";
 import { PaymentMethodCard } from "@/ui/components/calendar/payment-method-card";
 import { usePaymentSelfService } from "@/credits/hooks/use-payment-selfservice";
+import { WompiCheckoutForm } from "@/credits/components/wompi-checkout/wompi-checkout-form";
 
 const RECEIPT_ACCEPT = ".jpg,.jpeg,.png,.pdf,.doc";
 
@@ -18,7 +19,7 @@ export const FinancialEventDetails: React.FC<FinancialEventDetailsProps> = ({ ev
   const { credit, payment, status } = event;
   const { requestReschedule, requestValidation, submitting } = usePaymentSelfService();
 
-  const [mode, setMode] = useState<"reschedule" | "validation" | null>(null);
+  const [mode, setMode] = useState<"pay" | "reschedule" | "validation" | null>(null);
   const [newDate, setNewDate] = useState("");
   const [files, setFiles] = useState<FileList | null>(null);
 
@@ -106,8 +107,15 @@ export const FinancialEventDetails: React.FC<FinancialEventDetailsProps> = ({ ev
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => setMode("reschedule")}
+                onClick={() => setMode("pay")}
                 className="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
+              >
+                Pagar aquí
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("reschedule")}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/3"
               >
                 Reprogramar pago
               </button>
@@ -119,6 +127,15 @@ export const FinancialEventDetails: React.FC<FinancialEventDetailsProps> = ({ ev
                 Reportar pago realizado
               </button>
             </div>
+          )}
+
+          {mode === "pay" && (
+            <WompiCheckoutForm
+              payment={payment}
+              currencyCode={credit.currencyCode}
+              onDone={() => finish(true)}
+              onCancel={() => setMode(null)}
+            />
           )}
 
           {mode === "reschedule" && (
