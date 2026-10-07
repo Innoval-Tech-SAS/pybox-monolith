@@ -1,14 +1,17 @@
 """Adaptador de Wompi: implementa el Protocol de pasarela de cobro de receivables."""
 
+import html
 from typing import Any
 
 from receivables.payment_gateways.gateways.base import (
     AcceptanceTokens,
     BancolombiaTransferPaymentMethod,
+    BrowserInfo,
     CardPaymentMethod,
     NequiPaymentMethod,
     PaymentMethodInput,
     PsePaymentMethod,
+    ThreeDsChallenge,
     WompiFinancialInstitution,
     WompiPaymentSource,
     WompiTransaction,
@@ -81,6 +84,7 @@ class WompiGateway:
         accept_personal_auth: str,
         customer_email: str,
         payment_source_id: str | None = None,
+        browser_info: BrowserInfo | None = None,
     ) -> WompiTransaction:
         signature = build_integrity_signature(
             reference, amount_in_cents, currency, self._integrity_secret
@@ -94,10 +98,26 @@ class WompiGateway:
             "reference": reference,
             "signature": signature,
         }
+        if isinstance(payment_method, CardPaymentMethod):
+            # La tarjeta se tokeniza aquí mismo (server-to-server, con la public_key ya
+            # descifrada) -- el frontend nunca ve ni necesita esa llave (skill
+            # `wompi-gateway`, Paso 5).
+            token = await self.tokenize_card(
+                payment_method.number,
+                payment_method.cvc,
+                payment_method.exp_month,
+                payment_method.exp_year,
+                payment_method.card_holder,
+            )
+            payload["payment_method"] = {
+                "type": "CARD",
+                "installments": payment_method.installments,
+                "token": token,
+            }
         # Cobro contra una fuente de pago guardada (recurrente/3RI): se manda
         # `payment_source_id` en vez de `payment_method` (skill `wompi-gateway`,
         # Paso 5.3).
-        if payment_source_id is not None:
+        elif payment_source_id is not None:
             payload["payment_source_id"] = payment_source_id
         elif payment_method is not None:
             payload["payment_method"] = self._build_payment_method_payload(
@@ -108,6 +128,23 @@ class WompiGateway:
                 "create_transaction requiere payment_method o payment_source_id."
             )
 
+        if browser_info is not None:
+            # 3D Secure v2 (challenge_v2) para CARD -- confirmado contra
+            # docs.wompi.co/en/docs/colombia/transacciones-con-3d-secure-v2/ (skill
+            # `wompi-gateway`, Paso 6). No aplica a PSE/NEQUI/BANCOLOMBIA_TRANSFER.
+            payload["is_three_ds"] = True
+            payload["three_ds_auth_type"] = "challenge_v2"
+            payload["customer_data"] = {
+                "browser_info": {
+                    "browser_color_depth": browser_info.browser_color_depth,
+                    "browser_screen_height": browser_info.browser_screen_height,
+                    "browser_screen_width": browser_info.browser_screen_width,
+                    "browser_language": browser_info.browser_language,
+                    "browser_user_agent": browser_info.browser_user_agent,
+                    "browser_tz": browser_info.browser_tz,
+                }
+            }
+
         response = await self._client.create_transaction(
             self._private_key, self._environment, payload
         )
@@ -117,12 +154,8 @@ class WompiGateway:
     def _build_payment_method_payload(
         payment_method: PaymentMethodInput,
     ) -> dict[str, Any]:
-        if isinstance(payment_method, CardPaymentMethod):
-            return {
-                "type": "CARD",
-                "installments": payment_method.installments,
-                "token": payment_method.token,
-            }
+        """CARD no pasa por aquí -- `create_transaction` la tokeniza y construye su
+        payload antes de llegar a este punto (necesita await, esto es sync)."""
         if isinstance(payment_method, PsePaymentMethod):
             return {
                 "type": "PSE",
@@ -212,14 +245,38 @@ class WompiGateway:
     @staticmethod
     def _to_transaction(response: dict[str, Any]) -> WompiTransaction:
         data = response.get("data") or {}
+        payment_method_data = data.get("payment_method") or {}
         return WompiTransaction(
             id=str(data.get("id", "")),
             status=data.get("status", ""),
             amount_in_cents=int(data.get("amount_in_cents") or 0),
             currency=data.get("currency", ""),
             reference=data.get("reference", ""),
-            payment_method_type=(data.get("payment_method") or {}).get("type", ""),
+            payment_method_type=payment_method_data.get("type", ""),
             raw=data,
+            three_ds_challenge=WompiGateway._extract_three_ds_challenge(
+                payment_method_data
+            ),
+        )
+
+    @staticmethod
+    def _extract_three_ds_challenge(
+        payment_method_data: dict[str, Any],
+    ) -> ThreeDsChallenge | None:
+        """Solo hay reto que mostrar cuando Wompi deja el paso actual en `PENDING`
+        (skill `wompi-gateway`, Paso 6) -- el HTML del iframe llega escapado
+        (`&lt;iframe...`) y hay que decodificarlo antes de pasarlo al frontend."""
+        three_ds_auth = (payment_method_data.get("extra") or {}).get(
+            "three_ds_auth"
+        ) or {}
+        challenge_html = three_ds_auth.get("three_ds_method_data")
+        current_step_status = three_ds_auth.get("current_step_status")
+        if not challenge_html or current_step_status != "PENDING":
+            return None
+        return ThreeDsChallenge(
+            current_step=three_ds_auth.get("current_step", ""),
+            current_step_status=current_step_status,
+            challenge_html=html.unescape(challenge_html),
         )
 
     def verify_webhook_signature(self, event_body: dict[str, Any]) -> bool:
