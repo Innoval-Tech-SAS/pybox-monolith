@@ -1,20 +1,21 @@
 """Credenciales de la cuenta propia de la plataforma en una pasarela de facturación."""
 
-from sqlalchemy import Boolean, ForeignKey, Index, String, text
-from sqlalchemy.dialects.postgresql import ENUM, JSONB
+from sqlalchemy import ForeignKey, Index, String, text
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column
 
 from billing.provider_credentials.enums.provider_credential_enums import (
     PlatformGatewayProvider,
 )
-from core.base.audit_model import BaseModel
+from core.base.encrypted_credential_model import EncryptedCredentialModel
 
 
-class PlatformGatewayCredentialModel(BaseModel):
+class PlatformGatewayCredentialModel(EncryptedCredentialModel):
     """Credenciales de la(s) cuenta(s) PROPIA(S) de PYBOX en una pasarela, usadas para
     cobrar la suscripción/consumo a las organizaciones (billing de la plataforma, no
     cobro de un deudor). Mismo diseño de cifrado que `messaging.provider_credentials`
-    y `receivables.payment_gateways`. `country_code` NULL = credencial GLOBAL."""
+    y `receivables.payment_gateways` (ver `EncryptedCredentialModel`). `country_code`
+    NULL = credencial GLOBAL."""
 
     __tablename__ = "credenciales_pasarela_plataforma"
     __table_args__ = (
@@ -38,16 +39,4 @@ class PlatformGatewayCredentialModel(BaseModel):
         ),
         nullable=False,
         name="proveedor",
-    )
-    secrets: Mapped[dict] = mapped_column(
-        JSONB, nullable=False, default=dict, name="secretos"
-    )
-    public_config: Mapped[dict] = mapped_column(
-        JSONB, nullable=False, default=dict, name="config_publica"
-    )
-    lookup_key: Mapped[str | None] = mapped_column(
-        String(255), nullable=True, index=True, name="clave_busqueda"
-    )
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=True, name="activo"
     )
