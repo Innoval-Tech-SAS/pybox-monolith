@@ -19,19 +19,19 @@ router = APIRouter(prefix="/results", tags=["Resultados de envío"])
     summary="Webhook de eventos de entrega de 360NRS",
     include_in_schema=False,
 )
-async def receive_event(
+async def receive_event(  # pylint: disable=unused-argument
     service: WebhookServiceDep,
     token: Annotated[str | None, Query()] = None,
     id: Annotated[str, Form()] = "",
     event: Annotated[str, Form()] = "",
-    _channel: Annotated[str, Form(alias="channel")] = "",
-    _contact_id: Annotated[str, Form(alias="contactId")] = "",
-    _campaign_id: Annotated[str, Form(alias="campaignId")] = "",
-    _campaign_name: Annotated[str, Form(alias="campaignName")] = "",
-    _form_id: Annotated[str, Form(alias="formId")] = "",
-    _extra: Annotated[str, Form(alias="extra")] = "",
-    _smtp_response: Annotated[str, Form(alias="smtpResponse")] = "",
-    _event_date: Annotated[str, Form(alias="eventDate")] = "",
+    channel: Annotated[str, Form()] = "",
+    contact_id: Annotated[str, Form(alias="contactId")] = "",
+    campaign_id: Annotated[str, Form(alias="campaignId")] = "",
+    campaign_name: Annotated[str, Form(alias="campaignName")] = "",
+    form_id: Annotated[str, Form(alias="formId")] = "",
+    extra: Annotated[str, Form()] = "",
+    smtp_response: Annotated[str, Form(alias="smtpResponse")] = "",
+    event_date: Annotated[str, Form(alias="eventDate")] = "",
 ) -> dict:
     """Recibe el evento y actualiza `ContactModel.status`.
 
