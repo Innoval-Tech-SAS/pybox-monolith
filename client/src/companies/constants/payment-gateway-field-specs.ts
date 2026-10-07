@@ -5,8 +5,8 @@ import type { PaymentGatewayFieldSpec, PaymentGatewayProvider } from "@/companie
 export const PAYMENT_GATEWAY_FIELD_SPECS: Record<PaymentGatewayProvider, PaymentGatewayFieldSpec> = {
   WOMPI: {
     label: "Wompi",
-    secretKeys: ["private_key", "events_key", "integrity_key"],
-    publicKeys: ["public_key"],
+    secretKeys: ["private_key", "events_secret", "integrity_secret"],
+    publicKeys: ["public_key", "environment"],
   },
   BOLD: {
     label: "Bold",
