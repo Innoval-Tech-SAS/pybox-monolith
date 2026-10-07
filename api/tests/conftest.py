@@ -18,8 +18,9 @@ os.environ.setdefault("DB_HOST", "127.0.0.1")
 # `https://storage.pybox.local` (el dominio que usa STORAGE_PUBLIC_ENDPOINT, vía
 # nginx) resuelve pero falla la verificación TLS: el cert de nginx es de mkcert,
 # boto3/aiobotocore no confía en esa CA local (`SSLCertVerificationError`). Se usa
-# el puerto publicado del container directo, sin TLS de por medio.
-os.environ.setdefault("STORAGE_ENDPOINT", "http://127.0.0.1:8333")
+# el puerto publicado del container directo, sin TLS de por medio -- el 3004 de
+# `docker-compose.yaml` (`127.0.0.1:3004:8333`), no el 8333 interno del container.
+os.environ.setdefault("STORAGE_ENDPOINT", "http://127.0.0.1:3004")
 # Un bucket/colección de test separado ("documentos-test") no funciona: este SeaweedFS
 # de un solo nodo no logra crearle volúmenes nuevos ("not enough data nodes", aunque
 # sobra disco -- límite del server, no algo para tocar sin autorización). Se reutiliza
