@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { KeyRound } from "lucide-react";
 import { useToast } from "@/context/toast-context";
+import { API_URL } from "@/config/api";
 import { ConfirmModal } from "@/ui/components/modal/confirm-modal";
 import { ModuleBase } from "@/ui/components/common/module-base";
 import { PAYMENT_GATEWAY_FIELD_SPECS } from "@/companies/constants/payment-gateway-field-specs";
@@ -13,6 +14,15 @@ import { useOrgModule } from "../hooks/use-org-module";
 import { useBreadcrumb } from "../hooks/use-breadcrumb";
 import { PaymentGatewayCredentialForm } from "../components/payment-gateway-credential-form";
 import { PaymentGatewayCredentialsTable } from "../components/payment-gateway-credentials-table";
+import { InfoRow } from "../components/info-row";
+
+/** Pasarelas con webhook propio ya implementado -- hoy solo Wompi
+ * (`/webhooks/wompi/{organizationId}`, ver skill `wompi-gateway`). Bold/PayU/ePayco
+ * todavía no tienen adaptador ni controller de webhook: no mostrar una URL que no
+ * recibiría nada. */
+const WEBHOOK_PATH_BY_PROVIDER: Partial<Record<PaymentGatewayProvider, string>> = {
+  WOMPI: "webhooks/wompi",
+};
 
 const emptyRecord = (keys: string[]): Record<string, string> =>
   Object.fromEntries(keys.map((k) => [k, ""]));
@@ -88,6 +98,16 @@ export const PaymentGatewayCredentialsPage: React.FC = () => {
           para armar el cobro directamente en tu cuenta. Los secretos nunca se muestran:
           se escriben una vez y para rotarlos se vuelve a escribir el valor.
         </p>
+
+        {WEBHOOK_PATH_BY_PROVIDER[provider] && (
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/3">
+            <InfoRow
+              label={`URL de webhook para ${PAYMENT_GATEWAY_FIELD_SPECS[provider].label} — regístrala en su panel para que tus pagos confirmen automáticamente`}
+              value={`${API_URL}/${WEBHOOK_PATH_BY_PROVIDER[provider]}/${orgId}`}
+              copyable
+            />
+          </div>
+        )}
 
         <PaymentGatewayCredentialForm
           editingId={editingId}
