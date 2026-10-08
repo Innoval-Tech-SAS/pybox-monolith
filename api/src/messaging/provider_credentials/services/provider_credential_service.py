@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.security.services.encrypt_service import encrypt_service
+from core.security.services.credential_decryption import decrypt_credential_values
 from messaging.provider_credentials.enums.provider_credential_enums import (
     MessagingCredentialProvider,
 )
@@ -54,11 +54,7 @@ class MessagingProviderCredentialService:
     ) -> DecryptedMessagingCredential | None:
         if row is None or not row.is_active:
             return None
-        decrypted = {
-            key: encrypt_service.decrypt_to_str(token)
-            for key, token in (row.secrets or {}).items()
-        }
-        values = {**(row.public_config or {}), **decrypted}
+        values = decrypt_credential_values(row.secrets, row.public_config)
         return DecryptedMessagingCredential(
             row.country_code, row.provider, values, row.lookup_key
         )

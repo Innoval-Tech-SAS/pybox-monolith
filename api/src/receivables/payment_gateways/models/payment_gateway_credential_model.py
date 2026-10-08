@@ -2,25 +2,25 @@
 
 import uuid
 
-from sqlalchemy import Boolean, ForeignKey, Index, String, text
-from sqlalchemy.dialects.postgresql import ENUM, JSONB
+from sqlalchemy import ForeignKey, Index, text
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from core.base.audit_model import BaseModel
+from core.base.encrypted_credential_model import EncryptedCredentialModel
 from receivables.payment_gateways.enums.payment_gateway_enums import (
     ReceivablesGatewayProvider,
 )
 
 
-class OrganizationGatewayCredentialModel(BaseModel):
+class OrganizationGatewayCredentialModel(EncryptedCredentialModel):
     """Credenciales de la cuenta PROPIA de una organización en una pasarela de pago,
     usadas para cobrarle a SUS deudores (la plataforma nunca las recibe ni dispersa).
 
     Mismo diseño de cifrado que `messaging.provider_credentials` y
-    `billing.provider_credentials`: secretos cifrados individualmente en `secrets`
-    (JSONB), no secretos en claro en `public_config`, `lookup_key` para resolver por
-    identificador del proveedor cuando el webhook lo trae (ver skill `wompi-gateway`).
+    `billing.provider_credentials` (ver `EncryptedCredentialModel` para las columnas
+    compartidas); `lookup_key` resuelve por identificador del proveedor cuando el
+    webhook lo trae (ver skill `wompi-gateway`).
 
     A diferencia de las otras dos tablas, aquí NO existe el concepto de credencial
     global: `organization_id` es obligatorio, porque la cuenta de una pasarela siempre
@@ -52,16 +52,4 @@ class OrganizationGatewayCredentialModel(BaseModel):
         ),
         nullable=False,
         name="proveedor",
-    )
-    secrets: Mapped[dict] = mapped_column(
-        JSONB, nullable=False, default=dict, name="secretos"
-    )
-    public_config: Mapped[dict] = mapped_column(
-        JSONB, nullable=False, default=dict, name="config_publica"
-    )
-    lookup_key: Mapped[str | None] = mapped_column(
-        String(255), nullable=True, index=True, name="clave_busqueda"
-    )
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=True, name="activo"
     )

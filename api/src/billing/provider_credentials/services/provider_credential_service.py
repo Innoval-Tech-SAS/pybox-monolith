@@ -13,7 +13,7 @@ from billing.provider_credentials.models.provider_credential_model import (
 from billing.provider_credentials.repository.provider_credential_repository import (
     PlatformGatewayCredentialRepository,
 )
-from core.security.services.encrypt_service import encrypt_service
+from core.security.services.credential_decryption import decrypt_credential_values
 
 
 @dataclass(frozen=True)
@@ -56,11 +56,7 @@ class PlatformGatewayCredentialService:
     ) -> DecryptedPlatformGatewayCredential | None:
         if row is None or not row.is_active:
             return None
-        decrypted = {
-            key: encrypt_service.decrypt_to_str(token)
-            for key, token in (row.secrets or {}).items()
-        }
-        values = {**(row.public_config or {}), **decrypted}
+        values = decrypt_credential_values(row.secrets, row.public_config)
         return DecryptedPlatformGatewayCredential(
             row.country_code, row.provider, values, row.lookup_key
         )

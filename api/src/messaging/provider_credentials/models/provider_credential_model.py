@@ -1,22 +1,21 @@
 """Credenciales de un proveedor de mensajería (SMS/Email/WhatsApp) por país."""
 
-from sqlalchemy import Boolean, ForeignKey, Index, String, text
-from sqlalchemy.dialects.postgresql import ENUM, JSONB
+from sqlalchemy import ForeignKey, Index, String, text
+from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.orm import Mapped, mapped_column
 
-from core.base.audit_model import BaseModel
+from core.base.encrypted_credential_model import EncryptedCredentialModel
 from messaging.provider_credentials.enums.provider_credential_enums import (
     MessagingCredentialProvider,
 )
 
 
-class MessagingProviderCredentialModel(BaseModel):
+class MessagingProviderCredentialModel(EncryptedCredentialModel):
     """Credenciales de un proveedor de mensajería (SMS/Email/WhatsApp) por país.
 
     Mismo diseño que las otras dos tablas de credenciales del proyecto (ver
-    `billing.provider_credentials` y `receivables.payment_gateways`): secretos cifrados
-    individualmente en `secrets` (JSONB), no secretos en claro en `public_config`,
-    `lookup_key` para resolver por identificador del proveedor. `country_code` NULL =
+    `billing.provider_credentials` y `receivables.payment_gateways`, y
+    `EncryptedCredentialModel` para las columnas compartidas). `country_code` NULL =
     credencial GLOBAL (WhatsApp Cloud y NRS360 hoy usan una sola cuenta compartida)."""
 
     __tablename__ = "credenciales_mensajeria"
@@ -41,16 +40,4 @@ class MessagingProviderCredentialModel(BaseModel):
         ),
         nullable=False,
         name="proveedor",
-    )
-    secrets: Mapped[dict] = mapped_column(
-        JSONB, nullable=False, default=dict, name="secretos"
-    )
-    public_config: Mapped[dict] = mapped_column(
-        JSONB, nullable=False, default=dict, name="config_publica"
-    )
-    lookup_key: Mapped[str | None] = mapped_column(
-        String(255), nullable=True, index=True, name="clave_busqueda"
-    )
-    is_active: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=True, name="activo"
     )
