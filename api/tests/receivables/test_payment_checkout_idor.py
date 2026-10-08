@@ -93,13 +93,19 @@ class TestPaymentCheckoutServiceIdor:
         await db_session.flush()
 
         service = PaymentCheckoutService(
-            make_ownership_resolver(db_session), CreditPaymentAttemptRepository(db_session), AsyncMock()
+            make_ownership_resolver(db_session),
+            CreditPaymentAttemptRepository(db_session),
+            AsyncMock(),
+            PaymentRepository(db_session),
         )
         session = self_session(make_user_session_factory, encrypt_service.hash_document(requester_doc))
+        card = CardPaymentMethod(
+            number="4242424242424242", cvc="123", exp_month="12", exp_year="29", card_holder="Test",
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.create_transaction(
-                session, payment_of_another_debtor.id, CardPaymentMethod(token="tok_test"), "debtor@example.com"
+                session, payment_of_another_debtor.id, card, "debtor@example.com"
             )
         assert exc_info.value.status_code == 404
 

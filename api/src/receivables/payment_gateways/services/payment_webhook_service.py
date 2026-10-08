@@ -1,7 +1,6 @@
 """Procesa el webhook de la pasarela de cobro: actualiza el intento de pago."""
 
 import uuid
-from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import HTTPException, status
@@ -9,14 +8,14 @@ from fastapi import HTTPException, status
 from core.config.logger import logger
 from receivables.payment_gateways.enums.payment_gateway_enums import (
     ReceivablesGatewayProvider,
-    ReceivablesPaymentAttemptStatus,
 )
 from receivables.payment_gateways.gateways.resolver import ReceivablesGatewayResolver
 from receivables.payment_gateways.repository.payment_attempt_repository import (
     CreditPaymentAttemptRepository,
 )
-from receivables.payment_gateways.utils.wompi_status_mapping import to_attempt_status
-from receivables.payments.enums.payment_enums import PaymentStatus
+from receivables.payment_gateways.utils.attempt_status_sync import (
+    sync_attempt_with_transaction,
+)
 from receivables.payments.repository.payment_repository import PaymentRepository
 
 
@@ -93,33 +92,6 @@ class WompiWebhookService:
             )
             return
 
-        if attempt.status == ReceivablesPaymentAttemptStatus.APPROVED:
-            return  # idempotencia: ya se proceso una entrega anterior de este webhook.
-
-        new_status = to_attempt_status(transaction.status)
-        if new_status == ReceivablesPaymentAttemptStatus.APPROVED:
-            if (
-                attempt.expected_amount_cents is not None
-                and transaction.amount_in_cents != attempt.expected_amount_cents
-            ):
-                logger.warning(
-                    "[receivables][wompi-webhook] monto no coincide | "
-                    "intento=%s esperado=%s reportado=%s",
-                    attempt.id,
-                    attempt.expected_amount_cents,
-                    transaction.amount_in_cents,
-                )
-                new_status = ReceivablesPaymentAttemptStatus.ERROR
-
-        attempt.status = new_status
-        attempt.provider_payload = transaction.raw
-        await self._attempt_repo.update(attempt)
-
-        if new_status != ReceivablesPaymentAttemptStatus.APPROVED:
-            return
-
-        payment = await self._payment_repo.get_by_id(attempt.payment_id)
-        if payment is not None and payment.status != PaymentStatus.PAID:
-            payment.status = PaymentStatus.PAID
-            payment.payment_date = datetime.now(timezone.utc)
-            await self._payment_repo.update(payment)
+        await sync_attempt_with_transaction(
+            attempt, transaction, self._attempt_repo, self._payment_repo
+        )

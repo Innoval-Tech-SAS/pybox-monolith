@@ -12,6 +12,7 @@ from receivables.payment_gateways.dependencies import (
 )
 from receivables.payment_gateways.gateways.base import (
     BancolombiaTransferPaymentMethod,
+    BrowserInfo,
     CardPaymentMethod,
     NequiPaymentMethod,
     PaymentMethodInput,
@@ -20,12 +21,15 @@ from receivables.payment_gateways.gateways.base import (
 from receivables.payment_gateways.schemas.payment_checkout_schemas import (
     BancolombiaTransferTransactionRequest,
     CardTransactionRequest,
+    FinancialInstitutionResponse,
     NequiTransactionRequest,
     PaymentAttemptResponse,
     PaymentSourceResponse,
     PseTransactionRequest,
+    ThreeDsChallengeResponse,
     TokenizeCardSourceRequest,
     TokenizeNequiSourceRequest,
+    TransactionCreationResponse,
     TransactionRequest,
 )
 
@@ -34,7 +38,14 @@ router = APIRouter(prefix="/credits/payments", tags=["Cobro de cuotas (Wompi)"])
 
 def _to_gateway_payment_method(body: TransactionRequest) -> PaymentMethodInput:
     if isinstance(body, CardTransactionRequest):
-        return CardPaymentMethod(token=body.token, installments=body.installments)
+        return CardPaymentMethod(
+            number=body.number,
+            cvc=body.cvc,
+            exp_month=body.exp_month,
+            exp_year=body.exp_year,
+            card_holder=body.card_holder,
+            installments=body.installments,
+        )
     if isinstance(body, PseTransactionRequest):
         return PsePaymentMethod(
             user_type=body.user_type,
@@ -54,7 +65,7 @@ def _to_gateway_payment_method(body: TransactionRequest) -> PaymentMethodInput:
 
 @router.post(
     "/{payment_id}/wompi/transaction",
-    response_model=PaymentAttemptResponse,
+    response_model=TransactionCreationResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Iniciar el cobro de una cuota vía Wompi",
 )
@@ -63,10 +74,78 @@ async def create_transaction(
     body: TransactionRequest,
     session: RequireSelfForPaymentGateways,
     service: PaymentCheckoutServiceDep,
-) -> PaymentAttemptResponse:
-    attempt = await service.create_transaction(
-        session, payment_id, _to_gateway_payment_method(body), body.customer_email
+) -> TransactionCreationResponse:
+    browser_info = (
+        BrowserInfo(
+            browser_color_depth=body.browser_info.browser_color_depth,
+            browser_screen_height=body.browser_info.browser_screen_height,
+            browser_screen_width=body.browser_info.browser_screen_width,
+            browser_language=body.browser_info.browser_language,
+            browser_user_agent=body.browser_info.browser_user_agent,
+            browser_tz=body.browser_info.browser_tz,
+        )
+        if isinstance(body, CardTransactionRequest)
+        else None
     )
+    attempt, three_ds_challenge = await service.create_transaction(
+        session,
+        payment_id,
+        _to_gateway_payment_method(body),
+        body.customer_email,
+        browser_info=browser_info,
+    )
+    return TransactionCreationResponse(
+        attempt=PaymentAttemptResponse(
+            id=attempt.id,
+            status=attempt.status.value,
+            provider_reference=attempt.provider_reference,
+            provider_transaction_id=attempt.provider_transaction_id,
+            charge_mode=attempt.charge_mode.value,
+        ),
+        three_ds_challenge=(
+            ThreeDsChallengeResponse(
+                current_step=three_ds_challenge.current_step,
+                current_step_status=three_ds_challenge.current_step_status,
+                challenge_html=three_ds_challenge.challenge_html,
+            )
+            if three_ds_challenge is not None
+            else None
+        ),
+    )
+
+
+@router.get(
+    "/{payment_id}/wompi/pse/financial-institutions",
+    response_model=list[FinancialInstitutionResponse],
+    summary="Listar bancos disponibles para pagar por PSE",
+)
+async def list_pse_financial_institutions(
+    payment_id: uuid.UUID,
+    session: RequireSelfForPaymentGateways,
+    service: PaymentCheckoutServiceDep,
+) -> list[FinancialInstitutionResponse]:
+    institutions = await service.list_pse_institutions(session, payment_id)
+    return [
+        FinancialInstitutionResponse(
+            financial_institution_code=i.financial_institution_code,
+            financial_institution_name=i.financial_institution_name,
+        )
+        for i in institutions
+    ]
+
+
+@router.get(
+    "/{payment_id}/wompi/transactions/{attempt_id}",
+    response_model=PaymentAttemptResponse,
+    summary="Consultar el estado de un intento de cobro (polling del reto 3DS)",
+)
+async def get_transaction_status(
+    payment_id: uuid.UUID,
+    attempt_id: uuid.UUID,
+    session: RequireSelfForPaymentGateways,
+    service: PaymentCheckoutServiceDep,
+) -> PaymentAttemptResponse:
+    attempt = await service.refresh_attempt_status(session, payment_id, attempt_id)
     return PaymentAttemptResponse(
         id=attempt.id,
         status=attempt.status.value,

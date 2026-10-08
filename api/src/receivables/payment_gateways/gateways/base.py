@@ -19,7 +19,16 @@ class AcceptanceTokens:
 
 @dataclass(frozen=True)
 class CardPaymentMethod:
-    token: str
+    """Datos crudos de la tarjeta -- `WompiGateway.create_transaction` la tokeniza
+    server-to-server (mismo mecanismo ya usado por `PaymentSourceService`, con la
+    `public_key` de la organización ya descifrada en el backend) antes de cobrar.
+    Ningún frontend necesita la `public_key` ni el widget de Wompi para esto."""
+
+    number: str
+    cvc: str
+    exp_month: str
+    exp_year: str
+    card_holder: str
     installments: int = 1
 
 
@@ -57,6 +66,31 @@ PaymentMethodInput = Union[
 
 
 @dataclass(frozen=True)
+class BrowserInfo:
+    """Fingerprint del navegador exigido por Wompi para 3D Secure v2 (challenge_v2) en
+    transacciones CARD -- ver skill `wompi-gateway`, Paso 6. Nombres en snake_case
+    porque viajan tal cual dentro de `customer_data.browser_info` del body de
+    `POST /transactions`."""
+
+    browser_color_depth: str
+    browser_screen_height: str
+    browser_screen_width: str
+    browser_language: str
+    browser_user_agent: str
+    browser_tz: str
+
+
+@dataclass(frozen=True)
+class ThreeDsChallenge:
+    """Reto 3DS pendiente de resolver (ver `WompiGateway._to_transaction`). El HTML del
+    iframe ya llega decodificado (la API de Wompi lo entrega escapado)."""
+
+    current_step: str
+    current_step_status: str
+    challenge_html: str
+
+
+@dataclass(frozen=True)
 class WompiTransaction:
     id: str
     status: str
@@ -65,6 +99,7 @@ class WompiTransaction:
     reference: str
     payment_method_type: str
     raw: dict[str, Any]
+    three_ds_challenge: ThreeDsChallenge | None = None
 
 
 @dataclass(frozen=True)
@@ -102,10 +137,12 @@ class ReceivablesPaymentGateway(Protocol):
         accept_personal_auth: str,
         customer_email: str,
         payment_source_id: str | None = None,
+        browser_info: BrowserInfo | None = None,
     ) -> WompiTransaction:
         """`payment_method` es obligatorio salvo cuando se cobra contra una fuente de
         pago guardada (`payment_source_id` presente, ver Paso 5.3 de la skill) — en ese
-        caso Wompi ignora `payment_method` y este se pasa en `None`."""
+        caso Wompi ignora `payment_method` y este se pasa en `None`. `browser_info` se
+        exige para CARD (3DS v2, Paso 6) y no aplica a los demás métodos."""
         ...
 
     async def tokenize_card(

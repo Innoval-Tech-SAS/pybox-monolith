@@ -8,15 +8,28 @@ from pydantic import EmailStr, Field
 from core.base.schema_base import BaseSchema
 
 
+class BrowserInfoRequest(BaseSchema):
+    """Fingerprint del navegador del deudor, exigido por Wompi para 3D Secure v2 en
+    pagos con tarjeta (ver skill `wompi-gateway`, Paso 6)."""
+
+    browser_color_depth: str
+    browser_screen_height: str
+    browser_screen_width: str
+    browser_language: str
+    browser_user_agent: str
+    browser_tz: str
+
+
 class CardTransactionRequest(BaseSchema):
     payment_method_type: Literal["CARD"] = "CARD"
-    token: str = Field(
-        description=(
-            "Token de la tarjeta ya tokenizada en el frontend (widget o /tokens/cards)"
-        )
-    )
+    number: str
+    cvc: str
+    exp_month: str
+    exp_year: str
+    card_holder: str
     installments: int = Field(default=1, ge=1)
     customer_email: EmailStr
+    browser_info: BrowserInfoRequest
 
 
 class PseTransactionRequest(BaseSchema):
@@ -58,6 +71,17 @@ class PaymentAttemptResponse(BaseSchema):
     provider_reference: str | None
     provider_transaction_id: str | None
     charge_mode: str
+
+
+class ThreeDsChallengeResponse(BaseSchema):
+    current_step: str
+    current_step_status: str
+    challenge_html: str
+
+
+class TransactionCreationResponse(BaseSchema):
+    attempt: PaymentAttemptResponse
+    three_ds_challenge: ThreeDsChallengeResponse | None = None
 
 
 class TokenizeCardSourceRequest(BaseSchema):

@@ -76,7 +76,10 @@ def get_payment_checkout_service(
     ],
 ) -> PaymentCheckoutService:
     return PaymentCheckoutService(
-        ownership_resolver, CreditPaymentAttemptRepository(session), gateway_resolver
+        ownership_resolver,
+        CreditPaymentAttemptRepository(session),
+        gateway_resolver,
+        PaymentRepository(session),
     )
 
 
