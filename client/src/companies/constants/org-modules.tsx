@@ -1,0 +1,87 @@
+import {
+  BarChart2,
+  CreditCard,
+  FolderOpen,
+  KeyRound,
+  Receipt,
+  Settings,
+  Users,
+} from "lucide-react";
+import type { OrgModule } from "@/types/companies/company-types";
+
+export const ORG_MODULES: OrgModule[] = [
+  {
+    key: "portfolios",
+    title: "Portafolios",
+    description: "Consulta y gestiona los portafolios de la empresa.",
+    icon: FolderOpen,
+    gradient: "from-teal-500 to-teal-600",
+    path: "/my-companies/portfolios",
+    requiredPermission: "org.portfolios",
+  },
+  {
+    key: "users",
+    title: "Usuarios",
+    description: "Consulta los usuarios vinculados a la empresa.",
+    icon: Users,
+    gradient: "from-blue-500 to-blue-600",
+    path: "/my-companies/users",
+    requiredPermission: "org.users",
+  },
+  {
+    key: "payment-methods",
+    title: "Métodos de Pago",
+    description: "Administra los medios de pago habilitados.",
+    icon: CreditCard,
+    gradient: "from-emerald-500 to-cyan-600",
+    path: "/my-companies/payment-methods",
+    requiredPermission: "org.payment_methods",
+  },
+  {
+    key: "payment-gateway-credentials",
+    title: "Pasarelas de Cobro",
+    description: "Conecta tu propia cuenta de pasarela para cobrarle a tus deudores.",
+    icon: KeyRound,
+    gradient: "from-indigo-500 to-violet-600",
+    path: "/my-companies/payment-gateway-credentials",
+    // A diferencia de payment-methods (permiso delegable), esto mueve dinero real de
+    // la empresa: solo el ADMIN de la organización (o un admin global) lo ve.
+    adminOnly: true,
+  },
+  {
+    key: "billing",
+    title: "Facturación",
+    description: "Consulta y paga las facturas de la empresa.",
+    icon: Receipt,
+    gradient: "from-rose-500 to-pink-600",
+    path: "/my-companies/billing",
+    requiredPermission: "org.billing",
+  },
+  {
+    key: "reports",
+    title: "Reportes",
+    description: "Genera y consulta reportes de gestión.",
+    icon: BarChart2,
+    gradient: "from-orange-500 to-orange-600",
+    path: "/my-companies/reports",
+    requiredPermission: "org.reports",
+  },
+  // {
+  //   key: "roles",
+  //   title: "Roles",
+  //   description: "Administra los roles y permisos de los usuarios.",
+  //   icon: ShieldCheck,
+  //   gradient: "from-cyan-500 to-sky-600",
+  //   path: null,
+  //   adminOnly: true,
+  // },
+  {
+    key: "settings",
+    title: "Configuración",
+    description: "Edita la información y ajustes de la empresa.",
+    icon: Settings,
+    gradient: "from-purple-500 to-purple-600",
+    path: "/my-companies/settings",
+    adminOnly: true,
+  },
+];

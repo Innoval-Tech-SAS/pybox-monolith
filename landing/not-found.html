@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Página no encontrada — Pybox</title>
+  <meta name="robots" content="noindex, follow" />
+  <meta name="description" content="La página que buscas no existe o fue movida. Vuelve al inicio de Pybox o contáctanos." />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #fff;
+      -webkit-font-smoothing: antialiased
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(18, 16, 48, .82);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(99, 102, 241, .15)
+    }
+
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 3.75rem;
+      max-width: 1200px;
+      margin-inline: auto;
+      padding-inline: 1.25rem;
+      gap: 1rem
+    }
+
+    .nav__logo {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-shrink: 0
+    }
+
+    .nav__logo-icon {
+      width: 2rem;
+      height: 2rem;
+      border-radius: .75rem;
+      background: #6366f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .nav__logo-name {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: #fff
+    }
+  </style>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+
+<body data-page="not-found">
+
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+      <path d="m16 19 2 2 4-4" />
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7" />
+    </symbol>
+  </svg>
+
+  <div id="nav-placeholder"></div>
+
+  <main class="main" id="main-content">
+
+    <section class="page-hero">
+      <div class="container">
+        <span class="hero__label">
+          <span class="hero__label-dot" aria-hidden="true"></span>
+          Error 404
+        </span>
+        <h1 class="page-hero__title">Esta página <em>no existe</em></h1>
+        <p class="page-hero__sub">Puede que el enlace esté roto o que la página se haya movido. Vuelve al inicio o
+          contáctanos si crees que esto es un error.</p>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="container" style="max-width:960px">
+        <div class="cta-wrap">
+          <div aria-hidden="true"
+            style="width:3rem;height:3rem;border-radius:var(--r-lg);background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-inline:auto;margin-bottom:var(--s5)">
+            <svg width="22" height="22">
+              <use href="#i-alert" />
+            </svg>
+          </div>
+          <h2 class="cta-title">¿Nos ayudas a encontrar el camino?</h2>
+          <p class="cta-body">Revisa la dirección o usa alguno de estos accesos para seguir navegando.</p>
+          <div class="cta-actions">
+            <a href="index.html" class="btn btn--white btn--lg">
+              <svg width="16" height="16" aria-hidden="true">
+                <use href="#i-arrow" />
+              </svg>Volver al inicio
+            </a>
+            <a href="contacto.html" class="btn btn--ghost btn--lg">Contactar soporte</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script defer src="js/env.js"></script>
+  <script defer src="js/partials.js"></script>
+  <script defer src="js/nav.js"></script>
+</body>
+
+</html>

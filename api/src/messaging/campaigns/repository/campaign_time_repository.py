@@ -1,0 +1,71 @@
+"""Acceso a datos de la programación (horario/frecuencia) de campañas."""
+
+import uuid
+from datetime import datetime
+from typing import Sequence
+
+from sqlalchemy import select
+
+from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
+from messaging.campaigns.models.campaign_model import CampaignModel
+from messaging.campaigns.models.campaign_time_model import CampaignTimeModel
+
+
+class CampaignTimeRepository(SoftDeleteRepositoryBase[CampaignTimeModel]):
+    model_class = CampaignTimeModel
+
+    async def list_active_by_org(
+        self, organization_id: uuid.UUID
+    ) -> Sequence[tuple[CampaignTimeModel, CampaignModel]]:
+        stmt = (
+            select(CampaignTimeModel, CampaignModel)
+            .join(CampaignModel, CampaignTimeModel.campaign_id == CampaignModel.id)
+            .where(
+                CampaignTimeModel.organization_id == organization_id,
+                CampaignTimeModel.is_active.is_(True),
+                CampaignModel.deleted_at.is_(None),
+            )
+            .order_by(CampaignTimeModel.next_execution)
+        )
+        result = await self.session.execute(stmt)
+        return [tuple(row) for row in result.all()]
+
+    async def find_due_active(
+        self, now: datetime, limit: int = 300, after_id: uuid.UUID | None = None
+    ) -> Sequence[CampaignTimeModel]:
+        # La campaña debe seguir viva: al eliminar su portafolio (o la organización) la
+        # campaña cae en cascada, y su programación no debe seguir disparando envíos.
+        stmt = (
+            select(CampaignTimeModel)
+            .join(CampaignModel, CampaignModel.id == CampaignTimeModel.campaign_id)
+            .where(
+                CampaignTimeModel.is_active.is_(True),
+                CampaignTimeModel.next_execution <= now,
+                CampaignModel.deleted_at.is_(None),
+            )
+            .order_by(CampaignTimeModel.id)
+            .limit(limit)
+        )
+        if after_id is not None:
+            stmt = stmt.where(CampaignTimeModel.id > after_id)
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
+    async def get_by_campaign(self, campaign_id: uuid.UUID) -> CampaignTimeModel | None:
+        result = await self.session.execute(
+            select(CampaignTimeModel).where(
+                CampaignTimeModel.campaign_id == campaign_id
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def deactivate(self, ct: CampaignTimeModel) -> CampaignTimeModel:
+        ct.is_active = False
+        ct.next_execution = None
+        return await self.update(ct)
+
+    async def reschedule(
+        self, ct: CampaignTimeModel, next_execution: datetime
+    ) -> CampaignTimeModel:
+        ct.next_execution = next_execution
+        return await self.update(ct)

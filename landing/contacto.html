@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contacto y PQRS — Pybox</title>
+  <meta name="description"
+    content="Escríbenos para resolver dudas comerciales o radica una Petición, Queja, Reclamo o Sugerencia sobre tus obligaciones y comunicaciones en Pybox." />
+  <link rel="canonical" href="https://pybox.app/contacto.html" />
+  <meta property="og:title" content="Contacto y PQRS — Pybox" />
+  <meta property="og:description"
+    content="Contáctanos o radica una PQRS sobre tus obligaciones, notificaciones o el servicio de Pybox." />
+  <meta property="og:url" content="https://pybox.app/contacto.html" />
+  <meta property="og:type" content="website" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #fff;
+      -webkit-font-smoothing: antialiased
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(18, 16, 48, .82);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(99, 102, 241, .15)
+    }
+
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 3.75rem;
+      max-width: 1200px;
+      margin-inline: auto;
+      padding-inline: 1.25rem;
+      gap: 1rem
+    }
+
+    .nav__logo {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-shrink: 0
+    }
+
+    .nav__logo-icon {
+      width: 2rem;
+      height: 2rem;
+      border-radius: .75rem;
+      background: #6366f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .nav__logo-name {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: #fff
+    }
+  </style>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+
+<body data-page="contacto">
+
+  <!--
+  Backend (futuro): al enviar estos formularios se debe crear un "ticket" en la API.
+  Sugerencia de payload para POST /tickets (api/src/tickets/):
+
+  Contacto -> {
+    type: "contact",
+    full_name: string,
+    company_name?: string,
+    email: string,
+    phone?: string,
+    reason: "demo" | "comercial" | "soporte" | "alianzas" | "otro",
+    message: string,
+    data_consent: boolean
+  }
+
+  PQRS -> {
+    type: "pqrs",
+    request_type: "peticion" | "queja" | "reclamo" | "sugerencia",
+    document_type: "CC" | "CE" | "PA" | "NIT",
+    document_number: string,
+    full_name: string,
+    email: string,
+    phone?: string,
+    reference?: string,        // n.º de obligación o empresa relacionada
+    description: string,
+    attachment?: file,
+    truthfulness_consent: boolean,
+    data_consent: boolean
+  }
+-->
+
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+      <path d="m16 19 2 2 4-4" />
+    </symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path
+        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+    </symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2z" />
+      <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+    </symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <path d="m9 11 3 3L22 4" />
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </symbol>
+    <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="m22 2-7 20-4-9-9-4Z" />
+      <path d="M22 2 11 13" />
+    </symbol>
+  </svg>
+
+  <div id="nav-placeholder"></div>
+
+  <main class="main" id="main-content">
+
+    <section class="page-hero">
+      <div class="container">
+        <span class="hero__label">
+          <span class="hero__label-dot" aria-hidden="true"></span>
+          Estamos para ayudarte
+        </span>
+        <h1 class="page-hero__title">Contáctanos o <em>radica tu PQRS</em></h1>
+        <p class="page-hero__sub">Escríbenos para resolver dudas comerciales o radica una Petición, Queja, Reclamo o
+          Sugerencia sobre tus obligaciones y comunicaciones.</p>
+        <div class="page-hero__tabs" role="tablist" aria-label="Ir a sección">
+          <button type="button" class="page-hero__tab" role="tab" id="tab-contacto" data-tab="contacto" aria-selected="true" aria-controls="contacto">Contacto</button>
+          <button type="button" class="page-hero__tab" role="tab" id="tab-pqrs" data-tab="pqrs" aria-selected="false" aria-controls="pqrs">PQRS</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contacto" data-tab-panel="contacto" role="tabpanel" aria-labelledby="tab-contacto">
+      <div class="container">
+        <div class="contact-grid">
+          <div class="contact-info">
+            <span class="kicker">Contacto</span>
+            <h2 class="section-title">Hablemos de tu cartera o tus comunicaciones certificadas</h2>
+            <p class="section-body">Cuéntanos qué necesitas y un asesor de Pybox te responderá en menos de 1 día hábil.
+            </p>
+            <ul class="contact-info__list">
+              <li class="contact-info__item">
+                <span class="contact-info__icon" aria-hidden="true"><svg width="18" height="18">
+                    <use href="#i-mail" />
+                  </svg></span>
+                <div>
+                  <div class="contact-info__label">Correo</div>
+                  <div class="contact-info__value">contacto@pybox.app</div>
+                </div>
+              </li>
+              <li class="contact-info__item">
+                <span class="contact-info__icon" aria-hidden="true"><svg width="18" height="18">
+                    <use href="#i-phone" />
+                  </svg></span>
+                <div>
+                  <div class="contact-info__label">Línea de atención</div>
+                  <div class="contact-info__value">+57 (1) 000 0000</div>
+                </div>
+              </li>
+              <li class="contact-info__item">
+                <span class="contact-info__icon" aria-hidden="true"><svg width="18" height="18">
+                    <use href="#i-msg" />
+                  </svg></span>
+                <div>
+                  <div class="contact-info__label">Tiempo de respuesta</div>
+                  <div class="contact-info__value">Menos de 1 día hábil</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <form class="form-card" id="form-contacto" novalidate aria-labelledby="form-contacto-title">
+            <h3 id="form-contacto-title" class="form-card__title">Envíanos un mensaje</h3>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="contacto-nombre">Nombre completo <span class="form-required"
+                    aria-hidden="true">*</span></label>
+                <input class="form-input" type="text" id="contacto-nombre" name="full_name" autocomplete="name"
+                  required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="contacto-empresa">Empresa <span
+                    class="form-hint">(opcional)</span></label>
+                <input class="form-input" type="text" id="contacto-empresa" name="company_name"
+                  autocomplete="organization" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="contacto-email">Correo electrónico <span class="form-required"
+                    aria-hidden="true">*</span></label>
+                <input class="form-input" type="email" id="contacto-email" name="email" autocomplete="email" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="contacto-telefono">Teléfono <span
+                    class="form-hint">(opcional)</span></label>
+                <input class="form-input" type="tel" id="contacto-telefono" name="phone" autocomplete="tel" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="contacto-motivo">Motivo de contacto <span class="form-required"
+                  aria-hidden="true">*</span></label>
+              <select class="form-input form-select" id="contacto-motivo" name="reason" required>
+                <option value="" disabled selected>Selecciona una opción</option>
+                <option value="demo">Quiero una demo</option>
+                <option value="comercial">Consulta comercial</option>
+                <option value="soporte">Soporte técnico</option>
+                <option value="alianzas">Alianzas</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="contacto-mensaje">Mensaje <span class="form-required"
+                  aria-hidden="true">*</span></label>
+              <textarea class="form-input form-textarea" id="contacto-mensaje" name="message" rows="4"
+                required></textarea>
+            </div>
+
+            <div class="form-group form-group--checkbox">
+              <input class="form-checkbox" type="checkbox" id="contacto-habeas" name="data_consent" required />
+              <label for="contacto-habeas">Autorizo el tratamiento de mis datos personales conforme a la <a href="#"
+                  class="form-link">política de privacidad</a>. <span class="form-required"
+                  aria-hidden="true">*</span></label>
+            </div>
+
+            <button type="submit" class="btn btn--violet btn--lg form-card__submit">
+              <svg width="16" height="16" aria-hidden="true">
+                <use href="#i-send" />
+              </svg>
+              Enviar mensaje
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--gray" id="pqrs" data-tab-panel="pqrs" role="tabpanel" aria-labelledby="tab-pqrs" hidden>
+      <div class="container">
+        <div class="section-header section-header--center">
+          <span class="kicker">PQRS</span>
+          <h2 class="section-title" style="margin-inline:auto">Peticiones, quejas, reclamos y sugerencias</h2>
+          <p class="section-body" style="margin-inline:auto">Radica tu solicitud sobre tus obligaciones, notificaciones
+            o el servicio de Pybox. Le daremos seguimiento con número de radicado y trazabilidad.</p>
+        </div>
+
+        <form class="form-card form-card--wide" id="form-pqrs" novalidate aria-labelledby="form-pqrs-title">
+          <h3 id="form-pqrs-title" class="sr-only">Formulario de PQRS</h3>
+
+          <fieldset class="form-fieldset">
+            <legend class="form-label">Tipo de solicitud <span class="form-required" aria-hidden="true">*</span>
+            </legend>
+            <div class="pqrs-type-grid">
+              <label class="pqrs-type">
+                <input type="radio" name="request_type" value="peticion" required />
+                <span class="pqrs-type__icon" aria-hidden="true"><svg width="18" height="18">
+                    <use href="#i-msg" />
+                  </svg></span>
+                <span class="pqrs-type__label">Petición</span>
+              </label>
+              <label class="pqrs-type">
+                <input type="radio" name="request_type" value="queja" />
+                <span class="pqrs-type__icon" aria-hidden="true"><svg width="18" height="18">
+                    <use href="#i-alert" />
+                  </svg></span>
+                <span class="pqrs-type__label">Queja</span>
+              </label>
+              <label class="pqrs-type">
+                <input type="radio" name="request_type" value="reclamo" />
+                <span class="pqrs-type__icon" aria-hidden="true"><svg width="18" height="18">
+                    <use href="#i-shield" />
+                  </svg></span>
+                <span class="pqrs-type__label">Reclamo</span>
+              </label>
+              <label class="pqrs-type">
+                <input type="radio" name="request_type" value="sugerencia" />
+                <span class="pqrs-type__icon" aria-hidden="true"><svg width="18" height="18">
+                    <use href="#i-check-circle" />
+                  </svg></span>
+                <span class="pqrs-type__label">Sugerencia</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="pqrs-tipo-doc">Tipo de documento <span class="form-required"
+                  aria-hidden="true">*</span></label>
+              <select class="form-input form-select" id="pqrs-tipo-doc" name="document_type" required>
+                <option value="" disabled selected>Selecciona</option>
+                <option value="CC">Cédula de ciudadanía</option>
+                <option value="CE">Cédula de extranjería</option>
+                <option value="PA">Pasaporte</option>
+                <option value="NIT">NIT</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pqrs-num-doc">Número de documento <span class="form-required"
+                  aria-hidden="true">*</span></label>
+              <input class="form-input" type="text" id="pqrs-num-doc" name="document_number" inputmode="numeric"
+                required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="pqrs-nombre">Nombres y apellidos <span class="form-required"
+                  aria-hidden="true">*</span></label>
+              <input class="form-input" type="text" id="pqrs-nombre" name="full_name" autocomplete="name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pqrs-email">Correo electrónico <span class="form-required"
+                  aria-hidden="true">*</span></label>
+              <input class="form-input" type="email" id="pqrs-email" name="email" autocomplete="email" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="pqrs-telefono">Teléfono <span class="form-hint">(opcional)</span></label>
+              <input class="form-input" type="tel" id="pqrs-telefono" name="phone" autocomplete="tel" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pqrs-referencia">N.º de obligación o empresa relacionada <span
+                  class="form-hint">(opcional)</span></label>
+              <input class="form-input" type="text" id="pqrs-referencia" name="reference" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="pqrs-descripcion">Descripción de tu solicitud <span class="form-required"
+                aria-hidden="true">*</span></label>
+            <textarea class="form-input form-textarea" id="pqrs-descripcion" name="description" rows="5"
+              required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="pqrs-adjunto">Adjuntar soporte <span class="form-hint">(opcional, PDF o
+                imagen)</span></label>
+            <input class="form-input form-file" type="file" id="pqrs-adjunto" name="attachment"
+              accept=".pdf,.jpg,.jpeg,.png" />
+          </div>
+
+          <div class="form-group form-group--checkbox">
+            <input class="form-checkbox" type="checkbox" id="pqrs-veracidad" name="truthfulness_consent" required />
+            <label for="pqrs-veracidad">Declaro que la información suministrada es veraz. <span class="form-required"
+                aria-hidden="true">*</span></label>
+          </div>
+
+          <div class="form-group form-group--checkbox">
+            <input class="form-checkbox" type="checkbox" id="pqrs-habeas" name="data_consent" required />
+            <label for="pqrs-habeas">Autorizo el tratamiento de mis datos personales conforme a la <a href="#"
+                class="form-link">política de privacidad</a>. <span class="form-required"
+                aria-hidden="true">*</span></label>
+          </div>
+
+          <button type="submit" class="btn btn--violet btn--lg form-card__submit">
+            <svg width="16" height="16" aria-hidden="true">
+              <use href="#i-send" />
+            </svg>
+            Radicar PQRS
+          </button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script defer src="js/env.js"></script>
+  <script defer src="js/partials.js"></script>
+  <script defer src="js/nav.js"></script>
+  <script defer src="js/tabs.js"></script>
+</body>
+
+</html>
