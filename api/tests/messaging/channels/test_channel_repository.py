@@ -25,7 +25,9 @@ class TestGetByName:
         repo = ChannelRepository(db_session)
         # Se borra el canal sembrado dentro de la transacción de este test -- se
         # revierte solo al terminar, no afecta a otros tests.
-        await db_session.execute(delete(ChannelModel).where(ChannelModel.name == ChannelName.CALL_IA))
+        await db_session.execute(
+            delete(ChannelModel).where(ChannelModel.name == ChannelName.CALL_IA)
+        )
         await db_session.flush()
 
         channel = await repo.get_by_name(ChannelName.CALL_IA)

@@ -94,7 +94,10 @@ class TestUpdate:
         # `name` es un kwarg reservado del constructor de MagicMock (fija el nombre
         # interno del mock, no el atributo) -- se asigna aparte para que quede real.
         existing = MagicMock(
-            id=uuid.uuid4(), body="cuerpo original", subject=None, status=TemplateStatus.DRAFT
+            id=uuid.uuid4(),
+            body="cuerpo original",
+            subject=None,
+            status=TemplateStatus.DRAFT,
         )
         existing.name = "Original"
         template_repo.get_by_id_and_portfolio = AsyncMock(return_value=existing)
@@ -102,7 +105,9 @@ class TestUpdate:
 
         # Solo `status` va explícito -- `name`/`body` no deben tocarse.
         data = TemplateUpdateRequest(status=TemplateStatus.ACTIVE)
-        result = await service.update(uuid.uuid4(), uuid.uuid4(), data, make_user_session())
+        result = await service.update(
+            uuid.uuid4(), uuid.uuid4(), data, make_user_session()
+        )
 
         assert result.status == TemplateStatus.ACTIVE
         assert result.name == "Original"
@@ -123,14 +128,21 @@ class TestDelete:
 
 
 class TestPreview:
-    async def test_reports_variables_from_body_and_subject_and_renders_available_ones(self):
+    async def test_reports_variables_from_body_and_subject_and_renders_available_ones(
+        self,
+    ):
         service, template_repo, portfolio_repo = build_service()
         portfolio_repo.get_by_id = AsyncMock(return_value=make_portfolio())
-        template = MagicMock(body="Hola {nombre}, saldo {saldo}", subject="Recordatorio {nombre}")
+        template = MagicMock(
+            body="Hola {nombre}, saldo {saldo}", subject="Recordatorio {nombre}"
+        )
         template_repo.get_by_id_and_portfolio = AsyncMock(return_value=template)
 
         result = await service.preview(
-            uuid.uuid4(), uuid.uuid4(), TemplatePreviewRequest(sub={"nombre": "Ana"}), make_user_session()
+            uuid.uuid4(),
+            uuid.uuid4(),
+            TemplatePreviewRequest(sub={"nombre": "Ana"}),
+            make_user_session(),
         )
 
         assert result.variables_used == ["nombre", "saldo"]
@@ -141,8 +153,11 @@ class TestPreview:
 class TestSend:
     def _make_email_template(self, **overrides):
         defaults = dict(
-            id=uuid.uuid4(), channel=ChannelName.EMAIL, status=TemplateStatus.ACTIVE,
-            body="Hola {nombre}", subject="Asunto original",
+            id=uuid.uuid4(),
+            channel=ChannelName.EMAIL,
+            status=TemplateStatus.ACTIVE,
+            body="Hola {nombre}",
+            subject="Asunto original",
         )
         defaults.update(overrides)
         template = MagicMock(**defaults)
@@ -155,7 +170,12 @@ class TestSend:
         template_repo.get_by_id_and_portfolio = AsyncMock(return_value=template)
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.send(uuid.uuid4(), uuid.uuid4(), TemplateSendRequest(to="a@b.com", sub={}), make_user_session())
+            await service.send(
+                uuid.uuid4(),
+                uuid.uuid4(),
+                TemplateSendRequest(to="a@b.com", sub={}),
+                make_user_session(),
+            )
         assert exc_info.value.status_code == 422
 
     async def test_inactive_template_raises_422(self):
@@ -165,7 +185,12 @@ class TestSend:
         template_repo.get_by_id_and_portfolio = AsyncMock(return_value=template)
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.send(uuid.uuid4(), uuid.uuid4(), TemplateSendRequest(to="a@b.com", sub={}), make_user_session())
+            await service.send(
+                uuid.uuid4(),
+                uuid.uuid4(),
+                TemplateSendRequest(to="a@b.com", sub={}),
+                make_user_session(),
+            )
         assert exc_info.value.status_code == 422
 
     async def test_sends_through_the_gateway_using_the_template_channel(self):
@@ -175,19 +200,28 @@ class TestSend:
         template = self._make_email_template()
         template_repo.get_by_id_and_portfolio = AsyncMock(return_value=template)
 
-        with patch("messaging.templates.services.template_service._DISPATCHER") as mock_dispatcher:
-            mock_dispatcher.send = AsyncMock(return_value=(True, {"a@b.com": "id-1"}, "sending-1"))
+        with patch(
+            "messaging.templates.services.template_service._DISPATCHER"
+        ) as mock_dispatcher:
+            mock_dispatcher.send = AsyncMock(
+                return_value=(True, {"a@b.com": "id-1"}, "sending-1")
+            )
             result = await service.send(
-                uuid.uuid4(), uuid.uuid4(),
+                uuid.uuid4(),
+                uuid.uuid4(),
                 TemplateSendRequest(to="a@b.com", subject=None, sub={"nombre": "Ana"}),
                 make_user_session(),
             )
 
         mock_dispatcher.send.assert_awaited_once()
         call = mock_dispatcher.send.await_args
-        assert call.args[0] == ChannelName.EMAIL  # canal de la plantilla, no hardcodeado
+        assert (
+            call.args[0] == ChannelName.EMAIL
+        )  # canal de la plantilla, no hardcodeado
         assert call.args[1] == ["a@b.com"]
-        assert call.args[2] == "Hola {nombre}"  # sin resolver -- lo hace el proveedor con `sub`
+        assert (
+            call.args[2] == "Hola {nombre}"
+        )  # sin resolver -- lo hace el proveedor con `sub`
         assert call.kwargs["subject"] == "Asunto original"
         assert call.kwargs["sub"] == [{"nombre": "Ana"}]
         assert call.kwargs["credential_service"] is service._credential_service
@@ -200,10 +234,13 @@ class TestSend:
         template = self._make_email_template()
         template_repo.get_by_id_and_portfolio = AsyncMock(return_value=template)
 
-        with patch("messaging.templates.services.template_service._DISPATCHER") as mock_dispatcher:
+        with patch(
+            "messaging.templates.services.template_service._DISPATCHER"
+        ) as mock_dispatcher:
             mock_dispatcher.send = AsyncMock(return_value=(True, None, None))
             await service.send(
-                uuid.uuid4(), uuid.uuid4(),
+                uuid.uuid4(),
+                uuid.uuid4(),
                 TemplateSendRequest(to="a@b.com", subject="Asunto custom", sub={}),
                 make_user_session(),
             )
@@ -216,10 +253,15 @@ class TestSend:
         template = self._make_email_template()
         template_repo.get_by_id_and_portfolio = AsyncMock(return_value=template)
 
-        with patch("messaging.templates.services.template_service._DISPATCHER") as mock_dispatcher:
+        with patch(
+            "messaging.templates.services.template_service._DISPATCHER"
+        ) as mock_dispatcher:
             mock_dispatcher.send = AsyncMock(return_value=(False, None, None))
             with pytest.raises(HTTPException) as exc_info:
                 await service.send(
-                    uuid.uuid4(), uuid.uuid4(), TemplateSendRequest(to="a@b.com", sub={}), make_user_session()
+                    uuid.uuid4(),
+                    uuid.uuid4(),
+                    TemplateSendRequest(to="a@b.com", sub={}),
+                    make_user_session(),
                 )
         assert exc_info.value.status_code == 502

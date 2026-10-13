@@ -14,8 +14,15 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from receivables.credits.repository.credit_repository import CreditRepository
-from receivables.portfolios.models.portfolio_daily_counter_config_model import PortfolioDailyCounterConfigModel
-from tests.receivables.conftest import build_credit, build_debtor, build_organization, build_portfolio
+from receivables.portfolios.models.portfolio_daily_counter_config_model import (
+    PortfolioDailyCounterConfigModel,
+)
+from tests.receivables.conftest import (
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 TZ_STR = "America/Bogota"
 
@@ -31,7 +38,9 @@ class TestDebtorBelongsToPortfolio:
         debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
-        credit = build_credit(portfolio.id, debtor.id, deleted_at=datetime.now(timezone.utc))
+        credit = build_credit(
+            portfolio.id, debtor.id, deleted_at=datetime.now(timezone.utc)
+        )
         db_session.add(credit)
         await db_session.flush()
 
@@ -69,7 +78,9 @@ class TestDebtorBelongsToPortfolio:
         await db_session.flush()
 
         repo = CreditRepository(db_session)
-        assert await repo.debtor_belongs_to_portfolio(debtor.id, portfolio_y.id) is False
+        assert (
+            await repo.debtor_belongs_to_portfolio(debtor.id, portfolio_y.id) is False
+        )
 
 
 class TestBulkAdvanceOverdueDays:
@@ -80,7 +91,9 @@ class TestBulkAdvanceOverdueDays:
         portfolio = build_portfolio(org.id, country="CO")
         db_session.add(portfolio)
         await db_session.flush()
-        config = PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=enabled)
+        config = PortfolioDailyCounterConfigModel(
+            portfolio_id=portfolio.id, enabled=enabled
+        )
         db_session.add(config)
         debtor = build_debtor(org.id)
         db_session.add(debtor)
@@ -90,7 +103,8 @@ class TestBulkAdvanceOverdueDays:
     async def test_credit_with_no_court_date_advances_exactly_one_day(self, db_session):
         portfolio, debtor = await self._setup(db_session, enabled=True)
         credit = build_credit(
-            portfolio.id, debtor.id,
+            portfolio.id,
+            debtor.id,
             court_date=None,
             days_overdue_at_cutoff=5,
             overdue_principal_balance=100,
@@ -113,7 +127,8 @@ class TestBulkAdvanceOverdueDays:
         portfolio, debtor = await self._setup(db_session, enabled=True)
         now = datetime.now(timezone.utc)
         credit = build_credit(
-            portfolio.id, debtor.id,
+            portfolio.id,
+            debtor.id,
             court_date=now,
             days_overdue_at_cutoff=5,
             overdue_principal_balance=100,
@@ -134,7 +149,8 @@ class TestBulkAdvanceOverdueDays:
     async def test_credit_in_disabled_portfolio_is_not_touched(self, db_session):
         portfolio, debtor = await self._setup(db_session, enabled=False)
         credit = build_credit(
-            portfolio.id, debtor.id,
+            portfolio.id,
+            debtor.id,
             court_date=None,
             days_overdue_at_cutoff=5,
             overdue_principal_balance=100,
@@ -167,7 +183,9 @@ class TestGetByDebtorId:
         db_session.add_all([titular, codebtor_only])
         await db_session.flush()
         as_titular = build_credit(portfolio.id, titular.id)
-        as_codebtor = build_credit(portfolio.id, codebtor_only.id, codebtor_id=titular.id)
+        as_codebtor = build_credit(
+            portfolio.id, codebtor_only.id, codebtor_id=titular.id
+        )
         db_session.add_all([as_titular, as_codebtor])
         await db_session.flush()
 
@@ -186,7 +204,9 @@ class TestGetByDebtorId:
         debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
-        credit = build_credit(portfolio.id, debtor.id, deleted_at=datetime.now(timezone.utc))
+        credit = build_credit(
+            portfolio.id, debtor.id, deleted_at=datetime.now(timezone.utc)
+        )
         db_session.add(credit)
         await db_session.flush()
 
@@ -241,7 +261,9 @@ class TestGetByCodebtorId:
 
 
 class TestGetLatestByDebtorIds:
-    async def test_returns_only_the_most_recently_disbursed_credit_per_debtor(self, db_session):
+    async def test_returns_only_the_most_recently_disbursed_credit_per_debtor(
+        self, db_session
+    ):
         org = build_organization()
         db_session.add(org)
         await db_session.flush()
@@ -251,8 +273,16 @@ class TestGetLatestByDebtorIds:
         debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
-        older = build_credit(portfolio.id, debtor.id, disbursed_date=datetime(2024, 1, 1, tzinfo=timezone.utc))
-        newer = build_credit(portfolio.id, debtor.id, disbursed_date=datetime(2025, 1, 1, tzinfo=timezone.utc))
+        older = build_credit(
+            portfolio.id,
+            debtor.id,
+            disbursed_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+        )
+        newer = build_credit(
+            portfolio.id,
+            debtor.id,
+            disbursed_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        )
         db_session.add_all([older, newer])
         await db_session.flush()
 
@@ -283,10 +313,14 @@ class TestGetPortfolioStats:
 
         # `shared_debtor` es titular de un crédito Y codeudor de otro, ambos en el
         # MISMO portafolio -- debe contarse una sola vez en `clientes_unicos`.
-        db_session.add_all([
-            build_credit(portfolio.id, shared_debtor.id),
-            build_credit(portfolio.id, other_titular.id, codebtor_id=shared_debtor.id),
-        ])
+        db_session.add_all(
+            [
+                build_credit(portfolio.id, shared_debtor.id),
+                build_credit(
+                    portfolio.id, other_titular.id, codebtor_id=shared_debtor.id
+                ),
+            ]
+        )
         await db_session.flush()
 
         repo = CreditRepository(db_session)

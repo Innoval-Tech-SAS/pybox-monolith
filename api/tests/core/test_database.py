@@ -4,7 +4,9 @@ from core.database.database import Database, _is_terminated_connection_error
 
 
 def _dbapi_error(*, connection_invalidated: bool = False) -> DBAPIError:
-    return DBAPIError("SELECT 1", {}, Exception("boom"), connection_invalidated=connection_invalidated)
+    return DBAPIError(
+        "SELECT 1", {}, Exception("boom"), connection_invalidated=connection_invalidated
+    )
 
 
 class TestIsTerminatedConnectionError:
@@ -13,18 +15,26 @@ class TestIsTerminatedConnectionError:
     real (p. ej. IntegrityError, que NO invalida la conexión)."""
 
     def test_connection_invalidated_flag_is_terminated(self):
-        assert _is_terminated_connection_error(_dbapi_error(connection_invalidated=True)) is True
+        assert (
+            _is_terminated_connection_error(_dbapi_error(connection_invalidated=True))
+            is True
+        )
 
     def test_interface_error_is_terminated(self):
         err = InterfaceError("SELECT 1", {}, Exception("conn gone"))
         assert _is_terminated_connection_error(err) is True
 
     def test_internal_error_is_terminated(self):
-        err = InternalError("SELECT 1", {}, Exception("another operation is in progress"))
+        err = InternalError(
+            "SELECT 1", {}, Exception("another operation is in progress")
+        )
         assert _is_terminated_connection_error(err) is True
 
     def test_plain_dbapi_error_without_flag_is_not_terminated(self):
-        assert _is_terminated_connection_error(_dbapi_error(connection_invalidated=False)) is False
+        assert (
+            _is_terminated_connection_error(_dbapi_error(connection_invalidated=False))
+            is False
+        )
 
     def test_integrity_error_is_not_terminated(self):
         err = IntegrityError("INSERT ...", {}, Exception("duplicate key"))

@@ -57,13 +57,19 @@ class TestListAllByPortfolioFiltersByChannel:
     async def test_only_templates_of_requested_channel_are_returned(self, db_session):
         portfolio = await _make_portfolio(db_session)
         repo = TemplateRepository(db_session)
-        db_session.add_all([
-            make_template(portfolio.id, channel=ChannelName.SMS, body="sms"),
-            make_template(portfolio.id, channel=ChannelName.EMAIL, body=None, subject="asunto"),
-        ])
+        db_session.add_all(
+            [
+                make_template(portfolio.id, channel=ChannelName.SMS, body="sms"),
+                make_template(
+                    portfolio.id, channel=ChannelName.EMAIL, body=None, subject="asunto"
+                ),
+            ]
+        )
         await db_session.flush()
 
-        results = await repo.list_all_by_portfolio(portfolio.id, channel=ChannelName.EMAIL)
+        results = await repo.list_all_by_portfolio(
+            portfolio.id, channel=ChannelName.EMAIL
+        )
 
         assert len(results) == 1
         assert results[0].channel == ChannelName.EMAIL
@@ -73,7 +79,9 @@ class TestListByPortfolioPagination:
     async def test_total_reflects_full_count_not_page_size(self, db_session):
         portfolio = await _make_portfolio(db_session)
         repo = TemplateRepository(db_session)
-        db_session.add_all([make_template(portfolio.id, name=f"Plantilla {i}") for i in range(3)])
+        db_session.add_all(
+            [make_template(portfolio.id, name=f"Plantilla {i}") for i in range(3)]
+        )
         await db_session.flush()
 
         items, total = await repo.list_by_portfolio(portfolio.id, page=1, page_size=2)
@@ -84,13 +92,17 @@ class TestListByPortfolioPagination:
     async def test_search_filters_by_name_case_insensitive(self, db_session):
         portfolio = await _make_portfolio(db_session)
         repo = TemplateRepository(db_session)
-        db_session.add_all([
-            make_template(portfolio.id, name="Recordatorio de pago"),
-            make_template(portfolio.id, name="Bienvenida"),
-        ])
+        db_session.add_all(
+            [
+                make_template(portfolio.id, name="Recordatorio de pago"),
+                make_template(portfolio.id, name="Bienvenida"),
+            ]
+        )
         await db_session.flush()
 
-        items, total = await repo.list_by_portfolio(portfolio.id, page=1, page_size=10, search="recordatorio")
+        items, total = await repo.list_by_portfolio(
+            portfolio.id, page=1, page_size=10, search="recordatorio"
+        )
 
         assert total == 1
         assert items[0].name == "Recordatorio de pago"
@@ -99,20 +111,26 @@ class TestListByPortfolioPagination:
         portfolio_a = await _make_portfolio(db_session)
         portfolio_b = await _make_portfolio(db_session)
         repo = TemplateRepository(db_session)
-        db_session.add_all([
-            make_template(portfolio_a.id, name="De A"),
-            make_template(portfolio_b.id, name="De B"),
-        ])
+        db_session.add_all(
+            [
+                make_template(portfolio_a.id, name="De A"),
+                make_template(portfolio_b.id, name="De B"),
+            ]
+        )
         await db_session.flush()
 
-        items, total = await repo.list_by_portfolio(portfolio_a.id, page=1, page_size=10)
+        items, total = await repo.list_by_portfolio(
+            portfolio_a.id, page=1, page_size=10
+        )
 
         assert total == 1
         assert items[0].name == "De A"
 
 
 class TestGetByIdAndPortfolio:
-    async def test_returns_none_when_template_belongs_to_different_portfolio(self, db_session):
+    async def test_returns_none_when_template_belongs_to_different_portfolio(
+        self, db_session
+    ):
         portfolio_a = await _make_portfolio(db_session)
         portfolio_b = await _make_portfolio(db_session)
         repo = TemplateRepository(db_session)

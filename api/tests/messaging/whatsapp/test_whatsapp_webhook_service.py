@@ -20,7 +20,9 @@ from messaging.whatsapp.services import whatsapp_webhook_service as webhook_modu
 from messaging.whatsapp.services.whatsapp_webhook_service import WhatsAppWebhookService
 
 
-def build_webhook_body(phone_number_id: str, *, wamid: str, phone: str, text: str = "hola") -> dict:
+def build_webhook_body(
+    phone_number_id: str, *, wamid: str, phone: str, text: str = "hola"
+) -> dict:
     return {
         "entry": [
             {
@@ -28,7 +30,9 @@ def build_webhook_body(phone_number_id: str, *, wamid: str, phone: str, text: st
                     {
                         "value": {
                             "metadata": {"phone_number_id": phone_number_id},
-                            "contacts": [{"wa_id": phone, "profile": {"name": "Juan Deudor"}}],
+                            "contacts": [
+                                {"wa_id": phone, "profile": {"name": "Juan Deudor"}}
+                            ],
                             "messages": [
                                 {
                                     "id": wamid,
@@ -47,7 +51,13 @@ def build_webhook_body(phone_number_id: str, *, wamid: str, phone: str, text: st
 
 
 def build_service(
-    *, credentials_repo=None, contact_repo=None, error_repo=None, chat_repo=None, message_repo=None, assignment_service=None
+    *,
+    credentials_repo=None,
+    contact_repo=None,
+    error_repo=None,
+    chat_repo=None,
+    message_repo=None,
+    assignment_service=None,
 ) -> WhatsAppWebhookService:
     return WhatsAppWebhookService(
         credentials_repo=credentials_repo or MagicMock(),
@@ -75,7 +85,9 @@ class TestHandleMessageDeduplicatesByWamid:
         contact_repo = MagicMock()
         contact_repo.get_latest_by_recipient_and_org = AsyncMock(return_value=None)
 
-        chat = WhatsAppChatModel(id=uuid.uuid4(), organization_id=organization_id, phone=phone)
+        chat = WhatsAppChatModel(
+            id=uuid.uuid4(), organization_id=organization_id, phone=phone
+        )
         chat_repo = MagicMock()
         chat_repo.get_by_org_and_phone = AsyncMock(return_value=None)
         chat_repo.add = AsyncMock(return_value=chat)
@@ -124,7 +136,9 @@ class TestHandleMessageDeduplicatesByWamid:
 
 
 class TestHandleMessageReusesExistingChatWithoutReassigning:
-    async def test_second_message_same_phone_reuses_chat_and_does_not_call_assign_again(self):
+    async def test_second_message_same_phone_reuses_chat_and_does_not_call_assign_again(
+        self,
+    ):
         organization_id = uuid.uuid4()
         agent_id = uuid.uuid4()
         phone_number_id = "1234567890"
@@ -139,7 +153,10 @@ class TestHandleMessageReusesExistingChatWithoutReassigning:
         contact_repo.get_latest_by_recipient_and_org = AsyncMock(return_value=None)
 
         existing_chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone=phone, assigned_user_id=agent_id
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone=phone,
+            assigned_user_id=agent_id,
         )
         chat_repo = MagicMock()
         # 1er mensaje: no hay chat todavía -> se crea. 2do: ya existe -> se reutiliza.
@@ -155,7 +172,9 @@ class TestHandleMessageReusesExistingChatWithoutReassigning:
             return message
 
         message_repo = MagicMock()
-        message_repo.get_by_wamid = AsyncMock(return_value=None)  # wamids distintos cada vez
+        message_repo.get_by_wamid = AsyncMock(
+            return_value=None
+        )  # wamids distintos cada vez
         message_repo.add = AsyncMock(side_effect=fake_message_add)
 
         assignment_service = MagicMock()
@@ -171,7 +190,9 @@ class TestHandleMessageReusesExistingChatWithoutReassigning:
         body_1 = build_webhook_body(phone_number_id, wamid="wamid.first", phone=phone)
         body_2 = build_webhook_body(phone_number_id, wamid="wamid.second", phone=phone)
 
-        with patch.object(webhook_module.whatsapp_ws_manager, "send_to_user", new_callable=AsyncMock):
+        with patch.object(
+            webhook_module.whatsapp_ws_manager, "send_to_user", new_callable=AsyncMock
+        ):
             await service.handle_event(body_1)  # chat nuevo -> se asigna
             await service.handle_event(body_2)  # mismo chat -> NO se reasigna
 
@@ -191,9 +212,13 @@ class TestHandleChangeUnknownPhoneNumberId:
         message_repo.get_by_wamid = AsyncMock()
 
         service = build_service(
-            credentials_repo=credentials_repo, chat_repo=chat_repo, message_repo=message_repo
+            credentials_repo=credentials_repo,
+            chat_repo=chat_repo,
+            message_repo=message_repo,
         )
-        body = build_webhook_body("phone-number-id-sin-organizacion", wamid="wamid.x", phone="573000000000")
+        body = build_webhook_body(
+            "phone-number-id-sin-organizacion", wamid="wamid.x", phone="573000000000"
+        )
 
         # No debe lanzar ninguna excepción -- el evento se ignora en silencio.
         await service.handle_event(body)

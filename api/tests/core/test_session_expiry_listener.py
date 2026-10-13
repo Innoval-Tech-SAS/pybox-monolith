@@ -15,7 +15,8 @@ from tests.factories import unique_email, unique_phone
 class TestMarkUserLoggedOut:
     """`_mark_user_logged_out` reacciona al evento de expiración `keyevent` de Redis:
     si para cuando el evento se procesa el usuario ya inició sesión de nuevo (la key
-    de sesión existe otra vez), NO debe pisar esa sesión activa marcándolo deslogueado."""
+    de sesión existe otra vez), NO debe pisar esa sesión activa marcándolo deslogueado.
+    """
 
     async def test_marks_logged_out_when_no_active_session(self, db_session):
         user = await UserRepository(db_session).add(
@@ -71,8 +72,12 @@ class TestListenForever:
                 raise ConnectionError("pub/sub connection lost")
             raise asyncio.CancelledError()
 
-        monkeypatch.setattr("core.database.session_expiry_listener._listen", _flaky_listen)
-        monkeypatch.setattr("core.database.session_expiry_listener._RESUBSCRIBE_BACKOFF_SECONDS", 0)
+        monkeypatch.setattr(
+            "core.database.session_expiry_listener._listen", _flaky_listen
+        )
+        monkeypatch.setattr(
+            "core.database.session_expiry_listener._RESUBSCRIBE_BACKOFF_SECONDS", 0
+        )
 
         try:
             await _listen_forever()

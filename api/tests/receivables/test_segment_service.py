@@ -13,12 +13,17 @@ import pytest
 from fastapi import HTTPException
 
 from app_platform.schema_manager.services.dml_service import DmlService
-from core.security.constants.permissions import PORTFOLIO_CLIENTS, PORTFOLIO_COMMUNICATIONS
+from core.security.constants.permissions import (
+    PORTFOLIO_CLIENTS,
+    PORTFOLIO_COMMUNICATIONS,
+)
 from identity.organizations.enums.organization_enums import VerificationStatus
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.schemas.user_session_schema import OrgSessionEntry, UserSession
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from receivables.segments.repository.segment_execution_repository import SegmentExecutionRepository
+from receivables.segments.repository.segment_execution_repository import (
+    SegmentExecutionRepository,
+)
 from receivables.segments.repository.segment_repository import SegmentRepository
 from receivables.segments.schemas.segment_schemas import (
     SegmentCreateRequest,
@@ -61,7 +66,9 @@ def org_session(
 
 
 def no_access_session(make_user_session_factory) -> UserSession:
-    return make_user_session_factory(role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={})
+    return make_user_session_factory(
+        role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={}
+    )
 
 
 def query_config(**overrides) -> SegmentQueryConfig:
@@ -82,13 +89,17 @@ async def org_and_portfolio(db_session):
 
 
 class TestCreate:
-    async def test_creates_segment_with_given_criteria(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_creates_segment_with_given_criteria(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
         org, portfolio = org_and_portfolio
         service = build_service(db_session)
         session = org_session(make_user_session_factory, org.id)
 
         result = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Mora 30+", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Mora 30+", filter_criteria=query_config()),
+            session,
         )
 
         assert result.id is not None
@@ -96,45 +107,69 @@ class TestCreate:
         assert result.portfolio_id == portfolio.id
         assert result.filter_criteria["tables"][0]["name"] == "deudores"
 
-    async def test_create_from_an_unrelated_org_raises_404(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_create_from_an_unrelated_org_raises_404(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
         _, portfolio = org_and_portfolio
         service = build_service(db_session)
         session = no_access_session(make_user_session_factory)
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.create(portfolio.id, SegmentCreateRequest(name="X", filter_criteria=query_config()), session)
+            await service.create(
+                portfolio.id,
+                SegmentCreateRequest(name="X", filter_criteria=query_config()),
+                session,
+            )
         assert exc_info.value.status_code == 404
 
-    async def test_create_unknown_portfolio_raises_404(self, db_session, make_user_session_factory):
+    async def test_create_unknown_portfolio_raises_404(
+        self, db_session, make_user_session_factory
+    ):
         service = build_service(db_session)
         session = no_access_session(make_user_session_factory)
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.create(uuid.uuid4(), SegmentCreateRequest(name="X", filter_criteria=query_config()), session)
+            await service.create(
+                uuid.uuid4(),
+                SegmentCreateRequest(name="X", filter_criteria=query_config()),
+                session,
+            )
         assert exc_info.value.status_code == 404
 
 
 class TestListing:
-    async def test_list_by_org_paginates(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_list_by_org_paginates(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
         org, portfolio = org_and_portfolio
         service = build_service(db_session)
         session = org_session(make_user_session_factory, org.id)
         for i in range(3):
             await service.create(
-                portfolio.id, SegmentCreateRequest(name=f"Seg {i}", filter_criteria=query_config()), session
+                portfolio.id,
+                SegmentCreateRequest(name=f"Seg {i}", filter_criteria=query_config()),
+                session,
             )
 
-        items, total = await service.list_by_org(portfolio.id, page=1, page_size=2, user_session=session)
+        items, total = await service.list_by_org(
+            portfolio.id, page=1, page_size=2, user_session=session
+        )
         assert total == 3
         assert len(items) == 2
 
-    async def test_list_all_by_org_is_cached(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_list_all_by_org_is_cached(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
         """Segunda llamada no debe volver a golpear el repo -- cache-aside vía
         `cache_service.get_or_set` (Redis fake del conftest raíz)."""
         org, portfolio = org_and_portfolio
         service = build_service(db_session)
         session = org_session(make_user_session_factory, org.id)
-        await service.create(portfolio.id, SegmentCreateRequest(name="Seg", filter_criteria=query_config()), session)
+        await service.create(
+            portfolio.id,
+            SegmentCreateRequest(name="Seg", filter_criteria=query_config()),
+            session,
+        )
 
         first = await service.list_all_by_org(portfolio.id, session)
         assert len(first) == 1
@@ -146,26 +181,38 @@ class TestListing:
         from receivables.segments.models.segment_model import SegmentModel
 
         await segment_repo.add(
-            SegmentModel(name="Directo", filter_criteria={"tables": []}, portfolio_id=portfolio.id)
+            SegmentModel(
+                name="Directo",
+                filter_criteria={"tables": []},
+                portfolio_id=portfolio.id,
+            )
         )
 
         second = await service.list_all_by_org(portfolio.id, session)
         assert len(second) == 1
 
-    async def test_create_busts_list_cache(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_create_busts_list_cache(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
         org, portfolio = org_and_portfolio
         service = build_service(db_session)
         session = org_session(make_user_session_factory, org.id)
 
         await service.list_all_by_org(portfolio.id, session)
-        await service.create(portfolio.id, SegmentCreateRequest(name="Nuevo", filter_criteria=query_config()), session)
+        await service.create(
+            portfolio.id,
+            SegmentCreateRequest(name="Nuevo", filter_criteria=query_config()),
+            session,
+        )
 
         result = await service.list_all_by_org(portfolio.id, session)
         assert len(result) == 1
 
 
 class TestGetUpdateDelete:
-    async def test_get_wrong_portfolio_raises_404(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_get_wrong_portfolio_raises_404(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
         org, portfolio = org_and_portfolio
         other_portfolio = build_portfolio(org.id)
         db_session.add(other_portfolio)
@@ -173,34 +220,47 @@ class TestGetUpdateDelete:
         service = build_service(db_session)
         session = org_session(make_user_session_factory, org.id)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Seg", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Seg", filter_criteria=query_config()),
+            session,
         )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.get(segment.id, other_portfolio.id, session)
         assert exc_info.value.status_code == 404
 
-    async def test_update_changes_fields(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_update_changes_fields(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
         org, portfolio = org_and_portfolio
         service = build_service(db_session)
         session = org_session(make_user_session_factory, org.id)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Original", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Original", filter_criteria=query_config()),
+            session,
         )
 
         updated = await service.update(
-            segment.id, portfolio.id, SegmentUpdateRequest(name="Renombrado", description="nueva desc"), session
+            segment.id,
+            portfolio.id,
+            SegmentUpdateRequest(name="Renombrado", description="nueva desc"),
+            session,
         )
 
         assert updated.name == "Renombrado"
         assert updated.description == "nueva desc"
 
-    async def test_delete_removes_segment(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_delete_removes_segment(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
         org, portfolio = org_and_portfolio
         service = build_service(db_session)
         session = org_session(make_user_session_factory, org.id)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Borrar", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Borrar", filter_criteria=query_config()),
+            session,
         )
 
         await service.delete(segment.id, portfolio.id, session)
@@ -213,22 +273,36 @@ class TestGetUpdateDelete:
 class TestExecute:
     def _ok_result(self, rows: list[dict]) -> dict:
         columns = list(rows[0].keys()) if rows else []
-        return {"success": True, "data": json.dumps(rows), "columns": columns, "rows": len(rows), "error": ""}
+        return {
+            "success": True,
+            "data": json.dumps(rows),
+            "columns": columns,
+            "rows": len(rows),
+            "error": "",
+        }
 
     async def test_preview_mode_does_not_persist_execution(
         self, db_session, make_user_session_factory, org_and_portfolio
     ):
         org, portfolio = org_and_portfolio
         dml_mock = AsyncMock(spec=DmlService)
-        dml_mock.execute_query.return_value = self._ok_result([{"nombre_completo": "Ana"}])
+        dml_mock.execute_query.return_value = self._ok_result(
+            [{"nombre_completo": "Ana"}]
+        )
         service = build_service(db_session, dml_mock)
         session = org_session(make_user_session_factory, org.id)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Preview", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Preview", filter_criteria=query_config()),
+            session,
         )
 
         result = await service.execute(
-            segment.id, portfolio.id, SegmentExecuteRequest(mode="preview"), uuid.uuid4(), session
+            segment.id,
+            portfolio.id,
+            SegmentExecuteRequest(mode="preview"),
+            uuid.uuid4(),
+            session,
         )
 
         assert result["success"] is True
@@ -239,7 +313,11 @@ class TestExecute:
         assert len(executions) == 0
 
     async def test_audit_mode_persists_execution_and_file(
-        self, db_session, make_user_session_factory, org_and_portfolio, real_admin_user_id
+        self,
+        db_session,
+        make_user_session_factory,
+        org_and_portfolio,
+        real_admin_user_id,
     ):
         org, portfolio = org_and_portfolio
         dml_mock = AsyncMock(spec=DmlService)
@@ -249,11 +327,17 @@ class TestExecute:
         service = build_service(db_session, dml_mock)
         session = org_session(make_user_session_factory, org.id)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Audit", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Audit", filter_criteria=query_config()),
+            session,
         )
 
         result = await service.execute(
-            segment.id, portfolio.id, SegmentExecuteRequest(mode="audit"), real_admin_user_id, session
+            segment.id,
+            portfolio.id,
+            SegmentExecuteRequest(mode="audit"),
+            real_admin_user_id,
+            session,
         )
 
         assert result["rows"] == 2
@@ -266,18 +350,31 @@ class TestExecute:
         assert executions[0].rows == 2
         assert executions[0].executed_by == real_admin_user_id
 
-    async def test_dml_failure_raises_500(self, db_session, make_user_session_factory, org_and_portfolio):
+    async def test_dml_failure_raises_500(
+        self, db_session, make_user_session_factory, org_and_portfolio
+    ):
         org, portfolio = org_and_portfolio
         dml_mock = AsyncMock(spec=DmlService)
-        dml_mock.execute_query.return_value = {"success": False, "error": "columna inexistente"}
+        dml_mock.execute_query.return_value = {
+            "success": False,
+            "error": "columna inexistente",
+        }
         service = build_service(db_session, dml_mock)
         session = org_session(make_user_session_factory, org.id)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Falla", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Falla", filter_criteria=query_config()),
+            session,
         )
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.execute(segment.id, portfolio.id, SegmentExecuteRequest(mode="preview"), uuid.uuid4(), session)
+            await service.execute(
+                segment.id,
+                portfolio.id,
+                SegmentExecuteRequest(mode="preview"),
+                uuid.uuid4(),
+                session,
+            )
         assert exc_info.value.status_code == 500
 
     async def test_invalid_query_config_raises_422_with_dml_message(
@@ -293,29 +390,50 @@ class TestExecute:
         service = build_service(db_session, dml_mock)
         session = org_session(make_user_session_factory, org.id)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Config mala", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Config mala", filter_criteria=query_config()),
+            session,
         )
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.execute(segment.id, portfolio.id, SegmentExecuteRequest(mode="preview"), uuid.uuid4(), session)
+            await service.execute(
+                segment.id,
+                portfolio.id,
+                SegmentExecuteRequest(mode="preview"),
+                uuid.uuid4(),
+                session,
+            )
         assert exc_info.value.status_code == 422
-        assert exc_info.value.detail == "Una de las columnas configuradas no existe en su tabla."
+        assert (
+            exc_info.value.detail
+            == "Una de las columnas configuradas no existe en su tabla."
+        )
 
-    async def _execute_and_get_dml_kwargs(self, db_session, org_and_portfolio, make_user_session_factory, **session_kwargs):
+    async def _execute_and_get_dml_kwargs(
+        self, db_session, org_and_portfolio, make_user_session_factory, **session_kwargs
+    ):
         org, portfolio = org_and_portfolio
         dml_mock = AsyncMock(spec=DmlService)
         dml_mock.execute_query.return_value = self._ok_result([])
         service = build_service(db_session, dml_mock)
         creator = org_session(make_user_session_factory, org.id)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Documentos", filter_criteria=query_config()), creator
+            portfolio.id,
+            SegmentCreateRequest(name="Documentos", filter_criteria=query_config()),
+            creator,
         )
         session = (
             org_session(make_user_session_factory, org.id, **session_kwargs)
             if session_kwargs
             else creator
         )
-        await service.execute(segment.id, portfolio.id, SegmentExecuteRequest(mode="preview"), uuid.uuid4(), session)
+        await service.execute(
+            segment.id,
+            portfolio.id,
+            SegmentExecuteRequest(mode="preview"),
+            uuid.uuid4(),
+            session,
+        )
         _, kwargs = dml_mock.execute_query.call_args
         return kwargs
 
@@ -335,7 +453,9 @@ class TestExecute:
     ):
         # Ejecutar un segmento solo exige comunicaciones: sin `portfolio.clients` el
         # usuario no debe poder leer documentos que DebtorService no le mostraría.
-        kwargs = await self._execute_and_get_dml_kwargs(db_session, org_and_portfolio, make_user_session_factory)
+        kwargs = await self._execute_and_get_dml_kwargs(
+            db_session, org_and_portfolio, make_user_session_factory
+        )
         assert kwargs["decrypt_sensitive"] is False
 
     async def test_document_is_decrypted_for_global_session(
@@ -347,9 +467,17 @@ class TestExecute:
         service = build_service(db_session, dml_mock)
         session = make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Global", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Global", filter_criteria=query_config()),
+            session,
         )
-        await service.execute(segment.id, portfolio.id, SegmentExecuteRequest(mode="preview"), uuid.uuid4(), session)
+        await service.execute(
+            segment.id,
+            portfolio.id,
+            SegmentExecuteRequest(mode="preview"),
+            uuid.uuid4(),
+            session,
+        )
         _, kwargs = dml_mock.execute_query.call_args
         assert kwargs["decrypt_sensitive"] is True
 
@@ -362,10 +490,18 @@ class TestExecute:
         service = build_service(db_session, dml_mock)
         session = org_session(make_user_session_factory, org.id)
         segment = await service.create(
-            portfolio.id, SegmentCreateRequest(name="Scoped", filter_criteria=query_config()), session
+            portfolio.id,
+            SegmentCreateRequest(name="Scoped", filter_criteria=query_config()),
+            session,
         )
 
-        await service.execute(segment.id, portfolio.id, SegmentExecuteRequest(mode="preview", limit=50), uuid.uuid4(), session)
+        await service.execute(
+            segment.id,
+            portfolio.id,
+            SegmentExecuteRequest(mode="preview", limit=50),
+            uuid.uuid4(),
+            session,
+        )
 
         _, kwargs = dml_mock.execute_query.call_args
         assert kwargs["portfolio_ids"] == [portfolio.id]

@@ -25,9 +25,15 @@ class _FakeProvider(NRS360BaseProvider):
         self._token = "test-token"
 
 
-def make_response(status_code: int = 200, json_body=None, text_body: str = "") -> httpx.Response:
-    request = httpx.Request("GET", "https://dashboard.360nrs.com/api/rest/sendings/x/reports/events")
-    content = json.dumps(json_body).encode() if json_body is not None else text_body.encode()
+def make_response(
+    status_code: int = 200, json_body=None, text_body: str = ""
+) -> httpx.Response:
+    request = httpx.Request(
+        "GET", "https://dashboard.360nrs.com/api/rest/sendings/x/reports/events"
+    )
+    content = (
+        json.dumps(json_body).encode() if json_body is not None else text_body.encode()
+    )
     return httpx.Response(status_code=status_code, content=content, request=request)
 
 
@@ -45,8 +51,12 @@ class TestRequestSetsAuthorizationHeader:
 class TestGetSendingEventsReport:
     async def test_returns_response_body_as_text(self):
         provider = _FakeProvider()
-        csv_text = "phone,event,createdAt\n+573001112233,DELIVERED,2026-08-19T10:00:00Z\n"
-        provider._http.request = AsyncMock(return_value=make_response(text_body=csv_text))
+        csv_text = (
+            "phone,event,createdAt\n+573001112233,DELIVERED,2026-08-19T10:00:00Z\n"
+        )
+        provider._http.request = AsyncMock(
+            return_value=make_response(text_body=csv_text)
+        )
 
         report = await provider.get_sending_events_report("sending-1")
 
@@ -54,7 +64,9 @@ class TestGetSendingEventsReport:
 
     async def test_http_error_returns_empty_string_instead_of_raising(self):
         provider = _FakeProvider()
-        provider._http.request = AsyncMock(return_value=make_response(status_code=404, text_body="not found"))
+        provider._http.request = AsyncMock(
+            return_value=make_response(status_code=404, text_body="not found")
+        )
 
         report = await provider.get_sending_events_report("sending-vencido")
 
@@ -64,10 +76,15 @@ class TestGetSendingEventsReport:
         provider = _FakeProvider()
         provider._http.request = AsyncMock(return_value=make_response(text_body=""))
 
-        await provider.get_sending_events_report("sending-1", after_date="2026-08-01", before_date="2026-08-19")
+        await provider.get_sending_events_report(
+            "sending-1", after_date="2026-08-01", before_date="2026-08-19"
+        )
 
         _, kwargs = provider._http.request.call_args
-        assert kwargs["params"] == {"afterDate": "2026-08-01", "beforeDate": "2026-08-19"}
+        assert kwargs["params"] == {
+            "afterDate": "2026-08-01",
+            "beforeDate": "2026-08-19",
+        }
 
     async def test_no_date_filters_sends_empty_params(self):
         provider = _FakeProvider()

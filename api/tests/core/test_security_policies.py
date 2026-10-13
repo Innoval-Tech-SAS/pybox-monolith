@@ -110,13 +110,21 @@ class TestRequireOrgAdmin:
 
 class TestRequirePermission:
     def test_global_bypasses_permission_check(self):
-        require_permission("any.perm", _session(scope=UserScope.GLOBAL), str(uuid.uuid4()))
+        require_permission(
+            "any.perm", _session(scope=UserScope.GLOBAL), str(uuid.uuid4())
+        )
 
     def test_org_member_with_permission_passes(self):
         org_id = str(uuid.uuid4())
         session = _session(
             scope=UserScope.ORGANIZATION,
-            orgs={org_id: OrgSessionEntry(role=UserRole.USER, org_name="Org", permissions=frozenset({"orgs.users"}))},
+            orgs={
+                org_id: OrgSessionEntry(
+                    role=UserRole.USER,
+                    org_name="Org",
+                    permissions=frozenset({"orgs.users"}),
+                )
+            },
         )
         require_permission("orgs.users", session, org_id)
 
@@ -137,13 +145,24 @@ class TestRequirePermission:
 
 class TestHasPermission:
     def test_global_has_every_permission(self):
-        assert has_permission("any.perm", _session(scope=UserScope.GLOBAL), str(uuid.uuid4())) is True
+        assert (
+            has_permission(
+                "any.perm", _session(scope=UserScope.GLOBAL), str(uuid.uuid4())
+            )
+            is True
+        )
 
     def test_org_member_with_permission(self):
         org_id = str(uuid.uuid4())
         session = _session(
             scope=UserScope.ORGANIZATION,
-            orgs={org_id: OrgSessionEntry(role=UserRole.USER, org_name="Org", permissions=frozenset({"portfolio.clients"}))},
+            orgs={
+                org_id: OrgSessionEntry(
+                    role=UserRole.USER,
+                    org_name="Org",
+                    permissions=frozenset({"portfolio.clients"}),
+                )
+            },
         )
         assert has_permission("portfolio.clients", session, org_id) is True
 
@@ -151,7 +170,13 @@ class TestHasPermission:
         org_id = str(uuid.uuid4())
         session = _session(
             scope=UserScope.ORGANIZATION,
-            orgs={org_id: OrgSessionEntry(role=UserRole.USER, org_name="Org", permissions=frozenset({"portfolio.communications"}))},
+            orgs={
+                org_id: OrgSessionEntry(
+                    role=UserRole.USER,
+                    org_name="Org",
+                    permissions=frozenset({"portfolio.communications"}),
+                )
+            },
         )
         assert has_permission("portfolio.clients", session, org_id) is False
 
@@ -159,14 +184,22 @@ class TestHasPermission:
         own_org, other_org = str(uuid.uuid4()), str(uuid.uuid4())
         session = _session(
             scope=UserScope.ORGANIZATION,
-            orgs={own_org: OrgSessionEntry(role=UserRole.USER, org_name="Org", permissions=frozenset({"portfolio.clients"}))},
+            orgs={
+                own_org: OrgSessionEntry(
+                    role=UserRole.USER,
+                    org_name="Org",
+                    permissions=frozenset({"portfolio.clients"}),
+                )
+            },
         )
         assert has_permission("portfolio.clients", session, other_org) is False
 
 
 class TestRequireAdminOrOrg:
     def test_global_bypasses(self):
-        require_admin_or_org("orgs.users", _session(scope=UserScope.GLOBAL), str(uuid.uuid4()))
+        require_admin_or_org(
+            "orgs.users", _session(scope=UserScope.GLOBAL), str(uuid.uuid4())
+        )
 
     def test_org_admin_bypasses_permission_check(self):
         org_id = str(uuid.uuid4())
@@ -180,7 +213,13 @@ class TestRequireAdminOrOrg:
         org_id = str(uuid.uuid4())
         session = _session(
             scope=UserScope.ORGANIZATION,
-            orgs={org_id: OrgSessionEntry(role=UserRole.USER, org_name="Org", permissions=frozenset({"orgs.users"}))},
+            orgs={
+                org_id: OrgSessionEntry(
+                    role=UserRole.USER,
+                    org_name="Org",
+                    permissions=frozenset({"orgs.users"}),
+                )
+            },
         )
         require_admin_or_org("orgs.users", session, org_id)
 
@@ -257,7 +296,9 @@ class TestGetSelfIdentity:
 class TestCheckPortfolioOrgAccess:
     async def test_missing_portfolio_raises_404(self):
         with pytest.raises(HTTPException) as exc:
-            await check_portfolio_org_access(_session(scope=UserScope.GLOBAL), None, "portfolio.view")
+            await check_portfolio_org_access(
+                _session(scope=UserScope.GLOBAL), None, "portfolio.view"
+            )
         assert exc.value.status_code == 404
 
     async def test_global_session_bypasses_permission(self):
@@ -274,7 +315,9 @@ class TestCheckPortfolioOrgAccess:
             orgs={str(org_id): OrgSessionEntry(role=UserRole.USER, org_name="Org")},
         )
         with pytest.raises(HTTPException):
-            await check_portfolio_org_access(session, _FakePortfolio(org_id), "portfolio.view")
+            await check_portfolio_org_access(
+                session, _FakePortfolio(org_id), "portfolio.view"
+            )
 
 
 class TestRequirePortfolioAccess:
@@ -286,7 +329,9 @@ class TestRequirePortfolioAccess:
             called = True
             return False
 
-        await require_portfolio_access(_session(scope=UserScope.GLOBAL), str(uuid.uuid4()), uuid.uuid4(), _check)
+        await require_portfolio_access(
+            _session(scope=UserScope.GLOBAL), str(uuid.uuid4()), uuid.uuid4(), _check
+        )
         assert called is False
 
     async def test_org_admin_bypasses_check_callback(self):
@@ -333,4 +378,6 @@ class TestRequirePortfolioAccess:
             return True
 
         with pytest.raises(HTTPException):
-            await require_portfolio_access(session, str(uuid.uuid4()), uuid.uuid4(), _check)
+            await require_portfolio_access(
+                session, str(uuid.uuid4()), uuid.uuid4(), _check
+            )

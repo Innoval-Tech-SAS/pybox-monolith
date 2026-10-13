@@ -50,7 +50,10 @@ class TestGetChatForUser:
     async def test_admin_can_access_any_assigned_chat(self):
         organization_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000", assigned_user_id=uuid.uuid4()
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
+            assigned_user_id=uuid.uuid4(),
         )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
@@ -71,7 +74,9 @@ class TestGetChatForUser:
         assert exc_info.value.status_code == 404
 
     async def test_chat_from_different_organization_raises_404(self):
-        chat = WhatsAppChatModel(id=uuid.uuid4(), organization_id=uuid.uuid4(), phone="573000000000")
+        chat = WhatsAppChatModel(
+            id=uuid.uuid4(), organization_id=uuid.uuid4(), phone="573000000000"
+        )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
         session = make_user_session(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
@@ -85,11 +90,16 @@ class TestGetChatForUser:
         agent_id = uuid.uuid4()
         other_agent_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000", assigned_user_id=other_agent_id
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
+            assigned_user_id=other_agent_id,
         )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
-        session = make_user_session(user_id=agent_id, role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={})
+        session = make_user_session(
+            user_id=agent_id, role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={}
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service._get_chat_for_user(chat.id, organization_id, session)
@@ -108,8 +118,12 @@ class TestGetChatForUser:
         )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
-        mocks["portfolio_access_repo"].check_active_access = AsyncMock(return_value=False)
-        session = make_user_session(user_id=agent_id, role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={})
+        mocks["portfolio_access_repo"].check_active_access = AsyncMock(
+            return_value=False
+        )
+        session = make_user_session(
+            user_id=agent_id, role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={}
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service._get_chat_for_user(chat.id, organization_id, session)
@@ -117,7 +131,8 @@ class TestGetChatForUser:
 
     async def test_agent_assigned_chat_without_portfolio_raises_403(self):
         """Sin portafolio resuelto en el hilo, un agente no-admin nunca tiene acceso
-        (solo admins ven hilos huérfanos) -- ver comentario en whatsapp_assignment_service."""
+        (solo admins ven hilos huérfanos) -- ver comentario en whatsapp_assignment_service.
+        """
         organization_id = uuid.uuid4()
         agent_id = uuid.uuid4()
         chat = WhatsAppChatModel(
@@ -129,7 +144,9 @@ class TestGetChatForUser:
         )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
-        session = make_user_session(user_id=agent_id, role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={})
+        session = make_user_session(
+            user_id=agent_id, role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={}
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service._get_chat_for_user(chat.id, organization_id, session)
@@ -149,8 +166,12 @@ class TestGetChatForUser:
         )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
-        mocks["portfolio_access_repo"].check_active_access = AsyncMock(return_value=True)
-        session = make_user_session(user_id=agent_id, role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={})
+        mocks["portfolio_access_repo"].check_active_access = AsyncMock(
+            return_value=True
+        )
+        session = make_user_session(
+            user_id=agent_id, role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={}
+        )
 
         result = await service._get_chat_for_user(chat.id, organization_id, session)
         assert result is chat
@@ -182,7 +203,9 @@ class TestListChats:
 
         await service.list_chats(1, 20, session, None)
 
-        scopes, _page, _page_size, unrestricted = mocks["chat_repo"].list_by_scopes.call_args.args
+        scopes, _page, _page_size, unrestricted = mocks[
+            "chat_repo"
+        ].list_by_scopes.call_args.args
         assert scopes == []
         assert unrestricted is True
 
@@ -193,22 +216,30 @@ class TestListChats:
         org_without_perm = uuid.uuid4()
         service, mocks = build_service()
         mocks["chat_repo"].list_by_scopes = AsyncMock(return_value=([], 0))
-        mocks["portfolio_access_repo"].get_active_by_user_and_org = AsyncMock(return_value=[])
+        mocks["portfolio_access_repo"].get_active_by_user_and_org = AsyncMock(
+            return_value=[]
+        )
         mocks["org_repo"].get_by_ids = AsyncMock(return_value=[])
         session = make_user_session(
             role=UserRole.USER,
             scope=UserScope.ORGANIZATION,
             orgs={
                 str(org_with_perm): OrgSessionEntry(
-                    role=UserRole.USER, org_name="A", permissions=frozenset({"org.manage_whatsapp_chats"})
+                    role=UserRole.USER,
+                    org_name="A",
+                    permissions=frozenset({"org.manage_whatsapp_chats"}),
                 ),
-                str(org_without_perm): OrgSessionEntry(role=UserRole.USER, org_name="B", permissions=frozenset()),
+                str(org_without_perm): OrgSessionEntry(
+                    role=UserRole.USER, org_name="B", permissions=frozenset()
+                ),
             },
         )
 
         await service.list_chats(1, 20, session, None)
 
-        scopes, _page, _page_size, unrestricted = mocks["chat_repo"].list_by_scopes.call_args.args
+        scopes, _page, _page_size, unrestricted = mocks[
+            "chat_repo"
+        ].list_by_scopes.call_args.args
         assert unrestricted is False
         assert len(scopes) == 1
         assert scopes[0].organization_id == org_with_perm
@@ -216,7 +247,9 @@ class TestListChats:
     async def test_response_includes_organization_name(self):
         organization_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000",
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
             created_at=datetime.now(timezone.utc),
         )
         service, mocks = build_service()
@@ -236,7 +269,9 @@ class TestAssign:
     async def test_assign_updates_chat_and_returns_it(self):
         organization_id = uuid.uuid4()
         new_agent_id = uuid.uuid4()
-        chat = WhatsAppChatModel(id=uuid.uuid4(), organization_id=organization_id, phone="573000000000")
+        chat = WhatsAppChatModel(
+            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000"
+        )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
         mocks["chat_repo"].update = AsyncMock(side_effect=lambda c: c)
@@ -259,7 +294,9 @@ class TestAssign:
     async def test_assign_requires_org_admin(self):
         organization_id = uuid.uuid4()
         service, _mocks = build_service()
-        session = make_user_session(role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={})
+        session = make_user_session(
+            role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={}
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.assign(uuid.uuid4(), organization_id, uuid.uuid4(), session)
@@ -269,7 +306,9 @@ class TestAssign:
 class TestSendMessage:
     def _make_chat(self, organization_id, chat_id=None) -> WhatsAppChatModel:
         return WhatsAppChatModel(
-            id=chat_id or uuid.uuid4(), organization_id=organization_id, phone="573000000000"
+            id=chat_id or uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
         )
 
     async def test_no_inbound_message_ever_blocks_send_with_409(self):
@@ -374,15 +413,21 @@ class TestSendMessage:
         mocks["client"].send_text = AsyncMock(return_value=(True, "wamid.out1"))
         mocks["message_repo"].add = AsyncMock(side_effect=lambda m: m)
         mocks["chat_repo"].update = AsyncMock(side_effect=lambda c: c)
-        service._credential_service.get_decrypted = AsyncMock(return_value={"access_token": "tok"})
+        service._credential_service.get_decrypted = AsyncMock(
+            return_value={"access_token": "tok"}
+        )
         session = make_user_session(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
 
-        message = await service.send_message(chat.id, organization_id, "hola de vuelta", session)
+        message = await service.send_message(
+            chat.id, organization_id, "hola de vuelta", session
+        )
 
         assert message.direction == MessageDirection.OUTBOUND
         assert message.wamid == "wamid.out1"
         assert message.content == "hola de vuelta"
-        mocks["client"].send_text.assert_awaited_once_with("123", chat.phone, "hola de vuelta", token="tok")
+        mocks["client"].send_text.assert_awaited_once_with(
+            "123", chat.phone, "hola de vuelta", token="tok"
+        )
         assert chat.last_message_at is not None
         mocks["chat_repo"].update.assert_awaited_once()
 
@@ -390,7 +435,9 @@ class TestSendMessage:
 class TestGetChatDetails:
     async def test_chat_without_debtor_or_portfolio_or_campaign(self):
         organization_id = uuid.uuid4()
-        chat = WhatsAppChatModel(id=uuid.uuid4(), organization_id=organization_id, phone="573000000000")
+        chat = WhatsAppChatModel(
+            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000"
+        )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
         session = make_user_session(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
@@ -403,7 +450,9 @@ class TestGetChatDetails:
         assert result.campaign is None
         assert result.credits == []
 
-    async def test_chat_with_debtor_and_portfolio_includes_credits_and_self_registration(self):
+    async def test_chat_with_debtor_and_portfolio_includes_credits_and_self_registration(
+        self,
+    ):
         organization_id = uuid.uuid4()
         debtor_id = uuid.uuid4()
         portfolio_id = uuid.uuid4()
@@ -418,10 +467,16 @@ class TestGetChatDetails:
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
 
         debtor = MagicMock(
-            id=debtor_id, full_name="Juan Deudor", debtor_type="TITULAR", document_type="CC", document_number=b"enc"
+            id=debtor_id,
+            full_name="Juan Deudor",
+            debtor_type="TITULAR",
+            document_type="CC",
+            document_number=b"enc",
         )
         mocks["debtor_repo"].get_by_id = AsyncMock(return_value=debtor)
-        mocks["user_repo"].get_by_document = AsyncMock(return_value=MagicMock())  # existe cuenta propia
+        mocks["user_repo"].get_by_document = AsyncMock(
+            return_value=MagicMock()
+        )  # existe cuenta propia
 
         portfolio = MagicMock(id=portfolio_id)
         portfolio.name = "Portafolio Q1"
@@ -439,7 +494,9 @@ class TestGetChatDetails:
             overdue_installments=1,
             pending_installments=5,
         )
-        mocks["credit_repo"].get_by_debtor_and_portfolio = AsyncMock(return_value=[credit])
+        mocks["credit_repo"].get_by_debtor_and_portfolio = AsyncMock(
+            return_value=[credit]
+        )
 
         session = make_user_session(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
         with patch(
@@ -459,7 +516,10 @@ class TestGetChatDetails:
         organization_id = uuid.uuid4()
         debtor_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000", debtor_id=debtor_id
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
+            debtor_id=debtor_id,
         )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
@@ -475,7 +535,10 @@ class TestGetChatDetails:
         organization_id = uuid.uuid4()
         campaign_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000", campaign_id=campaign_id
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
+            campaign_id=campaign_id,
         )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
@@ -483,7 +546,9 @@ class TestGetChatDetails:
 
         campaign = MagicMock(id=campaign_id, status=CampaignStatus.RUNNING)
         campaign.name = "Campaña Julio"
-        mocks["campaign_repo"].get_by_id_and_organization_id = AsyncMock(return_value=campaign)
+        mocks["campaign_repo"].get_by_id_and_organization_id = AsyncMock(
+            return_value=campaign
+        )
         session = make_user_session(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
 
         result = await service.get_chat_details(chat.id, organization_id, session)
@@ -495,11 +560,16 @@ class TestGetChatDetails:
         organization_id = uuid.uuid4()
         campaign_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000", campaign_id=campaign_id
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
+            campaign_id=campaign_id,
         )
         service, mocks = build_service()
         mocks["chat_repo"].get_by_id = AsyncMock(return_value=chat)
-        mocks["campaign_repo"].get_by_id_and_organization_id = AsyncMock(return_value=None)
+        mocks["campaign_repo"].get_by_id_and_organization_id = AsyncMock(
+            return_value=None
+        )
         session = make_user_session(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
 
         result = await service.get_chat_details(chat.id, organization_id, session)
@@ -510,7 +580,9 @@ class TestGetChatDetails:
 class TestListMessages:
     async def test_lists_messages_for_accessible_chat(self):
         organization_id = uuid.uuid4()
-        chat = WhatsAppChatModel(id=uuid.uuid4(), organization_id=organization_id, phone="573000000000")
+        chat = WhatsAppChatModel(
+            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000"
+        )
         message = WhatsAppMessageModel(
             id=uuid.uuid4(),
             chat_id=chat.id,

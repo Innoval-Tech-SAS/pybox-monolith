@@ -15,8 +15,16 @@ from fastapi import HTTPException
 
 from core.security.services.encrypt_service import encrypt_service
 from identity.users.enums.user_enums import UserRole, UserScope
-from receivables.credits.services.credit_selfservice_service import CreditSelfServiceService
-from tests.receivables.conftest import add_organization, build_credit, build_debtor, build_organization, build_portfolio
+from receivables.credits.services.credit_selfservice_service import (
+    CreditSelfServiceService,
+)
+from tests.receivables.conftest import (
+    add_organization,
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 
 def self_session(make_user_session_factory, document_number_hash: str):
@@ -51,25 +59,35 @@ class TestResolveOwnedCreditIdor:
         self, db_session, make_user_session_factory, credit_of_another_debtor
     ):
         requester_doc = "111222333"
-        requester = build_debtor((await add_organization(db_session)).id, document_number_plain=requester_doc)
+        requester = build_debtor(
+            (await add_organization(db_session)).id, document_number_plain=requester_doc
+        )
         db_session.add(requester)
         await db_session.flush()
 
         service = CreditSelfServiceService(db_session)
-        session = self_session(make_user_session_factory, encrypt_service.hash_document(requester_doc))
+        session = self_session(
+            make_user_session_factory, encrypt_service.hash_document(requester_doc)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service._resolve_owned_credit(session, credit_of_another_debtor.id)
         assert exc_info.value.status_code == 404
 
-    async def test_unknown_credit_raises_404(self, db_session, make_user_session_factory):
+    async def test_unknown_credit_raises_404(
+        self, db_session, make_user_session_factory
+    ):
         requester_doc = "444555666"
-        requester = build_debtor((await add_organization(db_session)).id, document_number_plain=requester_doc)
+        requester = build_debtor(
+            (await add_organization(db_session)).id, document_number_plain=requester_doc
+        )
         db_session.add(requester)
         await db_session.flush()
 
         service = CreditSelfServiceService(db_session)
-        session = self_session(make_user_session_factory, encrypt_service.hash_document(requester_doc))
+        session = self_session(
+            make_user_session_factory, encrypt_service.hash_document(requester_doc)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service._resolve_owned_credit(session, uuid.uuid4())
@@ -91,8 +109,12 @@ class TestResolveOwnedCreditIdor:
         await db_session.flush()
 
         service = CreditSelfServiceService(db_session)
-        session = self_session(make_user_session_factory, encrypt_service.hash_document(doc_number))
+        session = self_session(
+            make_user_session_factory, encrypt_service.hash_document(doc_number)
+        )
 
-        resolved_credit, org_id = await service._resolve_owned_credit(session, credit.id)
+        resolved_credit, org_id = await service._resolve_owned_credit(
+            session, credit.id
+        )
         assert resolved_credit.id == credit.id
         assert org_id == org.id

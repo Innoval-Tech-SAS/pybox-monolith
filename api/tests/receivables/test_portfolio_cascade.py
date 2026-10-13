@@ -12,18 +12,31 @@ from datetime import datetime, timezone
 import pytest
 from fastapi import HTTPException
 
-from identity.organizations.repository.organization_repository import OrganizationRepository
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
 from messaging.campaigns.repository.campaign_repository import CampaignRepository
-from messaging.campaigns.repository.campaign_time_repository import CampaignTimeRepository
+from messaging.campaigns.repository.campaign_time_repository import (
+    CampaignTimeRepository,
+)
 from messaging.contacts.repository.contact_repository import ContactRepository
 from receivables.credits.repository.credit_repository import CreditRepository
-from receivables.portfolios.repository.portfolio_daily_counter_config_repository import PortfolioDailyCounterConfigRepository
+from receivables.portfolios.repository.portfolio_daily_counter_config_repository import (
+    PortfolioDailyCounterConfigRepository,
+)
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from receivables.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
+from receivables.portfolios.repository.portfolio_user_access_repository import (
+    PortfolioUserAccessRepository,
+)
 from receivables.portfolios.services.portfolio_service import PortfolioService
 from tests.messaging.campaigns.conftest import build_campaign, get_channel_id
 from tests.messaging.campaigns.test_campaign_time_repository import build_ct
-from tests.receivables.conftest import add_organization, build_credit, build_debtor, build_portfolio
+from tests.receivables.conftest import (
+    add_organization,
+    build_credit,
+    build_debtor,
+    build_portfolio,
+)
 
 
 def build_service(db_session) -> PortfolioService:
@@ -52,7 +65,9 @@ async def _portfolio_with_credit_and_campaign(db_session):
 
 class TestDeletePortfolioCascade:
     async def test_soft_deletes_credits_and_campaigns(self, db_session):
-        _, portfolio, credit, campaign = await _portfolio_with_credit_and_campaign(db_session)
+        _, portfolio, credit, campaign = await _portfolio_with_credit_and_campaign(
+            db_session
+        )
 
         await build_service(db_session).delete_portfolio(portfolio.id)
         db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
@@ -76,13 +91,19 @@ class TestDeletePortfolioCascade:
 
         assert await CreditRepository(db_session).get_by_id(other_credit.id) is not None
 
-    async def test_deleted_campaign_is_no_longer_due_for_the_scheduler(self, db_session):
-        org, portfolio, _, campaign = await _portfolio_with_credit_and_campaign(db_session)
+    async def test_deleted_campaign_is_no_longer_due_for_the_scheduler(
+        self, db_session
+    ):
+        org, portfolio, _, campaign = await _portfolio_with_credit_and_campaign(
+            db_session
+        )
         ct = build_ct(campaign.id, org.id)
         db_session.add(ct)
         await db_session.flush()
         now = datetime.now(timezone.utc)
-        assert [d.id for d in await CampaignTimeRepository(db_session).find_due_active(now)] == [ct.id]
+        assert [
+            d.id for d in await CampaignTimeRepository(db_session).find_due_active(now)
+        ] == [ct.id]
 
         await build_service(db_session).delete_portfolio(portfolio.id)
         db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
@@ -92,7 +113,9 @@ class TestDeletePortfolioCascade:
 
 class TestRestorePortfolioCascade:
     async def test_restores_credits_and_campaigns_of_the_cascade(self, db_session):
-        _, portfolio, credit, campaign = await _portfolio_with_credit_and_campaign(db_session)
+        _, portfolio, credit, campaign = await _portfolio_with_credit_and_campaign(
+            db_session
+        )
         service = build_service(db_session)
         await service.delete_portfolio(portfolio.id)
         db_session.expunge_all()  # el UPDATE en bloque no refresca lo ya cargado: forzar relectura
@@ -104,8 +127,12 @@ class TestRestorePortfolioCascade:
         assert await CreditRepository(db_session).get_by_id(credit.id) is not None
         assert await CampaignRepository(db_session).get_by_id(campaign.id) is not None
 
-    async def test_does_not_resurrect_a_credit_deleted_before_the_portfolio(self, db_session):
-        org, portfolio, credit, _ = await _portfolio_with_credit_and_campaign(db_session)
+    async def test_does_not_resurrect_a_credit_deleted_before_the_portfolio(
+        self, db_session
+    ):
+        org, portfolio, credit, _ = await _portfolio_with_credit_and_campaign(
+            db_session
+        )
         debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()

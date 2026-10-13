@@ -26,23 +26,33 @@ def make_invoice(**overrides):
 
 
 class TestIsBlocked:
-    async def test_blocking_disabled_returns_false_even_with_overdue_invoice(self, monkeypatch):
+    async def test_blocking_disabled_returns_false_even_with_overdue_invoice(
+        self, monkeypatch
+    ):
         monkeypatch.setattr(billing_config, "blocking_enabled", False)
         service, invoice_repo = make_service()
-        invoice_repo.get_oldest_unpaid_due = AsyncMock(return_value=make_invoice(status=InvoiceStatus.OVERDUE))
+        invoice_repo.get_oldest_unpaid_due = AsyncMock(
+            return_value=make_invoice(status=InvoiceStatus.OVERDUE)
+        )
 
         assert await service.is_blocked(uuid.uuid4()) is False
         # La valvula de escape corta antes de consultar la DB.
         invoice_repo.get_oldest_unpaid_due.assert_not_awaited()
 
-    async def test_blocking_enabled_with_overdue_invoice_returns_true(self, monkeypatch):
+    async def test_blocking_enabled_with_overdue_invoice_returns_true(
+        self, monkeypatch
+    ):
         monkeypatch.setattr(billing_config, "blocking_enabled", True)
         service, invoice_repo = make_service()
-        invoice_repo.get_oldest_unpaid_due = AsyncMock(return_value=make_invoice(status=InvoiceStatus.OVERDUE))
+        invoice_repo.get_oldest_unpaid_due = AsyncMock(
+            return_value=make_invoice(status=InvoiceStatus.OVERDUE)
+        )
 
         assert await service.is_blocked(uuid.uuid4()) is True
 
-    async def test_blocking_enabled_with_no_overdue_invoice_returns_false(self, monkeypatch):
+    async def test_blocking_enabled_with_no_overdue_invoice_returns_false(
+        self, monkeypatch
+    ):
         monkeypatch.setattr(billing_config, "blocking_enabled", True)
         service, invoice_repo = make_service()
         invoice_repo.get_oldest_unpaid_due = AsyncMock(return_value=None)
@@ -56,7 +66,8 @@ class TestGetStatus:
         service, invoice_repo = make_service()
         invoice_repo.get_oldest_unpaid_due = AsyncMock(return_value=None)
         invoice = make_invoice(
-            status=InvoiceStatus.ISSUED, due_at=datetime.now(timezone.utc) + timedelta(days=2)
+            status=InvoiceStatus.ISSUED,
+            due_at=datetime.now(timezone.utc) + timedelta(days=2),
         )
         invoice_repo.get_open_by_organization_id = AsyncMock(return_value=invoice)
 
@@ -70,7 +81,8 @@ class TestGetStatus:
         service, invoice_repo = make_service()
         invoice_repo.get_oldest_unpaid_due = AsyncMock(return_value=None)
         invoice = make_invoice(
-            status=InvoiceStatus.ISSUED, due_at=datetime.now(timezone.utc) + timedelta(days=10)
+            status=InvoiceStatus.ISSUED,
+            due_at=datetime.now(timezone.utc) + timedelta(days=10),
         )
         invoice_repo.get_open_by_organization_id = AsyncMock(return_value=invoice)
 
@@ -90,7 +102,9 @@ class TestGetStatus:
         assert result.lock_status == TenantBillingLockStatus.NONE
         assert result.active_invoice_id is None
 
-    async def test_overdue_invoice_with_blocking_enabled_returns_blocked(self, monkeypatch):
+    async def test_overdue_invoice_with_blocking_enabled_returns_blocked(
+        self, monkeypatch
+    ):
         monkeypatch.setattr(billing_config, "blocking_enabled", True)
         service, invoice_repo = make_service()
         overdue = make_invoice(status=InvoiceStatus.OVERDUE)
@@ -101,7 +115,9 @@ class TestGetStatus:
         assert result.lock_status == TenantBillingLockStatus.BLOCKED
         assert result.active_invoice_id == overdue.id
 
-    async def test_overdue_invoice_with_blocking_disabled_returns_payment_required_not_blocked(self, monkeypatch):
+    async def test_overdue_invoice_with_blocking_disabled_returns_payment_required_not_blocked(
+        self, monkeypatch
+    ):
         monkeypatch.setattr(billing_config, "blocking_enabled", False)
         service, invoice_repo = make_service()
         overdue = make_invoice(status=InvoiceStatus.OVERDUE)

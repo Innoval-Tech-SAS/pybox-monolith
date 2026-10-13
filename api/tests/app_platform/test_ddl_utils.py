@@ -4,7 +4,10 @@ DDL de columna, incluyendo el rechazo de identificadores inválidos."""
 
 import pytest
 
-from app_platform.schema_manager.schemas.database_schemas import ColumnDataType, ColumnDefinition
+from app_platform.schema_manager.schemas.database_schemas import (
+    ColumnDataType,
+    ColumnDefinition,
+)
 from app_platform.schema_manager.utils.ddl_utils import (
     build_column_ddl,
     build_column_type,
@@ -66,7 +69,9 @@ class TestBuildColumnType:
         assert build_column_type(col) == "CHAR(1)"
 
     def test_numeric_with_precision_and_scale(self):
-        col = ColumnDefinition(name="x", data_type=ColumnDataType.NUMERIC, precision=10, scale=2)
+        col = ColumnDefinition(
+            name="x", data_type=ColumnDataType.NUMERIC, precision=10, scale=2
+        )
         assert build_column_type(col) == "NUMERIC(10,2)"
 
     def test_numeric_with_precision_only(self):
@@ -92,28 +97,44 @@ class TestBuildColumnDdl:
         assert build_column_ddl(col) == '"etiqueta" TEXT'
 
     def test_not_null_column(self):
-        col = ColumnDefinition(name="etiqueta", data_type=ColumnDataType.TEXT, nullable=False)
+        col = ColumnDefinition(
+            name="etiqueta", data_type=ColumnDataType.TEXT, nullable=False
+        )
         assert build_column_ddl(col) == '"etiqueta" TEXT NOT NULL'
 
     def test_primary_key_omits_not_null(self):
-        col = ColumnDefinition(name="id", data_type=ColumnDataType.INTEGER, primary_key=True, nullable=False)
+        col = ColumnDefinition(
+            name="id",
+            data_type=ColumnDataType.INTEGER,
+            primary_key=True,
+            nullable=False,
+        )
         assert build_column_ddl(col) == '"id" INTEGER PRIMARY KEY'
 
     def test_unique_column(self):
-        col = ColumnDefinition(name="codigo", data_type=ColumnDataType.TEXT, unique=True)
+        col = ColumnDefinition(
+            name="codigo", data_type=ColumnDataType.TEXT, unique=True
+        )
         assert build_column_ddl(col) == '"codigo" TEXT UNIQUE'
 
     def test_column_with_default_value(self):
-        col = ColumnDefinition(name="activo", data_type=ColumnDataType.BOOLEAN, default_value="true")
+        col = ColumnDefinition(
+            name="activo", data_type=ColumnDataType.BOOLEAN, default_value="true"
+        )
         assert build_column_ddl(col) == '"activo" BOOLEAN DEFAULT TRUE'
 
     def test_varchar_column_with_length_and_default(self):
         col = ColumnDefinition(
-            name="estado", data_type=ColumnDataType.VARCHAR, length=20, default_value="pendiente"
+            name="estado",
+            data_type=ColumnDataType.VARCHAR,
+            length=20,
+            default_value="pendiente",
         )
         assert build_column_ddl(col) == "\"estado\" VARCHAR(20) DEFAULT 'pendiente'"
 
     def test_invalid_column_name_rejected(self):
-        col = ColumnDefinition(name="bad name; DROP TABLE x", data_type=ColumnDataType.TEXT)
+        col = ColumnDefinition(
+            name="bad name; DROP TABLE x", data_type=ColumnDataType.TEXT
+        )
         with pytest.raises(ValueError, match="Identificador inválido"):
             build_column_ddl(col)

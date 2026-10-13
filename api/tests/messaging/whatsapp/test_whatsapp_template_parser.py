@@ -11,7 +11,10 @@ class TestExtractVariableSlots:
 
         slots = extract_variable_slots(components)
 
-        assert [(s.component, s.name) for s in slots] == [("BODY", "nombre"), ("BODY", "monto")]
+        assert [(s.component, s.name) for s in slots] == [
+            ("BODY", "nombre"),
+            ("BODY", "monto"),
+        ]
 
     def test_ignores_footer_and_buttons_components(self):
         components = [
@@ -29,7 +32,10 @@ class TestExtractVariableSlots:
 
         slots = extract_variable_slots(components)
 
-        assert [(s.component, s.name) for s in slots] == [("HEADER", "nombre"), ("BODY", "monto")]
+        assert [(s.component, s.name) for s in slots] == [
+            ("HEADER", "nombre"),
+            ("BODY", "monto"),
+        ]
 
     def test_lowercase_type_is_normalized_to_uppercase(self):
         components = [{"type": "body", "text": "Hola {{nombre}}"}]
@@ -49,7 +55,12 @@ class TestExtractVariableSlots:
         assert extract_variable_slots(components) == []
 
     def test_duplicate_variable_appears_only_once_preserving_first_order(self):
-        components = [{"type": "BODY", "text": "{{nombre}} repetido {{monto}} y otra vez {{nombre}}"}]
+        components = [
+            {
+                "type": "BODY",
+                "text": "{{nombre}} repetido {{monto}} y otra vez {{nombre}}",
+            }
+        ]
 
         slots = extract_variable_slots(components)
 
@@ -71,14 +82,21 @@ class TestExtractVariableSlots:
 
         slots = extract_variable_slots(components)
 
-        assert {s.name: s.example for s in slots} == {"nombre": "Juan", "monto": "150000"}
+        assert {s.name: s.example for s in slots} == {
+            "nombre": "Juan",
+            "monto": "150000",
+        }
 
     def test_header_example_uses_header_text_named_params_key(self):
         components = [
             {
                 "type": "HEADER",
                 "text": "Hola {{nombre}}",
-                "example": {"header_text_named_params": [{"param_name": "nombre", "example": "Ana"}]},
+                "example": {
+                    "header_text_named_params": [
+                        {"param_name": "nombre", "example": "Ana"}
+                    ]
+                },
             }
         ]
 
@@ -91,7 +109,9 @@ class TestExtractVariableSlots:
             {
                 "type": "BODY",
                 "text": "Hola {{nombre}}",
-                "example": {"body_text_named_params": [{"param_name": "otro", "example": "x"}]},
+                "example": {
+                    "body_text_named_params": [{"param_name": "otro", "example": "x"}]
+                },
             }
         ]
 

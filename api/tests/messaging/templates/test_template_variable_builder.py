@@ -110,10 +110,17 @@ class TestBuildVariable:
 
 class TestBuildPaymentVariable:
     def test_hidden_field_returns_none(self):
-        assert build_payment_variable("id_pago", "uuid", "proxima", "Próxima cuota", "pagos") is None
+        assert (
+            build_payment_variable(
+                "id_pago", "uuid", "proxima", "Próxima cuota", "pagos"
+            )
+            is None
+        )
 
     def test_key_and_label_include_strategy_suffix(self):
-        option = build_payment_variable("saldo_cuota", "numeric", "proxima", "Próxima cuota", "pagos")
+        option = build_payment_variable(
+            "saldo_cuota", "numeric", "proxima", "Próxima cuota", "pagos"
+        )
         assert option is not None
         assert option.key == "saldo_cuota_proxima"
         assert option.label == "Saldo cuota (Próxima cuota)"

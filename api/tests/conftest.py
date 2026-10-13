@@ -43,7 +43,12 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 import core.config.models
 from core.database import redis as redis_module
 from core.database.database import Base, db, get_main_session
-from core.security.dependencies import get_pending_mfa_session, get_session, get_sse_session, get_ws_session
+from core.security.dependencies import (
+    get_pending_mfa_session,
+    get_session,
+    get_sse_session,
+    get_ws_session,
+)
 from core.seed import (
     seed_admin,
     seed_channels,
@@ -101,7 +106,10 @@ class _FakeAsyncRedis:
     async def expire(self, key: str, ttl_seconds: int) -> None:
         if key in self._store and not self._expired(key):
             value, _ = self._store[key]
-            self._store[key] = (value, datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds))
+            self._store[key] = (
+                value,
+                datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds),
+            )
 
     async def config_set(self, name: str, value: str) -> None:
         return None
@@ -232,7 +240,9 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
     # El host tiene que caer bajo COOKIE_DOMAIN (`.pybox.local`) y ser https, si no
     # el cookie jar de httpx descarta las cookies de auth (secure + domain-matched)
     # y el login/refresh/logout end-to-end no puede encadenar requests.
-    async with AsyncClient(transport=transport, base_url="https://api.pybox.local") as ac:
+    async with AsyncClient(
+        transport=transport, base_url="https://api.pybox.local"
+    ) as ac:
         yield ac
     db.get_session = original_get_session
     fastapi_app.dependency_overrides.pop(get_main_session, None)
@@ -296,7 +306,13 @@ def auth_as(client: AsyncClient) -> Callable[[UserSession], AsyncClient]:
     no por módulo, así que cubre a todos los routers que las importan."""
 
     def _clear() -> None:
-        for dep in (_get_token_payload, get_session, get_pending_mfa_session, get_ws_session, get_sse_session):
+        for dep in (
+            _get_token_payload,
+            get_session,
+            get_pending_mfa_session,
+            get_ws_session,
+            get_sse_session,
+        ):
             fastapi_app.dependency_overrides.pop(dep, None)
 
     def _apply(user_session: UserSession) -> AsyncClient:

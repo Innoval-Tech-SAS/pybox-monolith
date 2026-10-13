@@ -18,7 +18,9 @@ async def onboarding_user(client, db_session, auth_as, make_user_session_factory
     resp = await client.post(f"{AUTH_BASE}/register/user", json=payload)
     assert resp.status_code == 201
     user = await get_user_by_email(db_session, payload["email"])
-    session = make_user_session_factory(user_id=user.id, role=UserRole.USER, scope=UserScope.SELF)
+    session = make_user_session_factory(
+        user_id=user.id, role=UserRole.USER, scope=UserScope.SELF
+    )
     authed = auth_as(session)
     return authed, user, payload
 
@@ -59,27 +61,37 @@ class TestVerifyOtp:
         authed, user, _payload = onboarding_user
         await authed.post(f"{BASE}/request-otp", json={"channel": "EMAIL"})
         code_row = (
-            await db_session.execute(
-                select(VerificationCodeModel)
-                .where(VerificationCodeModel.user_id == user.id)
-                .order_by(VerificationCodeModel.created_at.desc())
+            (
+                await db_session.execute(
+                    select(VerificationCodeModel)
+                    .where(VerificationCodeModel.user_id == user.id)
+                    .order_by(VerificationCodeModel.created_at.desc())
+                )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
 
-        resp = await authed.post(f"{BASE}/verify-otp", json={"channel": "EMAIL", "code": code_row.code})
+        resp = await authed.post(
+            f"{BASE}/verify-otp", json={"channel": "EMAIL", "code": code_row.code}
+        )
         assert resp.status_code == 204
 
     async def test_verify_otp_wrong_code_returns_400(self, onboarding_user):
         authed, _user, _payload = onboarding_user
         await authed.post(f"{BASE}/request-otp", json={"channel": "EMAIL"})
-        resp = await authed.post(f"{BASE}/verify-otp", json={"channel": "EMAIL", "code": "000000"})
+        resp = await authed.post(
+            f"{BASE}/verify-otp", json={"channel": "EMAIL", "code": "000000"}
+        )
         assert resp.status_code == 400
 
 
 class TestSetPassword:
     async def test_set_password_valid(self, onboarding_user):
         authed, _user, _payload = onboarding_user
-        resp = await authed.patch(f"{BASE}/set-password", json={"new_password": "OtraFuerte1!"})
+        resp = await authed.patch(
+            f"{BASE}/set-password", json={"new_password": "OtraFuerte1!"}
+        )
         assert resp.status_code == 204
 
     async def test_set_password_weak_returns_422(self, onboarding_user):
@@ -95,11 +107,15 @@ class TestSetPhone:
         resp = await authed.patch(f"{BASE}/phone", json={"phone_number": new_phone})
         assert resp.status_code == 204
 
-    async def test_set_phone_already_registered_returns_409(self, client, onboarding_user):
+    async def test_set_phone_already_registered_returns_409(
+        self, client, onboarding_user
+    ):
         authed, _user, _payload = onboarding_user
         other = register_payload()
         await client.post(f"{AUTH_BASE}/register/user", json=other)
-        resp = await authed.patch(f"{BASE}/phone", json={"phone_number": other["phone_number"]})
+        resp = await authed.patch(
+            f"{BASE}/phone", json={"phone_number": other["phone_number"]}
+        )
         assert resp.status_code == 409
 
 
@@ -108,16 +124,26 @@ class TestUpdateProfile:
         authed, _user, _payload = onboarding_user
         resp = await authed.patch(
             f"{BASE}/profile",
-            json={"document_type": "CE", "document_number": str(uuid.uuid4().int)[:9], "nationality": "CO"},
+            json={
+                "document_type": "CE",
+                "document_number": str(uuid.uuid4().int)[:9],
+                "nationality": "CO",
+            },
         )
         assert resp.status_code == 204
 
-    async def test_update_profile_document_not_valid_for_country_returns_400(self, onboarding_user):
+    async def test_update_profile_document_not_valid_for_country_returns_400(
+        self, onboarding_user
+    ):
         authed, _user, _payload = onboarding_user
         resp = await authed.patch(
             f"{BASE}/profile",
             # RFC es un documento mexicano, no válido para nacionalidad CO
-            json={"document_type": "RFC", "document_number": str(uuid.uuid4().int)[:9], "nationality": "CO"},
+            json={
+                "document_type": "RFC",
+                "document_number": str(uuid.uuid4().int)[:9],
+                "nationality": "CO",
+            },
         )
         assert resp.status_code == 400
 
@@ -125,6 +151,10 @@ class TestUpdateProfile:
         authed, _user, _payload = onboarding_user
         resp = await authed.patch(
             f"{BASE}/profile",
-            json={"document_type": "CC", "document_number": str(uuid.uuid4().int)[:9], "nationality": "ZZ"},
+            json={
+                "document_type": "CC",
+                "document_number": str(uuid.uuid4().int)[:9],
+                "nationality": "ZZ",
+            },
         )
         assert resp.status_code == 400

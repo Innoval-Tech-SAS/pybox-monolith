@@ -23,7 +23,8 @@ class TestVerifyWhatsAppSignature:
         signature = _sign(raw_body)
 
         with patch(
-            "messaging.whatsapp.utils.whatsapp_signature.get_or_throw", return_value=APP_SECRET
+            "messaging.whatsapp.utils.whatsapp_signature.get_or_throw",
+            return_value=APP_SECRET,
         ):
             assert verify_whatsapp_signature(raw_body, signature) is True
 
@@ -33,7 +34,8 @@ class TestVerifyWhatsAppSignature:
         tampered_body = b'{"entry": ["injected"]}'
 
         with patch(
-            "messaging.whatsapp.utils.whatsapp_signature.get_or_throw", return_value=APP_SECRET
+            "messaging.whatsapp.utils.whatsapp_signature.get_or_throw",
+            return_value=APP_SECRET,
         ):
             assert verify_whatsapp_signature(tampered_body, signature) is False
 
@@ -42,17 +44,22 @@ class TestVerifyWhatsAppSignature:
         signature = _sign(raw_body, secret="otro-secreto")
 
         with patch(
-            "messaging.whatsapp.utils.whatsapp_signature.get_or_throw", return_value=APP_SECRET
+            "messaging.whatsapp.utils.whatsapp_signature.get_or_throw",
+            return_value=APP_SECRET,
         ):
             assert verify_whatsapp_signature(raw_body, signature) is False
 
     def test_missing_signature_header_returns_false_without_reading_secret(self):
-        with patch("messaging.whatsapp.utils.whatsapp_signature.get_or_throw") as mock_get:
+        with patch(
+            "messaging.whatsapp.utils.whatsapp_signature.get_or_throw"
+        ) as mock_get:
             assert verify_whatsapp_signature(b"body", None) is False
             mock_get.assert_not_called()
 
     def test_signature_without_sha256_prefix_returns_false(self):
-        with patch("messaging.whatsapp.utils.whatsapp_signature.get_or_throw") as mock_get:
+        with patch(
+            "messaging.whatsapp.utils.whatsapp_signature.get_or_throw"
+        ) as mock_get:
             assert verify_whatsapp_signature(b"body", "not-a-valid-prefix") is False
             mock_get.assert_not_called()
 

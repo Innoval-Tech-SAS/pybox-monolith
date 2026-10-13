@@ -6,7 +6,11 @@ el proveedor real; si nunca lo antepone, el mensaje no llega.
 
 import pytest
 
-from messaging.campaigns.utils.provider_utils import is_phone_channel, normalize_phone, provider_for_channel
+from messaging.campaigns.utils.provider_utils import (
+    is_phone_channel,
+    normalize_phone,
+    provider_for_channel,
+)
 from messaging.channels.enums.channel_enums import ChannelName
 from messaging.contacts.enums.contact_enums import ProviderType
 
@@ -28,7 +32,8 @@ class TestProviderForChannel:
 
 class TestIsPhoneChannel:
     @pytest.mark.parametrize(
-        "channel", [ChannelName.SMS, ChannelName.WHATSAPP, ChannelName.CALL, ChannelName.CALL_IA]
+        "channel",
+        [ChannelName.SMS, ChannelName.WHATSAPP, ChannelName.CALL, ChannelName.CALL_IA],
     )
     def test_phone_channels_return_true(self, channel):
         assert is_phone_channel(channel) is True

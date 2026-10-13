@@ -1,6 +1,8 @@
 """Tests de integración de WhatsAppOrgCredentialsRepository (ver whatsapp_org_credentials_repository.py)."""
 
-from messaging.whatsapp.repository.whatsapp_org_credentials_repository import WhatsAppOrgCredentialsRepository
+from messaging.whatsapp.repository.whatsapp_org_credentials_repository import (
+    WhatsAppOrgCredentialsRepository,
+)
 from tests.messaging.whatsapp.conftest import build_credentials
 
 

@@ -10,7 +10,9 @@ from datetime import datetime, timedelta, timezone
 
 from messaging.campaigns.models.campaign_time_model import CampaignTimeModel
 from messaging.campaigns.repository.campaign_repository import CampaignRepository
-from messaging.campaigns.repository.campaign_time_repository import CampaignTimeRepository
+from messaging.campaigns.repository.campaign_time_repository import (
+    CampaignTimeRepository,
+)
 from tests.messaging.campaigns.conftest import build_campaign, get_channel_id
 from tests.receivables.conftest import build_organization, build_portfolio
 
@@ -29,7 +31,9 @@ async def _setup_campaign(db_session, **overrides):
     return org, portfolio, campaign
 
 
-def build_ct(campaign_id: uuid.UUID, organization_id: uuid.UUID, **overrides) -> CampaignTimeModel:
+def build_ct(
+    campaign_id: uuid.UUID, organization_id: uuid.UUID, **overrides
+) -> CampaignTimeModel:
     defaults = dict(
         campaign_id=campaign_id,
         organization_id=organization_id,
@@ -43,7 +47,11 @@ def build_ct(campaign_id: uuid.UUID, organization_id: uuid.UUID, **overrides) ->
 class TestFindDueActive:
     async def test_returns_active_schedule_with_past_next_execution(self, db_session):
         org, _portfolio, campaign = await _setup_campaign(db_session)
-        ct = build_ct(campaign.id, org.id, next_execution=datetime.now(timezone.utc) - timedelta(minutes=5))
+        ct = build_ct(
+            campaign.id,
+            org.id,
+            next_execution=datetime.now(timezone.utc) - timedelta(minutes=5),
+        )
         db_session.add(ct)
         await db_session.flush()
 
@@ -54,7 +62,11 @@ class TestFindDueActive:
 
     async def test_future_next_execution_is_not_due(self, db_session):
         org, _portfolio, campaign = await _setup_campaign(db_session)
-        ct = build_ct(campaign.id, org.id, next_execution=datetime.now(timezone.utc) + timedelta(hours=1))
+        ct = build_ct(
+            campaign.id,
+            org.id,
+            next_execution=datetime.now(timezone.utc) + timedelta(hours=1),
+        )
         db_session.add(ct)
         await db_session.flush()
 
@@ -87,7 +99,9 @@ class TestFindDueActive:
         first_page = await repo.find_due_active(now, limit=1)
         assert len(first_page) == 1
 
-        second_page = await repo.find_due_active(now, limit=1, after_id=first_page[-1].id)
+        second_page = await repo.find_due_active(
+            now, limit=1, after_id=first_page[-1].id
+        )
         assert len(second_page) <= 1
         if second_page:
             assert second_page[0].id != first_page[0].id
@@ -95,7 +109,9 @@ class TestFindDueActive:
 
 class TestListActiveByOrg:
     async def test_joins_campaign_time_with_campaign(self, db_session):
-        org, _portfolio, campaign = await _setup_campaign(db_session, name="Campaña activa")
+        org, _portfolio, campaign = await _setup_campaign(
+            db_session, name="Campaña activa"
+        )
         ct = build_ct(campaign.id, org.id)
         db_session.add(ct)
         await db_session.flush()
@@ -136,7 +152,9 @@ class TestListActiveByOrg:
     async def test_other_organization_schedules_are_excluded(self, db_session):
         org_a, _portfolio_a, campaign_a = await _setup_campaign(db_session)
         org_b, _portfolio_b, campaign_b = await _setup_campaign(db_session)
-        db_session.add_all([build_ct(campaign_a.id, org_a.id), build_ct(campaign_b.id, org_b.id)])
+        db_session.add_all(
+            [build_ct(campaign_a.id, org_a.id), build_ct(campaign_b.id, org_b.id)]
+        )
         await db_session.flush()
 
         repo = CampaignTimeRepository(db_session)
@@ -147,7 +165,9 @@ class TestListActiveByOrg:
 
 
 class TestDeactivateAndReschedule:
-    async def test_deactivate_clears_next_execution_and_flags_inactive(self, db_session):
+    async def test_deactivate_clears_next_execution_and_flags_inactive(
+        self, db_session
+    ):
         org, _portfolio, campaign = await _setup_campaign(db_session)
         ct = build_ct(campaign.id, org.id)
         db_session.add(ct)

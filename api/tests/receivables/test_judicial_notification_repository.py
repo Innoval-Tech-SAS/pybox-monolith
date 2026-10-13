@@ -6,12 +6,21 @@ buzón (no solo el titular) y exclusión de soft-deleted -- casos que
 import uuid
 from datetime import datetime, timezone
 
-from receivables.judicial_notifications.enums.judicial_notification_enums import JudicialPriority
-from receivables.judicial_notifications.models.judicial_notification_model import JudicialNotificationModel
+from receivables.judicial_notifications.enums.judicial_notification_enums import (
+    JudicialPriority,
+)
+from receivables.judicial_notifications.models.judicial_notification_model import (
+    JudicialNotificationModel,
+)
 from receivables.judicial_notifications.repository.judicial_notification_repository import (
     JudicialNotificationRepository,
 )
-from tests.receivables.conftest import build_credit, build_debtor, build_organization, build_portfolio
+from tests.receivables.conftest import (
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 
 async def _setup_with_codebtor(db_session):
@@ -32,10 +41,16 @@ async def _setup_with_codebtor(db_session):
 
 
 class TestGetInboxByDebtorId:
-    async def test_codebtor_sees_notification_in_inbox(self, db_session, real_admin_user_id):
+    async def test_codebtor_sees_notification_in_inbox(
+        self, db_session, real_admin_user_id
+    ):
         _, _, titular, codebtor, credit = await _setup_with_codebtor(db_session)
         notification = JudicialNotificationModel(
-            credit_id=credit.id, title="T", body="B", priority=JudicialPriority.URGENT, created_by=real_admin_user_id
+            credit_id=credit.id,
+            title="T",
+            body="B",
+            priority=JudicialPriority.URGENT,
+            created_by=real_admin_user_id,
         )
         db_session.add(notification)
         await db_session.flush()
@@ -51,11 +66,19 @@ class TestGetInboxByDebtorId:
     async def test_excludes_soft_deleted(self, db_session, real_admin_user_id):
         _, _, titular, _, credit = await _setup_with_codebtor(db_session)
         active = JudicialNotificationModel(
-            credit_id=credit.id, title="Activa", body="B", priority=JudicialPriority.LOW, created_by=real_admin_user_id
+            credit_id=credit.id,
+            title="Activa",
+            body="B",
+            priority=JudicialPriority.LOW,
+            created_by=real_admin_user_id,
         )
         deleted = JudicialNotificationModel(
-            credit_id=credit.id, title="Borrada", body="B", priority=JudicialPriority.LOW,
-            created_by=real_admin_user_id, deleted_at=datetime.now(timezone.utc),
+            credit_id=credit.id,
+            title="Borrada",
+            body="B",
+            priority=JudicialPriority.LOW,
+            created_by=real_admin_user_id,
+            deleted_at=datetime.now(timezone.utc),
         )
         db_session.add_all([active, deleted])
         await db_session.flush()
@@ -67,18 +90,30 @@ class TestGetInboxByDebtorId:
 
 
 class TestCountUnreadByDebtorId:
-    async def test_counts_only_unread_for_that_debtor(self, db_session, real_admin_user_id):
+    async def test_counts_only_unread_for_that_debtor(
+        self, db_session, real_admin_user_id
+    ):
         _, _, titular, codebtor, credit = await _setup_with_codebtor(db_session)
-        db_session.add_all([
-            JudicialNotificationModel(
-                credit_id=credit.id, title="Unread", body="B", priority=JudicialPriority.LOW,
-                created_by=real_admin_user_id, is_read=False,
-            ),
-            JudicialNotificationModel(
-                credit_id=credit.id, title="Read", body="B", priority=JudicialPriority.LOW,
-                created_by=real_admin_user_id, is_read=True,
-            ),
-        ])
+        db_session.add_all(
+            [
+                JudicialNotificationModel(
+                    credit_id=credit.id,
+                    title="Unread",
+                    body="B",
+                    priority=JudicialPriority.LOW,
+                    created_by=real_admin_user_id,
+                    is_read=False,
+                ),
+                JudicialNotificationModel(
+                    credit_id=credit.id,
+                    title="Read",
+                    body="B",
+                    priority=JudicialPriority.LOW,
+                    created_by=real_admin_user_id,
+                    is_read=True,
+                ),
+            ]
+        )
         await db_session.flush()
 
         repo = JudicialNotificationRepository(db_session)
@@ -87,8 +122,12 @@ class TestCountUnreadByDebtorId:
 
 
 class TestMarkAllReadByDebtorId:
-    async def test_only_marks_notifications_of_that_debtors_credits(self, db_session, real_admin_user_id):
-        org, portfolio, titular, codebtor, credit = await _setup_with_codebtor(db_session)
+    async def test_only_marks_notifications_of_that_debtors_credits(
+        self, db_session, real_admin_user_id
+    ):
+        org, portfolio, titular, codebtor, credit = await _setup_with_codebtor(
+            db_session
+        )
         other_debtor = build_debtor(org.id)
         db_session.add(other_debtor)
         await db_session.flush()
@@ -97,12 +136,20 @@ class TestMarkAllReadByDebtorId:
         await db_session.flush()
 
         mine = JudicialNotificationModel(
-            credit_id=credit.id, title="Mine", body="B", priority=JudicialPriority.LOW,
-            created_by=real_admin_user_id, is_read=False,
+            credit_id=credit.id,
+            title="Mine",
+            body="B",
+            priority=JudicialPriority.LOW,
+            created_by=real_admin_user_id,
+            is_read=False,
         )
         others = JudicialNotificationModel(
-            credit_id=other_credit.id, title="Others", body="B", priority=JudicialPriority.LOW,
-            created_by=real_admin_user_id, is_read=False,
+            credit_id=other_credit.id,
+            title="Others",
+            body="B",
+            priority=JudicialPriority.LOW,
+            created_by=real_admin_user_id,
+            is_read=False,
         )
         db_session.add_all([mine, others])
         await db_session.flush()

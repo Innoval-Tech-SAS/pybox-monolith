@@ -14,8 +14,14 @@ from fastapi import HTTPException, UploadFile
 from messaging.bulk_send.utils.file_parser import parse_file
 
 
-def make_upload_file(content: bytes, filename: str = "contactos.csv", content_type: str = "text/csv") -> UploadFile:
-    return UploadFile(filename=filename, file=io.BytesIO(content), headers={"content-type": content_type})
+def make_upload_file(
+    content: bytes, filename: str = "contactos.csv", content_type: str = "text/csv"
+) -> UploadFile:
+    return UploadFile(
+        filename=filename,
+        file=io.BytesIO(content),
+        headers={"content-type": content_type},
+    )
 
 
 class TestParseFileRequiredColumns:
@@ -35,7 +41,9 @@ class TestParseFileRequiredColumns:
 
         rows = await parse_file(file)
 
-        assert rows == [{"tipo_documento": "CC", "documento": "123", "destinatario": "3001112233"}]
+        assert rows == [
+            {"tipo_documento": "CC", "documento": "123", "destinatario": "3001112233"}
+        ]
 
 
 class TestParseFileEmptyOrOversized:
@@ -74,7 +82,9 @@ class TestParseFileMissingCellData:
     async def test_row_with_missing_optional_cell_is_filled_with_empty_string(self):
         # `documento` vacío en la 2a fila (fila con datos faltantes) -- no debe romper
         # el parseo ni dejar un `None` en el dict resultante.
-        csv = "tipo_documento,documento,destinatario\nCC,123,3001112233\nCC,,3001112244\n"
+        csv = (
+            "tipo_documento,documento,destinatario\nCC,123,3001112233\nCC,,3001112244\n"
+        )
         file = make_upload_file(csv.encode("utf-8"))
 
         rows = await parse_file(file)
@@ -83,7 +93,9 @@ class TestParseFileMissingCellData:
         assert rows[1]["documento"] == ""
         assert all(isinstance(v, str) for row in rows for v in row.values())
 
-    async def test_extra_column_beyond_required_is_preserved_for_template_variables(self):
+    async def test_extra_column_beyond_required_is_preserved_for_template_variables(
+        self,
+    ):
         csv = "tipo_documento,documento,destinatario,nombre\nCC,123,3001112233,Ana\n"
         file = make_upload_file(csv.encode("utf-8"))
 
@@ -107,7 +119,9 @@ class TestParseFileMalformedContent:
         # Contenido CSV real pero con extensión .xlsx: el lector de Excel debe fallar
         # limpio (422), no reventar con una excepción cruda de openpyxl/calamine.
         csv = b"tipo_documento,documento,destinatario\nCC,123,3001112233\n"
-        file = make_upload_file(csv, filename="contactos.xlsx", content_type="application/octet-stream")
+        file = make_upload_file(
+            csv, filename="contactos.xlsx", content_type="application/octet-stream"
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await parse_file(file)

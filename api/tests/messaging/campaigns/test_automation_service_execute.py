@@ -42,7 +42,9 @@ def make_campaign(**overrides) -> MagicMock:
 
 def make_ct(campaign_id: uuid.UUID, **overrides) -> MagicMock:
     ct = MagicMock(spec=CampaignTimeModel)
-    defaults = dict(id=uuid.uuid4(), campaign_id=campaign_id, organization_id=uuid.uuid4())
+    defaults = dict(
+        id=uuid.uuid4(), campaign_id=campaign_id, organization_id=uuid.uuid4()
+    )
     defaults.update(overrides)
     for key, value in defaults.items():
         setattr(ct, key, value)
@@ -87,10 +89,17 @@ class TestExecuteCampaignOnceEarlyReturns:
         campaign = make_campaign()
         ct = make_ct(campaign.id)
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=uuid.uuid4())
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=uuid.uuid4(),
+            )
         )
-        service._portfolio_repo.get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        service._dml.execute_query = AsyncMock(return_value={"success": False, "error": "boom"})
+        service._portfolio_repo.get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        service._dml.execute_query = AsyncMock(
+            return_value={"success": False, "error": "boom"}
+        )
 
         await service._execute_campaign_once(campaign, ct)
 
@@ -101,9 +110,14 @@ class TestExecuteCampaignOnceEarlyReturns:
         campaign = make_campaign()
         ct = make_ct(campaign.id)
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=uuid.uuid4())
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=uuid.uuid4(),
+            )
         )
-        service._portfolio_repo.get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
+        service._portfolio_repo.get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
         service._dml.execute_query = AsyncMock(return_value=dml_success([]))
 
         await service._execute_campaign_once(campaign, ct)
@@ -115,10 +129,17 @@ class TestExecuteCampaignOnceEarlyReturns:
         campaign = make_campaign()
         ct = make_ct(campaign.id)
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=uuid.uuid4())
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=uuid.uuid4(),
+            )
         )
-        service._portfolio_repo.get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        service._dml.execute_query = AsyncMock(return_value=dml_success([{"id": str(uuid.uuid4())}]))
+        service._portfolio_repo.get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        service._dml.execute_query = AsyncMock(
+            return_value=dml_success([{"id": str(uuid.uuid4())}])
+        )
         service._channel_repo.get_by_id = AsyncMock(return_value=None)
 
         await service._execute_campaign_once(campaign, ct)
@@ -132,10 +153,17 @@ class TestExecuteCampaignOnceEarlyReturns:
         campaign = make_campaign()
         ct = make_ct(campaign.id)
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=uuid.uuid4())
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=uuid.uuid4(),
+            )
         )
-        service._portfolio_repo.get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        service._dml.execute_query = AsyncMock(return_value=dml_success([{"id": "no-es-un-uuid"}]))
+        service._portfolio_repo.get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        service._dml.execute_query = AsyncMock(
+            return_value=dml_success([{"id": "no-es-un-uuid"}])
+        )
         service._channel_repo.get_by_id = AsyncMock(return_value=make_channel())
 
         await service._execute_campaign_once(campaign, ct)
@@ -147,12 +175,23 @@ class TestExecuteCampaignOnceEarlyReturns:
         campaign = make_campaign()
         ct = make_ct(campaign.id)
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=uuid.uuid4())
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=uuid.uuid4(),
+            )
         )
-        service._portfolio_repo.get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        service._dml.execute_query = AsyncMock(return_value=dml_success([{"id": str(uuid.uuid4())}]))
-        service._channel_repo.get_by_id = AsyncMock(return_value=make_channel(ChannelName.WHATSAPP))
-        service._whatsapp_credentials_repo.get_by_organization = AsyncMock(return_value=None)
+        service._portfolio_repo.get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        service._dml.execute_query = AsyncMock(
+            return_value=dml_success([{"id": str(uuid.uuid4())}])
+        )
+        service._channel_repo.get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.WHATSAPP)
+        )
+        service._whatsapp_credentials_repo.get_by_organization = AsyncMock(
+            return_value=None
+        )
 
         await service._execute_campaign_once(campaign, ct)
 
@@ -163,11 +202,20 @@ class TestExecuteCampaignOnceEarlyReturns:
         campaign = make_campaign(template_id=None)
         ct = make_ct(campaign.id)
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=uuid.uuid4())
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=uuid.uuid4(),
+            )
         )
-        service._portfolio_repo.get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        service._dml.execute_query = AsyncMock(return_value=dml_success([{"id": str(uuid.uuid4())}]))
-        service._channel_repo.get_by_id = AsyncMock(return_value=make_channel(ChannelName.WHATSAPP))
+        service._portfolio_repo.get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        service._dml.execute_query = AsyncMock(
+            return_value=dml_success([{"id": str(uuid.uuid4())}])
+        )
+        service._channel_repo.get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.WHATSAPP)
+        )
         service._whatsapp_credentials_repo.get_by_organization = AsyncMock(
             return_value=MagicMock(active=True, phone_number_id="PN-1")
         )
@@ -182,13 +230,24 @@ class TestExecuteCampaignOnceEarlyReturns:
         ct = make_ct(campaign.id)
         debtor_id = uuid.uuid4()
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=uuid.uuid4())
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=uuid.uuid4(),
+            )
         )
-        service._portfolio_repo.get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4(), country="CO"))
-        service._dml.execute_query = AsyncMock(return_value=dml_success([{"id": str(debtor_id)}]))
+        service._portfolio_repo.get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4(), country="CO")
+        )
+        service._dml.execute_query = AsyncMock(
+            return_value=dml_success([{"id": str(debtor_id)}])
+        )
         service._channel_repo.get_by_id = AsyncMock(return_value=make_channel())
-        service._contact_method_repo.get_all_values_by_debtors = AsyncMock(return_value={debtor_id: []})
-        service._debtor_repo.get_by_ids = AsyncMock(return_value=[MagicMock(id=debtor_id, document_number=None)])
+        service._contact_method_repo.get_all_values_by_debtors = AsyncMock(
+            return_value={debtor_id: []}
+        )
+        service._debtor_repo.get_by_ids = AsyncMock(
+            return_value=[MagicMock(id=debtor_id, document_number=None)]
+        )
         service._country_repo = AsyncMock()
         service._country_repo.get_phone_prefix = AsyncMock(return_value="57")
 
@@ -205,21 +264,34 @@ class TestExecuteCampaignOnceSmsHappyPath:
         debtor_id = uuid.uuid4()
 
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=campaign.portfolio_id)
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=campaign.portfolio_id,
+            )
         )
         portfolio = MagicMock(organization_id=ct.organization_id, country="CO")
         service._portfolio_repo.get_by_id = AsyncMock(return_value=portfolio)
-        service._dml.execute_query = AsyncMock(return_value=dml_success([{"id": str(debtor_id)}]))
+        service._dml.execute_query = AsyncMock(
+            return_value=dml_success([{"id": str(debtor_id)}])
+        )
         channel = make_channel(ChannelName.SMS)
         service._channel_repo.get_by_id = AsyncMock(return_value=channel)
-        service._contact_method_repo.get_all_values_by_debtors = AsyncMock(return_value={debtor_id: ["3001234567"]})
-        service._debtor_repo.get_by_ids = AsyncMock(return_value=[MagicMock(id=debtor_id, document_number=None)])
-        service._template_var_service.list_available_variables = AsyncMock(return_value=[])
+        service._contact_method_repo.get_all_values_by_debtors = AsyncMock(
+            return_value={debtor_id: ["3001234567"]}
+        )
+        service._debtor_repo.get_by_ids = AsyncMock(
+            return_value=[MagicMock(id=debtor_id, document_number=None)]
+        )
+        service._template_var_service.list_available_variables = AsyncMock(
+            return_value=[]
+        )
 
         service._country_repo = AsyncMock()
         service._country_repo.get_phone_prefix = AsyncMock(return_value="57")
 
-        stats = BatchStats(total_sent=1, success_count=1, failure_count=0, unique_customers=1)
+        stats = BatchStats(
+            total_sent=1, success_count=1, failure_count=0, unique_customers=1
+        )
         service._batch_sender.process_batch = AsyncMock(return_value=stats)
 
         @asynccontextmanager
@@ -256,27 +328,43 @@ class TestExecuteCampaignOnceSmsHappyPath:
     async def test_result_registration_failure_does_not_propagate(self):
         """El registro del resultado va en un savepoint aislado (ver comentario en
         automation_service.py): si falla, no debe tumbar el resto del procesamiento
-        de la campaña (la reprogramación posterior en _process_due debe poder seguir)."""
+        de la campaña (la reprogramación posterior en _process_due debe poder seguir).
+        """
         service = build_service()
         campaign = make_campaign(message="hola sin variables")
         ct = make_ct(campaign.id)
         debtor_id = uuid.uuid4()
 
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=campaign.portfolio_id)
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=campaign.portfolio_id,
+            )
         )
         service._portfolio_repo.get_by_id = AsyncMock(
             return_value=MagicMock(organization_id=ct.organization_id, country="CO")
         )
-        service._dml.execute_query = AsyncMock(return_value=dml_success([{"id": str(debtor_id)}]))
-        service._channel_repo.get_by_id = AsyncMock(return_value=make_channel(ChannelName.SMS))
-        service._contact_method_repo.get_all_values_by_debtors = AsyncMock(return_value={debtor_id: ["3001234567"]})
-        service._debtor_repo.get_by_ids = AsyncMock(return_value=[MagicMock(id=debtor_id, document_number=None)])
-        service._template_var_service.list_available_variables = AsyncMock(return_value=[])
+        service._dml.execute_query = AsyncMock(
+            return_value=dml_success([{"id": str(debtor_id)}])
+        )
+        service._channel_repo.get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.SMS)
+        )
+        service._contact_method_repo.get_all_values_by_debtors = AsyncMock(
+            return_value={debtor_id: ["3001234567"]}
+        )
+        service._debtor_repo.get_by_ids = AsyncMock(
+            return_value=[MagicMock(id=debtor_id, document_number=None)]
+        )
+        service._template_var_service.list_available_variables = AsyncMock(
+            return_value=[]
+        )
         service._country_repo = AsyncMock()
         service._country_repo.get_phone_prefix = AsyncMock(return_value="57")
         service._batch_sender.process_batch = AsyncMock(
-            return_value=BatchStats(total_sent=1, success_count=1, failure_count=0, unique_customers=1)
+            return_value=BatchStats(
+                total_sent=1, success_count=1, failure_count=0, unique_customers=1
+            )
         )
 
         @asynccontextmanager
@@ -307,23 +395,35 @@ class TestExecuteCampaignOnceWhatsAppConsent:
         debtor_pending = uuid.uuid4()
 
         service._seg_repo.get_by_id = AsyncMock(
-            return_value=MagicMock(filter_criteria={"tables": [{"name": "deudores"}]}, portfolio_id=campaign.portfolio_id)
+            return_value=MagicMock(
+                filter_criteria={"tables": [{"name": "deudores"}]},
+                portfolio_id=campaign.portfolio_id,
+            )
         )
         service._portfolio_repo.get_by_id = AsyncMock(
             return_value=MagicMock(organization_id=ct.organization_id, country="CO")
         )
         service._dml.execute_query = AsyncMock(
-            return_value=dml_success([{"id": str(debtor_approved)}, {"id": str(debtor_pending)}])
+            return_value=dml_success(
+                [{"id": str(debtor_approved)}, {"id": str(debtor_pending)}]
+            )
         )
-        service._channel_repo.get_by_id = AsyncMock(return_value=make_channel(ChannelName.WHATSAPP))
+        service._channel_repo.get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.WHATSAPP)
+        )
         service._whatsapp_credentials_repo.get_by_organization = AsyncMock(
             return_value=MagicMock(active=True, phone_number_id="PN-1")
         )
         service._whatsapp_template_data_repo.get_by_template_id = AsyncMock(
-            return_value=MagicMock(meta_name="plantilla_saldo", language="es", meta_template_id=None)
+            return_value=MagicMock(
+                meta_name="plantilla_saldo", language="es", meta_template_id=None
+            )
         )
         service._contact_method_repo.get_all_values_by_debtors = AsyncMock(
-            return_value={debtor_approved: ["3001111111"], debtor_pending: ["3002222222"]}
+            return_value={
+                debtor_approved: ["3001111111"],
+                debtor_pending: ["3002222222"],
+            }
         )
         service._debtor_repo.get_by_ids = AsyncMock(
             return_value=[
@@ -331,7 +431,9 @@ class TestExecuteCampaignOnceWhatsAppConsent:
                 MagicMock(id=debtor_pending, document_number=None),
             ]
         )
-        service._template_var_service.list_available_variables = AsyncMock(return_value=[])
+        service._template_var_service.list_available_variables = AsyncMock(
+            return_value=[]
+        )
         service._country_repo = AsyncMock()
         service._country_repo.get_phone_prefix = AsyncMock(return_value="57")
 
@@ -341,7 +443,9 @@ class TestExecuteCampaignOnceWhatsAppConsent:
         )
         service._whatsapp_channel_request_service.ensure_cases_bulk = AsyncMock()
 
-        stats = BatchStats(total_sent=1, success_count=1, failure_count=0, unique_customers=1)
+        stats = BatchStats(
+            total_sent=1, success_count=1, failure_count=0, unique_customers=1
+        )
         service._batch_sender.process_batch = AsyncMock(return_value=stats)
 
         @asynccontextmanager
@@ -355,7 +459,9 @@ class TestExecuteCampaignOnceWhatsAppConsent:
 
         # El teléfono sin caso previo se creó en bulk (no via ensure_case por fila).
         service._whatsapp_channel_request_service.ensure_cases_bulk.assert_awaited_once()
-        bulk_call = service._whatsapp_channel_request_service.ensure_cases_bulk.await_args
+        bulk_call = (
+            service._whatsapp_channel_request_service.ensure_cases_bulk.await_args
+        )
         assert bulk_call.args[0] == ct.organization_id
         assert bulk_call.args[1] == {"573002222222": debtor_pending}
         assert bulk_call.kwargs["origin_campaign_id"] == campaign.id

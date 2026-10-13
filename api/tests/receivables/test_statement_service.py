@@ -14,7 +14,9 @@ from app_platform.countries.repository.country_repository import CountryReposito
 from core.security.constants.permissions import PORTFOLIO_CLIENTS
 from core.security.services.encrypt_service import encrypt_service
 from identity.organizations.enums.organization_enums import VerificationStatus
-from identity.organizations.repository.organization_repository import OrganizationRepository
+from identity.organizations.repository.organization_repository import (
+    OrganizationRepository,
+)
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.schemas.user_session_schema import OrgSessionEntry, UserSession
 from receivables.credits.repository.credit_repository import CreditRepository
@@ -26,7 +28,12 @@ from receivables.portfolios.repository.portfolio_repository import PortfolioRepo
 from receivables.statements.repository.statement_repository import StatementRepository
 from receivables.statements.services.statement_service import StatementService
 from tests.factories import unique_email
-from tests.receivables.conftest import build_credit, build_debtor, build_organization, build_portfolio
+from tests.receivables.conftest import (
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 
 def build_service(db_session) -> StatementService:
@@ -55,7 +62,11 @@ async def _real_user_id(db_session) -> uuid.UUID:
 
 
 async def org_session(
-    db_session, make_user_session_factory, org_id: uuid.UUID, *, role: UserRole = UserRole.USER
+    db_session,
+    make_user_session_factory,
+    org_id: uuid.UUID,
+    *,
+    role: UserRole = UserRole.USER,
 ) -> UserSession:
     return make_user_session_factory(
         user_id=await _real_user_id(db_session),
@@ -74,11 +85,16 @@ async def org_session(
 
 async def no_access_session(db_session, make_user_session_factory) -> UserSession:
     return make_user_session_factory(
-        user_id=await _real_user_id(db_session), role=UserRole.USER, scope=UserScope.ORGANIZATION, orgs={}
+        user_id=await _real_user_id(db_session),
+        role=UserRole.USER,
+        scope=UserScope.ORGANIZATION,
+        orgs={},
     )
 
 
-async def self_session(db_session, make_user_session_factory, document_number_hash: str) -> UserSession:
+async def self_session(
+    db_session, make_user_session_factory, document_number_hash: str
+) -> UserSession:
     return make_user_session_factory(
         user_id=await _real_user_id(db_session),
         role=UserRole.USER,
@@ -143,7 +159,9 @@ class TestGenerateConsolidated:
         assert result.credit_number is None
         assert result.document_id is not None
 
-    async def test_no_active_credits_raises_422(self, db_session, make_user_session_factory, org_portfolio_debtor):
+    async def test_no_active_credits_raises_422(
+        self, db_session, make_user_session_factory, org_portfolio_debtor
+    ):
         org, portfolio, debtor, _ = org_portfolio_debtor
         credit = build_credit(portfolio.id, debtor.id, is_active=False)
         db_session.add(credit)
@@ -190,7 +208,9 @@ class TestGenerateSingleCredit:
         assert result.credit_id == credit.id
         assert result.credit_number == credit.credit_number
 
-    async def test_inactive_credit_id_raises_422(self, db_session, make_user_session_factory, org_portfolio_debtor):
+    async def test_inactive_credit_id_raises_422(
+        self, db_session, make_user_session_factory, org_portfolio_debtor
+    ):
         org, portfolio, debtor, _ = org_portfolio_debtor
         credit = build_credit(portfolio.id, debtor.id, is_active=False)
         db_session.add(credit)
@@ -221,7 +241,9 @@ class TestGenerateSingleCredit:
             await service.generate(debtor.id, portfolio.id, credit.id, session)
         assert exc_info.value.status_code == 404
 
-    async def test_unknown_debtor_raises_404(self, db_session, make_user_session_factory, org_portfolio_debtor):
+    async def test_unknown_debtor_raises_404(
+        self, db_session, make_user_session_factory, org_portfolio_debtor
+    ):
         org, portfolio, _, _ = org_portfolio_debtor
         service = build_service(db_session)
         session = await org_session(db_session, make_user_session_factory, org.id)
@@ -230,7 +252,9 @@ class TestGenerateSingleCredit:
             await service.generate(uuid.uuid4(), portfolio.id, None, session)
         assert exc_info.value.status_code == 404
 
-    async def test_from_an_unrelated_org_raises_404(self, db_session, make_user_session_factory, org_portfolio_debtor):
+    async def test_from_an_unrelated_org_raises_404(
+        self, db_session, make_user_session_factory, org_portfolio_debtor
+    ):
         _, portfolio, debtor, _ = org_portfolio_debtor
         service = build_service(db_session)
         session = await no_access_session(db_session, make_user_session_factory)
@@ -331,7 +355,9 @@ class TestListAndContentForOrg:
         await db_session.flush()
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.get_content_for_org(statement.id, other_debtor.id, portfolio.id, session)
+            await service.get_content_for_org(
+                statement.id, other_debtor.id, portfolio.id, session
+            )
         assert exc_info.value.status_code == 404
 
     async def test_get_content_for_org_returns_pdf_response(
@@ -345,7 +371,9 @@ class TestListAndContentForOrg:
         session = await org_session(db_session, make_user_session_factory, org.id)
         statement = await service.generate(debtor.id, portfolio.id, None, session)
 
-        response = await service.get_content_for_org(statement.id, debtor.id, portfolio.id, session)
+        response = await service.get_content_for_org(
+            statement.id, debtor.id, portfolio.id, session
+        )
 
         assert response.status_code == 200
         assert response.headers["Content-Type"] == "application/pdf"
@@ -370,9 +398,15 @@ class TestSelfService:
 
         assert result.total == 1
 
-    async def test_list_mine_without_matching_debtor_raises_404(self, db_session, make_user_session_factory):
+    async def test_list_mine_without_matching_debtor_raises_404(
+        self, db_session, make_user_session_factory
+    ):
         service = build_service(db_session)
-        session = await self_session(db_session, make_user_session_factory, encrypt_service.hash_document("000000000"))
+        session = await self_session(
+            db_session,
+            make_user_session_factory,
+            encrypt_service.hash_document("000000000"),
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.list_mine(session)

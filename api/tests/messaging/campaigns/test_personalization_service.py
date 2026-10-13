@@ -29,7 +29,11 @@ def make_debtor(debtor_id: uuid.UUID, full_name: str = "Ana Pérez") -> MagicMoc
     return debtor
 
 
-def make_credit(debtor_id: uuid.UUID, credit_id: uuid.UUID | None = None, overdue_principal_balance=250000) -> MagicMock:
+def make_credit(
+    debtor_id: uuid.UUID,
+    credit_id: uuid.UUID | None = None,
+    overdue_principal_balance=250000,
+) -> MagicMock:
     credit = MagicMock()
     credit.id = credit_id or uuid.uuid4()
     credit.debtor_id = debtor_id
@@ -67,7 +71,9 @@ class TestFetchDebtorFields:
     async def test_resolves_debtor_column_to_real_value(self):
         service, debtor_repo, credit_repo, payment_repo = make_service()
         debtor_id = uuid.uuid4()
-        debtor_repo.get_by_ids = AsyncMock(return_value=[make_debtor(debtor_id, "Ana Pérez")])
+        debtor_repo.get_by_ids = AsyncMock(
+            return_value=[make_debtor(debtor_id, "Ana Pérez")]
+        )
 
         result = await service.fetch([debtor_id], {"deudores": {"nombre_completo"}})
 
@@ -90,7 +96,9 @@ class TestFetchCreditFields:
     async def test_resolves_credit_column_via_latest_credit(self):
         service, debtor_repo, credit_repo, payment_repo = make_service()
         debtor_id = uuid.uuid4()
-        credit_repo.get_latest_by_debtor_ids = AsyncMock(return_value=[make_credit(debtor_id, overdue_principal_balance=125000)])
+        credit_repo.get_latest_by_debtor_ids = AsyncMock(
+            return_value=[make_credit(debtor_id, overdue_principal_balance=125000)]
+        )
 
         result = await service.fetch([debtor_id], {"creditos": {"saldo_capital_mora"}})
 
@@ -104,9 +112,13 @@ class TestFetchPaymentFields:
         debtor_id = uuid.uuid4()
         credit = make_credit(debtor_id)
         credit_repo.get_latest_by_debtor_ids = AsyncMock(return_value=[credit])
-        payment_repo.get_next_due_by_credit_ids = AsyncMock(return_value=[make_payment(credit.id, payment_amount=99000)])
+        payment_repo.get_next_due_by_credit_ids = AsyncMock(
+            return_value=[make_payment(credit.id, payment_amount=99000)]
+        )
 
-        result = await service.fetch([debtor_id], {"pagos": {"monto_pago_proxima_cuota"}})
+        result = await service.fetch(
+            [debtor_id], {"pagos": {"monto_pago_proxima_cuota"}}
+        )
 
         assert result == {debtor_id: {"monto_pago_proxima_cuota": 99000}}
         payment_repo.get_next_due_by_credit_ids.assert_awaited_once_with([credit.id])
@@ -114,17 +126,21 @@ class TestFetchPaymentFields:
 
     async def test_multiple_fields_same_strategy_only_calls_fetcher_once(self):
         """monto_pago_primera_vencida y fecha_pago_primera_vencida comparten estrategia
-        (primera_vencida) -- deben agruparse en una sola consulta, no una por columna."""
+        (primera_vencida) -- deben agruparse en una sola consulta, no una por columna.
+        """
         service, debtor_repo, credit_repo, payment_repo = make_service()
         debtor_id = uuid.uuid4()
         credit = make_credit(debtor_id)
         credit_repo.get_latest_by_debtor_ids = AsyncMock(return_value=[credit])
         payment = make_payment(credit.id, payment_amount=30000)
         payment.payment_date = "2026-08-01"
-        payment_repo.get_oldest_overdue_by_credit_ids = AsyncMock(return_value=[payment])
+        payment_repo.get_oldest_overdue_by_credit_ids = AsyncMock(
+            return_value=[payment]
+        )
 
         result = await service.fetch(
-            [debtor_id], {"pagos": {"monto_pago_primera_vencida", "fecha_pago_primera_vencida"}}
+            [debtor_id],
+            {"pagos": {"monto_pago_primera_vencida", "fecha_pago_primera_vencida"}},
         )
 
         assert result[debtor_id]["monto_pago_primera_vencida"] == 30000
@@ -139,10 +155,13 @@ class TestFetchPaymentFields:
         debtor_without_credit = uuid.uuid4()
         credit = make_credit(debtor_with_credit)
         credit_repo.get_latest_by_debtor_ids = AsyncMock(return_value=[credit])
-        payment_repo.get_next_due_by_credit_ids = AsyncMock(return_value=[make_payment(credit.id, payment_amount=1000)])
+        payment_repo.get_next_due_by_credit_ids = AsyncMock(
+            return_value=[make_payment(credit.id, payment_amount=1000)]
+        )
 
         result = await service.fetch(
-            [debtor_with_credit, debtor_without_credit], {"pagos": {"monto_pago_proxima_cuota"}}
+            [debtor_with_credit, debtor_without_credit],
+            {"pagos": {"monto_pago_proxima_cuota"}},
         )
 
         assert debtor_with_credit in result
@@ -153,7 +172,9 @@ class TestFetchPaymentFields:
         debtor_id = uuid.uuid4()
         credit_repo.get_latest_by_debtor_ids = AsyncMock(return_value=[])
 
-        result = await service.fetch([debtor_id], {"pagos": {"monto_pago_proxima_cuota"}})
+        result = await service.fetch(
+            [debtor_id], {"pagos": {"monto_pago_proxima_cuota"}}
+        )
 
         assert result == {}
         payment_repo.get_next_due_by_credit_ids.assert_not_called()
@@ -161,9 +182,13 @@ class TestFetchPaymentFields:
     async def test_field_without_known_strategy_suffix_is_ignored(self):
         service, debtor_repo, credit_repo, payment_repo = make_service()
         debtor_id = uuid.uuid4()
-        credit_repo.get_latest_by_debtor_ids = AsyncMock(return_value=[make_credit(debtor_id)])
+        credit_repo.get_latest_by_debtor_ids = AsyncMock(
+            return_value=[make_credit(debtor_id)]
+        )
 
-        result = await service.fetch([debtor_id], {"pagos": {"monto_pago_sin_sufijo_valido"}})
+        result = await service.fetch(
+            [debtor_id], {"pagos": {"monto_pago_sin_sufijo_valido"}}
+        )
 
         assert result == {}
         payment_repo.get_next_due_by_credit_ids.assert_not_called()
@@ -173,10 +198,14 @@ class TestFetchCombinedTables:
     async def test_combines_debtor_credit_and_payment_fields_for_same_debtor(self):
         service, debtor_repo, credit_repo, payment_repo = make_service()
         debtor_id = uuid.uuid4()
-        debtor_repo.get_by_ids = AsyncMock(return_value=[make_debtor(debtor_id, "Carlos Ruiz")])
+        debtor_repo.get_by_ids = AsyncMock(
+            return_value=[make_debtor(debtor_id, "Carlos Ruiz")]
+        )
         credit = make_credit(debtor_id, overdue_principal_balance=75000)
         credit_repo.get_latest_by_debtor_ids = AsyncMock(return_value=[credit])
-        payment_repo.get_last_unpaid_by_credit_ids = AsyncMock(return_value=[make_payment(credit.id, payment_amount=5000)])
+        payment_repo.get_last_unpaid_by_credit_ids = AsyncMock(
+            return_value=[make_payment(credit.id, payment_amount=5000)]
+        )
 
         result = await service.fetch(
             [debtor_id],

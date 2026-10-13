@@ -1,7 +1,11 @@
 """Queries reales de `PortfolioUserAccessRepository` contra `db_session` (sin mocks)."""
 
-from receivables.portfolios.models.portfolio_user_access_model import PortfolioUserAccessModel
-from receivables.portfolios.repository.portfolio_user_access_repository import PortfolioUserAccessRepository
+from receivables.portfolios.models.portfolio_user_access_model import (
+    PortfolioUserAccessModel,
+)
+from receivables.portfolios.repository.portfolio_user_access_repository import (
+    PortfolioUserAccessRepository,
+)
 from tests.factories import get_user_by_email, register_payload
 from tests.receivables.conftest import build_organization, build_portfolio
 
@@ -24,9 +28,14 @@ class TestCheckActiveAccess:
         db_session.add(portfolio)
         await db_session.flush()
         user = await create_user(client, db_session)
-        db_session.add(PortfolioUserAccessModel(
-            user_id=user.id, portfolio_id=portfolio.id, organization_id=org.id, is_active=True,
-        ))
+        db_session.add(
+            PortfolioUserAccessModel(
+                user_id=user.id,
+                portfolio_id=portfolio.id,
+                organization_id=org.id,
+                is_active=True,
+            )
+        )
         await db_session.flush()
 
         repo = PortfolioUserAccessRepository(db_session)
@@ -40,9 +49,14 @@ class TestCheckActiveAccess:
         db_session.add(portfolio)
         await db_session.flush()
         user = await create_user(client, db_session)
-        db_session.add(PortfolioUserAccessModel(
-            user_id=user.id, portfolio_id=portfolio.id, organization_id=org.id, is_active=False,
-        ))
+        db_session.add(
+            PortfolioUserAccessModel(
+                user_id=user.id,
+                portfolio_id=portfolio.id,
+                organization_id=org.id,
+                is_active=False,
+            )
+        )
         await db_session.flush()
 
         repo = PortfolioUserAccessRepository(db_session)
@@ -72,10 +86,22 @@ class TestGetDistinctOrgIdsByUser:
         db_session.add_all([portfolio_a, portfolio_b])
         await db_session.flush()
         user = await create_user(client, db_session)
-        db_session.add_all([
-            PortfolioUserAccessModel(user_id=user.id, portfolio_id=portfolio_a.id, organization_id=org_a.id, is_active=True),
-            PortfolioUserAccessModel(user_id=user.id, portfolio_id=portfolio_b.id, organization_id=org_b.id, is_active=False),
-        ])
+        db_session.add_all(
+            [
+                PortfolioUserAccessModel(
+                    user_id=user.id,
+                    portfolio_id=portfolio_a.id,
+                    organization_id=org_a.id,
+                    is_active=True,
+                ),
+                PortfolioUserAccessModel(
+                    user_id=user.id,
+                    portfolio_id=portfolio_b.id,
+                    organization_id=org_b.id,
+                    is_active=False,
+                ),
+            ]
+        )
         await db_session.flush()
 
         repo = PortfolioUserAccessRepository(db_session)
@@ -94,10 +120,22 @@ class TestCountActiveUsersForPortfolio:
         await db_session.flush()
         user_a = await create_user(client, db_session)
         user_b = await create_user(client, db_session)
-        db_session.add_all([
-            PortfolioUserAccessModel(user_id=user_a.id, portfolio_id=portfolio.id, organization_id=org.id, is_active=True),
-            PortfolioUserAccessModel(user_id=user_b.id, portfolio_id=portfolio.id, organization_id=org.id, is_active=False),
-        ])
+        db_session.add_all(
+            [
+                PortfolioUserAccessModel(
+                    user_id=user_a.id,
+                    portfolio_id=portfolio.id,
+                    organization_id=org.id,
+                    is_active=True,
+                ),
+                PortfolioUserAccessModel(
+                    user_id=user_b.id,
+                    portfolio_id=portfolio.id,
+                    organization_id=org.id,
+                    is_active=False,
+                ),
+            ]
+        )
         await db_session.flush()
 
         repo = PortfolioUserAccessRepository(db_session)
@@ -125,10 +163,22 @@ class TestGetActiveUserIdsForPortfolio:
         await db_session.flush()
         user_a = await create_user(client, db_session)
         user_b = await create_user(client, db_session)
-        db_session.add_all([
-            PortfolioUserAccessModel(user_id=user_a.id, portfolio_id=portfolio.id, organization_id=org.id, is_active=True),
-            PortfolioUserAccessModel(user_id=user_b.id, portfolio_id=portfolio.id, organization_id=org.id, is_active=False),
-        ])
+        db_session.add_all(
+            [
+                PortfolioUserAccessModel(
+                    user_id=user_a.id,
+                    portfolio_id=portfolio.id,
+                    organization_id=org.id,
+                    is_active=True,
+                ),
+                PortfolioUserAccessModel(
+                    user_id=user_b.id,
+                    portfolio_id=portfolio.id,
+                    organization_id=org.id,
+                    is_active=False,
+                ),
+            ]
+        )
         await db_session.flush()
 
         repo = PortfolioUserAccessRepository(db_session)

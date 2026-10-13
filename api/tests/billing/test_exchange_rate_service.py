@@ -9,7 +9,9 @@ import httpx
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from billing.exchange_rates.constants.exchange_rate_constants import EXCHANGE_RATE_FALLBACK_BY_CURRENCY
+from billing.exchange_rates.constants.exchange_rate_constants import (
+    EXCHANGE_RATE_FALLBACK_BY_CURRENCY,
+)
 from billing.exchange_rates.exchange_rate_service import ExchangeRateService
 
 MODULE = "billing.exchange_rates.exchange_rate_service"
@@ -57,7 +59,9 @@ class TestGetUsdRateDispatch:
         assert rate == pytest.approx(18.75)
         client.get.assert_awaited_once()
 
-    async def test_currency_without_source_returns_fallback_without_http_call(self, monkeypatch):
+    async def test_currency_without_source_returns_fallback_without_http_call(
+        self, monkeypatch
+    ):
         constructor = MagicMock()
         monkeypatch.setattr(f"{MODULE}.httpx.AsyncClient", constructor)
 

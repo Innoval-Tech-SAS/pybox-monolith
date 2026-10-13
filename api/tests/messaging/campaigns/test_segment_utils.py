@@ -14,7 +14,12 @@ class TestDebtorIdColumn:
         assert debtor_id_column(criteria) == "id"
 
     def test_multi_table_with_deudores_uses_alias_suffix(self):
-        criteria = {"tables": [{"name": "deudores", "alias": "d"}, {"name": "creditos", "alias": "c"}]}
+        criteria = {
+            "tables": [
+                {"name": "deudores", "alias": "d"},
+                {"name": "creditos", "alias": "c"},
+            ]
+        }
         assert debtor_id_column(criteria) == "d_id"
 
     def test_multi_table_without_alias_uses_table_name_suffix(self):
@@ -34,7 +39,9 @@ class TestDebtorIdColumn:
         assert debtor_id_column({}) == "id"
 
     def test_qualified_table_name_uses_last_segment(self):
-        criteria = {"tables": [{"name": "public.deudores", "alias": "dd"}, {"name": "creditos"}]}
+        criteria = {
+            "tables": [{"name": "public.deudores", "alias": "dd"}, {"name": "creditos"}]
+        }
         assert debtor_id_column(criteria) == "dd_id"
 
 
@@ -68,6 +75,11 @@ class TestExtractDebtorIds:
 
     def test_multi_table_uses_aliased_column(self):
         debtor_id = uuid.uuid4()
-        criteria = {"tables": [{"name": "deudores", "alias": "d"}, {"name": "creditos", "alias": "c"}]}
+        criteria = {
+            "tables": [
+                {"name": "deudores", "alias": "d"},
+                {"name": "creditos", "alias": "c"},
+            ]
+        }
         rows = [{"d_id": str(debtor_id), "c_id": str(uuid.uuid4())}]
         assert extract_debtor_ids(rows, criteria) == [debtor_id]

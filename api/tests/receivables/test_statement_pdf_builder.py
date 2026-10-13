@@ -1,7 +1,8 @@
 """`build_statement_pdf` no expone un parser de PDF en el repo -- el contrato que se
 puede verificar sin dependencias nuevas es: no revienta con datos mínimos/vacíos, y
 produce bytes con la cabecera `%PDF` real (reportlab). Los montos formateados en texto
-se prueban aparte contra los helpers internos `_money`/`_date`, que sí son inspeccionables."""
+se prueban aparte contra los helpers internos `_money`/`_date`, que sí son inspeccionables.
+"""
 
 from datetime import datetime, timezone
 
@@ -78,7 +79,10 @@ class TestBuildStatementPdf:
             cutoff_date=datetime.now(timezone.utc),
             credits=[
                 _credit_line(credit_number="CR-0001", payments=[_payment_line()]),
-                _credit_line(credit_number="CR-0002", payments=[_payment_line(), _payment_line(installment_number=2)]),
+                _credit_line(
+                    credit_number="CR-0002",
+                    payments=[_payment_line(), _payment_line(installment_number=2)],
+                ),
             ],
         )
         assert pdf.startswith(b"%PDF")
@@ -94,7 +98,13 @@ class TestBuildStatementPdf:
             cutoff_date=datetime.now(timezone.utc),
             credits=[
                 _credit_line(
-                    payments=[_payment_line(installment_number=None, payment_date=None, status_label="Vencida")]
+                    payments=[
+                        _payment_line(
+                            installment_number=None,
+                            payment_date=None,
+                            status_label="Vencida",
+                        )
+                    ]
                 )
             ],
         )

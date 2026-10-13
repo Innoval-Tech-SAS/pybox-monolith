@@ -3,7 +3,9 @@
 from datetime import datetime, timedelta, timezone
 
 from messaging.whatsapp.enums.whatsapp_enums import MessageDirection
-from messaging.whatsapp.repository.whatsapp_message_repository import WhatsAppMessageRepository
+from messaging.whatsapp.repository.whatsapp_message_repository import (
+    WhatsAppMessageRepository,
+)
 from tests.messaging.whatsapp.conftest import build_chat, build_message
 
 
@@ -13,8 +15,16 @@ class TestGetLastInbound:
         db_session.add(chat)
         await db_session.flush()
         now = datetime.now(timezone.utc)
-        older = build_message(chat.id, direction=MessageDirection.INBOUND, sent_at=now - timedelta(hours=2))
-        newer = build_message(chat.id, direction=MessageDirection.INBOUND, sent_at=now - timedelta(minutes=5))
+        older = build_message(
+            chat.id,
+            direction=MessageDirection.INBOUND,
+            sent_at=now - timedelta(hours=2),
+        )
+        newer = build_message(
+            chat.id,
+            direction=MessageDirection.INBOUND,
+            sent_at=now - timedelta(minutes=5),
+        )
         db_session.add_all([older, newer])
         await db_session.flush()
         repo = WhatsAppMessageRepository(db_session)
@@ -28,7 +38,11 @@ class TestGetLastInbound:
         db_session.add(chat)
         await db_session.flush()
         db_session.add(
-            build_message(chat.id, direction=MessageDirection.OUTBOUND, sent_at=datetime.now(timezone.utc))
+            build_message(
+                chat.id,
+                direction=MessageDirection.OUTBOUND,
+                sent_at=datetime.now(timezone.utc),
+            )
         )
         await db_session.flush()
         repo = WhatsAppMessageRepository(db_session)
@@ -65,7 +79,9 @@ class TestGetByWamid:
 
 
 class TestListByChat:
-    async def test_returns_messages_ordered_by_sent_at_ascending(self, db_session, real_org):
+    async def test_returns_messages_ordered_by_sent_at_ascending(
+        self, db_session, real_org
+    ):
         chat = build_chat(real_org.id)
         db_session.add(chat)
         await db_session.flush()

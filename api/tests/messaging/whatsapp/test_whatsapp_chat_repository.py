@@ -5,7 +5,10 @@
 
 import uuid
 
-from messaging.whatsapp.repository.whatsapp_chat_repository import OrgChatScope, WhatsAppChatRepository
+from messaging.whatsapp.repository.whatsapp_chat_repository import (
+    OrgChatScope,
+    WhatsAppChatRepository,
+)
 from tests.messaging.whatsapp.conftest import build_chat
 
 
@@ -43,7 +46,9 @@ class TestGetByOrgAndPhone:
 
 
 class TestListByScopes:
-    async def test_unrestricted_ignores_scopes_and_returns_all(self, db_session, real_org):
+    async def test_unrestricted_ignores_scopes_and_returns_all(
+        self, db_session, real_org
+    ):
         db_session.add(build_chat(real_org.id))
         db_session.add(build_chat(real_org.id))
         await db_session.flush()
@@ -54,7 +59,9 @@ class TestListByScopes:
         assert total == 2
         assert len(items) == 2
 
-    async def test_no_scopes_and_not_unrestricted_returns_empty(self, db_session, real_org):
+    async def test_no_scopes_and_not_unrestricted_returns_empty(
+        self, db_session, real_org
+    ):
         db_session.add(build_chat(real_org.id))
         await db_session.flush()
         repo = WhatsAppChatRepository(db_session)
@@ -63,7 +70,9 @@ class TestListByScopes:
 
         assert (items, total) == ([], 0)
 
-    async def test_scope_with_assigned_user_filters_to_that_user_only(self, db_session, real_org, make_real_user_id):
+    async def test_scope_with_assigned_user_filters_to_that_user_only(
+        self, db_session, real_org, make_real_user_id
+    ):
         agent_id = await make_real_user_id()
         other_agent_id = await make_real_user_id()
         mine = build_chat(real_org.id, assigned_user_id=agent_id)
@@ -73,7 +82,9 @@ class TestListByScopes:
         repo = WhatsAppChatRepository(db_session)
 
         items, total = await repo.list_by_scopes(
-            [OrgChatScope(organization_id=real_org.id, assigned_user_id=agent_id)], 1, 20
+            [OrgChatScope(organization_id=real_org.id, assigned_user_id=agent_id)],
+            1,
+            20,
         )
 
         assert total == 1
@@ -89,13 +100,21 @@ class TestListByScopes:
         repo = WhatsAppChatRepository(db_session)
 
         items, total = await repo.list_by_scopes(
-            [OrgChatScope(organization_id=real_org.id, portfolio_ids=[real_portfolio.id])], 1, 20
+            [
+                OrgChatScope(
+                    organization_id=real_org.id, portfolio_ids=[real_portfolio.id]
+                )
+            ],
+            1,
+            20,
         )
 
         assert total == 1
         assert items[0].id == with_portfolio.id
 
-    async def test_scope_with_none_portfolio_ids_means_unrestricted_within_org(self, db_session, real_org):
+    async def test_scope_with_none_portfolio_ids_means_unrestricted_within_org(
+        self, db_session, real_org
+    ):
         """`portfolio_ids=None` (admin de la org) no filtra -- a diferencia de una
         lista vacía, que excluiría todo."""
         chat = build_chat(real_org.id, portfolio_id=None)
@@ -103,7 +122,9 @@ class TestListByScopes:
         await db_session.flush()
         repo = WhatsAppChatRepository(db_session)
 
-        items, total = await repo.list_by_scopes([OrgChatScope(organization_id=real_org.id)], 1, 20)
+        items, total = await repo.list_by_scopes(
+            [OrgChatScope(organization_id=real_org.id)], 1, 20
+        )
 
         assert total == 1
 
@@ -119,7 +140,12 @@ class TestListByScopes:
         repo = WhatsAppChatRepository(db_session)
 
         items, total = await repo.list_by_scopes(
-            [OrgChatScope(organization_id=real_org.id), OrgChatScope(organization_id=other_org.id)], 1, 20
+            [
+                OrgChatScope(organization_id=real_org.id),
+                OrgChatScope(organization_id=other_org.id),
+            ],
+            1,
+            20,
         )
 
         assert total == 2
@@ -144,7 +170,9 @@ class TestGetLeastLoadedUser:
 
         assert await repo.get_least_loaded_user([]) is None
 
-    async def test_candidate_without_any_chat_has_zero_load(self, db_session, real_org, make_real_user_id):
+    async def test_candidate_without_any_chat_has_zero_load(
+        self, db_session, real_org, make_real_user_id
+    ):
         busy_agent = await make_real_user_id()
         idle_agent = await make_real_user_id()
         db_session.add(build_chat(real_org.id, assigned_user_id=busy_agent))
@@ -168,7 +196,9 @@ class TestGetLeastLoadedUser:
 
         assert result == expected
 
-    async def test_soft_deleted_chats_do_not_count_toward_load(self, db_session, real_org, make_real_user_id):
+    async def test_soft_deleted_chats_do_not_count_toward_load(
+        self, db_session, real_org, make_real_user_id
+    ):
         agent = await make_real_user_id()
         idle_agent = await make_real_user_id()
         chat = build_chat(real_org.id, assigned_user_id=agent)

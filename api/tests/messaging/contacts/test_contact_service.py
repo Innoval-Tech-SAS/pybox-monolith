@@ -34,7 +34,9 @@ class TestGetByDebtorPagination:
             return_value=[(uuid.uuid4(), "SMS", 0, [])]
         )
 
-        groups = await service.get_by_debtor(uuid.uuid4(), uuid.uuid4(), make_user_session(), page=1, page_size=10)
+        groups = await service.get_by_debtor(
+            uuid.uuid4(), uuid.uuid4(), make_user_session(), page=1, page_size=10
+        )
 
         assert groups[0].total_pages == 1
 
@@ -46,7 +48,9 @@ class TestGetByDebtorPagination:
             return_value=[(uuid.uuid4(), "EMAIL", 11, [])]
         )
 
-        groups = await service.get_by_debtor(uuid.uuid4(), uuid.uuid4(), make_user_session(), page=1, page_size=5)
+        groups = await service.get_by_debtor(
+            uuid.uuid4(), uuid.uuid4(), make_user_session(), page=1, page_size=5
+        )
 
         # 11 items / 5 por página = 2.2 -> 3 páginas, no 2 (truncado).
         assert groups[0].total_pages == 3
@@ -62,7 +66,9 @@ class TestGetByDebtorPagination:
             ]
         )
 
-        groups = await service.get_by_debtor(uuid.uuid4(), uuid.uuid4(), make_user_session(), page=1, page_size=10)
+        groups = await service.get_by_debtor(
+            uuid.uuid4(), uuid.uuid4(), make_user_session(), page=1, page_size=10
+        )
 
         assert len(groups) == 2
         assert {g.channel_name for g in groups} == {"SMS", "EMAIL"}

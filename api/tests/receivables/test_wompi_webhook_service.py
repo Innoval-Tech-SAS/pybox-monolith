@@ -19,13 +19,24 @@ from receivables.payment_gateways.enums.payment_gateway_enums import (
     ReceivablesPaymentAttemptStatus,
 )
 from receivables.payment_gateways.gateways.base import WompiTransaction
-from receivables.payment_gateways.models.payment_attempt_model import CreditPaymentAttemptModel
-from receivables.payment_gateways.repository.payment_attempt_repository import CreditPaymentAttemptRepository
-from receivables.payment_gateways.services.payment_webhook_service import WompiWebhookService
+from receivables.payment_gateways.models.payment_attempt_model import (
+    CreditPaymentAttemptModel,
+)
+from receivables.payment_gateways.repository.payment_attempt_repository import (
+    CreditPaymentAttemptRepository,
+)
+from receivables.payment_gateways.services.payment_webhook_service import (
+    WompiWebhookService,
+)
 from receivables.payments.enums.payment_enums import PaymentStatus
 from receivables.payments.models.payment_model import PaymentModel
 from receivables.payments.repository.payment_repository import PaymentRepository
-from tests.receivables.conftest import add_organization, build_credit, build_debtor, build_portfolio
+from tests.receivables.conftest import (
+    add_organization,
+    build_credit,
+    build_debtor,
+    build_portfolio,
+)
 
 _WEBHOOK_BODY = {"data": {"transaction": {"id": "txn-1"}}}
 
@@ -80,7 +91,9 @@ def make_gateway(*, signature_valid: bool, transaction: WompiTransaction) -> Mag
 
 def make_service(db_session, gateway_resolver) -> WompiWebhookService:
     return WompiWebhookService(
-        gateway_resolver, CreditPaymentAttemptRepository(db_session), PaymentRepository(db_session)
+        gateway_resolver,
+        CreditPaymentAttemptRepository(db_session),
+        PaymentRepository(db_session),
     )
 
 
@@ -97,8 +110,13 @@ class TestWompiWebhookService:
     async def test_invalid_signature_raises_401(self, db_session):
         org = await add_organization(db_session)
         transaction = WompiTransaction(
-            id="txn-1", status="APPROVED", amount_in_cents=1_500_000, currency="COP",
-            reference="PAG-TEST-1", payment_method_type="CARD", raw={},
+            id="txn-1",
+            status="APPROVED",
+            amount_in_cents=1_500_000,
+            currency="COP",
+            reference="PAG-TEST-1",
+            payment_method_type="CARD",
+            raw={},
         )
         gateway = make_gateway(signature_valid=False, transaction=transaction)
         gateway_resolver = AsyncMock()
@@ -109,11 +127,20 @@ class TestWompiWebhookService:
             await service.process_webhook(org.id, _WEBHOOK_BODY)
         assert exc_info.value.status_code == 401
 
-    async def test_amount_mismatch_marks_attempt_error_not_payment_paid(self, db_session):
-        org, payment, attempt = await _setup_payment_and_attempt(db_session, expected_amount_cents=1_500_000)
+    async def test_amount_mismatch_marks_attempt_error_not_payment_paid(
+        self, db_session
+    ):
+        org, payment, attempt = await _setup_payment_and_attempt(
+            db_session, expected_amount_cents=1_500_000
+        )
         transaction = WompiTransaction(
-            id="txn-1", status="APPROVED", amount_in_cents=999_000, currency="COP",
-            reference="PAG-TEST-1", payment_method_type="CARD", raw={"tampered": True},
+            id="txn-1",
+            status="APPROVED",
+            amount_in_cents=999_000,
+            currency="COP",
+            reference="PAG-TEST-1",
+            payment_method_type="CARD",
+            raw={"tampered": True},
         )
         gateway = make_gateway(signature_valid=True, transaction=transaction)
         gateway_resolver = AsyncMock()
@@ -128,10 +155,17 @@ class TestWompiWebhookService:
         assert payment.status == PaymentStatus.PENDING
 
     async def test_approved_matching_amount_marks_payment_paid(self, db_session):
-        org, payment, attempt = await _setup_payment_and_attempt(db_session, expected_amount_cents=1_500_000)
+        org, payment, attempt = await _setup_payment_and_attempt(
+            db_session, expected_amount_cents=1_500_000
+        )
         transaction = WompiTransaction(
-            id="txn-1", status="APPROVED", amount_in_cents=1_500_000, currency="COP",
-            reference="PAG-TEST-1", payment_method_type="CARD", raw={},
+            id="txn-1",
+            status="APPROVED",
+            amount_in_cents=1_500_000,
+            currency="COP",
+            reference="PAG-TEST-1",
+            payment_method_type="CARD",
+            raw={},
         )
         gateway = make_gateway(signature_valid=True, transaction=transaction)
         gateway_resolver = AsyncMock()
@@ -147,14 +181,21 @@ class TestWompiWebhookService:
 
     async def test_already_approved_attempt_is_idempotent(self, db_session):
         org, payment, attempt = await _setup_payment_and_attempt(
-            db_session, expected_amount_cents=1_500_000, attempt_status=ReceivablesPaymentAttemptStatus.APPROVED
+            db_session,
+            expected_amount_cents=1_500_000,
+            attempt_status=ReceivablesPaymentAttemptStatus.APPROVED,
         )
         payment.status = PaymentStatus.PAID
         await db_session.flush()
 
         transaction = WompiTransaction(
-            id="txn-1", status="APPROVED", amount_in_cents=1_500_000, currency="COP",
-            reference="PAG-TEST-1", payment_method_type="CARD", raw={},
+            id="txn-1",
+            status="APPROVED",
+            amount_in_cents=1_500_000,
+            currency="COP",
+            reference="PAG-TEST-1",
+            payment_method_type="CARD",
+            raw={},
         )
         gateway = make_gateway(signature_valid=True, transaction=transaction)
         gateway_resolver = AsyncMock()

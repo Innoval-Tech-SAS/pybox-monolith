@@ -30,10 +30,16 @@ class TestGetOrganizationStats:
     async def test_percentage_computed_normally(self):
         service, repos = _make_service()
         repos["credit_repo"].get_organization_stats.return_value = PortfolioCreditStats(
-            creditos=100, titulares=50, codeudores=10, clientes_unicos=80,
-            documentos_unicos=5, total_mora=12345.6,
+            creditos=100,
+            titulares=50,
+            codeudores=10,
+            clientes_unicos=80,
+            documentos_unicos=5,
+            total_mora=12345.6,
         )
-        repos["portfolio_repo"].count_active_inactive_by_organization_id.return_value = (3, 1)
+        repos[
+            "portfolio_repo"
+        ].count_active_inactive_by_organization_id.return_value = (3, 1)
 
         result = await service.get_organization_stats(uuid.uuid4())
 
@@ -51,10 +57,16 @@ class TestGetOrganizationStats:
         # reventar con ZeroDivisionError.
         service, repos = _make_service()
         repos["credit_repo"].get_organization_stats.return_value = PortfolioCreditStats(
-            creditos=0, titulares=0, codeudores=0, clientes_unicos=0,
-            documentos_unicos=0, total_mora=0.0,
+            creditos=0,
+            titulares=0,
+            codeudores=0,
+            clientes_unicos=0,
+            documentos_unicos=0,
+            total_mora=0.0,
         )
-        repos["portfolio_repo"].count_active_inactive_by_organization_id.return_value = (0, 0)
+        repos[
+            "portfolio_repo"
+        ].count_active_inactive_by_organization_id.return_value = (0, 0)
 
         result = await service.get_organization_stats(uuid.uuid4())
 
@@ -77,11 +89,17 @@ class TestListCampaignOptions:
 class TestGetSendStatusCounts:
     async def test_maps_rows_to_items(self):
         service, repos = _make_service()
-        repos["contact_repo"].get_send_status_counts.return_value = [("entregado", 10), ("fallido", 2)]
+        repos["contact_repo"].get_send_status_counts.return_value = [
+            ("entregado", 10),
+            ("fallido", 2),
+        ]
 
         result = await service.get_send_status_counts(uuid.uuid4())
 
-        assert [(i.status, i.count) for i in result.items] == [("entregado", 10), ("fallido", 2)]
+        assert [(i.status, i.count) for i in result.items] == [
+            ("entregado", 10),
+            ("fallido", 2),
+        ]
 
 
 class TestGetMonthlySends:

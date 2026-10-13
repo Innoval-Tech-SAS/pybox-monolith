@@ -22,7 +22,9 @@ class TestListCategories:
     DEBTORS_ME_BASE = "/api/v1/debtors/me/documents"
 
     async def test_list_valid(self, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.USER, scope=UserScope.SELF))
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.USER, scope=UserScope.SELF)
+        )
         resp = await authed.get(f"{self.DEBTORS_ME_BASE}/categories")
         assert resp.status_code == 200
         body = resp.json()
@@ -45,14 +47,25 @@ class TestDownloadOrganizationDocument:
         resp = await client.post(f"{AUTH_BASE}/register/user", json=payload)
         assert resp.status_code == 201
         user = await get_user_by_email(db_session, payload["email"])
-        global_admin = make_user_session_factory(user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        global_admin = make_user_session_factory(
+            user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL
+        )
         authed = auth_as(global_admin)
-        create = await authed.post(f"{ORG_BASE}/", json={"name": f"Org {uuid.uuid4().hex[:8]}", "sector": "FINTECH"})
+        create = await authed.post(
+            f"{ORG_BASE}/",
+            json={"name": f"Org {uuid.uuid4().hex[:8]}", "sector": "FINTECH"},
+        )
         org_id = create.json()["id"]
 
         upload = await authed.patch(
             f"{ORG_BASE}/{org_id}/documents/fiscal",
-            files={"file": ("fiscal.pdf", b"%PDF-1.4 contenido de prueba", "application/pdf")},
+            files={
+                "file": (
+                    "fiscal.pdf",
+                    b"%PDF-1.4 contenido de prueba",
+                    "application/pdf",
+                )
+            },
         )
         assert upload.status_code == 200
         document_id = upload.json()["fiscalDocumentFile"].split("/")[-2]
@@ -68,26 +81,49 @@ class TestDownloadOrganizationDocument:
             make_user_session_factory(
                 role=UserRole.ADMIN,
                 scope=UserScope.ORGANIZATION,
-                orgs={org_id: OrgSessionEntry(role=UserRole.ADMIN, org_name="Org", verification_status=VerificationStatus.APPROVED)},
+                orgs={
+                    org_id: OrgSessionEntry(
+                        role=UserRole.ADMIN,
+                        org_name="Org",
+                        verification_status=VerificationStatus.APPROVED,
+                    )
+                },
             )
         )
         resp = await authed.get(f"{ORG_BASE}/{org_id}/documents/{uuid.uuid4()}/content")
         assert resp.status_code == 404
 
-    async def test_forbidden_without_org_access(self, client, db_session, auth_as, make_user_session_factory):
+    async def test_forbidden_without_org_access(
+        self, client, db_session, auth_as, make_user_session_factory
+    ):
         payload = register_payload()
         await client.post(f"{AUTH_BASE}/register/user", json=payload)
         user = await get_user_by_email(db_session, payload["email"])
-        global_admin = make_user_session_factory(user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        global_admin = make_user_session_factory(
+            user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL
+        )
         authed = auth_as(global_admin)
-        create = await authed.post(f"{ORG_BASE}/", json={"name": f"Org {uuid.uuid4().hex[:8]}", "sector": "FINTECH"})
+        create = await authed.post(
+            f"{ORG_BASE}/",
+            json={"name": f"Org {uuid.uuid4().hex[:8]}", "sector": "FINTECH"},
+        )
         org_id = create.json()["id"]
         upload = await authed.patch(
             f"{ORG_BASE}/{org_id}/documents/fiscal",
-            files={"file": ("fiscal.pdf", b"%PDF-1.4 contenido de prueba", "application/pdf")},
+            files={
+                "file": (
+                    "fiscal.pdf",
+                    b"%PDF-1.4 contenido de prueba",
+                    "application/pdf",
+                )
+            },
         )
         document_id = upload.json()["fiscalDocumentFile"].split("/")[-2]
 
-        unrelated = auth_as(make_user_session_factory(role=UserRole.USER, scope=UserScope.SELF))
-        resp = await unrelated.get(f"{ORG_BASE}/{org_id}/documents/{document_id}/content")
+        unrelated = auth_as(
+            make_user_session_factory(role=UserRole.USER, scope=UserScope.SELF)
+        )
+        resp = await unrelated.get(
+            f"{ORG_BASE}/{org_id}/documents/{document_id}/content"
+        )
         assert resp.status_code == 403

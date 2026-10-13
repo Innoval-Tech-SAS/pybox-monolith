@@ -58,7 +58,9 @@ async def _fake_get_session():
 
 
 class TestGuardedProcessConcurrencyGuard:
-    async def test_second_call_for_same_campaign_returns_false_without_calling_process_due(self):
+    async def test_second_call_for_same_campaign_returns_false_without_calling_process_due(
+        self,
+    ):
         campaign_id = uuid.uuid4()
         ct = MagicMock(spec=CampaignTimeModel)
         ct.campaign_id = campaign_id
@@ -75,9 +77,18 @@ class TestGuardedProcessConcurrencyGuard:
         mock_svc._ct_repo.get_by_id = AsyncMock(return_value=ct)
         mock_svc._process_due = AsyncMock(side_effect=slow_process_due)
 
-        with patch.object(
-            automation_service_module.db, "get_session", side_effect=lambda: _fake_get_session()
-        ), patch.object(automation_service_module, "make_automation_service", return_value=mock_svc):
+        with (
+            patch.object(
+                automation_service_module.db,
+                "get_session",
+                side_effect=lambda: _fake_get_session(),
+            ),
+            patch.object(
+                automation_service_module,
+                "make_automation_service",
+                return_value=mock_svc,
+            ),
+        ):
             service = build_service()
 
             task1 = asyncio.create_task(
@@ -88,7 +99,9 @@ class TestGuardedProcessConcurrencyGuard:
             # Segunda llamada "concurrente" para la MISMA campaña, mientras la primera
             # sigue en curso (bloqueada en el evento): debe cortar por el guard, no
             # volver a invocar _process_due.
-            result2 = await service._guarded_process(uuid.uuid4(), datetime.now(timezone.utc))
+            result2 = await service._guarded_process(
+                uuid.uuid4(), datetime.now(timezone.utc)
+            )
             assert result2 is False
 
             release_first.set()
@@ -109,11 +122,22 @@ class TestGuardedProcessReleasesOnException:
 
         mock_svc = MagicMock()
         mock_svc._ct_repo.get_by_id = AsyncMock(return_value=ct)
-        mock_svc._process_due = AsyncMock(side_effect=RuntimeError("fallo simulado en el envío"))
+        mock_svc._process_due = AsyncMock(
+            side_effect=RuntimeError("fallo simulado en el envío")
+        )
 
-        with patch.object(
-            automation_service_module.db, "get_session", side_effect=lambda: _fake_get_session()
-        ), patch.object(automation_service_module, "make_automation_service", return_value=mock_svc):
+        with (
+            patch.object(
+                automation_service_module.db,
+                "get_session",
+                side_effect=lambda: _fake_get_session(),
+            ),
+            patch.object(
+                automation_service_module,
+                "make_automation_service",
+                return_value=mock_svc,
+            ),
+        ):
             service = build_service()
 
             try:
@@ -129,7 +153,9 @@ class TestGuardedProcessReleasesOnException:
 
             # Una llamada posterior para la misma campaña ya no debe seguir bloqueada.
             mock_svc._process_due = AsyncMock(return_value=True)
-            result = await service._guarded_process(uuid.uuid4(), datetime.now(timezone.utc))
+            result = await service._guarded_process(
+                uuid.uuid4(), datetime.now(timezone.utc)
+            )
             assert result is True
 
 

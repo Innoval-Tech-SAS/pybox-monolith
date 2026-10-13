@@ -43,7 +43,9 @@ class TestWebhookAuthentication:
         assert resp.status_code == 401
         assert handled == []
 
-    async def test_rejects_everything_when_the_secret_is_not_configured(self, client, monkeypatch, handled):
+    async def test_rejects_everything_when_the_secret_is_not_configured(
+        self, client, monkeypatch, handled
+    ):
         monkeypatch.delenv("NRS360_WEBHOOK_TOKEN", raising=False)
 
         resp = await client.post(URL, params={"token": "cualquiera"}, data=FORM)
@@ -60,11 +62,15 @@ class TestWebhookAuthentication:
         assert resp.json() == {"success": True}
         assert handled == [("ext-123", "DELIVERED")]
 
-    async def test_valid_token_with_unknown_event_still_answers_200(self, client, monkeypatch):
+    async def test_valid_token_with_unknown_event_still_answers_200(
+        self, client, monkeypatch
+    ):
         """Contrato de degradación: un evento desconocido no debe hacer fallar el webhook
         (360NRS podría desactivar el endpoint tras fallos repetidos)."""
         monkeypatch.setenv("NRS360_WEBHOOK_TOKEN", "secreto")
 
-        resp = await client.post(URL, params={"token": "secreto"}, data={"id": "ext-1", "event": "NOPE"})
+        resp = await client.post(
+            URL, params={"token": "secreto"}, data={"id": "ext-1", "event": "NOPE"}
+        )
 
         assert resp.status_code == 200

@@ -31,8 +31,10 @@ class TestJobAdvisoryLock:
         tocar `make_automation_service` ni la sesión de DB -- es justo lo que el lock
         coordina entre los workers de uvicorn (ver docstring de try_advisory_lock)."""
         make_svc = MagicMock()
-        with patch.object(cron_module, "try_advisory_lock", side_effect=_lock(False)), \
-             patch.object(cron_module, "make_automation_service", make_svc):
+        with (
+            patch.object(cron_module, "try_advisory_lock", side_effect=_lock(False)),
+            patch.object(cron_module, "make_automation_service", make_svc),
+        ):
             cron_module._running = False
             await cron_module._job()
 
@@ -44,9 +46,13 @@ class TestJobAdvisoryLock:
         automation_service.tick = AsyncMock(return_value=3)
         make_svc = MagicMock(return_value=automation_service)
 
-        with patch.object(cron_module, "try_advisory_lock", side_effect=_lock(True)), \
-             patch.object(cron_module, "make_automation_service", make_svc), \
-             patch.object(cron_module.db, "get_session", side_effect=lambda: _fake_session()):
+        with (
+            patch.object(cron_module, "try_advisory_lock", side_effect=_lock(True)),
+            patch.object(cron_module, "make_automation_service", make_svc),
+            patch.object(
+                cron_module.db, "get_session", side_effect=lambda: _fake_session()
+            ),
+        ):
             cron_module._running = False
             await cron_module._job()
 
@@ -70,12 +76,18 @@ class TestJobConcurrencyGuardWithinWorker:
 
     async def test_running_flag_is_released_even_if_tick_raises(self):
         automation_service = AsyncMock()
-        automation_service.tick = AsyncMock(side_effect=RuntimeError("fallo en el tick"))
+        automation_service.tick = AsyncMock(
+            side_effect=RuntimeError("fallo en el tick")
+        )
         make_svc = MagicMock(return_value=automation_service)
 
-        with patch.object(cron_module, "try_advisory_lock", side_effect=_lock(True)), \
-             patch.object(cron_module, "make_automation_service", make_svc), \
-             patch.object(cron_module.db, "get_session", side_effect=lambda: _fake_session()):
+        with (
+            patch.object(cron_module, "try_advisory_lock", side_effect=_lock(True)),
+            patch.object(cron_module, "make_automation_service", make_svc),
+            patch.object(
+                cron_module.db, "get_session", side_effect=lambda: _fake_session()
+            ),
+        ):
             cron_module._running = False
             await cron_module._job()  # no debe propagar: se loguea y se traga
 

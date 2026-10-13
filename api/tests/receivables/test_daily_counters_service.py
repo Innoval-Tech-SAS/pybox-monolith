@@ -6,9 +6,16 @@ en mora vía `db_session`. El advisory lock en sí ya está cubierto en
 from datetime import datetime, timedelta, timezone
 
 from app_platform.countries.repository.country_repository import CountryRepository
-from receivables.portfolios.models.portfolio_daily_counter_config_model import PortfolioDailyCounterConfigModel
+from receivables.portfolios.models.portfolio_daily_counter_config_model import (
+    PortfolioDailyCounterConfigModel,
+)
 from receivables.portfolios.services.daily_counters_service import DailyCountersService
-from tests.receivables.conftest import build_credit, build_debtor, build_organization, build_portfolio
+from tests.receivables.conftest import (
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 
 class TestRunForCountry:
@@ -19,12 +26,15 @@ class TestRunForCountry:
         portfolio = build_portfolio(org.id, country="CO")
         db_session.add(portfolio)
         await db_session.flush()
-        db_session.add(PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True))
+        db_session.add(
+            PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True)
+        )
         debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
         credit = build_credit(
-            portfolio.id, debtor.id,
+            portfolio.id,
+            debtor.id,
             court_date=None,
             days_overdue_at_cutoff=3,
             overdue_principal_balance=100,
@@ -46,12 +56,15 @@ class TestRunForCountry:
         portfolio = build_portfolio(org.id, country="CO")
         db_session.add(portfolio)
         await db_session.flush()
-        db_session.add(PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True))
+        db_session.add(
+            PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True)
+        )
         debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
         credit = build_credit(
-            portfolio.id, debtor.id,
+            portfolio.id,
+            debtor.id,
             court_date=None,
             days_overdue_at_cutoff=0,
             overdue_principal_balance=0,
@@ -75,12 +88,15 @@ class TestRunForCountry:
         portfolio = build_portfolio(org.id, country="MX")
         db_session.add(portfolio)
         await db_session.flush()
-        db_session.add(PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True))
+        db_session.add(
+            PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True)
+        )
         debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
         credit = build_credit(
-            portfolio.id, debtor.id,
+            portfolio.id,
+            debtor.id,
             court_date=None,
             days_overdue_at_cutoff=5,
             overdue_principal_balance=100,
@@ -108,12 +124,15 @@ class TestRunAllNationalities:
         portfolio = build_portfolio(org.id, country=target_country.code)
         db_session.add(portfolio)
         await db_session.flush()
-        db_session.add(PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True))
+        db_session.add(
+            PortfolioDailyCounterConfigModel(portfolio_id=portfolio.id, enabled=True)
+        )
         debtor = build_debtor(org.id)
         db_session.add(debtor)
         await db_session.flush()
         credit = build_credit(
-            portfolio.id, debtor.id,
+            portfolio.id,
+            debtor.id,
             court_date=None,
             days_overdue_at_cutoff=1,
             overdue_principal_balance=50,

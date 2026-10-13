@@ -34,7 +34,11 @@ def _service(branding) -> tuple[PlatformBrandingService, MagicMock, MagicMock]:
     documents.to_content_response = AsyncMock()
     documents.store_generated = AsyncMock(return_value=SimpleNamespace(id=uuid.uuid4()))
     documents.delete_by_id = AsyncMock()
-    return PlatformBrandingService(repo=repo, document_service=documents), repo, documents
+    return (
+        PlatformBrandingService(repo=repo, document_service=documents),
+        repo,
+        documents,
+    )
 
 
 class TestGetSingleton:
@@ -135,7 +139,9 @@ class TestReplaceLogo:
         previous_id = uuid.uuid4()
         branding = _branding(previous_id)
         service, repo, documents = _service(branding)
-        documents.store_generated.side_effect = HTTPException(503, "almacén no disponible")
+        documents.store_generated.side_effect = HTTPException(
+            503, "almacén no disponible"
+        )
 
         with pytest.raises(HTTPException):
             await service.replace_logo(b"contenido", "logo.png", uuid.uuid4())

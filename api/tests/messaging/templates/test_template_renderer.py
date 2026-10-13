@@ -12,7 +12,9 @@ from messaging.templates.services.template_renderer import TemplateRenderer
 class TestFindVariables:
     def test_finds_all_distinct_variable_names(self):
         renderer = TemplateRenderer()
-        found = renderer.find_variables("Hola {nombre}, tu saldo es {saldo}. {nombre}, no lo olvides.")
+        found = renderer.find_variables(
+            "Hola {nombre}, tu saldo es {saldo}. {nombre}, no lo olvides."
+        )
         assert found == {"nombre", "saldo"}
 
     def test_no_variables_returns_empty_set(self):
@@ -37,7 +39,9 @@ class TestRender:
 class TestRenderFields:
     def test_renders_body_and_subject_together(self):
         renderer = TemplateRenderer()
-        body, subject = renderer.render_fields("Hola {nombre}", "Recordatorio para {nombre}", {"nombre": "Ana"})
+        body, subject = renderer.render_fields(
+            "Hola {nombre}", "Recordatorio para {nombre}", {"nombre": "Ana"}
+        )
         assert body == "Hola Ana"
         assert subject == "Recordatorio para Ana"
 

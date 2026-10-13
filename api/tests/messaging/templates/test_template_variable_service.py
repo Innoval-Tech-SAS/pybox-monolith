@@ -11,14 +11,20 @@ Unitario puro: `InspectorService` va mockeado -- no hay introspección real de s
 from unittest.mock import AsyncMock, MagicMock
 
 from messaging.campaigns.constants import PAYMENT_STRATEGY_SUFFIXES, PAYMENT_TABLE
-from messaging.templates.services.template_variable_service import TemplateVariableService
+from messaging.templates.services.template_variable_service import (
+    TemplateVariableService,
+)
 
 
 def build_service(*, deudores=None, creditos=None, pagos=None):
     inspector = MagicMock()
 
     async def _get_table_fields(schema, table):
-        return {"deudores": deudores or [], "creditos": creditos or [], PAYMENT_TABLE: pagos or []}[table]
+        return {
+            "deudores": deudores or [],
+            "creditos": creditos or [],
+            PAYMENT_TABLE: pagos or [],
+        }[table]
 
     inspector.get_table_fields = AsyncMock(side_effect=_get_table_fields)
     return TemplateVariableService(inspector), inspector
@@ -27,7 +33,10 @@ def build_service(*, deudores=None, creditos=None, pagos=None):
 class TestListAvailableVariablesHidesTechnicalFields:
     async def test_id_field_from_source_table_is_excluded(self):
         service, _ = build_service(
-            deudores=[{"name": "id_credito", "type": "uuid"}, {"name": "nombre_completo", "type": "varchar"}]
+            deudores=[
+                {"name": "id_credito", "type": "uuid"},
+                {"name": "nombre_completo", "type": "varchar"},
+            ]
         )
 
         variables = await service.list_available_variables()
@@ -58,7 +67,9 @@ class TestListAvailableVariablesExpandsPaymentStrategies:
         variables = await service.list_available_variables()
 
         keys = {v.key for v in variables}
-        expected_keys = {f"saldo_cuota_{suffix}" for suffix in PAYMENT_STRATEGY_SUFFIXES}
+        expected_keys = {
+            f"saldo_cuota_{suffix}" for suffix in PAYMENT_STRATEGY_SUFFIXES
+        }
         assert expected_keys.issubset(keys)
         assert len(expected_keys) == len(PAYMENT_STRATEGY_SUFFIXES)
 
@@ -73,7 +84,10 @@ class TestListAvailableVariablesExpandsPaymentStrategies:
 class TestListAvailableVariablesSortedByKey:
     async def test_result_is_sorted_alphabetically_by_key(self):
         service, _ = build_service(
-            deudores=[{"name": "zapato", "type": "varchar"}, {"name": "apellido", "type": "varchar"}]
+            deudores=[
+                {"name": "zapato", "type": "varchar"},
+                {"name": "apellido", "type": "varchar"},
+            ]
         )
 
         variables = await service.list_available_variables()
