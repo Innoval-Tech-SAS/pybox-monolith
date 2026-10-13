@@ -66,7 +66,7 @@ class _FakeSession:
 
 def _fake_db(session: _FakeSession) -> Database:
     instance = Database.__new__(Database)
-    instance._Session = lambda: session
+    instance._session_factory = lambda: session
     return instance
 
 

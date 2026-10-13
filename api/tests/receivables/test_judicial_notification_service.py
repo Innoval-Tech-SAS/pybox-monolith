@@ -17,7 +17,11 @@ from app_platform.notifications.models.notification_model import NotificationMod
 from core.security.constants.permissions import PORTFOLIO_JUDICIAL
 from core.security.services.encrypt_service import encrypt_service
 from identity.organizations.enums.organization_enums import VerificationStatus
-from identity.users.enums.user_enums import UserRole, UserScope
+from identity.users.enums.user_enums import (
+    IdentityVerificationStatus,
+    UserRole,
+    UserScope,
+)
 from identity.users.schemas.user_session_schema import OrgSessionEntry, UserSession
 from receivables.judicial_notifications.enums.judicial_notification_enums import (
     JudicialPriority,
@@ -84,6 +88,10 @@ def self_session(make_user_session_factory, document_number_hash: str) -> UserSe
         orgs={},
         document_type="CC",
         document_number_hash=document_number_hash,
+        # _require_debtors (ver judicial_notification_service.py) exige identidad
+        # verificada además de ser deudor conocido: sin esto, el acceso se corta
+        # antes de llegar a la lógica de pertenencia que prueban estos tests.
+        identity_verification_status=IdentityVerificationStatus.APPROVED,
     )
 
 

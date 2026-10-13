@@ -221,6 +221,19 @@ class TestMessagingProviderCredentialServiceResolution:
         assert result.get("token") == "global-sms-token"
 
     async def test_returns_none_when_no_credential_configured(self, db_session):
+        # El seed (ver seed_messaging_credentials.py) crea una credencial global para
+        # WHATSAPP_CLOUD a partir de las env vars del proyecto, así que para probar
+        # "nada configurado" hay que desactivarla primero: si no, get_decrypted
+        # caería a ese fallback global en vez de devolver None.
+        admin_service = MessagingProviderCredentialAdminService(db_session)
+        await admin_service.upsert(
+            MessagingProviderCredentialUpsert(
+                country_code=None,
+                provider=MessagingCredentialProvider.WHATSAPP_CLOUD,
+                secrets={"access_token": "x", "app_secret": "y"},
+                is_active=False,
+            )
+        )
         credential_service = MessagingProviderCredentialService(db_session)
         result = await credential_service.get_decrypted(
             "ZZ", MessagingCredentialProvider.WHATSAPP_CLOUD

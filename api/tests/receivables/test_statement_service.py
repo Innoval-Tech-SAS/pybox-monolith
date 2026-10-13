@@ -17,7 +17,11 @@ from identity.organizations.enums.organization_enums import VerificationStatus
 from identity.organizations.repository.organization_repository import (
     OrganizationRepository,
 )
-from identity.users.enums.user_enums import UserRole, UserScope
+from identity.users.enums.user_enums import (
+    IdentityVerificationStatus,
+    UserRole,
+    UserScope,
+)
 from identity.users.schemas.user_session_schema import OrgSessionEntry, UserSession
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.debtors.repository.debtor_repository import DebtorRepository
@@ -102,6 +106,10 @@ async def self_session(
         orgs={},
         document_type="CC",
         document_number_hash=document_number_hash,
+        # _require_self_debtors (ver statement_service.py) exige identidad
+        # verificada además de ser deudor conocido: sin esto, el acceso se corta
+        # antes de llegar a la lógica de pertenencia que prueban estos tests.
+        identity_verification_status=IdentityVerificationStatus.APPROVED,
     )
 
 

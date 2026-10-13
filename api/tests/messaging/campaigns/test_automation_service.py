@@ -34,6 +34,7 @@ def build_service(**overrides) -> AutomationService:
         ct_repo=AsyncMock(),
         result_repo=AsyncMock(),
         channel_repo=AsyncMock(),
+        ivr_flow_repo=AsyncMock(),
         seg_repo=AsyncMock(),
         dml=AsyncMock(),
         batch_sender=AsyncMock(),

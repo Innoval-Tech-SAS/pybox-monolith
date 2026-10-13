@@ -34,6 +34,7 @@ def make_service():
     segment_repo = AsyncMock()
     recipient_count_service = AsyncMock()
     whatsapp_number_request_service = AsyncMock()
+    ivr_flow_repo = AsyncMock()
     service = CampaignService(
         campaign_repo,
         ct_repo,
@@ -44,6 +45,7 @@ def make_service():
         segment_repo,
         recipient_count_service,
         whatsapp_number_request_service,
+        ivr_flow_repo,
     )
     return (
         service,
@@ -55,6 +57,7 @@ def make_service():
         channel_repo,
         segment_repo,
         whatsapp_number_request_service,
+        ivr_flow_repo,
     )
 
 
@@ -193,7 +196,9 @@ class TestScheduleValidation:
 # ---------------------------------------------------------------------------
 class TestTemplateChannelCompatibility:
     async def test_missing_template_raises_404(self):
-        service, _cr, _ct, _b, _p, template_repo, channel_repo, _s, _w = make_service()
+        service, _cr, _ct, _b, _p, template_repo, channel_repo, _s, _w, _ivr = (
+            make_service()
+        )
         template_repo.get_by_id_and_portfolio = AsyncMock(return_value=None)
 
         with pytest.raises(HTTPException) as exc_info:
@@ -204,7 +209,9 @@ class TestTemplateChannelCompatibility:
         channel_repo.get_by_id.assert_not_awaited()
 
     async def test_missing_channel_raises_404(self):
-        service, _cr, _ct, _b, _p, template_repo, channel_repo, _s, _w = make_service()
+        service, _cr, _ct, _b, _p, template_repo, channel_repo, _s, _w, _ivr = (
+            make_service()
+        )
         template_repo.get_by_id_and_portfolio = AsyncMock(
             return_value=MagicMock(channel=ChannelName.SMS)
         )
@@ -217,7 +224,9 @@ class TestTemplateChannelCompatibility:
         assert exc_info.value.status_code == 404
 
     async def test_mismatched_channel_raises_422(self):
-        service, _cr, _ct, _b, _p, template_repo, channel_repo, _s, _w = make_service()
+        service, _cr, _ct, _b, _p, template_repo, channel_repo, _s, _w, _ivr = (
+            make_service()
+        )
         template_repo.get_by_id_and_portfolio = AsyncMock(
             return_value=MagicMock(channel=ChannelName.EMAIL)
         )
@@ -230,7 +239,9 @@ class TestTemplateChannelCompatibility:
         assert exc_info.value.status_code == 422
 
     async def test_matching_channel_does_not_raise(self):
-        service, _cr, _ct, _b, _p, template_repo, channel_repo, _s, _w = make_service()
+        service, _cr, _ct, _b, _p, template_repo, channel_repo, _s, _w, _ivr = (
+            make_service()
+        )
         template_repo.get_by_id_and_portfolio = AsyncMock(
             return_value=MagicMock(channel=ChannelName.SMS)
         )
@@ -243,7 +254,7 @@ class TestTemplateChannelCompatibility:
 
 class TestValidateChannelContent:
     async def test_whatsapp_without_template_id_is_rejected(self):
-        service, *_r, channel_repo, _s, _w = make_service()
+        service, *_r, channel_repo, _s, _w, _ivr = make_service()
         channel_repo.get_by_id = AsyncMock(
             return_value=make_channel(ChannelName.WHATSAPP)
         )
@@ -253,7 +264,7 @@ class TestValidateChannelContent:
         assert exc_info.value.status_code == 422
 
     async def test_whatsapp_with_message_is_rejected(self):
-        service, *_r, channel_repo, _s, _w = make_service()
+        service, *_r, channel_repo, _s, _w, _ivr = make_service()
         channel_repo.get_by_id = AsyncMock(
             return_value=make_channel(ChannelName.WHATSAPP)
         )
@@ -265,7 +276,7 @@ class TestValidateChannelContent:
         assert exc_info.value.status_code == 422
 
     async def test_whatsapp_with_only_template_id_is_accepted(self):
-        service, *_r, channel_repo, _s, _w = make_service()
+        service, *_r, channel_repo, _s, _w, _ivr = make_service()
         channel_repo.get_by_id = AsyncMock(
             return_value=make_channel(ChannelName.WHATSAPP)
         )
@@ -273,7 +284,7 @@ class TestValidateChannelContent:
         await service._validate_channel_content(uuid.uuid4(), uuid.uuid4(), None)
 
     async def test_non_whatsapp_without_message_is_rejected(self):
-        service, *_r, channel_repo, _s, _w = make_service()
+        service, *_r, channel_repo, _s, _w, _ivr = make_service()
         channel_repo.get_by_id = AsyncMock(return_value=make_channel(ChannelName.SMS))
 
         with pytest.raises(HTTPException) as exc_info:
@@ -281,7 +292,7 @@ class TestValidateChannelContent:
         assert exc_info.value.status_code == 422
 
     async def test_channel_not_found_raises_404(self):
-        service, *_r, channel_repo, _s, _w = make_service()
+        service, *_r, channel_repo, _s, _w, _ivr = make_service()
         channel_repo.get_by_id = AsyncMock(return_value=None)
 
         with pytest.raises(HTTPException) as exc_info:
@@ -304,6 +315,7 @@ class TestCreate:
             channel_repo,
             _s,
             whatsapp_svc,
+            _ivr,
         ) = make_service()
         portfolio = make_portfolio()
         portfolio_repo.get_by_id = AsyncMock(return_value=portfolio)
@@ -329,6 +341,7 @@ class TestCreate:
             channel_repo,
             _s,
             whatsapp_svc,
+            _ivr,
         ) = make_service()
         portfolio = make_portfolio()
         portfolio_repo.get_by_id = AsyncMock(return_value=portfolio)
@@ -372,6 +385,7 @@ class TestCreate:
             channel_repo,
             segment_repo,
             _w,
+            _ivr,
         ) = make_service()
         portfolio_repo.get_by_id = AsyncMock(return_value=make_portfolio())
         channel_repo.get_by_id = AsyncMock(return_value=make_channel(ChannelName.SMS))
@@ -399,6 +413,7 @@ class TestUpdate:
             channel_repo,
             _s,
             _w,
+            _ivr,
         ) = make_service()
         campaign = make_campaign(status=CampaignStatus.DRAFT)
         campaign_repo.get_by_id_and_portfolio = AsyncMock(return_value=campaign)
@@ -427,6 +442,7 @@ class TestUpdate:
             channel_repo,
             _s,
             _w,
+            _ivr,
         ) = make_service()
         campaign = make_campaign(
             status=CampaignStatus.SCHEDULED,
@@ -460,6 +476,7 @@ class TestUpdate:
             channel_repo,
             _s,
             _w,
+            _ivr,
         ) = make_service()
         campaign = make_campaign(status=CampaignStatus.DRAFT)
         campaign_repo.get_by_id_and_portfolio = AsyncMock(return_value=campaign)
@@ -527,6 +544,7 @@ class TestActivate:
             channel_repo,
             _s,
             _w,
+            _ivr,
         ) = make_service()
         portfolio_repo.get_by_id = AsyncMock(return_value=make_portfolio())
         billing.is_blocked = AsyncMock(return_value=False)
@@ -555,6 +573,7 @@ class TestActivate:
             channel_repo,
             _s,
             _w,
+            _ivr,
         ) = make_service()
         portfolio_repo.get_by_id = AsyncMock(return_value=make_portfolio())
         billing.is_blocked = AsyncMock(return_value=False)
@@ -592,6 +611,7 @@ class TestActivate:
             channel_repo,
             _s,
             whatsapp_svc,
+            _ivr,
         ) = make_service()
         portfolio_repo.get_by_id = AsyncMock(return_value=make_portfolio())
         billing.is_blocked = AsyncMock(return_value=False)
@@ -617,6 +637,7 @@ class TestActivate:
             channel_repo,
             _s,
             whatsapp_svc,
+            _ivr,
         ) = make_service()
         portfolio_repo.get_by_id = AsyncMock(return_value=make_portfolio())
         billing.is_blocked = AsyncMock(return_value=False)

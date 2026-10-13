@@ -238,7 +238,7 @@ class TestPlatformGatewayCredentialServiceResolution:
         admin_service = PlatformGatewayCredentialAdminService(db_session)
         await admin_service.upsert(
             PlatformGatewayCredentialUpsert(
-                country_code="PA",
+                country_code="PE",
                 provider=PlatformGatewayProvider.BOLD,
                 secrets={"api_key": "x"},
                 is_active=False,
@@ -246,7 +246,7 @@ class TestPlatformGatewayCredentialServiceResolution:
         )
         credential_service = PlatformGatewayCredentialService(db_session)
         result = await credential_service.get_decrypted(
-            "PA", PlatformGatewayProvider.BOLD
+            "PE", PlatformGatewayProvider.BOLD
         )
         assert result is None
 

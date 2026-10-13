@@ -1,8 +1,8 @@
 """Tests del wrapper del scheduler de campañas (ver cron.py): coordina el tick entre
 los N workers de uvicorn vía `try_advisory_lock` y evita que ticks se solapen dentro
-del mismo worker (`_running`). Unitarios puros: `try_advisory_lock`, `db.get_session`
-y `make_automation_service` van parchados a nivel de módulo -- nunca toca Postgres
-ni arma un `AsyncIOScheduler` real corriendo.
+del mismo worker (`_state.running`). Unitarios puros: `try_advisory_lock`,
+`db.get_session` y `make_automation_service` van parchados a nivel de módulo --
+nunca toca Postgres ni arma un `AsyncIOScheduler` real corriendo.
 """
 
 from contextlib import asynccontextmanager
@@ -35,11 +35,11 @@ class TestJobAdvisoryLock:
             patch.object(cron_module, "try_advisory_lock", side_effect=_lock(False)),
             patch.object(cron_module, "make_automation_service", make_svc),
         ):
-            cron_module._running = False
+            cron_module._state.running = False
             await cron_module._job()
 
         make_svc.assert_not_called()
-        assert cron_module._running is False  # se liberó en el finally
+        assert cron_module._state.running is False  # se liberó en el finally
 
     async def test_lock_acquired_runs_tick_and_releases_running_flag(self):
         automation_service = AsyncMock()
@@ -53,24 +53,24 @@ class TestJobAdvisoryLock:
                 cron_module.db, "get_session", side_effect=lambda: _fake_session()
             ),
         ):
-            cron_module._running = False
+            cron_module._state.running = False
             await cron_module._job()
 
         automation_service.tick.assert_awaited_once()
-        assert cron_module._running is False
+        assert cron_module._state.running is False
 
 
 class TestJobConcurrencyGuardWithinWorker:
     async def test_tick_already_running_in_this_worker_is_skipped(self):
-        """`_running=True` (un tick anterior sigue en curso en este mismo proceso): el
-        nuevo tick se corta ANTES de intentar el advisory lock."""
+        """`_state.running=True` (un tick anterior sigue en curso en este mismo
+        proceso): el nuevo tick se corta ANTES de intentar el advisory lock."""
         lock_fn = MagicMock(side_effect=_lock(True))
         with patch.object(cron_module, "try_advisory_lock", lock_fn):
-            cron_module._running = True
+            cron_module._state.running = True
             try:
                 await cron_module._job()
             finally:
-                cron_module._running = False
+                cron_module._state.running = False
 
         lock_fn.assert_not_called()
 
@@ -88,10 +88,10 @@ class TestJobConcurrencyGuardWithinWorker:
                 cron_module.db, "get_session", side_effect=lambda: _fake_session()
             ),
         ):
-            cron_module._running = False
+            cron_module._state.running = False
             await cron_module._job()  # no debe propagar: se loguea y se traga
 
-        assert cron_module._running is False
+        assert cron_module._state.running is False
 
 
 class TestCreateCampaignsScheduler:
