@@ -1,6 +1,9 @@
 from sqlalchemy import select
 
-from core.security.constants.cookie_constants import ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE
+from core.security.constants.cookie_constants import (
+    ACCESS_TOKEN_COOKIE,
+    REFRESH_TOKEN_COOKIE,
+)
 from identity.auth.models.verification_code_model import VerificationCodeModel
 from tests.factories import get_user_by_email, register_payload
 
@@ -11,12 +14,16 @@ ORGS_BASE = "/api/v1/organizations/"
 
 async def _fetch_otp_code(db_session, user_id) -> str:
     row = (
-        await db_session.execute(
-            select(VerificationCodeModel)
-            .where(VerificationCodeModel.user_id == user_id)
-            .order_by(VerificationCodeModel.created_at.desc())
+        (
+            await db_session.execute(
+                select(VerificationCodeModel)
+                .where(VerificationCodeModel.user_id == user_id)
+                .order_by(VerificationCodeModel.created_at.desc())
+            )
         )
-    ).scalars().first()
+        .scalars()
+        .first()
+    )
     return row.code
 
 
@@ -31,7 +38,9 @@ async def _register(client, db_session):
 async def _verify_otp(client, db_session, user_id) -> None:
     await client.post(f"{ONBOARDING_BASE}/request-otp", json={"channel": "EMAIL"})
     code = await _fetch_otp_code(db_session, user_id)
-    resp = await client.post(f"{ONBOARDING_BASE}/verify-otp", json={"channel": "EMAIL", "code": code})
+    resp = await client.post(
+        f"{ONBOARDING_BASE}/verify-otp", json={"channel": "EMAIL", "code": code}
+    )
     assert resp.status_code == 204
 
 
@@ -43,7 +52,9 @@ class TestMfaGate:
     `auth_as`) a propósito: `auth_as` pisa `get_session`/`get_pending_mfa_session`
     directo y no ejercita el gate."""
 
-    async def test_business_endpoint_blocked_until_otp_verified(self, client, db_session):
+    async def test_business_endpoint_blocked_until_otp_verified(
+        self, client, db_session
+    ):
         user, _payload = await _register(client, db_session)
 
         blocked = await client.get(ORGS_BASE)
@@ -64,7 +75,9 @@ class TestMfaGate:
         await _register(client, db_session)
         await client.post(f"{ONBOARDING_BASE}/request-otp", json={"channel": "EMAIL"})
 
-        wrong = await client.post(f"{ONBOARDING_BASE}/verify-otp", json={"channel": "EMAIL", "code": "000000"})
+        wrong = await client.post(
+            f"{ONBOARDING_BASE}/verify-otp", json={"channel": "EMAIL", "code": "000000"}
+        )
         assert wrong.status_code == 400
 
         still_blocked = await client.get(ORGS_BASE)
@@ -76,7 +89,8 @@ class TestMfaGate:
         assert (await client.get(ORGS_BASE)).status_code == 200
 
         login = await client.post(
-            f"{AUTH_BASE}/login", json={"email": payload["email"], "password": payload["password"]}
+            f"{AUTH_BASE}/login",
+            json={"email": payload["email"], "password": payload["password"]},
         )
         assert login.status_code == 200
 
@@ -89,7 +103,9 @@ class TestMfaGate:
         assert (await client.get(ORGS_BASE)).status_code == 200
 
         refresh_token = client.cookies.get(REFRESH_TOKEN_COOKIE)
-        refreshed = await client.post(f"{AUTH_BASE}/refresh", json={"refresh_token": refresh_token})
+        refreshed = await client.post(
+            f"{AUTH_BASE}/refresh", json={"refresh_token": refresh_token}
+        )
         assert refreshed.status_code == 200
         assert ACCESS_TOKEN_COOKIE in refreshed.cookies
 
@@ -103,7 +119,8 @@ class TestMfaGate:
         await client.post(f"{AUTH_BASE}/logout")
 
         login = await client.post(
-            f"{AUTH_BASE}/login", json={"email": payload["email"], "password": payload["password"]}
+            f"{AUTH_BASE}/login",
+            json={"email": payload["email"], "password": payload["password"]},
         )
         assert login.status_code == 200
         assert (await client.get(ORGS_BASE)).status_code == 403

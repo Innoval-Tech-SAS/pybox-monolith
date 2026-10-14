@@ -22,22 +22,44 @@ from receivables.payment_gateways.enums.payment_gateway_enums import (
     ReceivablesGatewayProvider,
 )
 from receivables.payment_gateways.gateways.base import CardPaymentMethod
-from receivables.payment_gateways.models.payment_source_model import DebtorPaymentSourceModel
-from receivables.payment_gateways.repository.payment_attempt_repository import CreditPaymentAttemptRepository
-from receivables.payment_gateways.repository.payment_source_repository import DebtorPaymentSourceRepository
-from receivables.payment_gateways.services.payment_checkout_service import PaymentCheckoutService
-from receivables.payment_gateways.services.payment_source_service import PaymentSourceService
+from receivables.payment_gateways.models.payment_source_model import (
+    DebtorPaymentSourceModel,
+)
+from receivables.payment_gateways.repository.payment_attempt_repository import (
+    CreditPaymentAttemptRepository,
+)
+from receivables.payment_gateways.repository.payment_source_repository import (
+    DebtorPaymentSourceRepository,
+)
+from receivables.payment_gateways.services.payment_checkout_service import (
+    PaymentCheckoutService,
+)
+from receivables.payment_gateways.services.payment_source_service import (
+    PaymentSourceService,
+)
 from receivables.payments.enums.payment_enums import PaymentStatus
 from receivables.payments.models.payment_model import PaymentModel
 from receivables.payments.repository.payment_repository import PaymentRepository
-from receivables.payments.services.payment_ownership_resolver import PaymentOwnershipResolver
+from receivables.payments.services.payment_ownership_resolver import (
+    PaymentOwnershipResolver,
+)
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from tests.receivables.conftest import add_organization, build_credit, build_debtor, build_organization, build_portfolio
+from tests.receivables.conftest import (
+    add_organization,
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 
 def self_session(make_user_session_factory, document_number_hash: str):
     return make_user_session_factory(
-        role=UserRole.USER, scope=UserScope.SELF, orgs={}, document_type="CC", document_number_hash=document_number_hash,
+        role=UserRole.USER,
+        scope=UserScope.SELF,
+        orgs={},
+        document_type="CC",
+        document_number_hash=document_number_hash,
     )
 
 
@@ -88,7 +110,9 @@ class TestPaymentCheckoutServiceIdor:
         self, db_session, make_user_session_factory, payment_of_another_debtor
     ):
         requester_doc = "111222333"
-        requester = build_debtor((await add_organization(db_session)).id, document_number_plain=requester_doc)
+        requester = build_debtor(
+            (await add_organization(db_session)).id, document_number_plain=requester_doc
+        )
         db_session.add(requester)
         await db_session.flush()
 
@@ -98,9 +122,15 @@ class TestPaymentCheckoutServiceIdor:
             AsyncMock(),
             PaymentRepository(db_session),
         )
-        session = self_session(make_user_session_factory, encrypt_service.hash_document(requester_doc))
+        session = self_session(
+            make_user_session_factory, encrypt_service.hash_document(requester_doc)
+        )
         card = CardPaymentMethod(
-            number="4242424242424242", cvc="123", exp_month="12", exp_year="29", card_holder="Test",
+            number="4242424242424242",
+            cvc="123",
+            exp_month="12",
+            exp_year="29",
+            card_holder="Test",
         )
 
         with pytest.raises(HTTPException) as exc_info:
@@ -115,20 +145,28 @@ class TestPaymentSourceServiceIdor:
         self, db_session, make_user_session_factory, payment_of_another_debtor
     ):
         requester_doc = "444555666"
-        requester = build_debtor((await add_organization(db_session)).id, document_number_plain=requester_doc)
+        requester = build_debtor(
+            (await add_organization(db_session)).id, document_number_plain=requester_doc
+        )
         db_session.add(requester)
         await db_session.flush()
 
         service = PaymentSourceService(
-            make_ownership_resolver(db_session), DebtorPaymentSourceRepository(db_session), AsyncMock()
+            make_ownership_resolver(db_session),
+            DebtorPaymentSourceRepository(db_session),
+            AsyncMock(),
         )
-        session = self_session(make_user_session_factory, encrypt_service.hash_document(requester_doc))
+        session = self_session(
+            make_user_session_factory, encrypt_service.hash_document(requester_doc)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.list_active(session, payment_of_another_debtor.id)
         assert exc_info.value.status_code == 404
 
-    async def test_revoke_source_of_another_debtor_raises_404(self, db_session, make_user_session_factory):
+    async def test_revoke_source_of_another_debtor_raises_404(
+        self, db_session, make_user_session_factory
+    ):
         """Aunque el `payment_id` sea propio, revocar una fuente cuyo `debtor_id` no
         coincide con el deudor resuelto debe fallar -- no basta con "conoce un
         payment_id válido", la fuente en sí debe ser del mismo deudor."""
@@ -161,9 +199,13 @@ class TestPaymentSourceServiceIdor:
         await db_session.flush()
 
         service = PaymentSourceService(
-            make_ownership_resolver(db_session), DebtorPaymentSourceRepository(db_session), AsyncMock()
+            make_ownership_resolver(db_session),
+            DebtorPaymentSourceRepository(db_session),
+            AsyncMock(),
         )
-        session = self_session(make_user_session_factory, encrypt_service.hash_document(owner_doc))
+        session = self_session(
+            make_user_session_factory, encrypt_service.hash_document(owner_doc)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.revoke(session, own_payment.id, foreign_source.id)

@@ -21,21 +21,27 @@ def manager() -> ChatConnectionManager:
 
 
 class TestConnect:
-    async def test_first_connection_is_accepted_and_tracked(self, manager: ChatConnectionManager):
+    async def test_first_connection_is_accepted_and_tracked(
+        self, manager: ChatConnectionManager
+    ):
         user_id = uuid.uuid4()
         ws = _fake_ws()
         await manager.connect(user_id, ws)
         ws.accept.assert_awaited_once()
         assert user_id in manager.online_user_ids()
 
-    async def test_multiple_connections_under_limit_are_all_kept(self, manager: ChatConnectionManager):
+    async def test_multiple_connections_under_limit_are_all_kept(
+        self, manager: ChatConnectionManager
+    ):
         user_id = uuid.uuid4()
         ws1, ws2 = _fake_ws(), _fake_ws()
         await manager.connect(user_id, ws1)
         await manager.connect(user_id, ws2)
         assert manager._connections[user_id] == [ws1, ws2]
 
-    async def test_exceeding_max_connections_closes_the_oldest(self, manager: ChatConnectionManager):
+    async def test_exceeding_max_connections_closes_the_oldest(
+        self, manager: ChatConnectionManager
+    ):
         user_id = uuid.uuid4()
         sockets = [_fake_ws() for _ in range(4)]
         for ws in sockets:
@@ -48,7 +54,9 @@ class TestConnect:
         assert manager._connections[user_id] == sockets[1:]
         assert len(manager._connections[user_id]) == 3
 
-    async def test_close_failure_on_eviction_does_not_raise(self, manager: ChatConnectionManager):
+    async def test_close_failure_on_eviction_does_not_raise(
+        self, manager: ChatConnectionManager
+    ):
         user_id = uuid.uuid4()
         sockets = [_fake_ws() for _ in range(3)]
         sockets[0].close.side_effect = RuntimeError("already gone")
@@ -68,10 +76,14 @@ class TestDisconnect:
         manager.disconnect(user_id, ws)
         assert user_id not in manager.online_user_ids()
 
-    async def test_disconnect_of_unknown_user_is_a_noop(self, manager: ChatConnectionManager):
+    async def test_disconnect_of_unknown_user_is_a_noop(
+        self, manager: ChatConnectionManager
+    ):
         manager.disconnect(uuid.uuid4(), _fake_ws())  # no debe lanzar
 
-    async def test_disconnect_of_unknown_socket_for_known_user_is_a_noop(self, manager: ChatConnectionManager):
+    async def test_disconnect_of_unknown_socket_for_known_user_is_a_noop(
+        self, manager: ChatConnectionManager
+    ):
         user_id = uuid.uuid4()
         await manager.connect(user_id, _fake_ws())
         manager.disconnect(user_id, _fake_ws())
@@ -79,7 +91,9 @@ class TestDisconnect:
 
 
 class TestOnlineUserIds:
-    async def test_only_users_with_active_connections_are_online(self, manager: ChatConnectionManager):
+    async def test_only_users_with_active_connections_are_online(
+        self, manager: ChatConnectionManager
+    ):
         user_a, user_b = uuid.uuid4(), uuid.uuid4()
         ws_a = _fake_ws()
         await manager.connect(user_a, ws_a)
@@ -89,7 +103,9 @@ class TestOnlineUserIds:
 
 
 class TestSendToUser:
-    async def test_sends_event_and_data_to_all_connections(self, manager: ChatConnectionManager):
+    async def test_sends_event_and_data_to_all_connections(
+        self, manager: ChatConnectionManager
+    ):
         user_id = uuid.uuid4()
         ws1, ws2 = _fake_ws(), _fake_ws()
         await manager.connect(user_id, ws1)
@@ -97,10 +113,16 @@ class TestSendToUser:
 
         await manager.send_to_user(user_id, "message", {"body": "hola"})
 
-        ws1.send_json.assert_awaited_once_with({"event": "message", "data": {"body": "hola"}})
-        ws2.send_json.assert_awaited_once_with({"event": "message", "data": {"body": "hola"}})
+        ws1.send_json.assert_awaited_once_with(
+            {"event": "message", "data": {"body": "hola"}}
+        )
+        ws2.send_json.assert_awaited_once_with(
+            {"event": "message", "data": {"body": "hola"}}
+        )
 
-    async def test_dead_connection_is_pruned_after_send_failure(self, manager: ChatConnectionManager):
+    async def test_dead_connection_is_pruned_after_send_failure(
+        self, manager: ChatConnectionManager
+    ):
         user_id = uuid.uuid4()
         alive, dead = _fake_ws(), _fake_ws()
         dead.send_json.side_effect = RuntimeError("connection closed")
@@ -112,7 +134,9 @@ class TestSendToUser:
         assert dead not in manager._connections[user_id]
         assert alive in manager._connections[user_id]
 
-    async def test_send_to_user_with_no_connections_is_a_noop(self, manager: ChatConnectionManager):
+    async def test_send_to_user_with_no_connections_is_a_noop(
+        self, manager: ChatConnectionManager
+    ):
         await manager.send_to_user(uuid.uuid4(), "ping", {})  # no debe lanzar
 
 
@@ -125,5 +149,7 @@ class TestBroadcastToOthers:
 
         await manager.broadcast_to_others(sender, "typing", {"chatId": "x"})
 
-        other_ws.send_json.assert_awaited_once_with({"event": "typing", "data": {"chatId": "x"}})
+        other_ws.send_json.assert_awaited_once_with(
+            {"event": "typing", "data": {"chatId": "x"}}
+        )
         sender_ws.send_json.assert_not_awaited()

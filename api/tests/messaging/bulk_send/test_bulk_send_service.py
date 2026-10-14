@@ -92,7 +92,13 @@ class TestProcessBillingBlock:
             await service.process(
                 portfolio_id=uuid.uuid4(),
                 channel_id=uuid.uuid4(),
-                rows=[{"tipo_documento": "CC", "documento": "1", "destinatario": "a@b.com"}],
+                rows=[
+                    {
+                        "tipo_documento": "CC",
+                        "documento": "1",
+                        "destinatario": "a@b.com",
+                    }
+                ],
                 user_session=make_user_session(),
                 template_id=uuid.uuid4(),
             )
@@ -125,7 +131,9 @@ class TestProcessEmailRequiresSubject:
         service, mocks = build_service()
         mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=make_portfolio())
         mocks["billing_status_service"].is_blocked = AsyncMock(return_value=False)
-        mocks["channel_repo"].get_by_id = AsyncMock(return_value=make_channel(ChannelName.EMAIL))
+        mocks["channel_repo"].get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.EMAIL)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.process(
@@ -146,7 +154,9 @@ class TestProcessWhatsAppRequiresTemplate:
         service, mocks = build_service()
         mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=make_portfolio())
         mocks["billing_status_service"].is_blocked = AsyncMock(return_value=False)
-        mocks["channel_repo"].get_by_id = AsyncMock(return_value=make_channel(ChannelName.WHATSAPP))
+        mocks["channel_repo"].get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.WHATSAPP)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.process(
@@ -164,9 +174,13 @@ class TestProcessWhatsAppRequiresTemplate:
         service, mocks = build_service()
         mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=make_portfolio())
         mocks["billing_status_service"].is_blocked = AsyncMock(return_value=False)
-        mocks["channel_repo"].get_by_id = AsyncMock(return_value=make_channel(ChannelName.WHATSAPP))
+        mocks["channel_repo"].get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.WHATSAPP)
+        )
         credentials = MagicMock(active=True, phone_number_id="pnid-1")
-        mocks["whatsapp_credentials_repo"].get_by_organization = AsyncMock(return_value=credentials)
+        mocks["whatsapp_credentials_repo"].get_by_organization = AsyncMock(
+            return_value=credentials
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.process(
@@ -184,9 +198,15 @@ class TestProcessWhatsAppRequiresTemplate:
         service, mocks = build_service()
         mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=make_portfolio())
         mocks["billing_status_service"].is_blocked = AsyncMock(return_value=False)
-        mocks["channel_repo"].get_by_id = AsyncMock(return_value=make_channel(ChannelName.WHATSAPP))
-        mocks["whatsapp_credentials_repo"].get_by_organization = AsyncMock(return_value=None)
-        mocks["whatsapp_number_request_service"].ensure_number_available = AsyncMock(return_value=False)
+        mocks["channel_repo"].get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.WHATSAPP)
+        )
+        mocks["whatsapp_credentials_repo"].get_by_organization = AsyncMock(
+            return_value=None
+        )
+        mocks["whatsapp_number_request_service"].ensure_number_available = AsyncMock(
+            return_value=False
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.process(
@@ -198,7 +218,9 @@ class TestProcessWhatsAppRequiresTemplate:
             )
 
         assert exc_info.value.status_code == 422
-        mocks["whatsapp_number_request_service"].ensure_number_available.assert_awaited_once()
+        mocks[
+            "whatsapp_number_request_service"
+        ].ensure_number_available.assert_awaited_once()
 
 
 class TestProcessTemplateResolution:
@@ -206,7 +228,9 @@ class TestProcessTemplateResolution:
         service, mocks = build_service()
         mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=make_portfolio())
         mocks["billing_status_service"].is_blocked = AsyncMock(return_value=False)
-        mocks["channel_repo"].get_by_id = AsyncMock(return_value=make_channel(ChannelName.EMAIL))
+        mocks["channel_repo"].get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.EMAIL)
+        )
         mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=None)
 
         with pytest.raises(HTTPException) as exc_info:
@@ -225,7 +249,9 @@ class TestProcessTemplateResolution:
         service, mocks = build_service()
         mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=make_portfolio())
         mocks["billing_status_service"].is_blocked = AsyncMock(return_value=False)
-        mocks["channel_repo"].get_by_id = AsyncMock(return_value=make_channel(ChannelName.EMAIL))
+        mocks["channel_repo"].get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.EMAIL)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.process(
@@ -244,13 +270,17 @@ class TestProcessRowParsing:
     def _setup_email(self, mocks):
         mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=make_portfolio())
         mocks["billing_status_service"].is_blocked = AsyncMock(return_value=False)
-        mocks["channel_repo"].get_by_id = AsyncMock(return_value=make_channel(ChannelName.EMAIL))
+        mocks["channel_repo"].get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.EMAIL)
+        )
         mocks["campaign_repo"].get_or_create_manual = AsyncMock(
             return_value=MagicMock(id=uuid.uuid4(), name="Envío Manual — Email")
         )
         mocks["debtor_repo"].get_by_document_hashes = AsyncMock(return_value=[])
         mocks["batch_sender"].process_batch = AsyncMock(
-            return_value=BatchStats(total_sent=0, success_count=0, failure_count=0, unique_customers=0)
+            return_value=BatchStats(
+                total_sent=0, success_count=0, failure_count=0, unique_customers=0
+            )
         )
 
     async def test_empty_recipient_row_is_skipped(self):
@@ -297,7 +327,11 @@ class TestProcessRowParsing:
         self._setup_email(mocks)
 
         rows = [
-            {"tipo_documento": "NO-EXISTE", "documento": "1", "destinatario": "a@b.com"},
+            {
+                "tipo_documento": "NO-EXISTE",
+                "documento": "1",
+                "destinatario": "a@b.com",
+            },
             {"tipo_documento": "CC", "documento": "2", "destinatario": "c@d.com"},
         ]
         response = await service.process(
@@ -338,7 +372,9 @@ class TestProcessRowParsing:
         sent_inputs = mocks["batch_sender"].process_batch.await_args.args[0]
         assert sent_inputs[0].sub == [{"nombre": "Ana"}]
 
-    async def test_no_valid_rows_returns_zeroed_response_without_calling_batch_sender(self):
+    async def test_no_valid_rows_returns_zeroed_response_without_calling_batch_sender(
+        self,
+    ):
         service, mocks = build_service()
         self._setup_email(mocks)
 
@@ -363,13 +399,21 @@ class TestProcessWhatsAppConsentGate:
         service, mocks = build_service()
         mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=make_portfolio())
         mocks["billing_status_service"].is_blocked = AsyncMock(return_value=False)
-        mocks["channel_repo"].get_by_id = AsyncMock(return_value=make_channel(ChannelName.WHATSAPP))
+        mocks["channel_repo"].get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.WHATSAPP)
+        )
         credentials = MagicMock(active=True, phone_number_id="pnid-1")
-        mocks["whatsapp_credentials_repo"].get_by_organization = AsyncMock(return_value=credentials)
+        mocks["whatsapp_credentials_repo"].get_by_organization = AsyncMock(
+            return_value=credentials
+        )
         whatsapp_data = MagicMock(meta_name="plantilla_meta", language="es")
-        mocks["whatsapp_template_data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
+        mocks["whatsapp_template_data_repo"].get_by_template_id = AsyncMock(
+            return_value=whatsapp_data
+        )
         template = MagicMock(id=uuid.uuid4(), channel=ChannelName.WHATSAPP)
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
         mocks["campaign_repo"].get_or_create_manual = AsyncMock(
             return_value=MagicMock(id=uuid.uuid4(), name="Envío Manual — WhatsApp")
         )
@@ -381,7 +425,9 @@ class TestProcessWhatsAppConsentGate:
         response = await service.process(
             portfolio_id=uuid.uuid4(),
             channel_id=uuid.uuid4(),
-            rows=[{"tipo_documento": "CC", "documento": "1", "destinatario": "3001112233"}],
+            rows=[
+                {"tipo_documento": "CC", "documento": "1", "destinatario": "3001112233"}
+            ],
             user_session=make_user_session(),
             template_id=uuid.uuid4(),
         )
@@ -394,13 +440,21 @@ class TestProcessWhatsAppConsentGate:
         service, mocks = build_service()
         mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=make_portfolio())
         mocks["billing_status_service"].is_blocked = AsyncMock(return_value=False)
-        mocks["channel_repo"].get_by_id = AsyncMock(return_value=make_channel(ChannelName.WHATSAPP))
+        mocks["channel_repo"].get_by_id = AsyncMock(
+            return_value=make_channel(ChannelName.WHATSAPP)
+        )
         credentials = MagicMock(active=True, phone_number_id="pnid-1")
-        mocks["whatsapp_credentials_repo"].get_by_organization = AsyncMock(return_value=credentials)
+        mocks["whatsapp_credentials_repo"].get_by_organization = AsyncMock(
+            return_value=credentials
+        )
         whatsapp_data = MagicMock(meta_name="plantilla_meta", language="es")
-        mocks["whatsapp_template_data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
+        mocks["whatsapp_template_data_repo"].get_by_template_id = AsyncMock(
+            return_value=whatsapp_data
+        )
         template = MagicMock(id=uuid.uuid4(), channel=ChannelName.WHATSAPP)
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
         mocks["campaign_repo"].get_or_create_manual = AsyncMock(
             return_value=MagicMock(id=uuid.uuid4(), name="Envío Manual — WhatsApp")
         )
@@ -409,13 +463,17 @@ class TestProcessWhatsAppConsentGate:
             return_value={"573001112233": ChannelRequestStatus.APPROVED}
         )
         mocks["batch_sender"].process_batch = AsyncMock(
-            return_value=BatchStats(total_sent=1, success_count=1, failure_count=0, unique_customers=1)
+            return_value=BatchStats(
+                total_sent=1, success_count=1, failure_count=0, unique_customers=1
+            )
         )
 
         response = await service.process(
             portfolio_id=uuid.uuid4(),
             channel_id=uuid.uuid4(),
-            rows=[{"tipo_documento": "CC", "documento": "1", "destinatario": "3001112233"}],
+            rows=[
+                {"tipo_documento": "CC", "documento": "1", "destinatario": "3001112233"}
+            ],
             user_session=make_user_session(),
             template_id=uuid.uuid4(),
         )

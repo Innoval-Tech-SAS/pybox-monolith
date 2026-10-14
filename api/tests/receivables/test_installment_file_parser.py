@@ -51,9 +51,18 @@ class TestParseValidRows:
 
     def test_full_settlement_row_allows_missing_installment_number(self):
         parser = InstallmentFileParser()
-        data = parser.parse(build_installments_csv([
-            installment_row(**{"Pago total del credito": "si", "Numero de la cuota que se cancela": ""})
-        ]))
+        data = parser.parse(
+            build_installments_csv(
+                [
+                    installment_row(
+                        **{
+                            "Pago total del credito": "si",
+                            "Numero de la cuota que se cancela": "",
+                        }
+                    )
+                ]
+            )
+        )
 
         assert data.total_skipped == 0
         row = data.rows[0]
@@ -62,9 +71,9 @@ class TestParseValidRows:
 
     def test_pending_installment_has_no_payment_date(self):
         parser = InstallmentFileParser()
-        data = parser.parse(build_installments_csv([
-            installment_row(**{"Fecha del pago": ""})
-        ]))
+        data = parser.parse(
+            build_installments_csv([installment_row(**{"Fecha del pago": ""})])
+        )
 
         assert data.rows[0].payment_date is None
 
@@ -72,38 +81,55 @@ class TestParseValidRows:
 class TestParseSkipsInvalidRows:
     def test_missing_credit_number_is_skipped(self):
         parser = InstallmentFileParser()
-        data = parser.parse(build_installments_csv([installment_row(**{"Numero de credito": ""})]))
+        data = parser.parse(
+            build_installments_csv([installment_row(**{"Numero de credito": ""})])
+        )
         assert data.rows == []
         assert data.total_skipped == 1
 
     def test_missing_installment_number_without_full_settlement_is_skipped(self):
         parser = InstallmentFileParser()
-        data = parser.parse(build_installments_csv([
-            installment_row(**{"Numero de la cuota que se cancela": "", "Pago total del credito": "no"})
-        ]))
+        data = parser.parse(
+            build_installments_csv(
+                [
+                    installment_row(
+                        **{
+                            "Numero de la cuota que se cancela": "",
+                            "Pago total del credito": "no",
+                        }
+                    )
+                ]
+            )
+        )
         assert data.rows == []
         assert data.total_skipped == 1
 
     def test_non_numeric_installment_number_is_skipped(self):
         # `_to_int_or_none` no puede convertir "abc" -> None -> misma regla que vacío.
         parser = InstallmentFileParser()
-        data = parser.parse(build_installments_csv([
-            installment_row(**{"Numero de la cuota que se cancela": "abc"})
-        ]))
+        data = parser.parse(
+            build_installments_csv(
+                [installment_row(**{"Numero de la cuota que se cancela": "abc"})]
+            )
+        )
         assert data.rows == []
         assert data.total_skipped == 1
 
     def test_missing_limit_pay_date_is_skipped(self):
         parser = InstallmentFileParser()
-        data = parser.parse(build_installments_csv([installment_row(**{"Fecha limite de pago": ""})]))
+        data = parser.parse(
+            build_installments_csv([installment_row(**{"Fecha limite de pago": ""})])
+        )
         assert data.rows == []
         assert data.total_skipped == 1
 
     def test_unparseable_limit_pay_date_is_skipped(self):
         parser = InstallmentFileParser()
-        data = parser.parse(build_installments_csv([
-            installment_row(**{"Fecha limite de pago": "not-a-date"})
-        ]))
+        data = parser.parse(
+            build_installments_csv(
+                [installment_row(**{"Fecha limite de pago": "not-a-date"})]
+            )
+        )
         assert data.rows == []
         assert data.total_skipped == 1
 
@@ -111,12 +137,16 @@ class TestParseSkipsInvalidRows:
 class TestParseNumericNormalization:
     def test_non_numeric_amount_falls_back_to_zero(self):
         parser = InstallmentFileParser()
-        data = parser.parse(build_installments_csv([installment_row(**{"total": "no-es-un-numero"})]))
+        data = parser.parse(
+            build_installments_csv([installment_row(**{"total": "no-es-un-numero"})])
+        )
         assert data.rows[0].payment_amount == Decimal("0")
 
     def test_amount_with_thousands_comma_is_parsed(self):
         parser = InstallmentFileParser()
-        data = parser.parse(build_installments_csv([installment_row(**{"total": "1,500,000"})]))
+        data = parser.parse(
+            build_installments_csv([installment_row(**{"total": "1,500,000"})])
+        )
         assert data.rows[0].payment_amount == Decimal("1500000")
 
 

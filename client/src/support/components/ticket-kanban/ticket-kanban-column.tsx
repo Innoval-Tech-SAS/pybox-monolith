@@ -22,7 +22,7 @@ export const TicketKanbanColumn: React.FC<TicketKanbanColumnProps> = ({
   const columnRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const [, dropColumn] = useDrop<TicketKanbanDragItem, TicketKanbanDropResult, {}>({
+  const [, dropColumn] = useDrop<TicketKanbanDragItem, TicketKanbanDropResult, Record<string, never>>({
     accept: "ticket",
     drop: () => ({ name: status }),
     collect: () => ({}),

@@ -14,9 +14,15 @@ from app_platform.documents.repository.document_repository import DocumentReposi
 from core.security.constants.permissions import PORTFOLIO_CLIENTS
 from core.security.services.encrypt_service import encrypt_service
 from identity.organizations.enums.organization_enums import VerificationStatus
-from identity.users.enums.user_enums import IdentityVerificationStatus, UserRole, UserScope
+from identity.users.enums.user_enums import (
+    IdentityVerificationStatus,
+    UserRole,
+    UserScope,
+)
 from identity.users.schemas.user_session_schema import OrgSessionEntry
-from receivables.contact_methods.repository.contact_method_repository import ContactMethodRepository
+from receivables.contact_methods.repository.contact_method_repository import (
+    ContactMethodRepository,
+)
 from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.credits.services.my_credits_service import MyCreditsService
 from receivables.debtors.enums.debtor_enums import DebtorType
@@ -51,7 +57,9 @@ def build_debtor_service(db_session) -> DebtorService:
     )
 
 
-def org_admin_session(make_user_session_factory, org_id, *, permissions=frozenset({PORTFOLIO_CLIENTS})):
+def org_admin_session(
+    make_user_session_factory, org_id, *, permissions=frozenset({PORTFOLIO_CLIENTS})
+):
     return make_user_session_factory(
         role=UserRole.ADMIN,
         scope=UserScope.ORGANIZATION,
@@ -82,12 +90,30 @@ class TestCsvUploadIsScopedToOrganization:
         service = PortfolioCsvService(db_session)
 
         await service.process_csv(
-            build_portfolio_csv([portfolio_csv_row(**{"Numero de documento": document, "Nombre del titular": "Nombre A"})]),
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{
+                            "Numero de documento": document,
+                            "Nombre del titular": "Nombre A",
+                        }
+                    )
+                ]
+            ),
             organization_id=org_a.id,
             portfolio_name="Portafolio A",
         )
         await service.process_csv(
-            build_portfolio_csv([portfolio_csv_row(**{"Numero de documento": document, "Nombre del titular": "Nombre B"})]),
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{
+                            "Numero de documento": document,
+                            "Nombre del titular": "Nombre B",
+                        }
+                    )
+                ]
+            ),
             organization_id=org_b.id,
             portfolio_name="Portafolio B",
         )
@@ -105,7 +131,9 @@ class TestCsvUploadIsScopedToOrganization:
 
 
 class TestDebtorRepositoryScoping:
-    async def test_lookup_by_document_number_does_not_cross_organizations(self, db_session):
+    async def test_lookup_by_document_number_does_not_cross_organizations(
+        self, db_session
+    ):
         org_a = await add_organization(db_session)
         org_b = await add_organization(db_session)
         debtor = build_debtor(org_a.id)
@@ -113,9 +141,18 @@ class TestDebtorRepositoryScoping:
         await db_session.flush()
 
         repo = DebtorRepository(db_session)
-        assert await repo.get_by_document_number(org_a.id, debtor.document_number_hash) is not None
-        assert await repo.get_by_document_number(org_b.id, debtor.document_number_hash) is None
-        assert await repo.get_by_document_hashes(org_b.id, [debtor.document_number_hash]) == []
+        assert (
+            await repo.get_by_document_number(org_a.id, debtor.document_number_hash)
+            is not None
+        )
+        assert (
+            await repo.get_by_document_number(org_b.id, debtor.document_number_hash)
+            is None
+        )
+        assert (
+            await repo.get_by_document_hashes(org_b.id, [debtor.document_number_hash])
+            == []
+        )
 
     async def test_list_by_document_returns_one_row_per_organization(self, db_session):
         org_a = await add_organization(db_session)
@@ -126,7 +163,9 @@ class TestDebtorRepositoryScoping:
         db_session.add_all([in_a, in_b])
         await db_session.flush()
 
-        rows = await DebtorRepository(db_session).list_by_document("CC", encrypt_service.hash_document(document))
+        rows = await DebtorRepository(db_session).list_by_document(
+            "CC", encrypt_service.hash_document(document)
+        )
 
         assert {d.id for d in rows} == {in_a.id, in_b.id}
 
@@ -155,7 +194,9 @@ class TestCreateDebtorIsScopedToOrganization:
             )
         assert exc_info.value.status_code == 403
 
-    async def test_duplicate_in_same_org_raises_409(self, db_session, make_user_session_factory):
+    async def test_duplicate_in_same_org_raises_409(
+        self, db_session, make_user_session_factory
+    ):
         org = await add_organization(db_session)
         session = org_admin_session(make_user_session_factory, org.id)
         service = build_debtor_service(db_session)
@@ -177,7 +218,8 @@ class TestCreateDebtorIsScopedToOrganization:
         await db_session.flush()
 
         created = await build_debtor_service(db_session).create_debtor(
-            self._request(org_b.id, document), org_admin_session(make_user_session_factory, org_b.id)
+            self._request(org_b.id, document),
+            org_admin_session(make_user_session_factory, org_b.id),
         )
 
         assert created.organization_id == org_b.id
@@ -200,12 +242,16 @@ class TestSelfServiceSpansOrganizations:
             credits.append(credit)
 
         result = await MyCreditsService(db_session).get_my_credits(
-            "CC", encrypt_service.hash_document(document), IdentityVerificationStatus.APPROVED
+            "CC",
+            encrypt_service.hash_document(document),
+            IdentityVerificationStatus.APPROVED,
         )
 
         assert {c.id for c in result} == {c.id for c in credits}
 
-    async def test_credit_of_a_deleted_portfolio_is_hidden_instead_of_failing(self, db_session):
+    async def test_credit_of_a_deleted_portfolio_is_hidden_instead_of_failing(
+        self, db_session
+    ):
         """Antes reventaba con KeyError: el portafolio dado de baja no aparecía en el mapa."""
         org = await add_organization(db_session)
         document = unique_document_number()
@@ -221,7 +267,9 @@ class TestSelfServiceSpansOrganizations:
         await PortfolioRepository(db_session).delete(dead_portfolio)
 
         result = await MyCreditsService(db_session).get_my_credits(
-            "CC", encrypt_service.hash_document(document), IdentityVerificationStatus.APPROVED
+            "CC",
+            encrypt_service.hash_document(document),
+            IdentityVerificationStatus.APPROVED,
         )
 
         assert [c.id for c in result] == [live_credit.id]

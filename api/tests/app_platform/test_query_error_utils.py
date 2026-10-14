@@ -8,7 +8,9 @@ from sqlalchemy.exc import DBAPIError
 
 from app_platform.schema_manager.utils.query_error_utils import describe_db_error
 
-SECRET_SQL = "SELECT * FROM public.creditos WHERE id_portafolio IN ('portafolio-secreto')"
+SECRET_SQL = (
+    "SELECT * FROM public.creditos WHERE id_portafolio IN ('portafolio-secreto')"
+)
 
 
 class _PgError(Exception):
@@ -28,7 +30,9 @@ def _db_error(sqlstate: str | None, server_message: str | None = None) -> DBAPIE
 
 class TestDescribeDbError:
     def test_undefined_column_is_user_error_with_server_detail(self):
-        message, status_code = describe_db_error(_db_error("42703", "column deudores.foo does not exist"))
+        message, status_code = describe_db_error(
+            _db_error("42703", "column deudores.foo does not exist")
+        )
         assert status_code == 422
         assert "columnas configuradas no existe" in message
         assert "column deudores.foo does not exist" in message
@@ -42,11 +46,15 @@ class TestDescribeDbError:
         assert "character varying = bigint" in message
 
     def test_invalid_text_representation_is_user_error(self):
-        _, status_code = describe_db_error(_db_error("22P02", 'invalid input syntax for type integer: "abc"'))
+        _, status_code = describe_db_error(
+            _db_error("22P02", 'invalid input syntax for type integer: "abc"')
+        )
         assert status_code == 422
 
     def test_unmapped_sqlstate_is_server_error_with_code(self):
-        message, status_code = describe_db_error(_db_error("40P01", "deadlock detected"))
+        message, status_code = describe_db_error(
+            _db_error("40P01", "deadlock detected")
+        )
         assert status_code == 500
         assert "40P01" in message
 
@@ -62,6 +70,8 @@ class TestDescribeDbError:
 
     def test_sql_never_leaks_into_message(self):
         for sqlstate in ("42703", "42883", "22P02", "40P01", None):
-            message, _ = describe_db_error(_db_error(sqlstate, "algún mensaje del servidor"))
+            message, _ = describe_db_error(
+                _db_error(sqlstate, "algún mensaje del servidor")
+            )
             assert "SELECT" not in message
             assert "portafolio-secreto" not in message

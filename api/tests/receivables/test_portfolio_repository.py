@@ -2,7 +2,9 @@
 
 import uuid
 
-from receivables.portfolios.models.portfolio_user_access_model import PortfolioUserAccessModel
+from receivables.portfolios.models.portfolio_user_access_model import (
+    PortfolioUserAccessModel,
+)
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
 from tests.factories import get_user_by_email, register_payload
 from tests.receivables.conftest import build_organization, build_portfolio
@@ -49,15 +51,19 @@ class TestActiveInactiveByOrganization:
         org = build_organization()
         db_session.add(org)
         await db_session.flush()
-        db_session.add_all([
-            build_portfolio(org.id, is_active=True),
-            build_portfolio(org.id, is_active=True),
-            build_portfolio(org.id, is_active=False),
-        ])
+        db_session.add_all(
+            [
+                build_portfolio(org.id, is_active=True),
+                build_portfolio(org.id, is_active=True),
+                build_portfolio(org.id, is_active=False),
+            ]
+        )
         await db_session.flush()
 
         repo = PortfolioRepository(db_session)
-        active_count, inactive_count = await repo.count_active_inactive_by_organization_id(org.id)
+        active_count, inactive_count = (
+            await repo.count_active_inactive_by_organization_id(org.id)
+        )
 
         assert active_count == 2
         assert inactive_count == 1
@@ -68,7 +74,9 @@ class TestActiveInactiveByOrganization:
         await db_session.flush()
 
         repo = PortfolioRepository(db_session)
-        active_count, inactive_count = await repo.count_active_inactive_by_organization_id(org.id)
+        active_count, inactive_count = (
+            await repo.count_active_inactive_by_organization_id(org.id)
+        )
 
         assert (active_count, inactive_count) == (0, 0)
 
@@ -92,7 +100,9 @@ class TestGetActiveAll:
 
 
 class TestListAccessibleByUserAndOrg:
-    async def test_only_returns_portfolios_with_active_access_grant(self, client, db_session):
+    async def test_only_returns_portfolios_with_active_access_grant(
+        self, client, db_session
+    ):
         payload = register_payload()
         resp = await client.post(f"{AUTH_BASE}/register/user", json=payload)
         assert resp.status_code == 201
@@ -105,9 +115,14 @@ class TestListAccessibleByUserAndOrg:
         not_granted = build_portfolio(org.id)
         db_session.add_all([granted, not_granted])
         await db_session.flush()
-        db_session.add(PortfolioUserAccessModel(
-            user_id=user.id, portfolio_id=granted.id, organization_id=org.id, is_active=True,
-        ))
+        db_session.add(
+            PortfolioUserAccessModel(
+                user_id=user.id,
+                portfolio_id=granted.id,
+                organization_id=org.id,
+                is_active=True,
+            )
+        )
         await db_session.flush()
 
         repo = PortfolioRepository(db_session)
@@ -127,9 +142,14 @@ class TestListAccessibleByUserAndOrg:
         portfolio = build_portfolio(org.id)
         db_session.add(portfolio)
         await db_session.flush()
-        db_session.add(PortfolioUserAccessModel(
-            user_id=user.id, portfolio_id=portfolio.id, organization_id=org.id, is_active=False,
-        ))
+        db_session.add(
+            PortfolioUserAccessModel(
+                user_id=user.id,
+                portfolio_id=portfolio.id,
+                organization_id=org.id,
+                is_active=False,
+            )
+        )
         await db_session.flush()
 
         repo = PortfolioRepository(db_session)

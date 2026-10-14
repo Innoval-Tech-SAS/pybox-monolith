@@ -7,7 +7,9 @@ from datetime import datetime, timedelta, timezone
 
 from receivables.segments.models.segment_execution_model import SegmentExecutionModel
 from receivables.segments.models.segment_model import SegmentModel
-from receivables.segments.repository.segment_execution_repository import SegmentExecutionRepository
+from receivables.segments.repository.segment_execution_repository import (
+    SegmentExecutionRepository,
+)
 from receivables.segments.repository.segment_repository import SegmentRepository
 from tests.receivables.conftest import build_organization, build_portfolio
 
@@ -25,7 +27,9 @@ async def _org_and_portfolio(db_session):
 class TestGetAllByPortfolio:
     async def test_excludes_soft_deleted(self, db_session):
         _, portfolio = await _org_and_portfolio(db_session)
-        active = SegmentModel(name="Activo", filter_criteria={"tables": []}, portfolio_id=portfolio.id)
+        active = SegmentModel(
+            name="Activo", filter_criteria={"tables": []}, portfolio_id=portfolio.id
+        )
         deleted = SegmentModel(
             name="Borrado",
             filter_criteria={"tables": []},
@@ -48,17 +52,27 @@ class TestGetByPortfolio:
         db_session.add(other_portfolio)
         await db_session.flush()
 
-        db_session.add_all([
-            SegmentModel(name="A", filter_criteria={"tables": []}, portfolio_id=portfolio.id),
-            SegmentModel(name="B", filter_criteria={"tables": []}, portfolio_id=portfolio.id),
-            SegmentModel(
-                name="Borrado",
-                filter_criteria={"tables": []},
-                portfolio_id=portfolio.id,
-                deleted_at=datetime.now(timezone.utc),
-            ),
-            SegmentModel(name="Otro portafolio", filter_criteria={"tables": []}, portfolio_id=other_portfolio.id),
-        ])
+        db_session.add_all(
+            [
+                SegmentModel(
+                    name="A", filter_criteria={"tables": []}, portfolio_id=portfolio.id
+                ),
+                SegmentModel(
+                    name="B", filter_criteria={"tables": []}, portfolio_id=portfolio.id
+                ),
+                SegmentModel(
+                    name="Borrado",
+                    filter_criteria={"tables": []},
+                    portfolio_id=portfolio.id,
+                    deleted_at=datetime.now(timezone.utc),
+                ),
+                SegmentModel(
+                    name="Otro portafolio",
+                    filter_criteria={"tables": []},
+                    portfolio_id=other_portfolio.id,
+                ),
+            ]
+        )
         await db_session.flush()
 
         repo = SegmentRepository(db_session)
@@ -70,7 +84,13 @@ class TestGetByPortfolio:
     async def test_pagination_second_page(self, db_session):
         _, portfolio = await _org_and_portfolio(db_session)
         for i in range(3):
-            db_session.add(SegmentModel(name=f"Seg {i}", filter_criteria={"tables": []}, portfolio_id=portfolio.id))
+            db_session.add(
+                SegmentModel(
+                    name=f"Seg {i}",
+                    filter_criteria={"tables": []},
+                    portfolio_id=portfolio.id,
+                )
+            )
         await db_session.flush()
 
         repo = SegmentRepository(db_session)
@@ -86,7 +106,9 @@ class TestGetByIdAndPortfolio:
         other_portfolio = build_portfolio(org.id)
         db_session.add(other_portfolio)
         await db_session.flush()
-        segment = SegmentModel(name="Seg", filter_criteria={"tables": []}, portfolio_id=portfolio.id)
+        segment = SegmentModel(
+            name="Seg", filter_criteria={"tables": []}, portfolio_id=portfolio.id
+        )
         db_session.add(segment)
         await db_session.flush()
 
@@ -97,21 +119,33 @@ class TestGetByIdAndPortfolio:
 
 
 class TestSegmentExecutionRepository:
-    async def test_get_by_segment_orders_most_recent_first(self, db_session, real_admin_user_id):
+    async def test_get_by_segment_orders_most_recent_first(
+        self, db_session, real_admin_user_id
+    ):
         _, portfolio = await _org_and_portfolio(db_session)
-        segment = SegmentModel(name="Seg", filter_criteria={"tables": []}, portfolio_id=portfolio.id)
+        segment = SegmentModel(
+            name="Seg", filter_criteria={"tables": []}, portfolio_id=portfolio.id
+        )
         db_session.add(segment)
         await db_session.flush()
 
         now = datetime.now(timezone.utc)
         older = SegmentExecutionModel(
-            segment_id=segment.id, mode="preview", rows=1, columns=["a"], executed_by=real_admin_user_id,
+            segment_id=segment.id,
+            mode="preview",
+            rows=1,
+            columns=["a"],
+            executed_by=real_admin_user_id,
             created_at=now - timedelta(days=1),
         )
         db_session.add(older)
         await db_session.flush()
         newer = SegmentExecutionModel(
-            segment_id=segment.id, mode="audit", rows=2, columns=["a"], executed_by=real_admin_user_id,
+            segment_id=segment.id,
+            mode="audit",
+            rows=2,
+            columns=["a"],
+            executed_by=real_admin_user_id,
             created_at=now,
         )
         db_session.add(newer)
@@ -122,18 +156,32 @@ class TestSegmentExecutionRepository:
 
         assert [e.id for e in result] == [newer.id, older.id]
 
-    async def test_get_by_segment_excludes_other_segments(self, db_session, real_admin_user_id):
+    async def test_get_by_segment_excludes_other_segments(
+        self, db_session, real_admin_user_id
+    ):
         _, portfolio = await _org_and_portfolio(db_session)
-        segment_a = SegmentModel(name="A", filter_criteria={"tables": []}, portfolio_id=portfolio.id)
-        segment_b = SegmentModel(name="B", filter_criteria={"tables": []}, portfolio_id=portfolio.id)
+        segment_a = SegmentModel(
+            name="A", filter_criteria={"tables": []}, portfolio_id=portfolio.id
+        )
+        segment_b = SegmentModel(
+            name="B", filter_criteria={"tables": []}, portfolio_id=portfolio.id
+        )
         db_session.add_all([segment_a, segment_b])
         await db_session.flush()
 
         exec_a = SegmentExecutionModel(
-            segment_id=segment_a.id, mode="preview", rows=1, columns=["a"], executed_by=real_admin_user_id
+            segment_id=segment_a.id,
+            mode="preview",
+            rows=1,
+            columns=["a"],
+            executed_by=real_admin_user_id,
         )
         exec_b = SegmentExecutionModel(
-            segment_id=segment_b.id, mode="preview", rows=1, columns=["a"], executed_by=real_admin_user_id
+            segment_id=segment_b.id,
+            mode="preview",
+            rows=1,
+            columns=["a"],
+            executed_by=real_admin_user_id,
         )
         db_session.add_all([exec_a, exec_b])
         await db_session.flush()

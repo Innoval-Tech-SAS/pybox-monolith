@@ -33,51 +33,84 @@ def client():
     del WhatsAppCloudClient._instance
 
 
-def _http_response(status_code: int, json_body: dict, request: httpx.Request | None = None) -> httpx.Response:
+def _http_response(
+    status_code: int, json_body: dict, request: httpx.Request | None = None
+) -> httpx.Response:
     request = request or httpx.Request("POST", "https://graph.facebook.com/x")
     return httpx.Response(status_code=status_code, json=json_body, request=request)
 
 
 class TestSendTemplate:
     async def test_success_returns_true_and_wamid(self, client: WhatsAppCloudClient):
-        client._http.request.return_value = _http_response(200, {"messages": [{"id": "wamid.123"}]})
+        client._http.request.return_value = _http_response(
+            200, {"messages": [{"id": "wamid.123"}]}
+        )
 
         ok, wamid = await client.send_template(
-            "phone-id", "573000000000", "recordatorio_pago", "es_CO", [{"type": "body", "parameters": []}]
+            "phone-id",
+            "573000000000",
+            "recordatorio_pago",
+            "es_CO",
+            [{"type": "body", "parameters": []}],
         )
 
         assert ok is True
         assert wamid == "wamid.123"
 
-    async def test_success_without_messages_in_body_returns_none_wamid(self, client: WhatsAppCloudClient):
+    async def test_success_without_messages_in_body_returns_none_wamid(
+        self, client: WhatsAppCloudClient
+    ):
         client._http.request.return_value = _http_response(200, {"messages": []})
 
-        ok, wamid = await client.send_template("phone-id", "573000000000", "tpl", "es_CO", [])
+        ok, wamid = await client.send_template(
+            "phone-id", "573000000000", "tpl", "es_CO", []
+        )
 
         assert ok is True
         assert wamid is None
 
-    async def test_http_status_error_returns_false_none_without_raising(self, client: WhatsAppCloudClient):
+    async def test_http_status_error_returns_false_none_without_raising(
+        self, client: WhatsAppCloudClient
+    ):
         request = httpx.Request("POST", "https://graph.facebook.com/x")
-        error_response = httpx.Response(status_code=400, json={"error": {"message": "Invalid parameter"}}, request=request)
+        error_response = httpx.Response(
+            status_code=400,
+            json={"error": {"message": "Invalid parameter"}},
+            request=request,
+        )
         client._http.request.return_value = error_response
 
-        ok, wamid = await client.send_template("phone-id", "573000000000", "tpl", "es_CO", [])
+        ok, wamid = await client.send_template(
+            "phone-id", "573000000000", "tpl", "es_CO", []
+        )
 
         assert (ok, wamid) == (False, None)
 
-    async def test_generic_exception_returns_false_none_without_raising(self, client: WhatsAppCloudClient):
+    async def test_generic_exception_returns_false_none_without_raising(
+        self, client: WhatsAppCloudClient
+    ):
         client._http.request.side_effect = RuntimeError("boom, red caída")
 
-        ok, wamid = await client.send_template("phone-id", "573000000000", "tpl", "es_CO", [])
+        ok, wamid = await client.send_template(
+            "phone-id", "573000000000", "tpl", "es_CO", []
+        )
 
         assert (ok, wamid) == (False, None)
 
-    async def test_sends_named_parameter_format_and_bearer_token(self, client: WhatsAppCloudClient):
-        client._http.request.return_value = _http_response(200, {"messages": [{"id": "wamid.abc"}]})
+    async def test_sends_named_parameter_format_and_bearer_token(
+        self, client: WhatsAppCloudClient
+    ):
+        client._http.request.return_value = _http_response(
+            200, {"messages": [{"id": "wamid.abc"}]}
+        )
 
         await client.send_template(
-            "phone-id", "573000000000", "recordatorio", "es_CO", [{"type": "body"}], token="org-token"
+            "phone-id",
+            "573000000000",
+            "recordatorio",
+            "es_CO",
+            [{"type": "body"}],
+            token="org-token",
         )
 
         call = client._http.request.call_args
@@ -85,8 +118,12 @@ class TestSendTemplate:
         assert call.kwargs["json"]["template"]["name"] == "recordatorio"
         assert call.kwargs["json"]["type"] == "template"
 
-    async def test_without_explicit_token_uses_app_level_token(self, client: WhatsAppCloudClient):
-        client._http.request.return_value = _http_response(200, {"messages": [{"id": "wamid.abc"}]})
+    async def test_without_explicit_token_uses_app_level_token(
+        self, client: WhatsAppCloudClient
+    ):
+        client._http.request.return_value = _http_response(
+            200, {"messages": [{"id": "wamid.abc"}]}
+        )
 
         await client.send_template("phone-id", "573000000000", "tpl", "es_CO", [])
 
@@ -96,19 +133,27 @@ class TestSendTemplate:
 
 class TestSendText:
     async def test_success_returns_true_and_wamid(self, client: WhatsAppCloudClient):
-        client._http.request.return_value = _http_response(200, {"messages": [{"id": "wamid.txt1"}]})
+        client._http.request.return_value = _http_response(
+            200, {"messages": [{"id": "wamid.txt1"}]}
+        )
 
-        ok, wamid = await client.send_text("phone-id", "573000000000", "hola, ¿cómo vas?")
+        ok, wamid = await client.send_text(
+            "phone-id", "573000000000", "hola, ¿cómo vas?"
+        )
 
         assert (ok, wamid) == (True, "wamid.txt1")
         call = client._http.request.call_args
         assert call.kwargs["json"]["type"] == "text"
         assert call.kwargs["json"]["text"]["body"] == "hola, ¿cómo vas?"
 
-    async def test_http_status_error_returns_false_none(self, client: WhatsAppCloudClient):
+    async def test_http_status_error_returns_false_none(
+        self, client: WhatsAppCloudClient
+    ):
         request = httpx.Request("POST", "https://graph.facebook.com/x")
         error_response = httpx.Response(
-            status_code=403, json={"error": {"message": "outside customer service window"}}, request=request
+            status_code=403,
+            json={"error": {"message": "outside customer service window"}},
+            request=request,
         )
         client._http.request.return_value = error_response
 
@@ -116,7 +161,9 @@ class TestSendText:
 
         assert (ok, wamid) == (False, None)
 
-    async def test_generic_exception_returns_false_none(self, client: WhatsAppCloudClient):
+    async def test_generic_exception_returns_false_none(
+        self, client: WhatsAppCloudClient
+    ):
         client._http.request.side_effect = httpx.ConnectTimeout("timeout")
 
         ok, wamid = await client.send_text("phone-id", "573000000000", "hola")
@@ -125,13 +172,18 @@ class TestSendText:
 
 
 class TestCreateTemplate:
-    async def test_lowercases_category_and_forces_named_parameter_format(self, client: WhatsAppCloudClient):
+    async def test_lowercases_category_and_forces_named_parameter_format(
+        self, client: WhatsAppCloudClient
+    ):
         client._http.request.return_value = _http_response(
             200, {"id": "meta-tpl-1", "status": "PENDING"}
         )
 
         result = await client.create_template(
-            "recordatorio_pago", "UTILITY", "es_CO", [{"type": "BODY", "text": "Hola {{nombre}}"}]
+            "recordatorio_pago",
+            "UTILITY",
+            "es_CO",
+            [{"type": "BODY", "text": "Hola {{nombre}}"}],
         )
 
         assert result == {"id": "meta-tpl-1", "status": "PENDING"}
@@ -139,12 +191,16 @@ class TestCreateTemplate:
         assert call.kwargs["json"]["category"] == "utility"
         assert call.kwargs["json"]["parameter_format"] == "NAMED"
 
-    async def test_http_error_propagates_unlike_send_methods(self, client: WhatsAppCloudClient):
+    async def test_http_error_propagates_unlike_send_methods(
+        self, client: WhatsAppCloudClient
+    ):
         """A diferencia de send_template/send_text, create_template no tiene
         try/except -- un error de Meta debe propagar para que el controller lo
         traduzca en un 5xx/4xx, no quedar silenciado."""
         request = httpx.Request("POST", "https://graph.facebook.com/x")
-        error_response = httpx.Response(status_code=400, json={"error": {"message": "bad"}}, request=request)
+        error_response = httpx.Response(
+            status_code=400, json={"error": {"message": "bad"}}, request=request
+        )
         client._http.request.return_value = error_response
 
         with pytest.raises(httpx.HTTPStatusError):
@@ -153,7 +209,9 @@ class TestCreateTemplate:
 
 class TestGetTemplate:
     async def test_returns_parsed_json(self, client: WhatsAppCloudClient):
-        client._http.request.return_value = _http_response(200, {"id": "meta-1", "status": "APPROVED"})
+        client._http.request.return_value = _http_response(
+            200, {"id": "meta-1", "status": "APPROVED"}
+        )
 
         result = await client.get_template("meta-1")
 

@@ -29,7 +29,9 @@ async def authed_global_admin(client, db_session, auth_as, make_user_session_fac
     resp = await client.post(f"{AUTH_BASE}/register/user", json=payload)
     assert resp.status_code == 201
     user = await get_user_by_email(db_session, payload["email"])
-    session = make_user_session_factory(user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+    session = make_user_session_factory(
+        user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL
+    )
     return auth_as(session)
 
 
@@ -43,8 +45,11 @@ def org_scoped_admin_session(make_user_session_factory, org_id: str | None = Non
         role=UserRole.ADMIN,
         scope=UserScope.ORGANIZATION,
         orgs={
-            org_id or str(uuid.uuid4()): OrgSessionEntry(
-                role=UserRole.ADMIN, org_name="Otra org", verification_status=VerificationStatus.APPROVED
+            org_id
+            or str(uuid.uuid4()): OrgSessionEntry(
+                role=UserRole.ADMIN,
+                org_name="Otra org",
+                verification_status=VerificationStatus.APPROVED,
             )
         },
     )
@@ -56,7 +61,9 @@ def no_admin_role_session(make_user_session_factory):
         scope=UserScope.ORGANIZATION,
         orgs={
             str(uuid.uuid4()): OrgSessionEntry(
-                role=UserRole.USER, org_name="Otra org", verification_status=VerificationStatus.APPROVED
+                role=UserRole.USER,
+                org_name="Otra org",
+                verification_status=VerificationStatus.APPROVED,
             )
         },
     )
@@ -95,7 +102,9 @@ class TestCreateOrganization:
         resp = await authed_global_admin.post(f"{BASE}/", json=payload)
         assert resp.status_code == 422
 
-    async def test_create_without_admin_role_returns_403(self, auth_as, make_user_session_factory):
+    async def test_create_without_admin_role_returns_403(
+        self, auth_as, make_user_session_factory
+    ):
         authed = auth_as(no_admin_role_session(make_user_session_factory))
         resp = await authed.post(f"{BASE}/", json=org_payload())
         assert resp.status_code == 403
@@ -132,7 +141,9 @@ class TestFiscalDocumentNumberDecryption:
     silenciosamente el texto cifrado -- por eso se verifica el valor exacto, no solo
     que la respuesta no lance una excepción."""
 
-    async def test_create_and_get_return_plaintext_fiscal_document_number(self, authed_global_admin):
+    async def test_create_and_get_return_plaintext_fiscal_document_number(
+        self, authed_global_admin
+    ):
         create = await authed_global_admin.post(
             f"{BASE}/", json=org_payload(fiscal_document_number="900123456-7")
         )
@@ -144,7 +155,9 @@ class TestFiscalDocumentNumberDecryption:
         assert get_resp.status_code == 200
         assert get_resp.json()["fiscalDocumentNumber"] == "900123456-7"
 
-    async def test_update_returns_plaintext_fiscal_document_number(self, authed_global_admin):
+    async def test_update_returns_plaintext_fiscal_document_number(
+        self, authed_global_admin
+    ):
         create = await authed_global_admin.post(f"{BASE}/", json=org_payload())
         org_id = create.json()["id"]
 
@@ -159,12 +172,16 @@ class TestUpdateOrganization:
     async def test_update_valid_as_global_admin(self, authed_global_admin):
         create = await authed_global_admin.post(f"{BASE}/", json=org_payload())
         org_id = create.json()["id"]
-        resp = await authed_global_admin.patch(f"{BASE}/{org_id}", json={"name": "Nombre actualizado"})
+        resp = await authed_global_admin.patch(
+            f"{BASE}/{org_id}", json={"name": "Nombre actualizado"}
+        )
         assert resp.status_code == 200
         assert resp.json()["name"] == "Nombre actualizado"
 
     async def test_update_not_found_returns_404(self, authed_global_admin):
-        resp = await authed_global_admin.patch(f"{BASE}/{uuid.uuid4()}", json={"name": "x"})
+        resp = await authed_global_admin.patch(
+            f"{BASE}/{uuid.uuid4()}", json={"name": "x"}
+        )
         assert resp.status_code == 404
 
     async def test_update_forbidden_for_non_admin_of_org(
@@ -245,7 +262,9 @@ class TestUpdateOrgDocument:
         assert second.status_code == 200
         assert first.json()["fiscalDocumentFile"] != second.json()["fiscalDocumentFile"]
 
-    async def test_update_document_invalid_doc_type_returns_422(self, authed_global_admin):
+    async def test_update_document_invalid_doc_type_returns_422(
+        self, authed_global_admin
+    ):
         create = await authed_global_admin.post(f"{BASE}/", json=org_payload())
         org_id = create.json()["id"]
         resp = await authed_global_admin.patch(

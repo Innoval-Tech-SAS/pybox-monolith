@@ -20,7 +20,9 @@ from tests.receivables.conftest import build_debtor, build_organization
 
 
 async def _channel_id(db_session, name: ChannelName) -> uuid.UUID:
-    result = await db_session.execute(select(ChannelModel.id).where(ChannelModel.name == name))
+    result = await db_session.execute(
+        select(ChannelModel.id).where(ChannelModel.name == name)
+    )
     return result.scalar_one()
 
 
@@ -54,11 +56,13 @@ class TestGetByExternalId:
 class TestGetBySendingId:
     async def test_returns_all_contacts_sharing_the_sending_id(self, db_session):
         repo = ContactRepository(db_session)
-        db_session.add_all([
-            make_contact(sending_id="sending-1", recipient="+573001112233"),
-            make_contact(sending_id="sending-1", recipient="+573001112244"),
-            make_contact(sending_id="sending-2", recipient="+573001112255"),
-        ])
+        db_session.add_all(
+            [
+                make_contact(sending_id="sending-1", recipient="+573001112233"),
+                make_contact(sending_id="sending-1", recipient="+573001112244"),
+                make_contact(sending_id="sending-2", recipient="+573001112255"),
+            ]
+        )
         await db_session.flush()
 
         results = await repo.get_by_sending_id("sending-1")
@@ -68,7 +72,9 @@ class TestGetBySendingId:
 
 
 class TestGetPendingSendingIds:
-    async def test_only_nrs360_sent_contacts_with_sending_id_are_included(self, db_session):
+    async def test_only_nrs360_sent_contacts_with_sending_id_are_included(
+        self, db_session
+    ):
         repo = ContactRepository(db_session)
         sms_channel_id = await _channel_id(db_session, ChannelName.SMS)
 
@@ -104,17 +110,21 @@ class TestGetPendingSendingIds:
 
 
 class TestGetSendStatusCounts:
-    async def test_counts_are_grouped_by_status_within_the_organization(self, db_session):
+    async def test_counts_are_grouped_by_status_within_the_organization(
+        self, db_session
+    ):
         org = build_organization()
         db_session.add(org)
         await db_session.flush()
         repo = ContactRepository(db_session)
 
-        db_session.add_all([
-            make_contact(status=ContactStatus.SENT, organization_id=org.id),
-            make_contact(status=ContactStatus.SENT, organization_id=org.id),
-            make_contact(status=ContactStatus.FAILED, organization_id=org.id),
-        ])
+        db_session.add_all(
+            [
+                make_contact(status=ContactStatus.SENT, organization_id=org.id),
+                make_contact(status=ContactStatus.SENT, organization_id=org.id),
+                make_contact(status=ContactStatus.FAILED, organization_id=org.id),
+            ]
+        )
         await db_session.flush()
 
         counts = dict(await repo.get_send_status_counts(org.id))
@@ -129,10 +139,12 @@ class TestGetSendStatusCounts:
         await db_session.flush()
         repo = ContactRepository(db_session)
 
-        db_session.add_all([
-            make_contact(status=ContactStatus.SENT, organization_id=org_a.id),
-            make_contact(status=ContactStatus.SENT, organization_id=org_b.id),
-        ])
+        db_session.add_all(
+            [
+                make_contact(status=ContactStatus.SENT, organization_id=org_a.id),
+                make_contact(status=ContactStatus.SENT, organization_id=org_b.id),
+            ]
+        )
         await db_session.flush()
 
         counts = dict(await repo.get_send_status_counts(org_a.id))
@@ -150,11 +162,15 @@ class TestGetLatestByRecipientAndOrg:
         await db_session.flush()
         repo = ContactRepository(db_session)
 
-        older = make_contact(recipient="+573001112233", organization_id=org.id, debtor_id=debtor.id)
+        older = make_contact(
+            recipient="+573001112233", organization_id=org.id, debtor_id=debtor.id
+        )
         db_session.add(older)
         await db_session.flush()
 
-        newer = make_contact(recipient="+573001112233", organization_id=org.id, debtor_id=debtor.id)
+        newer = make_contact(
+            recipient="+573001112233", organization_id=org.id, debtor_id=debtor.id
+        )
         db_session.add(newer)
         await db_session.flush()
         # Fuerza el orden esperado sin depender de la resolución del reloj entre inserts.
@@ -172,7 +188,9 @@ class TestGetLatestByRecipientAndOrg:
         await db_session.flush()
         repo = ContactRepository(db_session)
 
-        contact = make_contact(recipient="+573009998877", organization_id=org.id, debtor_id=None)
+        contact = make_contact(
+            recipient="+573009998877", organization_id=org.id, debtor_id=None
+        )
         db_session.add(contact)
         await db_session.flush()
 

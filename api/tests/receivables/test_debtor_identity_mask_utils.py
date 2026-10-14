@@ -1,6 +1,10 @@
 import pytest
 
-from receivables.debtors.utils.identity_mask_utils import mask_email, mask_phone, phone_compare_key
+from receivables.debtors.utils.identity_mask_utils import (
+    mask_email,
+    mask_phone,
+    phone_compare_key,
+)
 
 
 class TestMaskEmail:

@@ -19,7 +19,9 @@ from messaging.contacts.models.contact_model import ContactModel
 from messaging.results.services.reconciliation_service import ReconciliationService
 
 
-def build_service(*, sms_report_csv: str, contacts: list[ContactModel]) -> tuple[ReconciliationService, MagicMock, MagicMock]:
+def build_service(
+    *, sms_report_csv: str, contacts: list[ContactModel]
+) -> tuple[ReconciliationService, MagicMock, MagicMock]:
     sms_provider = MagicMock()
     sms_provider.get_sending_events_report = AsyncMock(return_value=sms_report_csv)
 
@@ -66,9 +68,13 @@ class TestReconcileUnknownSendingId:
         )
         # get_by_sending_id vacío: el proveedor conoce el sending_id pero en BD no
         # quedó ningún contacto asociado (p. ej. limpieza, o nunca se completó el envío).
-        service, contact_repo, result_repo = build_service(sms_report_csv=csv_text, contacts=[])
+        service, contact_repo, result_repo = build_service(
+            sms_report_csv=csv_text, contacts=[]
+        )
 
-        reconciled = await service._reconcile_sending("sending-desconocido", ChannelName.SMS)
+        reconciled = await service._reconcile_sending(
+            "sending-desconocido", ChannelName.SMS
+        )
 
         assert reconciled is False
         result_repo.create.assert_not_called()
@@ -88,7 +94,9 @@ class TestReconcileAppliesLatestEventPerRecipient:
             f"{recipient},irrelevante@example.com,HARD_BOUNCED,2026-08-19T15:00:00Z\n"
         )
         contact = make_contact(recipient=recipient, status=ContactStatus.SENT)
-        service, contact_repo, result_repo = build_service(sms_report_csv=csv_text, contacts=[contact])
+        service, contact_repo, result_repo = build_service(
+            sms_report_csv=csv_text, contacts=[contact]
+        )
 
         reconciled = await service._reconcile_sending("sending-1", ChannelName.SMS)
 
@@ -101,13 +109,13 @@ class TestReconcileAppliesLatestEventPerRecipient:
 class TestReconcileNoOpWhenStatusUnchanged:
     async def test_same_status_already_applied_does_not_update_or_create_result(self):
         recipient = "+573001112233"
-        csv_text = (
-            f"phone,email,event,createdAt\n{recipient},irrelevante@example.com,DELIVERED,2026-08-19T12:00:00Z\n"
-        )
+        csv_text = f"phone,email,event,createdAt\n{recipient},irrelevante@example.com,DELIVERED,2026-08-19T12:00:00Z\n"
         # El contacto YA está en DELIVERED -- el proveedor reporta lo mismo que ya
         # tenemos, no hay nada que cambiar.
         contact = make_contact(recipient=recipient, status=ContactStatus.DELIVERED)
-        service, contact_repo, result_repo = build_service(sms_report_csv=csv_text, contacts=[contact])
+        service, contact_repo, result_repo = build_service(
+            sms_report_csv=csv_text, contacts=[contact]
+        )
 
         reconciled = await service._reconcile_sending("sending-1", ChannelName.SMS)
 
@@ -119,7 +127,9 @@ class TestReconcileNoOpWhenStatusUnchanged:
 class TestReconcileEmptyCsv:
     async def test_blank_csv_returns_without_touching_db(self):
         contact_repo_get_called = AsyncMock()
-        service, contact_repo, result_repo = build_service(sms_report_csv="", contacts=[])
+        service, contact_repo, result_repo = build_service(
+            sms_report_csv="", contacts=[]
+        )
         contact_repo.get_by_sending_id = contact_repo_get_called
 
         reconciled = await service._reconcile_sending("sending-1", ChannelName.SMS)

@@ -13,21 +13,27 @@ from app_platform.chats.enums.chat_enums import ChatType
 from app_platform.chats.repository.chat_repository import ChatRepository
 from app_platform.chats.repository.message_repository import MessageRepository
 from app_platform.chats.services.chat_service import ChatService
-from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
+from identity.organizations.models.organization_membership_model import (
+    OrganizationMembershipModel,
+)
 from identity.organizations.repository.organization_membership_repository import (
     OrganizationMembershipRepository,
 )
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.models.role_assignment_model import RoleAssignmentModel
 from identity.users.models.user_model import UserModel
-from identity.users.repository.role_assignment_repository import RoleAssignmentRepository
+from identity.users.repository.role_assignment_repository import (
+    RoleAssignmentRepository,
+)
 from identity.users.repository.user_repository import UserRepository
 from tests.receivables.conftest import build_organization
 
 
 def build_user(**overrides) -> UserModel:
     suffix = uuid.uuid4().hex[:8]
-    defaults = dict(firstname="Test", lastname=f"User {suffix}", email=f"{suffix}@example.com")
+    defaults = dict(
+        firstname="Test", lastname=f"User {suffix}", email=f"{suffix}@example.com"
+    )
     defaults.update(overrides)
     return UserModel(**defaults)
 
@@ -54,7 +60,9 @@ async def two_orgs(db_session):
 
 async def add_org_member(db_session, user: UserModel, org_id: uuid.UUID) -> None:
     db_session.add(
-        OrganizationMembershipModel(user_id=user.id, organization_id=org_id, created_by=user.id)
+        OrganizationMembershipModel(
+            user_id=user.id, organization_id=org_id, created_by=user.id
+        )
     )
     await db_session.flush()
 
@@ -63,7 +71,11 @@ async def make_global_user(db_session, **overrides) -> UserModel:
     user = build_user(**overrides)
     db_session.add(user)
     await db_session.flush()
-    db_session.add(RoleAssignmentModel(user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+    db_session.add(
+        RoleAssignmentModel(
+            user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL
+        )
+    )
     await db_session.flush()
     return user
 
@@ -88,7 +100,9 @@ def org_session(make_user_session_factory, user_id, org_id):
 
 
 def global_session(make_user_session_factory, user_id):
-    return make_user_session_factory(user_id=user_id, role=UserRole.ADMIN, scope=UserScope.GLOBAL, orgs={})
+    return make_user_session_factory(
+        user_id=user_id, role=UserRole.ADMIN, scope=UserScope.GLOBAL, orgs={}
+    )
 
 
 class TestCreateGroupChat:
@@ -126,7 +140,9 @@ class TestCreateGroupChat:
         global_user = await make_global_user(db_session)
         session = org_session(make_user_session_factory, actor.id, org_x.id)
 
-        summary = await chat_service.create_group_chat(session, "Con soporte", [global_user.id])
+        summary = await chat_service.create_group_chat(
+            session, "Con soporte", [global_user.id]
+        )
 
         chat = await chat_service.chat_repo.get_by_id(summary.id)
         assert chat.organization_id == org_x.id
@@ -138,7 +154,9 @@ class TestCreateGroupChat:
         peer = await make_global_user(db_session)
         session = global_session(make_user_session_factory, actor.id)
 
-        summary = await chat_service.create_group_chat(session, "Staff global", [peer.id])
+        summary = await chat_service.create_group_chat(
+            session, "Staff global", [peer.id]
+        )
 
         chat = await chat_service.chat_repo.get_by_id(summary.id)
         assert chat.organization_id is None
@@ -170,7 +188,9 @@ class TestAddMember:
         member = await make_org_user(db_session, org_x.id)
         candidate = await make_org_user(db_session, org_x.id)
         owner_session = org_session(make_user_session_factory, owner.id, org_x.id)
-        summary = await chat_service.create_group_chat(owner_session, "Grupo", [member.id])
+        summary = await chat_service.create_group_chat(
+            owner_session, "Grupo", [member.id]
+        )
 
         member_session = org_session(make_user_session_factory, member.id, org_x.id)
         with pytest.raises(HTTPException) as exc:
@@ -185,7 +205,9 @@ class TestAddMember:
         peer = await make_org_user(db_session, org_x.id)
         outsider = await make_org_user(db_session, org_y.id)
         owner_session = org_session(make_user_session_factory, owner.id, org_x.id)
-        summary = await chat_service.create_group_chat(owner_session, "Grupo", [peer.id])
+        summary = await chat_service.create_group_chat(
+            owner_session, "Grupo", [peer.id]
+        )
 
         with pytest.raises(HTTPException) as exc:
             await chat_service.add_member(owner_session, summary.id, outsider.id)
@@ -203,10 +225,16 @@ class TestAddMember:
         peer = await make_global_user(db_session)
         candidate = await make_org_user(db_session, org_x.id)
         owner_session = global_session(make_user_session_factory, owner.id)
-        summary = await chat_service.create_group_chat(owner_session, "Grupo global", [peer.id])
-        assert (await chat_service.chat_repo.get_by_id(summary.id)).organization_id is None
+        summary = await chat_service.create_group_chat(
+            owner_session, "Grupo global", [peer.id]
+        )
+        assert (
+            await chat_service.chat_repo.get_by_id(summary.id)
+        ).organization_id is None
 
-        updated_summary, _recipients = await chat_service.add_member(owner_session, summary.id, candidate.id)
+        updated_summary, _recipients = await chat_service.add_member(
+            owner_session, summary.id, candidate.id
+        )
 
         chat = await chat_service.chat_repo.get_by_id(updated_summary.id)
         assert chat.organization_id == org_x.id
@@ -220,10 +248,14 @@ class TestRemoveMember:
         owner = await make_org_user(db_session, org_x.id)
         member = await make_org_user(db_session, org_x.id)
         owner_session = org_session(make_user_session_factory, owner.id, org_x.id)
-        summary = await chat_service.create_group_chat(owner_session, "Grupo", [member.id])
+        summary = await chat_service.create_group_chat(
+            owner_session, "Grupo", [member.id]
+        )
 
         member_session = org_session(make_user_session_factory, member.id, org_x.id)
-        recipients = await chat_service.remove_member(member_session, summary.id, member.id)
+        recipients = await chat_service.remove_member(
+            member_session, summary.id, member.id
+        )
         assert owner.id in recipients
 
         member_row = await chat_service.chat_repo.get_member(summary.id, member.id)
@@ -237,7 +269,9 @@ class TestRemoveMember:
         member_a = await make_org_user(db_session, org_x.id)
         member_b = await make_org_user(db_session, org_x.id)
         owner_session = org_session(make_user_session_factory, owner.id, org_x.id)
-        summary = await chat_service.create_group_chat(owner_session, "Grupo", [member_a.id, member_b.id])
+        summary = await chat_service.create_group_chat(
+            owner_session, "Grupo", [member_a.id, member_b.id]
+        )
 
         member_a_session = org_session(make_user_session_factory, member_a.id, org_x.id)
         with pytest.raises(HTTPException) as exc:

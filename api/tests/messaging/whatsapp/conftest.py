@@ -14,18 +14,31 @@ from typing import Any
 import pytest
 import pytest_asyncio
 
-from identity.organizations.enums.organization_enums import EntitySectors, VerificationStatus
+from identity.organizations.enums.organization_enums import (
+    EntitySectors,
+    VerificationStatus,
+)
 from identity.organizations.models.organization_model import OrganizationModel
 from messaging.channels.enums.channel_enums import ChannelName
 from messaging.templates.enums.template_enums import TemplateStatus
 from messaging.templates.models.template_model import TemplateModel
-from messaging.whatsapp.enums.whatsapp_enums import ChannelRequestStatus, MessageDirection, WhatsAppTemplateCategory
+from messaging.whatsapp.enums.whatsapp_enums import (
+    ChannelRequestStatus,
+    MessageDirection,
+    WhatsAppTemplateCategory,
+)
 from messaging.whatsapp.models.whatsapp_chat_model import WhatsAppChatModel
-from messaging.whatsapp.models.whatsapp_channel_request_model import WhatsAppChannelRequestModel
+from messaging.whatsapp.models.whatsapp_channel_request_model import (
+    WhatsAppChannelRequestModel,
+)
 from messaging.whatsapp.models.whatsapp_message_model import WhatsAppMessageModel
-from messaging.whatsapp.models.whatsapp_org_credentials_model import WhatsAppOrgCredentialsModel
+from messaging.whatsapp.models.whatsapp_org_credentials_model import (
+    WhatsAppOrgCredentialsModel,
+)
 from messaging.whatsapp.models.whatsapp_send_error_model import WhatsAppSendErrorModel
-from messaging.whatsapp.models.whatsapp_template_data_model import WhatsAppTemplateDataModel
+from messaging.whatsapp.models.whatsapp_template_data_model import (
+    WhatsAppTemplateDataModel,
+)
 from receivables.portfolios.models.portfolio_model import PortfolioModel
 from tests.factories import get_user_by_email, register_payload, unique_phone
 
@@ -48,7 +61,9 @@ async def real_org(db_session) -> OrganizationModel:
     return org
 
 
-def build_credentials(organization_id: uuid.UUID, **overrides: Any) -> WhatsAppOrgCredentialsModel:
+def build_credentials(
+    organization_id: uuid.UUID, **overrides: Any
+) -> WhatsAppOrgCredentialsModel:
     defaults = dict(
         organization_id=organization_id,
         phone_number_id=str(uuid.uuid4().int)[:15],
@@ -83,7 +98,9 @@ def build_message(chat_id: uuid.UUID, **overrides: Any) -> WhatsAppMessageModel:
     return WhatsAppMessageModel(**defaults)
 
 
-def build_channel_request(organization_id: uuid.UUID, **overrides: Any) -> WhatsAppChannelRequestModel:
+def build_channel_request(
+    organization_id: uuid.UUID, **overrides: Any
+) -> WhatsAppChannelRequestModel:
     defaults = dict(
         organization_id=organization_id,
         phone=unique_phone(),
@@ -116,7 +133,9 @@ def build_template(portfolio_id: uuid.UUID, **overrides: Any) -> TemplateModel:
     return TemplateModel(**defaults)
 
 
-def build_template_data(template_id: uuid.UUID, **overrides: Any) -> WhatsAppTemplateDataModel:
+def build_template_data(
+    template_id: uuid.UUID, **overrides: Any
+) -> WhatsAppTemplateDataModel:
     defaults = dict(
         template_id=template_id,
         meta_template_id=str(uuid.uuid4().int)[:15],

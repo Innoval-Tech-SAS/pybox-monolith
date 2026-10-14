@@ -27,13 +27,17 @@ from receivables.reports.schemas.report_schemas import ReportExecuteRequest
 
 async def _notifications_for(db_session, user_id: uuid.UUID) -> list[NotificationModel]:
     result = await db_session.execute(
-        select(NotificationModel).where(NotificationModel.user_id == user_id).order_by(NotificationModel.created_at.desc())
+        select(NotificationModel)
+        .where(NotificationModel.user_id == user_id)
+        .order_by(NotificationModel.created_at.desc())
     )
     return list(result.scalars().all())
 
 
 class TestExecuteAndNotify:
-    async def test_success_creates_success_notification(self, client, db_session, real_admin_user_id):
+    async def test_success_creates_success_notification(
+        self, client, db_session, real_admin_user_id
+    ):
         report_id = uuid.uuid4()
         org_id = uuid.uuid4()
         fake_result = {
@@ -46,9 +50,15 @@ class TestExecuteAndNotify:
             "document_id": uuid.uuid4(),
         }
         with patch(
-            "receivables.reports.background_tasks.ReportService.execute", AsyncMock(return_value=fake_result)
+            "receivables.reports.background_tasks.ReportService.execute",
+            AsyncMock(return_value=fake_result),
         ):
-            await execute_and_notify(report_id, org_id, ReportExecuteRequest(mode="audit"), real_admin_user_id)
+            await execute_and_notify(
+                report_id,
+                org_id,
+                ReportExecuteRequest(mode="audit"),
+                real_admin_user_id,
+            )
 
         notifications = await _notifications_for(db_session, real_admin_user_id)
         assert len(notifications) == 1
@@ -56,28 +66,42 @@ class TestExecuteAndNotify:
         assert notifications[0].notif_type == "success"
         assert "reporte.csv" in notifications[0].body
 
-    async def test_http_exception_creates_error_notification(self, client, db_session, real_admin_user_id):
+    async def test_http_exception_creates_error_notification(
+        self, client, db_session, real_admin_user_id
+    ):
         report_id = uuid.uuid4()
         org_id = uuid.uuid4()
         with patch(
             "receivables.reports.background_tasks.ReportService.execute",
             AsyncMock(side_effect=HTTPException(422, "config inválida")),
         ):
-            await execute_and_notify(report_id, org_id, ReportExecuteRequest(mode="audit"), real_admin_user_id)
+            await execute_and_notify(
+                report_id,
+                org_id,
+                ReportExecuteRequest(mode="audit"),
+                real_admin_user_id,
+            )
 
         notifications = await _notifications_for(db_session, real_admin_user_id)
         assert len(notifications) == 1
         assert notifications[0].title == "Error al generar reporte"
         assert notifications[0].notif_type == "error"
 
-    async def test_generic_exception_creates_error_notification(self, client, db_session, real_admin_user_id):
+    async def test_generic_exception_creates_error_notification(
+        self, client, db_session, real_admin_user_id
+    ):
         report_id = uuid.uuid4()
         org_id = uuid.uuid4()
         with patch(
             "receivables.reports.background_tasks.ReportService.execute",
             AsyncMock(side_effect=ValueError("boom inesperado")),
         ):
-            await execute_and_notify(report_id, org_id, ReportExecuteRequest(mode="audit"), real_admin_user_id)
+            await execute_and_notify(
+                report_id,
+                org_id,
+                ReportExecuteRequest(mode="audit"),
+                real_admin_user_id,
+            )
 
         notifications = await _notifications_for(db_session, real_admin_user_id)
         assert len(notifications) == 1
@@ -94,9 +118,21 @@ class TestExecuteAndNotify:
         ForeignKeyViolationError en vez de terminar limpio."""
         with patch(
             "receivables.reports.background_tasks.ReportService.execute",
-            AsyncMock(return_value={"success": True, "rows": 0, "file_name": "x.csv", "document_id": None}),
+            AsyncMock(
+                return_value={
+                    "success": True,
+                    "rows": 0,
+                    "file_name": "x.csv",
+                    "document_id": None,
+                }
+            ),
         ):
-            await execute_and_notify(uuid.uuid4(), uuid.uuid4(), ReportExecuteRequest(mode="audit"), real_admin_user_id)
+            await execute_and_notify(
+                uuid.uuid4(),
+                uuid.uuid4(),
+                ReportExecuteRequest(mode="audit"),
+                real_admin_user_id,
+            )
 
         notifications = await _notifications_for(db_session, real_admin_user_id)
         assert len(notifications) == 1

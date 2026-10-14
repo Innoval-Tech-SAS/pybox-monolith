@@ -76,7 +76,9 @@ class TestSanitizeTableName:
 
 class TestEncryptedOutputColumns:
     def test_single_table_uses_bare_column_name(self):
-        assert encrypted_output_columns([{"name": "deudores"}], prefixed=False) == {"numero_documento"}
+        assert encrypted_output_columns([{"name": "deudores"}], prefixed=False) == {
+            "numero_documento"
+        }
 
     def test_join_uses_alias_prefixed_name_too(self):
         outputs = encrypted_output_columns(
@@ -85,13 +87,26 @@ class TestEncryptedOutputColumns:
         assert outputs == {"numero_documento", "d_numero_documento"}
 
     def test_tables_without_encrypted_columns_yield_nothing(self):
-        assert encrypted_output_columns([{"name": "creditos"}, {"name": "pagos"}], prefixed=True) == set()
+        assert (
+            encrypted_output_columns(
+                [{"name": "creditos"}, {"name": "pagos"}], prefixed=True
+            )
+            == set()
+        )
 
     def test_group_by_output_alias_of_encrypted_column(self):
         alias_map = {"public.deudores": "d", "public.creditos": "c"}
         group_by = [
-            {"table_alias": "d", "column": "numero_documento", "output_alias": "documento"},
-            {"table_alias": "d", "column": "nombre_completo", "output_alias": "nombre_completo"},
+            {
+                "table_alias": "d",
+                "column": "numero_documento",
+                "output_alias": "documento",
+            },
+            {
+                "table_alias": "d",
+                "column": "nombre_completo",
+                "output_alias": "nombre_completo",
+            },
             {"table_alias": "c", "column": "numero_documento", "output_alias": "otro"},
         ]
         assert encrypted_group_outputs(alias_map, group_by) == {"documento"}
@@ -160,10 +175,16 @@ class TestBuildSqlCondition:
             build_sql_condition("t.fecha", "between", ["2024-01-01"])
 
     def test_like_contains(self):
-        assert build_sql_condition("t.nombre", "like", "%Colombia%") == "t.nombre LIKE '%Colombia%'"
+        assert (
+            build_sql_condition("t.nombre", "like", "%Colombia%")
+            == "t.nombre LIKE '%Colombia%'"
+        )
 
     def test_ilike_contains_case_insensitive(self):
-        assert build_sql_condition("t.nombre", "ilike", "%colombia%") == "t.nombre ILIKE '%colombia%'"
+        assert (
+            build_sql_condition("t.nombre", "ilike", "%colombia%")
+            == "t.nombre ILIKE '%colombia%'"
+        )
 
     def test_is_null(self):
         assert build_sql_condition("t.col", "is_null", None) == "t.col IS NULL"
@@ -191,7 +212,9 @@ class TestBuildWhereClauses:
         assert build_where_clauses([], "t") == ""
 
     def test_single_equality_filter(self):
-        clause = build_where_clauses([{"column": "codigo", "op": "=", "value": "CO"}], "t")
+        clause = build_where_clauses(
+            [{"column": "codigo", "op": "=", "value": "CO"}], "t"
+        )
         assert clause == "t.codigo = 'CO'"
 
     def test_multiple_filters_joined_with_and(self):
@@ -205,56 +228,88 @@ class TestBuildWhereClauses:
         assert clause == "t.codigo = 'CO' AND t.activo = TRUE"
 
     def test_in_filter(self):
-        clause = build_where_clauses([{"column": "codigo", "op": "in", "value": ["CO", "MX"]}], "t")
+        clause = build_where_clauses(
+            [{"column": "codigo", "op": "in", "value": ["CO", "MX"]}], "t"
+        )
         assert clause == "t.codigo IN ('CO', 'MX')"
 
     def test_numeric_looking_string_stays_quoted(self):
         # Regresión: "6168564922" se volvía int vía json.loads y `varchar = bigint` reventaba.
-        clause = build_where_clauses([{"column": "numero_documento", "op": "=", "value": "6168564922"}], "t")
+        clause = build_where_clauses(
+            [{"column": "numero_documento", "op": "=", "value": "6168564922"}], "t"
+        )
         assert clause == "t.numero_documento = '6168564922'"
 
     def test_json_list_string_is_still_parsed_for_in(self):
-        clause = build_where_clauses([{"column": "codigo", "op": "in", "value": '["CO", "MX"]'}], "t")
+        clause = build_where_clauses(
+            [{"column": "codigo", "op": "in", "value": '["CO", "MX"]'}], "t"
+        )
         assert clause == "t.codigo IN ('CO', 'MX')"
 
     def test_debtor_document_filter_uses_hash_column(self):
         # numero_documento va cifrado con nonce aleatorio: solo se puede buscar por el hash.
         clause = build_where_clauses(
-            [{"column": "numero_documento", "op": "=", "value": "6168564922"}], "d", "public.deudores"
+            [{"column": "numero_documento", "op": "=", "value": "6168564922"}],
+            "d",
+            "public.deudores",
         )
-        assert clause == f"d.numero_documento_hash = '{encrypt_service.hash_document('6168564922')}'"
+        assert (
+            clause
+            == f"d.numero_documento_hash = '{encrypt_service.hash_document('6168564922')}'"
+        )
 
     def test_debtor_document_filter_in_hashes_every_value(self):
         clause = build_where_clauses(
-            [{"column": "numero_documento", "op": "in", "value": ["111", " 222 "]}], "d", "public.deudores"
+            [{"column": "numero_documento", "op": "in", "value": ["111", " 222 "]}],
+            "d",
+            "public.deudores",
         )
-        expected = ", ".join(f"'{encrypt_service.hash_document(v)}'" for v in ("111", "222"))
+        expected = ", ".join(
+            f"'{encrypt_service.hash_document(v)}'" for v in ("111", "222")
+        )
         assert clause == f"d.numero_documento_hash IN ({expected})"
 
     def test_debtor_document_filter_rejects_pattern_operators(self):
         with pytest.raises(ValueError, match="solo se puede filtrar por igualdad"):
             build_where_clauses(
-                [{"column": "numero_documento", "op": "like", "value": "616%"}], "d", "public.deudores"
+                [{"column": "numero_documento", "op": "like", "value": "616%"}],
+                "d",
+                "public.deudores",
             )
 
     def test_debtor_document_filter_rejects_empty_value(self):
         with pytest.raises(ValueError, match="requiere un valor"):
-            build_where_clauses([{"column": "numero_documento", "op": "=", "value": ""}], "d", "public.deudores")
+            build_where_clauses(
+                [{"column": "numero_documento", "op": "=", "value": ""}],
+                "d",
+                "public.deudores",
+            )
 
     def test_same_column_name_on_other_table_is_not_rewritten(self):
         clause = build_where_clauses(
-            [{"column": "numero_documento", "op": "=", "value": "123"}], "c", "public.contactos"
+            [{"column": "numero_documento", "op": "=", "value": "123"}],
+            "c",
+            "public.contactos",
         )
         assert clause == "c.numero_documento = '123'"
 
     def test_between_filter_date_range(self):
         clause = build_where_clauses(
-            [{"column": "fecha", "op": "between", "value": ["2024-01-01", "2024-12-31"]}], "t"
+            [
+                {
+                    "column": "fecha",
+                    "op": "between",
+                    "value": ["2024-01-01", "2024-12-31"],
+                }
+            ],
+            "t",
         )
         assert clause == "t.fecha BETWEEN '2024-01-01' AND '2024-12-31'"
 
     def test_contains_filter_via_ilike(self):
-        clause = build_where_clauses([{"column": "nombre", "op": "ilike", "value": "%bogo%"}], "t")
+        clause = build_where_clauses(
+            [{"column": "nombre", "op": "ilike", "value": "%bogo%"}], "t"
+        )
         assert clause == "t.nombre ILIKE '%bogo%'"
 
     def test_invalid_column_rejected(self):
@@ -263,7 +318,9 @@ class TestBuildWhereClauses:
 
     def test_invalid_operator_rejected(self):
         with pytest.raises(ValueError, match="Operador inválido"):
-            build_where_clauses([{"column": "codigo", "op": "; DROP TABLE x", "value": 1}], "t")
+            build_where_clauses(
+                [{"column": "codigo", "op": "; DROP TABLE x", "value": 1}], "t"
+            )
 
 
 class TestBuildTenantScopeCondition:
@@ -316,7 +373,10 @@ class TestResolveAlias:
             resolve_alias(tables, None)
 
     def test_resolve_by_alias(self):
-        tables = [{"name": "creditos", "alias": "c"}, {"name": "deudores", "alias": "d"}]
+        tables = [
+            {"name": "creditos", "alias": "c"},
+            {"name": "deudores", "alias": "d"},
+        ]
         assert resolve_alias(tables, "d") == "d"
 
     def test_unknown_reference_rejected(self):
@@ -364,7 +424,9 @@ class TestNormalizeAggregateSpecs:
     def test_star_with_non_count_function_rejected(self):
         tables = [{"name": "creditos", "alias": "c"}]
         with pytest.raises(ValueError, match="Solo COUNT"):
-            normalize_aggregate_specs(tables, [], [{"function": "sum", "column": "*"}], [], [])
+            normalize_aggregate_specs(
+                tables, [], [{"function": "sum", "column": "*"}], [], []
+            )
 
     def test_no_aggregations_rejected(self):
         tables = [{"name": "creditos", "alias": "c"}]

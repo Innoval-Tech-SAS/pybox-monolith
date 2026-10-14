@@ -16,6 +16,8 @@ export const useUploadClosureAttachments = () => {
         body: formData,
       });
     } catch {
+      // Silencioso a propósito: el ticket ya se cerró, los adjuntos son
+      // best-effort y no deben bloquear el flujo si fallan.
     } finally {
       setLoading(false);
     }

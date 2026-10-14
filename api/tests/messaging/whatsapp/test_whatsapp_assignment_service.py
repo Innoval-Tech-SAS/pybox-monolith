@@ -9,11 +9,17 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 from messaging.whatsapp.models.whatsapp_chat_model import WhatsAppChatModel
-from messaging.whatsapp.services.whatsapp_assignment_service import WhatsAppAssignmentService
+from messaging.whatsapp.services.whatsapp_assignment_service import (
+    WhatsAppAssignmentService,
+)
 
 
 def build_service(**overrides) -> tuple[WhatsAppAssignmentService, dict]:
-    mocks = dict(chat_repo=MagicMock(), permission_repo=MagicMock(), portfolio_access_repo=MagicMock())
+    mocks = dict(
+        chat_repo=MagicMock(),
+        permission_repo=MagicMock(),
+        portfolio_access_repo=MagicMock(),
+    )
     mocks.update(overrides)
     return WhatsAppAssignmentService(**mocks), mocks
 
@@ -22,7 +28,10 @@ class TestAssign:
     async def test_chat_without_portfolio_is_never_assigned(self):
         organization_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000", portfolio_id=None
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
+            portfolio_id=None,
         )
         service, mocks = build_service()
         mocks["permission_repo"].get_user_ids_with_permission_in_org = AsyncMock(
@@ -36,14 +45,19 @@ class TestAssign:
         assert result.assigned_user_id is None
         # candidate_ids se vacía explícitamente sin portafolio -- nunca se consulta
         # accesos_usuario_portafolio.
-        mocks["portfolio_access_repo"].get_active_user_ids_for_portfolio.assert_not_called()
+        mocks[
+            "portfolio_access_repo"
+        ].get_active_user_ids_for_portfolio.assert_not_called()
         mocks["chat_repo"].get_least_loaded_user.assert_awaited_once_with([])
 
     async def test_candidates_without_portfolio_access_are_filtered_out(self):
         organization_id = uuid.uuid4()
         portfolio_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000", portfolio_id=portfolio_id
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
+            portfolio_id=portfolio_id,
         )
         agent_with_access = uuid.uuid4()
         agent_without_access = uuid.uuid4()
@@ -54,23 +68,34 @@ class TestAssign:
         mocks["portfolio_access_repo"].get_active_user_ids_for_portfolio = AsyncMock(
             return_value=[agent_with_access]
         )
-        mocks["chat_repo"].get_least_loaded_user = AsyncMock(return_value=agent_with_access)
+        mocks["chat_repo"].get_least_loaded_user = AsyncMock(
+            return_value=agent_with_access
+        )
         mocks["chat_repo"].update = AsyncMock(side_effect=lambda c: c)
 
         result = await service.assign(chat, organization_id)
 
         assert result.assigned_user_id == agent_with_access
-        mocks["chat_repo"].get_least_loaded_user.assert_awaited_once_with([agent_with_access])
+        mocks["chat_repo"].get_least_loaded_user.assert_awaited_once_with(
+            [agent_with_access]
+        )
 
     async def test_no_eligible_candidates_leaves_chat_unassigned(self):
         organization_id = uuid.uuid4()
         portfolio_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000", portfolio_id=portfolio_id
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
+            portfolio_id=portfolio_id,
         )
         service, mocks = build_service()
-        mocks["permission_repo"].get_user_ids_with_permission_in_org = AsyncMock(return_value=[uuid.uuid4()])
-        mocks["portfolio_access_repo"].get_active_user_ids_for_portfolio = AsyncMock(return_value=[])
+        mocks["permission_repo"].get_user_ids_with_permission_in_org = AsyncMock(
+            return_value=[uuid.uuid4()]
+        )
+        mocks["portfolio_access_repo"].get_active_user_ids_for_portfolio = AsyncMock(
+            return_value=[]
+        )
         mocks["chat_repo"].get_least_loaded_user = AsyncMock(return_value=None)
         mocks["chat_repo"].update = AsyncMock(side_effect=lambda c: c)
 
@@ -83,11 +108,18 @@ class TestAssign:
         portfolio_id = uuid.uuid4()
         agent_id = uuid.uuid4()
         chat = WhatsAppChatModel(
-            id=uuid.uuid4(), organization_id=organization_id, phone="573000000000", portfolio_id=portfolio_id
+            id=uuid.uuid4(),
+            organization_id=organization_id,
+            phone="573000000000",
+            portfolio_id=portfolio_id,
         )
         service, mocks = build_service()
-        mocks["permission_repo"].get_user_ids_with_permission_in_org = AsyncMock(return_value=[agent_id])
-        mocks["portfolio_access_repo"].get_active_user_ids_for_portfolio = AsyncMock(return_value=[agent_id])
+        mocks["permission_repo"].get_user_ids_with_permission_in_org = AsyncMock(
+            return_value=[agent_id]
+        )
+        mocks["portfolio_access_repo"].get_active_user_ids_for_portfolio = AsyncMock(
+            return_value=[agent_id]
+        )
         mocks["chat_repo"].get_least_loaded_user = AsyncMock(return_value=agent_id)
         mocks["chat_repo"].update = AsyncMock(side_effect=lambda c: c)
 

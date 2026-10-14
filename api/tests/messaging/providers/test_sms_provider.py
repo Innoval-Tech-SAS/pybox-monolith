@@ -21,9 +21,13 @@ import httpx
 from messaging.providers.sms_provider import NRS360SmsProvider
 
 
-def make_response(status_code: int = 200, json_body=None, text_body: str = "") -> httpx.Response:
+def make_response(
+    status_code: int = 200, json_body=None, text_body: str = ""
+) -> httpx.Response:
     request = httpx.Request("POST", "https://dashboard.360nrs.com/api/rest/sms")
-    content = json.dumps(json_body).encode() if json_body is not None else text_body.encode()
+    content = (
+        json.dumps(json_body).encode() if json_body is not None else text_body.encode()
+    )
     return httpx.Response(status_code=status_code, content=content, request=request)
 
 
@@ -31,13 +35,18 @@ class TestSendSmsSuccess:
     async def test_returns_ids_by_recipient_and_sending_id(self):
         provider = NRS360SmsProvider()
         response = make_response(
-            json_body={"result": [{"to": "+573001112233", "id": "ext-1"}], "sendingId": 999}
+            json_body={
+                "result": [{"to": "+573001112233", "id": "ext-1"}],
+                "sendingId": 999,
+            }
         )
         mock_http = AsyncMock()
         mock_http.request = AsyncMock(return_value=response)
 
         with patch.object(provider, "_http", mock_http):
-            ok, ids_by_recipient, sending_id = await provider.send_sms("hola", ["+573001112233"])
+            ok, ids_by_recipient, sending_id = await provider.send_sms(
+                "hola", ["+573001112233"]
+            )
 
         assert ok is True
         assert ids_by_recipient == {"+573001112233": "ext-1"}
@@ -66,7 +75,11 @@ class TestSendSmsPayload:
         mock_http.request = AsyncMock(return_value=response)
 
         with patch.object(provider, "_http", mock_http):
-            await provider.send_sms("mensaje corto sin acentos", ["+573001112233"], campaign_name="mi-campana")
+            await provider.send_sms(
+                "mensaje corto sin acentos",
+                ["+573001112233"],
+                campaign_name="mi-campana",
+            )
 
         _, kwargs = mock_http.request.call_args
         payload = kwargs["json"]
@@ -122,7 +135,9 @@ class TestSendSmsFailureModes:
         mock_http.request = AsyncMock(return_value=response)
 
         with patch.object(provider, "_http", mock_http):
-            ok, ids_by_recipient, sending_id = await provider.send_sms("hola", ["+573001112233"])
+            ok, ids_by_recipient, sending_id = await provider.send_sms(
+                "hola", ["+573001112233"]
+            )
 
         assert ok is False
         assert ids_by_recipient is None
@@ -134,7 +149,9 @@ class TestSendSmsFailureModes:
         mock_http.request = AsyncMock(side_effect=RuntimeError("conexión reseteada"))
 
         with patch.object(provider, "_http", mock_http):
-            ok, ids_by_recipient, sending_id = await provider.send_sms("hola", ["+573001112233"])
+            ok, ids_by_recipient, sending_id = await provider.send_sms(
+                "hola", ["+573001112233"]
+            )
 
         assert ok is False
         assert ids_by_recipient is None

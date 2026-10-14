@@ -49,7 +49,9 @@ class TestAddIsolatedFailureMidChunk:
         repo = MagicMock()
         # La 2a llamada explota (p. ej. dato demasiado largo); 1a y 3a deben seguir
         # ejecutándose -- ese es justo el propósito del savepoint por contacto.
-        repo.add_isolated = AsyncMock(side_effect=[None, RuntimeError("valor demasiado largo"), None])
+        repo.add_isolated = AsyncMock(
+            side_effect=[None, RuntimeError("valor demasiado largo"), None]
+        )
 
         batch_sender = BatchSender(dispatcher, repo)
         inputs = [make_send_input() for _ in range(3)]
@@ -77,7 +79,8 @@ class TestSendWithRetryBackoff:
         batch_sender = BatchSender(dispatcher, repo)
 
         with patch(
-            "messaging.campaigns.services.batch_sender.asyncio.sleep", new_callable=AsyncMock
+            "messaging.campaigns.services.batch_sender.asyncio.sleep",
+            new_callable=AsyncMock,
         ) as mock_sleep:
             ok, err, ids_by_recipient, sending_id = await batch_sender._send_with_retry(
                 ChannelName.SMS, ["+573001112233"], "hola"
@@ -109,7 +112,9 @@ class TestSendChunkPhoneNormalization:
         batch_sender = BatchSender(dispatcher, repo)
         chunk = [make_send_input(recipient="3001234567")]
 
-        await batch_sender._send_chunk(chunk, ChannelName.SMS, sender.sends_per_recipient, phone_prefix="57")
+        await batch_sender._send_chunk(
+            chunk, ChannelName.SMS, sender.sends_per_recipient, phone_prefix="57"
+        )
 
         assert chunk[0].recipient == "573001234567"
 
@@ -124,7 +129,9 @@ class TestSendChunkPhoneNormalization:
         batch_sender = BatchSender(dispatcher, repo)
         chunk = [make_send_input(recipient="cliente@example.com")]
 
-        await batch_sender._send_chunk(chunk, ChannelName.EMAIL, sender.sends_per_recipient, phone_prefix="57")
+        await batch_sender._send_chunk(
+            chunk, ChannelName.EMAIL, sender.sends_per_recipient, phone_prefix="57"
+        )
 
         assert chunk[0].recipient == "cliente@example.com"
 
@@ -139,13 +146,19 @@ class TestProcessBatchChunkExceptionIsolation:
         batch_sender = BatchSender(dispatcher, repo)
         # BATCH_SIZE items forman el primer chunk completo; 5 más arman un segundo chunk.
         campaign_id = uuid.uuid4()
-        first_chunk_inputs = [make_send_input(campaign_id=campaign_id) for _ in range(BATCH_SIZE)]
-        second_chunk_inputs = [make_send_input(campaign_id=campaign_id) for _ in range(5)]
+        first_chunk_inputs = [
+            make_send_input(campaign_id=campaign_id) for _ in range(BATCH_SIZE)
+        ]
+        second_chunk_inputs = [
+            make_send_input(campaign_id=campaign_id) for _ in range(5)
+        ]
         inputs = first_chunk_inputs + second_chunk_inputs
 
         # El primer chunk revienta con una excepción no controlada; el segundo debe
         # procesarse igual (no debe detener el resto del envío).
-        batch_sender._send_chunk = AsyncMock(side_effect=[RuntimeError("chunk roto"), (5, 0)])
+        batch_sender._send_chunk = AsyncMock(
+            side_effect=[RuntimeError("chunk roto"), (5, 0)]
+        )
 
         stats = await batch_sender.process_batch(inputs, ChannelName.SMS)
 
@@ -177,10 +190,14 @@ class TestPersistContactsBulk:
 
         assert ok_count == 10
         assert fail_count == 0
-        assert repo.add_many_isolated.call_count == 1  # 1 llamada bulk, no 10 add_isolated
+        assert (
+            repo.add_many_isolated.call_count == 1
+        )  # 1 llamada bulk, no 10 add_isolated
         repo.add_isolated.assert_not_called()
 
-    async def test_send_bulk_persisted_content_matches_provider_result_per_recipient(self):
+    async def test_send_bulk_persisted_content_matches_provider_result_per_recipient(
+        self,
+    ):
         dispatcher = MagicMock()
         repo = MagicMock()
         repo.add_many_isolated = AsyncMock()
@@ -189,7 +206,11 @@ class TestPersistContactsBulk:
         chunk = [make_send_input() for _ in range(3)]
         recipients = [inp.recipient for inp in chunk]
         dispatcher.send = AsyncMock(
-            return_value=(True, {r: f"ext-{i}" for i, r in enumerate(recipients)}, "sending-shared")
+            return_value=(
+                True,
+                {r: f"ext-{i}" for i, r in enumerate(recipients)},
+                "sending-shared",
+            )
         )
 
         await batch_sender._send_bulk(chunk, ChannelName.SMS)
@@ -204,11 +225,14 @@ class TestPersistContactsBulk:
     async def test_send_bulk_falls_back_to_add_isolated_when_bulk_insert_fails(self):
         """El INSERT multi-fila falla (p. ej. un dato demasiado largo en una sola fila
         del chunk) -> cae al camino viejo, fila por fila, SOLO para este chunk. Nunca
-        se pierde la garantía de que un contacto inválido no tumbe el resto del envío."""
+        se pierde la garantía de que un contacto inválido no tumbe el resto del envío.
+        """
         dispatcher = MagicMock()
         dispatcher.send = AsyncMock(return_value=(True, {}, "sending-1"))
         repo = MagicMock()
-        repo.add_many_isolated = AsyncMock(side_effect=RuntimeError("valor demasiado largo"))
+        repo.add_many_isolated = AsyncMock(
+            side_effect=RuntimeError("valor demasiado largo")
+        )
         repo.add_isolated = AsyncMock()
 
         batch_sender = BatchSender(dispatcher, repo)

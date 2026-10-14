@@ -6,7 +6,11 @@ el proveedor real; si nunca lo antepone, el mensaje no llega.
 
 import pytest
 
-from messaging.campaigns.utils.provider_utils import is_phone_channel, normalize_phone, provider_for_channel
+from messaging.campaigns.utils.provider_utils import (
+    is_phone_channel,
+    normalize_phone,
+    provider_for_channel,
+)
 from messaging.channels.enums.channel_enums import ChannelName
 from messaging.contacts.enums.contact_enums import ProviderType
 
@@ -19,16 +23,19 @@ class TestProviderForChannel:
     def test_whatsapp_maps_to_whatsapp_cloud(self):
         assert provider_for_channel(ChannelName.WHATSAPP) == ProviderType.WHATSAPP_CLOUD
 
-    @pytest.mark.parametrize("channel", [ChannelName.CALL, ChannelName.CALL_IA])
-    def test_voice_channels_have_no_provider(self, channel):
-        # NRS360_CHANNELS solo cubre SMS/EMAIL -- las llamadas no tienen proveedor
-        # mapeado en esta función (se resuelven por otra vía en el dispatcher).
-        assert provider_for_channel(channel) is None
+    def test_call_maps_to_helena(self):
+        assert provider_for_channel(ChannelName.CALL) == ProviderType.HELENA
+
+    def test_call_ia_has_no_provider(self):
+        # CALL_IA no tiene proveedor mapeado en esta función (se resuelve por otra
+        # vía en el dispatcher).
+        assert provider_for_channel(ChannelName.CALL_IA) is None
 
 
 class TestIsPhoneChannel:
     @pytest.mark.parametrize(
-        "channel", [ChannelName.SMS, ChannelName.WHATSAPP, ChannelName.CALL, ChannelName.CALL_IA]
+        "channel",
+        [ChannelName.SMS, ChannelName.WHATSAPP, ChannelName.CALL, ChannelName.CALL_IA],
     )
     def test_phone_channels_return_true(self, channel):
         assert is_phone_channel(channel) is True

@@ -5,7 +5,9 @@ meses sin facturacion) no deben reventar con datos vacios ni dar division por ce
 from decimal import Decimal
 from unittest.mock import AsyncMock
 
-from billing.billing_dashboard.services.billing_dashboard_service import BillingDashboardService
+from billing.billing_dashboard.services.billing_dashboard_service import (
+    BillingDashboardService,
+)
 from billing.invoices.enums.invoice_enums import InvoiceStatus, PaymentProvider
 
 
@@ -34,7 +36,9 @@ class TestGetSummary:
         assert result.billed_organizations_count == 4
         assert result.collection_rate == 75.0
 
-    async def test_no_invoices_in_period_gives_zero_collection_rate_not_division_error(self):
+    async def test_no_invoices_in_period_gives_zero_collection_rate_not_division_error(
+        self,
+    ):
         service, invoice_repo = make_service()
         invoice_repo.get_revenue_for_period = AsyncMock(return_value=Decimal("0"))
         invoice_repo.get_overdue_amount = AsyncMock(return_value=Decimal("0"))
@@ -95,7 +99,10 @@ class TestGetRevenueByChannel:
         result = await service.get_revenue_by_channel()
 
         assert [item.channel_name for item in result.items] == ["SMS", "Email"]
-        assert [item.total_amount for item in result.items] == [Decimal("300"), Decimal("100")]
+        assert [item.total_amount for item in result.items] == [
+            Decimal("300"),
+            Decimal("100"),
+        ]
 
     async def test_window_is_twelve_months_back(self):
         service, invoice_repo = make_service()
@@ -103,7 +110,9 @@ class TestGetRevenueByChannel:
 
         await service.get_revenue_by_channel()
 
-        (since_year, since_month), _kwargs = invoice_repo.get_revenue_by_channel.await_args
+        (since_year, since_month), _kwargs = (
+            invoice_repo.get_revenue_by_channel.await_args
+        )
         # 12 meses hacia atras desde el mes actual: la diferencia de meses totales debe
         # ser exactamente 11 (incluye el mes actual como el 12avo).
         from datetime import datetime, timezone
@@ -117,13 +126,22 @@ class TestGetRevenueByProvider:
     async def test_maps_repository_rows_to_items(self):
         service, invoice_repo = make_service()
         invoice_repo.get_revenue_by_provider = AsyncMock(
-            return_value=[(PaymentProvider.BOLD, Decimal("400")), (PaymentProvider.MERCADO_PAGO, Decimal("120"))]
+            return_value=[
+                (PaymentProvider.BOLD, Decimal("400")),
+                (PaymentProvider.MERCADO_PAGO, Decimal("120")),
+            ]
         )
 
         result = await service.get_revenue_by_provider()
 
-        assert [item.provider for item in result.items] == [PaymentProvider.BOLD, PaymentProvider.MERCADO_PAGO]
-        assert [item.total_amount for item in result.items] == [Decimal("400"), Decimal("120")]
+        assert [item.provider for item in result.items] == [
+            PaymentProvider.BOLD,
+            PaymentProvider.MERCADO_PAGO,
+        ]
+        assert [item.total_amount for item in result.items] == [
+            Decimal("400"),
+            Decimal("120"),
+        ]
 
 
 class TestGetMonthlyRevenue:
@@ -132,7 +150,9 @@ class TestGetMonthlyRevenue:
 
         service, invoice_repo = make_service()
         now = datetime.now(timezone.utc)
-        invoice_repo.get_monthly_revenue = AsyncMock(return_value=[(now.year, now.month, Decimal("999"))])
+        invoice_repo.get_monthly_revenue = AsyncMock(
+            return_value=[(now.year, now.month, Decimal("999"))]
+        )
 
         result = await service.get_monthly_revenue()
 
@@ -148,7 +168,9 @@ class TestGetMonthlyRevenue:
         from datetime import datetime, timezone
 
         service, invoice_repo = make_service()
-        invoice_repo.get_monthly_revenue = AsyncMock(return_value=[(2026, 3, Decimal("10"))])
+        invoice_repo.get_monthly_revenue = AsyncMock(
+            return_value=[(2026, 3, Decimal("10"))]
+        )
 
         result = await service.get_monthly_revenue()
 

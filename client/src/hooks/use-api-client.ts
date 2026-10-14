@@ -55,6 +55,10 @@ export const useApiClient = () => {
   const navigate = useNavigate();
 
   const apiClient = useCallback(
+    // El default `any` es deliberado: cambiarlo a `unknown` rompería las ~190
+    // llamadas existentes que no pasan `<T>` explícito y acceden al resultado
+    // directamente.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async <T = any>(
       endpoint: string,
       options: RequestInit = {},

@@ -25,15 +25,28 @@ from receivables.payment_gateways.gateways.base import (
     WompiFinancialInstitution,
     WompiTransaction,
 )
-from receivables.payment_gateways.models.payment_attempt_model import CreditPaymentAttemptModel
-from receivables.payment_gateways.repository.payment_attempt_repository import CreditPaymentAttemptRepository
-from receivables.payment_gateways.services.payment_checkout_service import PaymentCheckoutService
+from receivables.payment_gateways.models.payment_attempt_model import (
+    CreditPaymentAttemptModel,
+)
+from receivables.payment_gateways.repository.payment_attempt_repository import (
+    CreditPaymentAttemptRepository,
+)
+from receivables.payment_gateways.services.payment_checkout_service import (
+    PaymentCheckoutService,
+)
 from receivables.payments.enums.payment_enums import PaymentStatus
 from receivables.payments.models.payment_model import PaymentModel
 from receivables.payments.repository.payment_repository import PaymentRepository
-from receivables.payments.services.payment_ownership_resolver import PaymentOwnershipResolver
+from receivables.payments.services.payment_ownership_resolver import (
+    PaymentOwnershipResolver,
+)
 from receivables.portfolios.repository.portfolio_repository import PortfolioRepository
-from tests.receivables.conftest import add_organization, build_credit, build_debtor, build_portfolio
+from tests.receivables.conftest import (
+    add_organization,
+    build_credit,
+    build_debtor,
+    build_portfolio,
+)
 
 
 def _ownership_resolver(db_session) -> PaymentOwnershipResolver:
@@ -73,7 +86,11 @@ def _self_session(make_user_session_factory, document_number_hash: str):
     from identity.users.enums.user_enums import UserRole, UserScope
 
     return make_user_session_factory(
-        role=UserRole.USER, scope=UserScope.SELF, orgs={}, document_type="CC", document_number_hash=document_number_hash,
+        role=UserRole.USER,
+        scope=UserScope.SELF,
+        orgs={},
+        document_type="CC",
+        document_number_hash=document_number_hash,
     )
 
 
@@ -84,8 +101,10 @@ class TestCardThreeDsChallenge:
         org, debtor, payment = await _setup_payment(db_session)
         gateway = AsyncMock()
         gateway.get_acceptance_tokens.return_value = AcceptanceTokens(
-            acceptance_token="acc_tok", acceptance_permalink="https://x/acc",
-            personal_data_token="pd_tok", personal_data_permalink="https://x/pd",
+            acceptance_token="acc_tok",
+            acceptance_permalink="https://x/acc",
+            personal_data_token="pd_tok",
+            personal_data_permalink="https://x/pd",
         )
         gateway.create_transaction.return_value = WompiTransaction(
             id="txn-card-1",
@@ -96,7 +115,9 @@ class TestCardThreeDsChallenge:
             payment_method_type="CARD",
             raw={"id": "txn-card-1", "status": "PENDING"},
             three_ds_challenge=ThreeDsChallenge(
-                current_step="CHALLENGE", current_step_status="PENDING", challenge_html="<iframe></iframe>",
+                current_step="CHALLENGE",
+                current_step_status="PENDING",
+                challenge_html="<iframe></iframe>",
             ),
         )
         gateway_resolver = AsyncMock()
@@ -110,10 +131,20 @@ class TestCardThreeDsChallenge:
         )
         session = _self_session(make_user_session_factory, debtor.document_number_hash)
 
-        card = CardPaymentMethod(number="4242424242424242", cvc="123", exp_month="12", exp_year="29", card_holder="Test")
+        card = CardPaymentMethod(
+            number="4242424242424242",
+            cvc="123",
+            exp_month="12",
+            exp_year="29",
+            card_holder="Test",
+        )
         browser_info = BrowserInfo(
-            browser_color_depth="24", browser_screen_height="1050", browser_screen_width="1680",
-            browser_language="es-CO", browser_user_agent="pytest", browser_tz="300",
+            browser_color_depth="24",
+            browser_screen_height="1050",
+            browser_screen_width="1680",
+            browser_language="es-CO",
+            browser_user_agent="pytest",
+            browser_tz="300",
         )
         attempt, challenge = await service.create_transaction(
             session, payment.id, card, "debtor@example.com", browser_info=browser_info
@@ -125,15 +156,21 @@ class TestCardThreeDsChallenge:
         assert challenge.current_step_status == "PENDING"
         assert challenge.challenge_html == "<iframe></iframe>"
         gateway.create_transaction.assert_awaited_once()
-        assert gateway.create_transaction.await_args.kwargs["browser_info"] is browser_info
+        assert (
+            gateway.create_transaction.await_args.kwargs["browser_info"] is browser_info
+        )
 
 
 class TestListPseInstitutions:
-    async def test_lists_institutions_for_own_payment(self, db_session, make_user_session_factory):
+    async def test_lists_institutions_for_own_payment(
+        self, db_session, make_user_session_factory
+    ):
         org, debtor, payment = await _setup_payment(db_session)
         gateway = AsyncMock()
         gateway.list_pse_financial_institutions.return_value = [
-            WompiFinancialInstitution(financial_institution_code="1", financial_institution_name="Banco Uno"),
+            WompiFinancialInstitution(
+                financial_institution_code="1", financial_institution_name="Banco Uno"
+            ),
         ]
         gateway_resolver = AsyncMock()
         gateway_resolver.get_for_organization.return_value = gateway
@@ -149,12 +186,16 @@ class TestListPseInstitutions:
         institutions = await service.list_pse_institutions(session, payment.id)
         assert [i.financial_institution_name for i in institutions] == ["Banco Uno"]
 
-    async def test_listing_on_others_payment_raises_404(self, db_session, make_user_session_factory):
+    async def test_listing_on_others_payment_raises_404(
+        self, db_session, make_user_session_factory
+    ):
         from core.security.services.encrypt_service import encrypt_service
 
         _org, _owner, payment = await _setup_payment(db_session)
         requester_doc = "999888777"
-        requester = build_debtor((await add_organization(db_session)).id, document_number_plain=requester_doc)
+        requester = build_debtor(
+            (await add_organization(db_session)).id, document_number_plain=requester_doc
+        )
         db_session.add(requester)
         await db_session.flush()
 
@@ -164,7 +205,9 @@ class TestListPseInstitutions:
             AsyncMock(),
             PaymentRepository(db_session),
         )
-        session = _self_session(make_user_session_factory, encrypt_service.hash_document(requester_doc))
+        session = _self_session(
+            make_user_session_factory, encrypt_service.hash_document(requester_doc)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.list_pse_institutions(session, payment.id)
@@ -172,7 +215,9 @@ class TestListPseInstitutions:
 
 
 class TestRefreshAttemptStatus:
-    async def _add_attempt(self, db_session, payment, **overrides) -> CreditPaymentAttemptModel:
+    async def _add_attempt(
+        self, db_session, payment, **overrides
+    ) -> CreditPaymentAttemptModel:
         defaults = dict(
             payment_id=payment.id,
             attempt_number=1,
@@ -197,8 +242,13 @@ class TestRefreshAttemptStatus:
 
         gateway = AsyncMock()
         gateway.get_transaction.return_value = WompiTransaction(
-            id="txn-1", status="APPROVED", amount_in_cents=1_500_000, currency="COP",
-            reference="PAG-ref", payment_method_type="CARD", raw={"id": "txn-1", "status": "APPROVED"},
+            id="txn-1",
+            status="APPROVED",
+            amount_in_cents=1_500_000,
+            currency="COP",
+            reference="PAG-ref",
+            payment_method_type="CARD",
+            raw={"id": "txn-1", "status": "APPROVED"},
         )
         gateway_resolver = AsyncMock()
         gateway_resolver.get_for_organization.return_value = gateway
@@ -237,7 +287,9 @@ class TestRefreshAttemptStatus:
         assert result.status == ReceivablesPaymentAttemptStatus.APPROVED
         gateway_resolver.get_for_organization.assert_not_awaited()
 
-    async def test_attempt_of_another_payment_raises_404(self, db_session, make_user_session_factory):
+    async def test_attempt_of_another_payment_raises_404(
+        self, db_session, make_user_session_factory
+    ):
         _org, debtor, payment = await _setup_payment(db_session)
         _org2, _debtor2, other_payment = await _setup_payment(db_session)
         foreign_attempt = await self._add_attempt(db_session, other_payment)
@@ -251,5 +303,7 @@ class TestRefreshAttemptStatus:
         session = _self_session(make_user_session_factory, debtor.document_number_hash)
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.refresh_attempt_status(session, payment.id, foreign_attempt.id)
+            await service.refresh_attempt_status(
+                session, payment.id, foreign_attempt.id
+            )
         assert exc_info.value.status_code == 404

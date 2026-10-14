@@ -1,6 +1,8 @@
 """Tests de integración de WhatsAppTemplateDataRepository (ver whatsapp_template_data_repository.py)."""
 
-from messaging.whatsapp.repository.whatsapp_template_data_repository import WhatsAppTemplateDataRepository
+from messaging.whatsapp.repository.whatsapp_template_data_repository import (
+    WhatsAppTemplateDataRepository,
+)
 from tests.messaging.whatsapp.conftest import build_template, build_template_data
 
 
@@ -19,7 +21,9 @@ class TestGetByTemplateId:
         assert result is not None
         assert result.id == data.id
 
-    async def test_template_without_data_row_returns_none(self, db_session, real_portfolio):
+    async def test_template_without_data_row_returns_none(
+        self, db_session, real_portfolio
+    ):
         template = build_template(real_portfolio.id)
         db_session.add(template)
         await db_session.flush()
@@ -45,7 +49,9 @@ class TestGetByTemplateIds:
         repo = WhatsAppTemplateDataRepository(db_session)
         assert await repo.get_by_template_ids([]) == []
 
-    async def test_returns_only_rows_for_requested_templates(self, db_session, real_portfolio):
+    async def test_returns_only_rows_for_requested_templates(
+        self, db_session, real_portfolio
+    ):
         template_a = build_template(real_portfolio.id)
         template_b = build_template(real_portfolio.id)
         template_c = build_template(real_portfolio.id)

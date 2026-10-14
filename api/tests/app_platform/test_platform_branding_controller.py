@@ -11,8 +11,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastapi import HTTPException, UploadFile
 
-from app_platform.branding.controllers.platform_branding_controller import update_platform_logo
-from app_platform.branding.services.platform_branding_service import PlatformBrandingService
+from app_platform.branding.controllers.platform_branding_controller import (
+    update_platform_logo,
+)
+from app_platform.branding.services.platform_branding_service import (
+    PlatformBrandingService,
+)
 from identity.users.enums.user_enums import UserRole, UserScope
 from identity.users.schemas.user_session_schema import UserSession
 
@@ -42,7 +46,10 @@ def _service() -> MagicMock:
     "role, scope",
     [
         (UserRole.CUSTOMER_SERVICE, UserScope.GLOBAL),  # staff global que no es admin
-        (UserRole.ADMIN, UserScope.ORGANIZATION),  # admin, pero solo de una organización
+        (
+            UserRole.ADMIN,
+            UserScope.ORGANIZATION,
+        ),  # admin, pero solo de una organización
         (UserRole.USER, UserScope.SELF),
     ],
 )
@@ -50,7 +57,9 @@ async def test_only_a_global_admin_can_replace_the_logo(role, scope):
     service = _service()
 
     with pytest.raises(HTTPException) as exc:
-        await update_platform_logo(session=_session(role, scope), service=service, file=_file())
+        await update_platform_logo(
+            session=_session(role, scope), service=service, file=_file()
+        )
 
     assert exc.value.status_code == 403
     service.replace_logo.assert_not_awaited()
@@ -61,7 +70,9 @@ async def test_a_pdf_is_rejected_with_415_before_touching_the_service():
 
     with pytest.raises(HTTPException) as exc:
         await update_platform_logo(
-            session=_session(UserRole.ADMIN, UserScope.GLOBAL), service=service, file=_file("logo.pdf")
+            session=_session(UserRole.ADMIN, UserScope.GLOBAL),
+            service=service,
+            file=_file("logo.pdf"),
         )
 
     assert exc.value.status_code == 415
@@ -74,7 +85,9 @@ async def test_a_global_admin_replaces_the_logo():
     service = _service()
     service.replace_logo.return_value = SimpleNamespace(logo_document_id=logo_id)
 
-    response = await update_platform_logo(session=session, service=service, file=_file("logo.png"))
+    response = await update_platform_logo(
+        session=session, service=service, file=_file("logo.png")
+    )
 
     service.replace_logo.assert_awaited_once()
     kwargs = service.replace_logo.await_args.kwargs

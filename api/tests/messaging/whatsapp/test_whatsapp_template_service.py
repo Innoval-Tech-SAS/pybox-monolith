@@ -17,9 +17,16 @@ from identity.users.enums.user_enums import UserRole, UserScope
 from messaging.templates.enums.template_enums import TemplateChannel, TemplateStatus
 from messaging.templates.models.template_model import TemplateModel
 from messaging.whatsapp.enums.whatsapp_enums import WhatsAppTemplateCategory
-from messaging.whatsapp.models.whatsapp_template_data_model import WhatsAppTemplateDataModel
-from messaging.whatsapp.schemas.whatsapp_template_data_schemas import WhatsAppTemplateCreateRequest
-from messaging.whatsapp.services.whatsapp_template_service import WhatsAppTemplateService, _meta_name
+from messaging.whatsapp.models.whatsapp_template_data_model import (
+    WhatsAppTemplateDataModel,
+)
+from messaging.whatsapp.schemas.whatsapp_template_data_schemas import (
+    WhatsAppTemplateCreateRequest,
+)
+from messaging.whatsapp.services.whatsapp_template_service import (
+    WhatsAppTemplateService,
+    _meta_name,
+)
 from tests.conftest import make_user_session
 
 
@@ -58,7 +65,9 @@ class TestCreate:
         mocks["portfolio_repo"].get_by_id = AsyncMock(
             return_value=MagicMock(organization_id=uuid.uuid4())
         )
-        created_template = TemplateModel(id=uuid.uuid4(), portfolio_id=portfolio_id, name="Recordatorio")
+        created_template = TemplateModel(
+            id=uuid.uuid4(), portfolio_id=portfolio_id, name="Recordatorio"
+        )
         mocks["template_repo"].add = AsyncMock(return_value=created_template)
         mocks["client"].create_template = AsyncMock(
             return_value={"id": "meta-tpl-1", "status": "PENDING"}
@@ -81,7 +90,9 @@ class TestCreate:
             components=[{"type": "BODY", "text": "Hola {{nombre}}"}],
         )
 
-        template, whatsapp_data = await service.create(portfolio_id, request, ADMIN_SESSION)
+        template, whatsapp_data = await service.create(
+            portfolio_id, request, ADMIN_SESSION
+        )
 
         assert template is created_template
         assert whatsapp_data.meta_template_id == "meta-tpl-1"
@@ -97,25 +108,45 @@ class TestCreate:
             return_value=MagicMock(organization_id=uuid.uuid4())
         )
         mocks["template_repo"].add = AsyncMock(
-            return_value=TemplateModel(id=uuid.uuid4(), portfolio_id=portfolio_id, name="X")
+            return_value=TemplateModel(
+                id=uuid.uuid4(), portfolio_id=portfolio_id, name="X"
+            )
         )
-        mocks["client"].create_template = AsyncMock(return_value={"id": "meta-tpl-2"})  # sin "status"
+        mocks["client"].create_template = AsyncMock(
+            return_value={"id": "meta-tpl-2"}
+        )  # sin "status"
         mocks["data_repo"].add = AsyncMock(side_effect=lambda m: m)
 
         request = WhatsAppTemplateCreateRequest(
-            name="X", language="es_CO", category=WhatsAppTemplateCategory.MARKETING, components=[]
+            name="X",
+            language="es_CO",
+            category=WhatsAppTemplateCategory.MARKETING,
+            components=[],
         )
-        _template, whatsapp_data = await service.create(portfolio_id, request, ADMIN_SESSION)
+        _template, whatsapp_data = await service.create(
+            portfolio_id, request, ADMIN_SESSION
+        )
 
         assert whatsapp_data.meta_status == "PENDING"
 
 
 class TestRefreshStatus:
-    async def _seed(self, service, mocks, *, meta_template_id="meta-1", meta_status="PENDING", template_status=TemplateStatus.DRAFT):
+    async def _seed(
+        self,
+        service,
+        mocks,
+        *,
+        meta_template_id="meta-1",
+        meta_status="PENDING",
+        template_status=TemplateStatus.DRAFT,
+    ):
         template_id = uuid.uuid4()
         portfolio_id = uuid.uuid4()
         template = TemplateModel(
-            id=template_id, portfolio_id=portfolio_id, name="X", status=template_status,
+            id=template_id,
+            portfolio_id=portfolio_id,
+            name="X",
+            status=template_status,
             channel=TemplateChannel.WHATSAPP,
         )
         whatsapp_data = WhatsAppTemplateDataModel(
@@ -127,8 +158,12 @@ class TestRefreshStatus:
             category=WhatsAppTemplateCategory.UTILITY,
             meta_status=meta_status,
         )
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
         mocks["data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
         mocks["template_repo"].update = AsyncMock(side_effect=lambda t: t)
         mocks["data_repo"].update = AsyncMock(side_effect=lambda d: d)
@@ -136,9 +171,13 @@ class TestRefreshStatus:
 
     async def test_without_meta_template_id_short_circuits(self):
         service, mocks = build_service()
-        template_id, portfolio_id = await self._seed(service, mocks, meta_template_id=None)
+        template_id, portfolio_id = await self._seed(
+            service, mocks, meta_template_id=None
+        )
 
-        template, whatsapp_data = await service.refresh_status(template_id, portfolio_id, ADMIN_SESSION)
+        template, whatsapp_data = await service.refresh_status(
+            template_id, portfolio_id, ADMIN_SESSION
+        )
 
         mocks["client"].get_template.assert_not_called()
         assert whatsapp_data.meta_status == "PENDING"
@@ -148,7 +187,9 @@ class TestRefreshStatus:
         template_id, portfolio_id = await self._seed(service, mocks)
         mocks["client"].get_template = AsyncMock(return_value={"status": "APPROVED"})
 
-        template, whatsapp_data = await service.refresh_status(template_id, portfolio_id, ADMIN_SESSION)
+        template, whatsapp_data = await service.refresh_status(
+            template_id, portfolio_id, ADMIN_SESSION
+        )
 
         assert whatsapp_data.meta_status == "APPROVED"
         assert template.status == TemplateStatus.ACTIVE
@@ -156,27 +197,37 @@ class TestRefreshStatus:
     @pytest.mark.parametrize("meta_status", ["REJECTED", "PAUSED", "DISABLED"])
     async def test_inactive_statuses_deactivate_template(self, meta_status):
         service, mocks = build_service()
-        template_id, portfolio_id = await self._seed(service, mocks, template_status=TemplateStatus.ACTIVE)
+        template_id, portfolio_id = await self._seed(
+            service, mocks, template_status=TemplateStatus.ACTIVE
+        )
         mocks["client"].get_template = AsyncMock(return_value={"status": meta_status})
 
-        template, whatsapp_data = await service.refresh_status(template_id, portfolio_id, ADMIN_SESSION)
+        template, whatsapp_data = await service.refresh_status(
+            template_id, portfolio_id, ADMIN_SESSION
+        )
 
         assert whatsapp_data.meta_status == meta_status
         assert template.status == TemplateStatus.INACTIVE
 
     async def test_pending_status_keeps_template_status_unchanged(self):
         service, mocks = build_service()
-        template_id, portfolio_id = await self._seed(service, mocks, template_status=TemplateStatus.DRAFT)
+        template_id, portfolio_id = await self._seed(
+            service, mocks, template_status=TemplateStatus.DRAFT
+        )
         mocks["client"].get_template = AsyncMock(return_value={"status": "IN_APPEAL"})
 
-        template, whatsapp_data = await service.refresh_status(template_id, portfolio_id, ADMIN_SESSION)
+        template, whatsapp_data = await service.refresh_status(
+            template_id, portfolio_id, ADMIN_SESSION
+        )
 
         assert whatsapp_data.meta_status == "IN_APPEAL"
         assert template.status == TemplateStatus.DRAFT
 
     async def test_template_not_found_raises_404(self):
         service, mocks = build_service()
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
         mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=None)
 
         with pytest.raises(HTTPException) as exc_info:
@@ -187,9 +238,18 @@ class TestRefreshStatus:
         from messaging.channels.enums.channel_enums import ChannelName
 
         service, mocks = build_service()
-        template = TemplateModel(id=uuid.uuid4(), portfolio_id=uuid.uuid4(), name="X", channel=ChannelName.EMAIL)
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        template = TemplateModel(
+            id=uuid.uuid4(),
+            portfolio_id=uuid.uuid4(),
+            name="X",
+            channel=ChannelName.EMAIL,
+        )
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service.refresh_status(uuid.uuid4(), uuid.uuid4(), ADMIN_SESSION)
@@ -199,9 +259,18 @@ class TestRefreshStatus:
         service, mocks = build_service()
         from messaging.channels.enums.channel_enums import ChannelName
 
-        template = TemplateModel(id=uuid.uuid4(), portfolio_id=uuid.uuid4(), name="X", channel=ChannelName.WHATSAPP)
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        template = TemplateModel(
+            id=uuid.uuid4(),
+            portfolio_id=uuid.uuid4(),
+            name="X",
+            channel=ChannelName.WHATSAPP,
+        )
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
         mocks["data_repo"].get_by_template_id = AsyncMock(return_value=None)
 
         with pytest.raises(HTTPException) as exc_info:
@@ -214,7 +283,12 @@ class TestListVariables:
         service, mocks = build_service()
         from messaging.channels.enums.channel_enums import ChannelName
 
-        template = TemplateModel(id=uuid.uuid4(), portfolio_id=uuid.uuid4(), name="X", channel=ChannelName.WHATSAPP)
+        template = TemplateModel(
+            id=uuid.uuid4(),
+            portfolio_id=uuid.uuid4(),
+            name="X",
+            channel=ChannelName.WHATSAPP,
+        )
         whatsapp_data = WhatsAppTemplateDataModel(
             id=uuid.uuid4(),
             template_id=template.id,
@@ -223,11 +297,17 @@ class TestListVariables:
             language="es_CO",
             category=WhatsAppTemplateCategory.UTILITY,
         )
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
         mocks["data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
 
-        result = await service.list_variables(template.id, template.portfolio_id, ADMIN_SESSION)
+        result = await service.list_variables(
+            template.id, template.portfolio_id, ADMIN_SESSION
+        )
 
         assert result == []
         mocks["client"].get_template.assert_not_called()
@@ -236,7 +316,12 @@ class TestListVariables:
         service, mocks = build_service()
         from messaging.channels.enums.channel_enums import ChannelName
 
-        template = TemplateModel(id=uuid.uuid4(), portfolio_id=uuid.uuid4(), name="X", channel=ChannelName.WHATSAPP)
+        template = TemplateModel(
+            id=uuid.uuid4(),
+            portfolio_id=uuid.uuid4(),
+            name="X",
+            channel=ChannelName.WHATSAPP,
+        )
         whatsapp_data = WhatsAppTemplateDataModel(
             id=uuid.uuid4(),
             template_id=template.id,
@@ -245,8 +330,12 @@ class TestListVariables:
             language="es_CO",
             category=WhatsAppTemplateCategory.UTILITY,
         )
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
         mocks["data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
         mocks["client"].get_template = AsyncMock(
             return_value={
@@ -256,7 +345,9 @@ class TestListVariables:
             }
         )
 
-        result = await service.list_variables(template.id, template.portfolio_id, ADMIN_SESSION)
+        result = await service.list_variables(
+            template.id, template.portfolio_id, ADMIN_SESSION
+        )
 
         assert [slot.name for slot in result] == ["nombre", "monto"]
 
@@ -266,7 +357,12 @@ class TestDelete:
         service, mocks = build_service()
         from messaging.channels.enums.channel_enums import ChannelName
 
-        template = TemplateModel(id=uuid.uuid4(), portfolio_id=uuid.uuid4(), name="X", channel=ChannelName.WHATSAPP)
+        template = TemplateModel(
+            id=uuid.uuid4(),
+            portfolio_id=uuid.uuid4(),
+            name="X",
+            channel=ChannelName.WHATSAPP,
+        )
         whatsapp_data = WhatsAppTemplateDataModel(
             id=uuid.uuid4(),
             template_id=template.id,
@@ -275,8 +371,12 @@ class TestDelete:
             language="es_CO",
             category=WhatsAppTemplateCategory.UTILITY,
         )
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
         mocks["data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
         mocks["client"].delete_template = AsyncMock()
         mocks["data_repo"].delete = AsyncMock()
@@ -299,20 +399,31 @@ class TestMetaErrorTranslation:
     """Un fallo de la Graph API debe llegar al usuario como HTTPException en español,
     no como un 500 genérico, y sin dejar filas locales a medio crear."""
 
-    async def test_create_with_rejected_token_raises_502_and_does_not_persist_data_row(self):
+    async def test_create_with_rejected_token_raises_502_and_does_not_persist_data_row(
+        self,
+    ):
         portfolio_id = uuid.uuid4()
         service, mocks = build_service()
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
         mocks["template_repo"].add = AsyncMock(
-            return_value=TemplateModel(id=uuid.uuid4(), portfolio_id=portfolio_id, name="X")
+            return_value=TemplateModel(
+                id=uuid.uuid4(), portfolio_id=portfolio_id, name="X"
+            )
         )
         mocks["client"].create_template = AsyncMock(
-            side_effect=_meta_http_error(401, {"error": {"message": "Invalid OAuth access token.", "code": 190}})
+            side_effect=_meta_http_error(
+                401, {"error": {"message": "Invalid OAuth access token.", "code": 190}}
+            )
         )
         mocks["data_repo"].add = AsyncMock()
 
         request = WhatsAppTemplateCreateRequest(
-            name="X", language="es", category=WhatsAppTemplateCategory.UTILITY, components=[]
+            name="X",
+            language="es",
+            category=WhatsAppTemplateCategory.UTILITY,
+            components=[],
         )
         with pytest.raises(HTTPException) as exc_info:
             await service.create(portfolio_id, request, ADMIN_SESSION)
@@ -324,19 +435,32 @@ class TestMetaErrorTranslation:
     async def test_create_with_meta_validation_error_surfaces_meta_detail_as_400(self):
         portfolio_id = uuid.uuid4()
         service, mocks = build_service()
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
         mocks["template_repo"].add = AsyncMock(
-            return_value=TemplateModel(id=uuid.uuid4(), portfolio_id=portfolio_id, name="X")
+            return_value=TemplateModel(
+                id=uuid.uuid4(), portfolio_id=portfolio_id, name="X"
+            )
         )
         mocks["client"].create_template = AsyncMock(
             side_effect=_meta_http_error(
                 400,
-                {"error": {"message": "Invalid parameter", "code": 100, "error_user_msg": "El cuerpo es demasiado largo."}},
+                {
+                    "error": {
+                        "message": "Invalid parameter",
+                        "code": 100,
+                        "error_user_msg": "El cuerpo es demasiado largo.",
+                    }
+                },
             )
         )
 
         request = WhatsAppTemplateCreateRequest(
-            name="X", language="es", category=WhatsAppTemplateCategory.UTILITY, components=[]
+            name="X",
+            language="es",
+            category=WhatsAppTemplateCategory.UTILITY,
+            components=[],
         )
         with pytest.raises(HTTPException) as exc_info:
             await service.create(portfolio_id, request, ADMIN_SESSION)
@@ -348,7 +472,12 @@ class TestMetaErrorTranslation:
         from messaging.channels.enums.channel_enums import ChannelName
 
         service, mocks = build_service()
-        template = TemplateModel(id=uuid.uuid4(), portfolio_id=uuid.uuid4(), name="X", channel=ChannelName.WHATSAPP)
+        template = TemplateModel(
+            id=uuid.uuid4(),
+            portfolio_id=uuid.uuid4(),
+            name="X",
+            channel=ChannelName.WHATSAPP,
+        )
         whatsapp_data = WhatsAppTemplateDataModel(
             id=uuid.uuid4(),
             template_id=template.id,
@@ -357,13 +486,21 @@ class TestMetaErrorTranslation:
             language="es",
             category=WhatsAppTemplateCategory.UTILITY,
         )
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
         mocks["data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
-        mocks["client"].get_template = AsyncMock(side_effect=httpx.ConnectTimeout("timeout"))
+        mocks["client"].get_template = AsyncMock(
+            side_effect=httpx.ConnectTimeout("timeout")
+        )
 
         with pytest.raises(HTTPException) as exc_info:
-            await service.refresh_status(template.id, template.portfolio_id, ADMIN_SESSION)
+            await service.refresh_status(
+                template.id, template.portfolio_id, ADMIN_SESSION
+            )
 
         assert exc_info.value.status_code == 502
         assert "No fue posible comunicarse con Meta" in exc_info.value.detail
@@ -372,7 +509,12 @@ class TestMetaErrorTranslation:
         from messaging.channels.enums.channel_enums import ChannelName
 
         service, mocks = build_service()
-        template = TemplateModel(id=uuid.uuid4(), portfolio_id=uuid.uuid4(), name="X", channel=ChannelName.WHATSAPP)
+        template = TemplateModel(
+            id=uuid.uuid4(),
+            portfolio_id=uuid.uuid4(),
+            name="X",
+            channel=ChannelName.WHATSAPP,
+        )
         whatsapp_data = WhatsAppTemplateDataModel(
             id=uuid.uuid4(),
             template_id=template.id,
@@ -381,11 +523,17 @@ class TestMetaErrorTranslation:
             language="es",
             category=WhatsAppTemplateCategory.UTILITY,
         )
-        mocks["portfolio_repo"].get_by_id = AsyncMock(return_value=MagicMock(organization_id=uuid.uuid4()))
-        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(return_value=template)
+        mocks["portfolio_repo"].get_by_id = AsyncMock(
+            return_value=MagicMock(organization_id=uuid.uuid4())
+        )
+        mocks["template_repo"].get_by_id_and_portfolio = AsyncMock(
+            return_value=template
+        )
         mocks["data_repo"].get_by_template_id = AsyncMock(return_value=whatsapp_data)
         mocks["client"].delete_template = AsyncMock(
-            side_effect=_meta_http_error(403, {"error": {"message": "Permissions error", "code": 200}})
+            side_effect=_meta_http_error(
+                403, {"error": {"message": "Permissions error", "code": 200}}
+            )
         )
         mocks["data_repo"].delete = AsyncMock()
         mocks["template_repo"].delete = AsyncMock()

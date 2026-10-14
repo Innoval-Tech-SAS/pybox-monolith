@@ -22,18 +22,28 @@ def org_scoped_session(make_user_session_factory):
     return make_user_session_factory(
         role=UserRole.USER,
         scope=UserScope.ORGANIZATION,
-        orgs={org_id: OrgSessionEntry(role=UserRole.USER, org_name="Org", verification_status=VerificationStatus.APPROVED)},
+        orgs={
+            org_id: OrgSessionEntry(
+                role=UserRole.USER,
+                org_name="Org",
+                verification_status=VerificationStatus.APPROVED,
+            )
+        },
     )
 
 
 class TestListSchemas:
     async def test_valid_as_global_admin(self, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        )
         resp = await authed.get(f"{BASE}/schemas")
         assert resp.status_code == 200
         assert "public" in resp.json()
 
-    async def test_without_global_admin_returns_403(self, auth_as, make_user_session_factory):
+    async def test_without_global_admin_returns_403(
+        self, auth_as, make_user_session_factory
+    ):
         authed = auth_as(org_scoped_session(make_user_session_factory))
         resp = await authed.get(f"{BASE}/schemas")
         assert resp.status_code == 403
@@ -45,12 +55,16 @@ class TestListSchemas:
 
 class TestListTables:
     async def test_valid_as_global_admin(self, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        )
         resp = await authed.get(f"{BASE}/schemas/public/tables")
         assert resp.status_code == 200
         assert "usuarios" in resp.json()
 
-    async def test_without_global_admin_returns_403(self, auth_as, make_user_session_factory):
+    async def test_without_global_admin_returns_403(
+        self, auth_as, make_user_session_factory
+    ):
         authed = auth_as(org_scoped_session(make_user_session_factory))
         resp = await authed.get(f"{BASE}/schemas/public/tables")
         assert resp.status_code == 403
@@ -58,7 +72,9 @@ class TestListTables:
 
 class TestListTableFields:
     async def test_valid_as_global_admin(self, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        )
         resp = await authed.get(f"{BASE}/schemas/public/tables/paises/fields")
         assert resp.status_code == 200
         assert any(f["name"] == "codigo" for f in resp.json())
@@ -68,12 +84,18 @@ class TestListTableFields:
         resp = await authed.get(f"{BASE}/schemas/public/tables/paises/fields")
         assert resp.status_code == 200
 
-    async def test_without_org_or_global_returns_403(self, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.USER, scope=UserScope.SELF))
+    async def test_without_org_or_global_returns_403(
+        self, auth_as, make_user_session_factory
+    ):
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.USER, scope=UserScope.SELF)
+        )
         resp = await authed.get(f"{BASE}/schemas/public/tables/paises/fields")
         assert resp.status_code == 403
 
-    async def test_enum_column_exposes_values_in_declaration_order(self, auth_as, make_user_session_factory):
+    async def test_enum_column_exposes_values_in_declaration_order(
+        self, auth_as, make_user_session_factory
+    ):
         authed = auth_as(org_scoped_session(make_user_session_factory))
         resp = await authed.get(f"{BASE}/schemas/public/tables/deudores/fields")
         assert resp.status_code == 200
@@ -81,7 +103,9 @@ class TestListTableFields:
         assert fields["tipo_deudor"]["type"] == "USER-DEFINED"
         assert fields["tipo_deudor"]["enumValues"] == [m.value for m in DebtorType]
 
-    async def test_non_enum_column_has_null_enum_values(self, auth_as, make_user_session_factory):
+    async def test_non_enum_column_has_null_enum_values(
+        self, auth_as, make_user_session_factory
+    ):
         authed = auth_as(org_scoped_session(make_user_session_factory))
         resp = await authed.get(f"{BASE}/schemas/public/tables/deudores/fields")
         fields = {f["name"]: f for f in resp.json()}
@@ -91,7 +115,9 @@ class TestListTableFields:
 
 class TestExecuteQuery:
     async def test_valid_as_global_admin(self, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        )
         resp = await authed.post(
             f"{BASE}/query",
             json={"tables": [{"name": "paises", "columns": ["codigo", "nombre"]}]},
@@ -101,7 +127,9 @@ class TestExecuteQuery:
         assert body["success"] is True
         assert body["rows"] >= 5
 
-    async def test_without_global_admin_returns_403(self, auth_as, make_user_session_factory):
+    async def test_without_global_admin_returns_403(
+        self, auth_as, make_user_session_factory
+    ):
         authed = auth_as(org_scoped_session(make_user_session_factory))
         resp = await authed.post(
             f"{BASE}/query",
@@ -110,20 +138,30 @@ class TestExecuteQuery:
         assert resp.status_code == 403
 
     async def test_without_auth_returns_401(self, client):
-        resp = await client.post(f"{BASE}/query", json={"tables": [{"name": "paises", "columns": ["codigo"]}]})
+        resp = await client.post(
+            f"{BASE}/query",
+            json={"tables": [{"name": "paises", "columns": ["codigo"]}]},
+        )
         assert resp.status_code == 401
 
 
 class TestCreateTable:
     async def test_valid_as_global_admin(self, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        )
         table_name = f"test_ddl_{uuid.uuid4().hex}"
         resp = await authed.post(
             f"{BASE}/schemas/public/tables",
             json={
                 "table_name": table_name,
                 "columns": [
-                    {"name": "id", "data_type": "INTEGER", "primary_key": True, "nullable": False},
+                    {
+                        "name": "id",
+                        "data_type": "INTEGER",
+                        "primary_key": True,
+                        "nullable": False,
+                    },
                     {"name": "label", "data_type": "TEXT"},
                 ],
             },
@@ -136,19 +174,31 @@ class TestCreateTable:
         listing = await authed.get(f"{BASE}/schemas/public/tables")
         assert table_name in listing.json()
 
-    async def test_invalid_identifier_returns_400(self, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+    async def test_invalid_identifier_returns_400(
+        self, auth_as, make_user_session_factory
+    ):
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        )
         resp = await authed.post(
             f"{BASE}/schemas/public/tables",
-            json={"table_name": "not a valid ident!", "columns": [{"name": "id", "data_type": "INTEGER"}]},
+            json={
+                "table_name": "not a valid ident!",
+                "columns": [{"name": "id", "data_type": "INTEGER"}],
+            },
         )
         assert resp.status_code == 400
 
-    async def test_without_global_admin_returns_403(self, auth_as, make_user_session_factory):
+    async def test_without_global_admin_returns_403(
+        self, auth_as, make_user_session_factory
+    ):
         authed = auth_as(org_scoped_session(make_user_session_factory))
         resp = await authed.post(
             f"{BASE}/schemas/public/tables",
-            json={"table_name": f"test_ddl_{uuid.uuid4().hex}", "columns": [{"name": "id", "data_type": "INTEGER"}]},
+            json={
+                "table_name": f"test_ddl_{uuid.uuid4().hex}",
+                "columns": [{"name": "id", "data_type": "INTEGER"}],
+            },
         )
         assert resp.status_code == 403
 
@@ -156,20 +206,32 @@ class TestCreateTable:
 class TestAlterTable:
     @pytest.fixture
     async def real_table(self, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        )
         table_name = f"test_ddl_{uuid.uuid4().hex}"
         create = await authed.post(
             f"{BASE}/schemas/public/tables",
-            json={"table_name": table_name, "columns": [{"name": "id", "data_type": "INTEGER"}]},
+            json={
+                "table_name": table_name,
+                "columns": [{"name": "id", "data_type": "INTEGER"}],
+            },
         )
         assert create.status_code == 201
         return table_name
 
-    async def test_add_column_valid(self, real_table, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+    async def test_add_column_valid(
+        self, real_table, auth_as, make_user_session_factory
+    ):
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        )
         resp = await authed.patch(
             f"{BASE}/schemas/public/tables/{real_table}",
-            json={"action": "ADD_COLUMN", "column": {"name": "extra", "data_type": "TEXT"}},
+            json={
+                "action": "ADD_COLUMN",
+                "column": {"name": "extra", "data_type": "TEXT"},
+            },
         )
         assert resp.status_code == 200
         assert resp.json()["success"] is True
@@ -177,8 +239,12 @@ class TestAlterTable:
         fields = await authed.get(f"{BASE}/schemas/public/tables/{real_table}/fields")
         assert any(f["name"] == "extra" for f in fields.json())
 
-    async def test_add_column_missing_definition_returns_success_false(self, real_table, auth_as, make_user_session_factory):
-        authed = auth_as(make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL))
+    async def test_add_column_missing_definition_returns_success_false(
+        self, real_table, auth_as, make_user_session_factory
+    ):
+        authed = auth_as(
+            make_user_session_factory(role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+        )
         resp = await authed.patch(
             f"{BASE}/schemas/public/tables/{real_table}",
             json={"action": "ADD_COLUMN"},
@@ -186,19 +252,28 @@ class TestAlterTable:
         assert resp.status_code == 200
         assert resp.json()["success"] is False
 
-    async def test_without_global_admin_returns_403(self, real_table, auth_as, make_user_session_factory):
+    async def test_without_global_admin_returns_403(
+        self, real_table, auth_as, make_user_session_factory
+    ):
         authed = auth_as(org_scoped_session(make_user_session_factory))
         resp = await authed.patch(
             f"{BASE}/schemas/public/tables/{real_table}",
-            json={"action": "ADD_COLUMN", "column": {"name": "extra", "data_type": "TEXT"}},
+            json={
+                "action": "ADD_COLUMN",
+                "column": {"name": "extra", "data_type": "TEXT"},
+            },
         )
         assert resp.status_code == 403
 
 
 class TestCreateDatabase:
-    async def test_without_global_admin_returns_403(self, auth_as, make_user_session_factory):
+    async def test_without_global_admin_returns_403(
+        self, auth_as, make_user_session_factory
+    ):
         authed = auth_as(org_scoped_session(make_user_session_factory))
-        resp = await authed.post(f"{BASE}/", json={"database_name": f"test_db_{uuid.uuid4().hex}"})
+        resp = await authed.post(
+            f"{BASE}/", json={"database_name": f"test_db_{uuid.uuid4().hex}"}
+        )
         assert resp.status_code == 403
 
     async def test_without_auth_returns_401(self, client):

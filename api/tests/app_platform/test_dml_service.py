@@ -10,16 +10,25 @@ from datetime import datetime, timedelta, timezone
 
 from app_platform.schema_manager.services.dml_service import DmlService
 from core.security.services.encrypt_service import encrypt_service
-from tests.receivables.conftest import build_credit, build_debtor, build_organization, build_portfolio
+from tests.receivables.conftest import (
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 
 class TestExecuteQueryFilters:
     async def test_equality_filter(self, db_session):
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "paises", "columns": ["codigo", "nombre"], "filters": [
-                {"column": "codigo", "op": "=", "value": "CO"}
-            ]}],
+            tables=[
+                {
+                    "name": "paises",
+                    "columns": ["codigo", "nombre"],
+                    "filters": [{"column": "codigo", "op": "=", "value": "CO"}],
+                }
+            ],
         )
         assert result["success"] is True
         rows = json.loads(result["data"])
@@ -29,9 +38,15 @@ class TestExecuteQueryFilters:
     async def test_in_filter(self, db_session):
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "paises", "columns": ["codigo"], "filters": [
-                {"column": "codigo", "op": "in", "value": ["CO", "MX"]}
-            ]}],
+            tables=[
+                {
+                    "name": "paises",
+                    "columns": ["codigo"],
+                    "filters": [
+                        {"column": "codigo", "op": "in", "value": ["CO", "MX"]}
+                    ],
+                }
+            ],
         )
         assert result["success"] is True
         rows = json.loads(result["data"])
@@ -42,9 +57,15 @@ class TestExecuteQueryFilters:
     async def test_contains_filter_via_ilike(self, db_session):
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "paises", "columns": ["codigo", "nombre"], "filters": [
-                {"column": "nombre", "op": "ilike", "value": "%colomb%"}
-            ]}],
+            tables=[
+                {
+                    "name": "paises",
+                    "columns": ["codigo", "nombre"],
+                    "filters": [
+                        {"column": "nombre", "op": "ilike", "value": "%colomb%"}
+                    ],
+                }
+            ],
         )
         assert result["success"] is True
         rows = json.loads(result["data"])
@@ -57,9 +78,19 @@ class TestExecuteQueryFilters:
         start = (datetime.now(timezone.utc) - timedelta(days=1)).date().isoformat()
         end = (datetime.now(timezone.utc) + timedelta(days=1)).date().isoformat()
         result = await service.execute_query(
-            tables=[{"name": "paises", "columns": ["codigo"], "filters": [
-                {"column": "fecha_creacion", "op": "between", "value": [start, end]}
-            ]}],
+            tables=[
+                {
+                    "name": "paises",
+                    "columns": ["codigo"],
+                    "filters": [
+                        {
+                            "column": "fecha_creacion",
+                            "op": "between",
+                            "value": [start, end],
+                        }
+                    ],
+                }
+            ],
         )
         assert result["success"] is True
         assert result["rows"] >= 5
@@ -67,21 +98,37 @@ class TestExecuteQueryFilters:
     async def test_no_matching_rows_still_succeeds(self, db_session):
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "paises", "columns": ["codigo"], "filters": [
-                {"column": "codigo", "op": "=", "value": "ZZ"}
-            ]}],
+            tables=[
+                {
+                    "name": "paises",
+                    "columns": ["codigo"],
+                    "filters": [{"column": "codigo", "op": "=", "value": "ZZ"}],
+                }
+            ],
         )
         assert result["success"] is True
         assert result["rows"] == 0
 
-    async def test_invalid_identifier_in_filter_column_fails_gracefully(self, db_session):
+    async def test_invalid_identifier_in_filter_column_fails_gracefully(
+        self, db_session
+    ):
         # `execute_query` atrapa el ValueError de sanitización y responde success=False
         # en vez de dejar que el error suba: nunca interpola el identificador crudo.
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "paises", "columns": ["codigo"], "filters": [
-                {"column": "codigo; DROP TABLE paises; --", "op": "=", "value": "CO"}
-            ]}],
+            tables=[
+                {
+                    "name": "paises",
+                    "columns": ["codigo"],
+                    "filters": [
+                        {
+                            "column": "codigo; DROP TABLE paises; --",
+                            "op": "=",
+                            "value": "CO",
+                        }
+                    ],
+                }
+            ],
         )
         assert result["success"] is False
         assert result["error"]
@@ -99,7 +146,9 @@ class TestExecuteQueryErrorReporting:
 
     async def test_unknown_column_reports_which_column(self, db_session):
         service = DmlService(db_session)
-        result = await service.execute_query(tables=[{"name": "paises", "columns": ["no_existe"]}])
+        result = await service.execute_query(
+            tables=[{"name": "paises", "columns": ["no_existe"]}]
+        )
         assert result["success"] is False
         assert result["status_code"] == 422
         assert "no existe" in result["error"]
@@ -108,7 +157,9 @@ class TestExecuteQueryErrorReporting:
 
     async def test_unknown_table_is_user_error(self, db_session):
         service = DmlService(db_session)
-        result = await service.execute_query(tables=[{"name": "tabla_que_no_existe", "columns": ["id"]}])
+        result = await service.execute_query(
+            tables=[{"name": "tabla_que_no_existe", "columns": ["id"]}]
+        )
         assert result["success"] is False
         assert result["status_code"] == 422
         assert "tablas configuradas no existe" in result["error"]
@@ -117,9 +168,19 @@ class TestExecuteQueryErrorReporting:
     async def test_invalid_date_value_reports_format_problem(self, db_session):
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "paises", "columns": ["codigo"], "filters": [
-                {"column": "fecha_creacion", "op": "=", "value": "no-es-una-fecha"}
-            ]}],
+            tables=[
+                {
+                    "name": "paises",
+                    "columns": ["codigo"],
+                    "filters": [
+                        {
+                            "column": "fecha_creacion",
+                            "op": "=",
+                            "value": "no-es-una-fecha",
+                        }
+                    ],
+                }
+            ],
         )
         assert result["success"] is False
         assert result["status_code"] == 422
@@ -129,7 +190,10 @@ class TestExecuteQueryErrorReporting:
     async def test_join_without_right_table_reports_missing_field(self, db_session):
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "paises", "columns": ["codigo"]}, {"name": "creditos", "columns": ["id"]}],
+            tables=[
+                {"name": "paises", "columns": ["codigo"]},
+                {"name": "creditos", "columns": ["id"]},
+            ],
             joins=[{"left": "paises", "left_on": "id", "right_on": "id"}],
         )
         assert result["success"] is False
@@ -140,8 +204,19 @@ class TestExecuteQueryErrorReporting:
         # El wizard permite guardar un join con las columnas vacías: se corrige editándolo.
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "deudores", "columns": ["id"]}, {"name": "creditos", "columns": ["id"]}],
-            joins=[{"left": "deudores", "right": "creditos", "left_on": "", "right_on": "", "how": "inner"}],
+            tables=[
+                {"name": "deudores", "columns": ["id"]},
+                {"name": "creditos", "columns": ["id"]},
+            ],
+            joins=[
+                {
+                    "left": "deudores",
+                    "right": "creditos",
+                    "left_on": "",
+                    "right_on": "",
+                    "how": "inner",
+                }
+            ],
         )
         assert result["success"] is False
         assert result["status_code"] == 422
@@ -154,20 +229,36 @@ class TestExecuteQueryErrorReporting:
                 {"name": "creditos", "alias": "creditos", "columns": ["id"]},
                 {"name": "deudores", "alias": "creditos", "columns": ["id"]},
             ],
-            joins=[{"left": "creditos", "right": "deudores", "left_on": "id_deudor", "right_on": "id", "how": "inner"}],
+            joins=[
+                {
+                    "left": "creditos",
+                    "right": "deudores",
+                    "left_on": "id_deudor",
+                    "right_on": "id",
+                    "how": "inner",
+                }
+            ],
         )
         assert result["success"] is False
         assert result["status_code"] == 422
         assert "'creditos' está repetido" in result["error"]
 
-    async def test_multiple_tables_without_joins_asks_for_joins_in_spanish(self, db_session):
+    async def test_multiple_tables_without_joins_asks_for_joins_in_spanish(
+        self, db_session
+    ):
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "deudores", "columns": ["id"]}, {"name": "creditos", "columns": ["id"]}],
+            tables=[
+                {"name": "deudores", "columns": ["id"]},
+                {"name": "creditos", "columns": ["id"]},
+            ],
         )
         assert result["success"] is False
         assert result["status_code"] == 422
-        assert result["error"] == "Se requieren uniones (joins) cuando hay más de una tabla."
+        assert (
+            result["error"]
+            == "Se requieren uniones (joins) cuando hay más de una tabla."
+        )
 
     async def test_validation_error_is_user_error(self, db_session):
         service = DmlService(db_session)
@@ -179,9 +270,15 @@ class TestExecuteQueryErrorReporting:
         # Regresión del incidente: `numero_documento = 6168564922` (varchar = bigint).
         service = DmlService(db_session)
         result = await service.execute_query(
-            tables=[{"name": "deudores", "columns": ["id"], "filters": [
-                {"column": "numero_documento", "op": "=", "value": "6168564922"}
-            ]}],
+            tables=[
+                {
+                    "name": "deudores",
+                    "columns": ["id"],
+                    "filters": [
+                        {"column": "numero_documento", "op": "=", "value": "6168564922"}
+                    ],
+                }
+            ],
         )
         assert result["success"] is True
         assert result["rows"] == 0
@@ -192,7 +289,9 @@ class TestRowsToDicts:
 
     def test_decrypts_only_requested_columns(self):
         token = encrypt_service.encrypt_to_str("6168564922")
-        data = DmlService._rows_to_dicts(["nombre", "documento"], [("Ana", token)], {"documento"})
+        data = DmlService._rows_to_dicts(
+            ["nombre", "documento"], [("Ana", token)], {"documento"}
+        )
         assert data == [{"nombre": "Ana", "documento": "6168564922"}]
 
     def test_leaves_token_untouched_when_column_not_requested(self):
@@ -201,7 +300,9 @@ class TestRowsToDicts:
         assert data == [{"documento": token}]
 
     def test_undecryptable_value_becomes_none_instead_of_failing(self):
-        data = DmlService._rows_to_dicts(["documento"], [("v1:corrupto:corrupto:corrupto",)], {"documento"})
+        data = DmlService._rows_to_dicts(
+            ["documento"], [("v1:corrupto:corrupto:corrupto",)], {"documento"}
+        )
         assert data == [{"documento": None}]
 
 
@@ -226,9 +327,15 @@ class TestExecuteQueryDecryptSensitive:
         document = f"{uuid.uuid4().int % 10**10:010d}"
         org, portfolio = await self._debtor_in_portfolio(db_session, document)
         result = await DmlService(db_session).execute_query(
-            tables=[{"name": "deudores", "columns": ["numero_documento"], "filters": [
-                {"column": "numero_documento", "op": "=", "value": document}
-            ]}],
+            tables=[
+                {
+                    "name": "deudores",
+                    "columns": ["numero_documento"],
+                    "filters": [
+                        {"column": "numero_documento", "op": "=", "value": document}
+                    ],
+                }
+            ],
             portfolio_ids=[portfolio.id],
             organization_ids=[org.id],
             decrypt_sensitive=True,
@@ -240,9 +347,15 @@ class TestExecuteQueryDecryptSensitive:
         document = f"{uuid.uuid4().int % 10**10:010d}"
         org, portfolio = await self._debtor_in_portfolio(db_session, document)
         result = await DmlService(db_session).execute_query(
-            tables=[{"name": "deudores", "columns": ["numero_documento"], "filters": [
-                {"column": "numero_documento", "op": "=", "value": document}
-            ]}],
+            tables=[
+                {
+                    "name": "deudores",
+                    "columns": ["numero_documento"],
+                    "filters": [
+                        {"column": "numero_documento", "op": "=", "value": document}
+                    ],
+                }
+            ],
             portfolio_ids=[portfolio.id],
             organization_ids=[org.id],
         )
@@ -256,12 +369,29 @@ class TestExecuteQueryDecryptSensitive:
         org, portfolio = await self._debtor_in_portfolio(db_session, document)
         result = await DmlService(db_session).execute_query(
             tables=[
-                {"name": "deudores", "alias": "deudores", "columns": ["numero_documento"], "filters": [
-                    {"column": "numero_documento", "op": "=", "value": document}
-                ]},
-                {"name": "creditos", "alias": "creditos", "columns": ["numero_credito"]},
+                {
+                    "name": "deudores",
+                    "alias": "deudores",
+                    "columns": ["numero_documento"],
+                    "filters": [
+                        {"column": "numero_documento", "op": "=", "value": document}
+                    ],
+                },
+                {
+                    "name": "creditos",
+                    "alias": "creditos",
+                    "columns": ["numero_credito"],
+                },
             ],
-            joins=[{"left": "deudores", "right": "creditos", "left_on": "id", "right_on": "id_deudor", "how": "inner"}],
+            joins=[
+                {
+                    "left": "deudores",
+                    "right": "creditos",
+                    "left_on": "id",
+                    "right_on": "id_deudor",
+                    "how": "inner",
+                }
+            ],
             portfolio_ids=[portfolio.id],
             organization_ids=[org.id],
             decrypt_sensitive=True,
@@ -284,7 +414,9 @@ class TestExecuteQueryTenantScope:
         assert result["success"] is False
         assert "no está habilitada" in result["error"]
 
-    async def test_allowlisted_table_with_no_matching_portfolio_returns_zero_rows(self, db_session):
+    async def test_allowlisted_table_with_no_matching_portfolio_returns_zero_rows(
+        self, db_session
+    ):
         # `creditos` sí está en el allowlist: con un portfolio_id que no existe, la
         # condición de scoping se aplica y no debe devolver ninguna fila (ni tampoco
         # fallar por construir mal el SQL).

@@ -31,7 +31,10 @@ async def _register_and_get_token(client, db_session) -> tuple[str, str]:
 class TestChatWebSocket:
     async def test_list_chats_valid_empty(self, client, db_session, ws_client):
         token, _user_id = await _register_and_get_token(client, db_session)
-        async with ws_client() as ac, aconnect_ws(WS_URL, client=ac, headers=_cookie(token)) as ws:
+        async with (
+            ws_client() as ac,
+            aconnect_ws(WS_URL, client=ac, headers=_cookie(token)) as ws,
+        ):
             await ws.send_json({"event": "list_chats", "data": {}})
             reply = await ws.receive_json()
             assert reply["event"] == "chats"
@@ -44,7 +47,9 @@ class TestChatWebSocket:
                     pass
             assert exc_info.value.code == 1008
 
-    async def test_token_in_the_query_string_is_rejected(self, client, db_session, ws_client):
+    async def test_token_in_the_query_string_is_rejected(
+        self, client, db_session, ws_client
+    ):
         token, _user_id = await _register_and_get_token(client, db_session)
         async with ws_client() as ac:
             with pytest.raises(WebSocketDisconnect) as exc_info:
@@ -55,23 +60,34 @@ class TestChatWebSocket:
     async def test_connect_invalid_token_rejected(self, ws_client):
         async with ws_client() as ac:
             with pytest.raises(WebSocketDisconnect) as exc_info:
-                async with aconnect_ws(WS_URL, client=ac, headers=_cookie("not-a-real-jwt")):
+                async with aconnect_ws(
+                    WS_URL, client=ac, headers=_cookie("not-a-real-jwt")
+                ):
                     pass
             assert exc_info.value.code == 1008
 
-    async def test_create_direct_chat_and_send_message(self, client, db_session, ws_client):
+    async def test_create_direct_chat_and_send_message(
+        self, client, db_session, ws_client
+    ):
         token_a, _user_a_id = await _register_and_get_token(client, db_session)
         client.cookies.clear()
         token_b, user_b_id = await _register_and_get_token(client, db_session)
 
-        async with ws_client() as ac, aconnect_ws(WS_URL, client=ac, headers=_cookie(token_a)) as ws:
-            await ws.send_json({"event": "create_direct_chat", "data": {"peerId": user_b_id}})
+        async with (
+            ws_client() as ac,
+            aconnect_ws(WS_URL, client=ac, headers=_cookie(token_a)) as ws,
+        ):
+            await ws.send_json(
+                {"event": "create_direct_chat", "data": {"peerId": user_b_id}}
+            )
             reply = await ws.receive_json()
             assert reply["event"] == "chat"
             chat_id = reply["data"]["id"]
             assert reply["data"]["peerId"] == user_b_id
 
-            await ws.send_json({"event": "send_message", "data": {"chatId": chat_id, "body": "Hola!"}})
+            await ws.send_json(
+                {"event": "send_message", "data": {"chatId": chat_id, "body": "Hola!"}}
+            )
             msg_reply = await ws.receive_json()
             assert msg_reply["event"] == "message"
             assert msg_reply["data"]["body"] == "Hola!"
@@ -81,54 +97,98 @@ class TestChatWebSocket:
             assert page["event"] == "messages"
             assert len(page["data"]["items"]) == 1
 
-    async def test_send_message_delivers_to_peer_in_real_time(self, client, db_session, ws_client):
+    async def test_send_message_delivers_to_peer_in_real_time(
+        self, client, db_session, ws_client
+    ):
         token_a, _user_a_id = await _register_and_get_token(client, db_session)
         client.cookies.clear()
         token_b, user_b_id = await _register_and_get_token(client, db_session)
 
-        async with ws_client() as ac_a, aconnect_ws(WS_URL, client=ac_a, headers=_cookie(token_a)) as ws_a:
-            await ws_a.send_json({"event": "create_direct_chat", "data": {"peerId": user_b_id}})
+        async with (
+            ws_client() as ac_a,
+            aconnect_ws(WS_URL, client=ac_a, headers=_cookie(token_a)) as ws_a,
+        ):
+            await ws_a.send_json(
+                {"event": "create_direct_chat", "data": {"peerId": user_b_id}}
+            )
             chat_reply = await ws_a.receive_json()
             chat_id = chat_reply["data"]["id"]
 
-            async with ws_client() as ac_b, aconnect_ws(WS_URL, client=ac_b, headers=_cookie(token_b)) as ws_b:
-                await ws_a.send_json({"event": "send_message", "data": {"chatId": chat_id, "body": "En vivo"}})
+            async with (
+                ws_client() as ac_b,
+                aconnect_ws(WS_URL, client=ac_b, headers=_cookie(token_b)) as ws_b,
+            ):
+                await ws_a.send_json(
+                    {
+                        "event": "send_message",
+                        "data": {"chatId": chat_id, "body": "En vivo"},
+                    }
+                )
                 await ws_a.receive_json()  # eco de confirmación para el emisor
 
                 pushed = await asyncio.wait_for(ws_b.receive_json(), timeout=5)
                 assert pushed["event"] == "message"
                 assert pushed["data"]["body"] == "En vivo"
 
-    async def test_send_message_to_chat_not_a_member_of_returns_error_event(self, client, db_session, ws_client):
+    async def test_send_message_to_chat_not_a_member_of_returns_error_event(
+        self, client, db_session, ws_client
+    ):
         token_a, _user_a_id = await _register_and_get_token(client, db_session)
         client.cookies.clear()
         token_b, user_b_id = await _register_and_get_token(client, db_session)
         client.cookies.clear()
         token_c, _user_c_id = await _register_and_get_token(client, db_session)
 
-        async with ws_client() as ac_a, aconnect_ws(WS_URL, client=ac_a, headers=_cookie(token_a)) as ws_a:
-            await ws_a.send_json({"event": "create_direct_chat", "data": {"peerId": user_b_id}})
+        async with (
+            ws_client() as ac_a,
+            aconnect_ws(WS_URL, client=ac_a, headers=_cookie(token_a)) as ws_a,
+        ):
+            await ws_a.send_json(
+                {"event": "create_direct_chat", "data": {"peerId": user_b_id}}
+            )
             chat_id = (await ws_a.receive_json())["data"]["id"]
 
-        async with ws_client() as ac_c, aconnect_ws(WS_URL, client=ac_c, headers=_cookie(token_c)) as ws_c:
-            await ws_c.send_json({"event": "send_message", "data": {"chatId": chat_id, "body": "colado"}})
+        async with (
+            ws_client() as ac_c,
+            aconnect_ws(WS_URL, client=ac_c, headers=_cookie(token_c)) as ws_c,
+        ):
+            await ws_c.send_json(
+                {"event": "send_message", "data": {"chatId": chat_id, "body": "colado"}}
+            )
             reply = await ws_c.receive_json()
             assert reply["event"] == "error"
 
-    async def test_read_marks_messages_and_notifies_peer(self, client, db_session, ws_client):
+    async def test_read_marks_messages_and_notifies_peer(
+        self, client, db_session, ws_client
+    ):
         token_a, _user_a_id = await _register_and_get_token(client, db_session)
         client.cookies.clear()
         token_b, user_b_id = await _register_and_get_token(client, db_session)
 
-        async with ws_client() as ac_a, aconnect_ws(WS_URL, client=ac_a, headers=_cookie(token_a)) as ws_a:
-            await ws_a.send_json({"event": "create_direct_chat", "data": {"peerId": user_b_id}})
+        async with (
+            ws_client() as ac_a,
+            aconnect_ws(WS_URL, client=ac_a, headers=_cookie(token_a)) as ws_a,
+        ):
+            await ws_a.send_json(
+                {"event": "create_direct_chat", "data": {"peerId": user_b_id}}
+            )
             chat_id = (await ws_a.receive_json())["data"]["id"]
 
-            async with ws_client() as ac_b, aconnect_ws(WS_URL, client=ac_b, headers=_cookie(token_b)) as ws_b:
-                await ws_a.send_json({"event": "send_message", "data": {"chatId": chat_id, "body": "leeme"}})
+            async with (
+                ws_client() as ac_b,
+                aconnect_ws(WS_URL, client=ac_b, headers=_cookie(token_b)) as ws_b,
+            ):
+                await ws_a.send_json(
+                    {
+                        "event": "send_message",
+                        "data": {"chatId": chat_id, "body": "leeme"},
+                    }
+                )
                 sent = await ws_a.receive_json()
                 message_id = sent["data"]["id"]
-                await asyncio.wait_for(ws_b.receive_json(), timeout=5)  # push del mensaje a B
+                await asyncio.wait_for(
+                    ws_b.receive_json(), timeout=5
+                )  # push del mensaje a B
 
                 await ws_b.send_json({"event": "read_all", "data": {"chatId": chat_id}})
                 read_push = await asyncio.wait_for(ws_a.receive_json(), timeout=5)

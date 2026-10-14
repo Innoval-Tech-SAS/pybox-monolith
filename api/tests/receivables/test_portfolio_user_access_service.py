@@ -9,8 +9,12 @@ registrado de verdad -- de ahí el helper `create_user`.
 import pytest
 from fastapi import HTTPException
 
-from identity.organizations.models.organization_membership_model import OrganizationMembershipModel
-from receivables.portfolios.services.portfolio_user_access_service import PortfolioUserAccessService
+from identity.organizations.models.organization_membership_model import (
+    OrganizationMembershipModel,
+)
+from receivables.portfolios.services.portfolio_user_access_service import (
+    PortfolioUserAccessService,
+)
 from tests.factories import get_user_by_email, register_payload
 from tests.receivables.conftest import build_organization, build_portfolio
 
@@ -28,7 +32,11 @@ async def create_member(client, db_session, org_id):
     """Usuario real que además es miembro de `org_id`: los accesos solo se conceden a
     miembros de la organización."""
     user = await create_user(client, db_session)
-    db_session.add(OrganizationMembershipModel(user_id=user.id, organization_id=org_id, created_by=user.id))
+    db_session.add(
+        OrganizationMembershipModel(
+            user_id=user.id, organization_id=org_id, created_by=user.id
+        )
+    )
     await db_session.flush()
     return user
 
@@ -51,7 +59,9 @@ class TestGrantAccess:
         assert access.user_id == user.id
         assert access.granted_by == granter.id
 
-    async def test_grant_is_idempotent_for_an_already_active_access(self, client, db_session):
+    async def test_grant_is_idempotent_for_an_already_active_access(
+        self, client, db_session
+    ):
         org = build_organization()
         db_session.add(org)
         await db_session.flush()
@@ -83,7 +93,9 @@ class TestGrantAccess:
         service = PortfolioUserAccessService(db_session)
         await service.grant_access(user.id, portfolio.id, org.id, first_granter.id)
         await service.revoke_access(user.id, portfolio.id, org.id)
-        reactivated = await service.grant_access(user.id, portfolio.id, org.id, new_granter.id)
+        reactivated = await service.grant_access(
+            user.id, portfolio.id, org.id, new_granter.id
+        )
 
         assert reactivated.is_active is True
         assert reactivated.revoked_at is None
@@ -204,7 +216,9 @@ class TestReplaceAccess:
         service = PortfolioUserAccessService(db_session)
         await service.grant_access(user_a.id, portfolio.id, org.id, granter.id)
 
-        result = await service.replace_access(portfolio.id, org.id, [user_b.id], granter.id)
+        result = await service.replace_access(
+            portfolio.id, org.id, [user_b.id], granter.id
+        )
 
         assert {a.user_id for a in result} == {user_b.id}
         remaining = await service.list_portfolio_access(portfolio.id)

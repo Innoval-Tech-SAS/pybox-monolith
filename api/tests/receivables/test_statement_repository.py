@@ -8,7 +8,12 @@ from datetime import datetime, timedelta, timezone
 from app_platform.documents.models.document_model import DocumentModel
 from receivables.statements.models.statement_model import StatementModel
 from receivables.statements.repository.statement_repository import StatementRepository
-from tests.receivables.conftest import build_credit, build_debtor, build_organization, build_portfolio
+from tests.receivables.conftest import (
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 
 async def _fake_document(db_session) -> uuid.UUID:
@@ -43,7 +48,9 @@ async def _setup(db_session):
     return org, portfolio, debtor, credit
 
 
-def _statement(*, debtor_id, portfolio_id, organization_id, document_id, **overrides) -> StatementModel:
+def _statement(
+    *, debtor_id, portfolio_id, organization_id, document_id, **overrides
+) -> StatementModel:
     defaults = dict(
         debtor_id=debtor_id,
         portfolio_id=portfolio_id,
@@ -64,15 +71,22 @@ class TestListByDebtorAndPortfolio:
         await db_session.flush()
 
         visible = _statement(
-            debtor_id=debtor.id, portfolio_id=portfolio.id, organization_id=org.id,
+            debtor_id=debtor.id,
+            portfolio_id=portfolio.id,
+            organization_id=org.id,
             document_id=await _fake_document(db_session),
         )
         deleted = _statement(
-            debtor_id=debtor.id, portfolio_id=portfolio.id, organization_id=org.id,
-            document_id=await _fake_document(db_session), deleted_at=datetime.now(timezone.utc),
+            debtor_id=debtor.id,
+            portfolio_id=portfolio.id,
+            organization_id=org.id,
+            document_id=await _fake_document(db_session),
+            deleted_at=datetime.now(timezone.utc),
         )
         other_portfolio_statement = _statement(
-            debtor_id=debtor.id, portfolio_id=other_portfolio.id, organization_id=org.id,
+            debtor_id=debtor.id,
+            portfolio_id=other_portfolio.id,
+            organization_id=org.id,
             document_id=await _fake_document(db_session),
         )
         db_session.add_all([visible, deleted, other_portfolio_statement])
@@ -87,14 +101,20 @@ class TestListByDebtorAndPortfolio:
         _, portfolio, debtor, _ = await _setup(db_session)
         now = datetime.now(timezone.utc)
         older = _statement(
-            debtor_id=debtor.id, portfolio_id=portfolio.id, organization_id=portfolio.organization_id,
-            document_id=await _fake_document(db_session), created_at=now - timedelta(days=1),
+            debtor_id=debtor.id,
+            portfolio_id=portfolio.id,
+            organization_id=portfolio.organization_id,
+            document_id=await _fake_document(db_session),
+            created_at=now - timedelta(days=1),
         )
         db_session.add(older)
         await db_session.flush()
         newer = _statement(
-            debtor_id=debtor.id, portfolio_id=portfolio.id, organization_id=portfolio.organization_id,
-            document_id=await _fake_document(db_session), created_at=now,
+            debtor_id=debtor.id,
+            portfolio_id=portfolio.id,
+            organization_id=portfolio.organization_id,
+            document_id=await _fake_document(db_session),
+            created_at=now,
         )
         db_session.add(newer)
         await db_session.flush()
@@ -116,11 +136,15 @@ class TestListByDebtor:
         await db_session.flush()
 
         stmt_a = _statement(
-            debtor_id=debtor.id, portfolio_id=portfolio.id, organization_id=org.id,
+            debtor_id=debtor.id,
+            portfolio_id=portfolio.id,
+            organization_id=org.id,
             document_id=await _fake_document(db_session),
         )
         stmt_b = _statement(
-            debtor_id=debtor.id, portfolio_id=other_portfolio.id, organization_id=other_org.id,
+            debtor_id=debtor.id,
+            portfolio_id=other_portfolio.id,
+            organization_id=other_org.id,
             document_id=await _fake_document(db_session),
         )
         db_session.add_all([stmt_a, stmt_b])
@@ -140,7 +164,9 @@ class TestGetOwnedByDebtorAndPortfolio:
         await db_session.flush()
 
         statement = _statement(
-            debtor_id=debtor.id, portfolio_id=portfolio.id, organization_id=portfolio.organization_id,
+            debtor_id=debtor.id,
+            portfolio_id=portfolio.id,
+            organization_id=portfolio.organization_id,
             document_id=await _fake_document(db_session),
         )
         db_session.add(statement)
@@ -157,12 +183,18 @@ class TestGetOwnedByDebtorAndPortfolio:
         await db_session.flush()
 
         statement = _statement(
-            debtor_id=debtor.id, portfolio_id=portfolio.id, organization_id=org.id,
+            debtor_id=debtor.id,
+            portfolio_id=portfolio.id,
+            organization_id=org.id,
             document_id=await _fake_document(db_session),
         )
         db_session.add(statement)
         await db_session.flush()
 
         repo = StatementRepository(db_session)
-        assert await repo.get_by_id_and_portfolio(statement.id, other_portfolio.id) is None
-        assert await repo.get_by_id_and_portfolio(statement.id, portfolio.id) is not None
+        assert (
+            await repo.get_by_id_and_portfolio(statement.id, other_portfolio.id) is None
+        )
+        assert (
+            await repo.get_by_id_and_portfolio(statement.id, portfolio.id) is not None
+        )

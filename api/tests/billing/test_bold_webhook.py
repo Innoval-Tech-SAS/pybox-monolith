@@ -32,7 +32,12 @@ class TestVerifyBoldSignature:
 
     def test_invalid_signature_returns_false(self, monkeypatch):
         monkeypatch.setenv("BOLD_SECRET_KEY", "top-secret")
-        assert verify_bold_signature(b'{"type": "SALE_APPROVED"}', "not-the-real-signature") is False
+        assert (
+            verify_bold_signature(
+                b'{"type": "SALE_APPROVED"}', "not-the-real-signature"
+            )
+            is False
+        )
 
     def test_empty_body_with_wrong_signature_returns_false(self, monkeypatch):
         monkeypatch.setenv("BOLD_SECRET_KEY", "top-secret")
@@ -40,7 +45,9 @@ class TestVerifyBoldSignature:
 
     def test_valid_signature_returns_true(self, monkeypatch):
         monkeypatch.setenv("BOLD_SECRET_KEY", "top-secret")
-        body = b'{"type": "SALE_APPROVED", "data": {"metadata": {"reference": "INV-1"}}}'
+        body = (
+            b'{"type": "SALE_APPROVED", "data": {"metadata": {"reference": "INV-1"}}}'
+        )
         signature = _sign(body, "top-secret")
         assert verify_bold_signature(body, signature) is True
 
@@ -59,7 +66,10 @@ class TestBoldWebhookServiceProcessWebhook:
 
     async def test_invalid_signature_returns_401_without_processing(self):
         service, invoice_service = self._service()
-        with patch("billing.bold.services.bold_webhook_service.verify_bold_signature", return_value=False):
+        with patch(
+            "billing.bold.services.bold_webhook_service.verify_bold_signature",
+            return_value=False,
+        ):
             with pytest.raises(HTTPException) as exc_info:
                 await service.process_webhook(b'{"type": "SALE_APPROVED"}', "bad-sig")
         assert exc_info.value.status_code == 401
@@ -67,36 +77,53 @@ class TestBoldWebhookServiceProcessWebhook:
 
     async def test_non_sale_approved_type_does_not_mark_paid(self):
         service, invoice_service = self._service()
-        body = b'{"type": "SALE_REJECTED", "data": {"metadata": {"reference": "INV-1"}}}'
-        with patch("billing.bold.services.bold_webhook_service.verify_bold_signature", return_value=True):
+        body = (
+            b'{"type": "SALE_REJECTED", "data": {"metadata": {"reference": "INV-1"}}}'
+        )
+        with patch(
+            "billing.bold.services.bold_webhook_service.verify_bold_signature",
+            return_value=True,
+        ):
             await service.process_webhook(body, "sig")
         invoice_service.mark_attempt_paid.assert_not_awaited()
 
     async def test_sale_approved_without_reference_does_not_mark_paid(self):
         service, invoice_service = self._service()
         body = b'{"type": "SALE_APPROVED", "data": {"metadata": {}}}'
-        with patch("billing.bold.services.bold_webhook_service.verify_bold_signature", return_value=True):
+        with patch(
+            "billing.bold.services.bold_webhook_service.verify_bold_signature",
+            return_value=True,
+        ):
             await service.process_webhook(body, "sig")
         invoice_service.mark_attempt_paid.assert_not_awaited()
 
     async def test_sale_approved_missing_data_entirely_does_not_mark_paid(self):
         service, invoice_service = self._service()
         body = b'{"type": "SALE_APPROVED"}'
-        with patch("billing.bold.services.bold_webhook_service.verify_bold_signature", return_value=True):
+        with patch(
+            "billing.bold.services.bold_webhook_service.verify_bold_signature",
+            return_value=True,
+        ):
             await service.process_webhook(body, "sig")
         invoice_service.mark_attempt_paid.assert_not_awaited()
 
     async def test_invalid_json_body_does_not_crash_and_does_not_process(self):
         service, invoice_service = self._service()
         body = b"{not-valid-json{{{"
-        with patch("billing.bold.services.bold_webhook_service.verify_bold_signature", return_value=True):
+        with patch(
+            "billing.bold.services.bold_webhook_service.verify_bold_signature",
+            return_value=True,
+        ):
             await service.process_webhook(body, "sig")  # no debe lanzar
         invoice_service.mark_attempt_paid.assert_not_awaited()
 
     async def test_sale_approved_with_reference_marks_paid(self):
         service, invoice_service = self._service()
         body = b'{"type": "SALE_APPROVED", "data": {"amount": 15000, "metadata": {"reference": "INV-1-1"}}}'
-        with patch("billing.bold.services.bold_webhook_service.verify_bold_signature", return_value=True):
+        with patch(
+            "billing.bold.services.bold_webhook_service.verify_bold_signature",
+            return_value=True,
+        ):
             await service.process_webhook(body, "sig")
         invoice_service.mark_attempt_paid.assert_awaited_once()
         args = invoice_service.mark_attempt_paid.await_args.args
@@ -155,7 +182,9 @@ class TestGenerateIntegrityHash:
         "order_id,amount,currency",
         [("INV-3", 5000, "COP"), ("INV-2", 5001, "COP"), ("INV-2", 5000, "USD")],
     )
-    def test_changing_any_input_changes_the_hash(self, monkeypatch, order_id, amount, currency):
+    def test_changing_any_input_changes_the_hash(
+        self, monkeypatch, order_id, amount, currency
+    ):
         monkeypatch.setenv("BOLD_SECRET_KEY", "top-secret")
         baseline = generate_integrity_hash("INV-2", 5000, "COP")
 

@@ -14,6 +14,27 @@ disable=
     # entienda mejor. Mismo motivo para Mapped[...] y otros genéricos.
     not-callable,
     unsubscriptable-object,
+    # Categorías de "forma"/tamaño que el proyecto decidió no perseguir de forma
+    # proactiva (ver skill pylint-compliance): dividir una función o clase solo
+    # para bajar un contador no mejora la legibilidad por sí mismo, y
+    # duplicate-code dispara con falsos positivos entre archivos que comparten
+    # estructura (tests, repositories) sin compartir lógica real.
+    duplicate-code,
+    too-many-arguments,
+    too-many-positional-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-instance-attributes,
+    too-many-public-methods,
+    too-many-lines,
+    too-many-return-statements,
+    # `except Exception` es el patrón correcto en los límites del sistema (jobs
+    # en background, llamadas a proveedores externos, loops de batch/CSV, el
+    # middleware global de excepciones): no debe tumbar el proceso por un fallo
+    # no previsto, y acotar a tipos específicos ahí sería adivinar sin
+    # beneficio real. Revisado caso por caso antes de deshabilitarlo.
+    broad-exception-caught,
 
 [VARIABLES]
 # `id` es el nombre idiomático del identificador de recurso en la API REST (y

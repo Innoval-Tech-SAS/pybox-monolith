@@ -13,7 +13,10 @@ import pytest
 from fastapi import HTTPException
 
 from messaging.channels.enums.channel_enums import ChannelName, Currency
-from messaging.channels.schemas.channel_schemas import ChannelCreateRequest, ChannelUpdateRequest
+from messaging.channels.schemas.channel_schemas import (
+    ChannelCreateRequest,
+    ChannelUpdateRequest,
+)
 from messaging.channels.services.channel_service import ChannelService
 
 
@@ -62,7 +65,11 @@ class TestCreate:
         repo.add = AsyncMock(side_effect=lambda c: c)
 
         data = ChannelCreateRequest(
-            name=ChannelName.SMS, label="SMS", currency=Currency.USD, unit_price="0.25", description="desc"
+            name=ChannelName.SMS,
+            label="SMS",
+            currency=Currency.USD,
+            unit_price="0.25",
+            description="desc",
         )
         result = await service.create(data)
 

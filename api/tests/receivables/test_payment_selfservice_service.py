@@ -17,8 +17,16 @@ from core.security.services.encrypt_service import encrypt_service
 from identity.users.enums.user_enums import UserRole, UserScope
 from receivables.payments.enums.payment_enums import PaymentStatus
 from receivables.payments.models.payment_model import PaymentModel
-from receivables.payments.services.payment_selfservice_service import PaymentSelfServiceService
-from tests.receivables.conftest import add_organization, build_credit, build_debtor, build_organization, build_portfolio
+from receivables.payments.services.payment_selfservice_service import (
+    PaymentSelfServiceService,
+)
+from tests.receivables.conftest import (
+    add_organization,
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 
 def self_session(make_user_session_factory, document_number_hash: str):
@@ -70,25 +78,35 @@ class TestResolveOwnedPaymentIdor:
         self, db_session, make_user_session_factory, payment_of_another_debtor
     ):
         requester_doc = "222333444"
-        requester = build_debtor((await add_organization(db_session)).id, document_number_plain=requester_doc)
+        requester = build_debtor(
+            (await add_organization(db_session)).id, document_number_plain=requester_doc
+        )
         db_session.add(requester)
         await db_session.flush()
 
         service = PaymentSelfServiceService(db_session)
-        session = self_session(make_user_session_factory, encrypt_service.hash_document(requester_doc))
+        session = self_session(
+            make_user_session_factory, encrypt_service.hash_document(requester_doc)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service._resolve_owned_payment(session, payment_of_another_debtor.id)
         assert exc_info.value.status_code == 404
 
-    async def test_unknown_payment_raises_404(self, db_session, make_user_session_factory):
+    async def test_unknown_payment_raises_404(
+        self, db_session, make_user_session_factory
+    ):
         requester_doc = "555666777"
-        requester = build_debtor((await add_organization(db_session)).id, document_number_plain=requester_doc)
+        requester = build_debtor(
+            (await add_organization(db_session)).id, document_number_plain=requester_doc
+        )
         db_session.add(requester)
         await db_session.flush()
 
         service = PaymentSelfServiceService(db_session)
-        session = self_session(make_user_session_factory, encrypt_service.hash_document(requester_doc))
+        session = self_session(
+            make_user_session_factory, encrypt_service.hash_document(requester_doc)
+        )
 
         with pytest.raises(HTTPException) as exc_info:
             await service._resolve_owned_payment(session, uuid.uuid4())
@@ -111,9 +129,13 @@ class TestResolveOwnedPaymentIdor:
         payment = await _add_payment(db_session, credit.id)
 
         service = PaymentSelfServiceService(db_session)
-        session = self_session(make_user_session_factory, encrypt_service.hash_document(doc_number))
+        session = self_session(
+            make_user_session_factory, encrypt_service.hash_document(doc_number)
+        )
 
-        resolved_payment, resolved_credit, org_id, _tz = await service._resolve_owned_payment(session, payment.id)
+        resolved_payment, resolved_credit, org_id, _tz = (
+            await service._resolve_owned_payment(session, payment.id)
+        )
         assert resolved_payment.id == payment.id
         assert resolved_credit.id == credit.id
         assert org_id == org.id

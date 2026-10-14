@@ -12,8 +12,16 @@ from receivables.credits.repository.credit_repository import CreditRepository
 from receivables.payments.enums.payment_enums import PaymentStatus
 from receivables.payments.models.payment_model import PaymentModel
 from receivables.payments.repository.payment_repository import PaymentRepository
-from receivables.portfolios.services.installment_csv_service import InstallmentCsvService
-from tests.receivables.conftest import build_credit, build_debtor, build_organization, build_portfolio, build_installments_csv
+from receivables.portfolios.services.installment_csv_service import (
+    InstallmentCsvService,
+)
+from tests.receivables.conftest import (
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+    build_installments_csv,
+)
 
 
 def installment_row(**overrides) -> dict[str, str]:
@@ -56,7 +64,9 @@ async def portfolio_with_credit(db_session):
 
 
 class TestUploadCreatesAndUpdatesInstallments:
-    async def test_new_installment_number_creates_a_payment(self, db_session, portfolio_with_credit):
+    async def test_new_installment_number_creates_a_payment(
+        self, db_session, portfolio_with_credit
+    ):
         portfolio, credit = portfolio_with_credit
         service = InstallmentCsvService(db_session)
         csv_bytes = build_installments_csv([installment_row()])
@@ -75,14 +85,20 @@ class TestUploadCreatesAndUpdatesInstallments:
         assert payment.payment_amount == 150000
         assert payment.status == PaymentStatus.PENDING
 
-    async def test_existing_installment_number_updates_the_payment(self, db_session, portfolio_with_credit):
+    async def test_existing_installment_number_updates_the_payment(
+        self, db_session, portfolio_with_credit
+    ):
         portfolio, credit = portfolio_with_credit
         service = InstallmentCsvService(db_session)
-        await service.upload(portfolio.id, build_installments_csv([installment_row()]), "cuotas.csv")
+        await service.upload(
+            portfolio.id, build_installments_csv([installment_row()]), "cuotas.csv"
+        )
 
         result = await service.upload(
             portfolio.id,
-            build_installments_csv([installment_row(**{"total": "200000", "Fecha del pago": "10/01/2026"})]),
+            build_installments_csv(
+                [installment_row(**{"total": "200000", "Fecha del pago": "10/01/2026"})]
+            ),
             "cuotas2.csv",
         )
 
@@ -96,7 +112,9 @@ class TestUploadCreatesAndUpdatesInstallments:
 
 
 class TestUploadFullSettlement:
-    async def test_settles_credit_and_closes_pending_installments(self, db_session, portfolio_with_credit):
+    async def test_settles_credit_and_closes_pending_installments(
+        self, db_session, portfolio_with_credit
+    ):
         portfolio, credit = portfolio_with_credit
         payment_repo = PaymentRepository(db_session)
         pending = await payment_repo.add(
@@ -110,9 +128,16 @@ class TestUploadFullSettlement:
         )
 
         service = InstallmentCsvService(db_session)
-        csv_bytes = build_installments_csv([
-            installment_row(**{"Pago total del credito": "si", "Numero de la cuota que se cancela": ""})
-        ])
+        csv_bytes = build_installments_csv(
+            [
+                installment_row(
+                    **{
+                        "Pago total del credito": "si",
+                        "Numero de la cuota que se cancela": "",
+                    }
+                )
+            ]
+        )
         result = await service.upload(portfolio.id, csv_bytes, "cuotas.csv")
 
         assert result.creditos_liquidados == 1
@@ -129,12 +154,18 @@ class TestUploadErrors:
     async def test_portfolio_not_found_raises(self, db_session):
         service = InstallmentCsvService(db_session)
         with pytest.raises(ValueError, match="no encontrado"):
-            await service.upload(uuid.uuid4(), build_installments_csv([installment_row()]), "cuotas.csv")
+            await service.upload(
+                uuid.uuid4(), build_installments_csv([installment_row()]), "cuotas.csv"
+            )
 
-    async def test_unknown_credit_number_is_reported_as_error_row(self, db_session, portfolio_with_credit):
+    async def test_unknown_credit_number_is_reported_as_error_row(
+        self, db_session, portfolio_with_credit
+    ):
         portfolio, _credit = portfolio_with_credit
         service = InstallmentCsvService(db_session)
-        csv_bytes = build_installments_csv([installment_row(**{"Numero de credito": "NO-EXISTE"})])
+        csv_bytes = build_installments_csv(
+            [installment_row(**{"Numero de credito": "NO-EXISTE"})]
+        )
 
         result = await service.upload(portfolio.id, csv_bytes, "cuotas.csv")
 
@@ -143,7 +174,9 @@ class TestUploadErrors:
         assert len(result.errors) == 1
         assert "NO-EXISTE" in result.errors[0]
 
-    async def test_credit_in_different_portfolio_is_reported_as_error_row(self, db_session, portfolio_with_credit):
+    async def test_credit_in_different_portfolio_is_reported_as_error_row(
+        self, db_session, portfolio_with_credit
+    ):
         _portfolio, credit = portfolio_with_credit
         other_org = build_organization()
         db_session.add(other_org)
@@ -153,7 +186,9 @@ class TestUploadErrors:
         await db_session.flush()
 
         service = InstallmentCsvService(db_session)
-        csv_bytes = build_installments_csv([installment_row(**{"Numero de credito": credit.credit_number})])
+        csv_bytes = build_installments_csv(
+            [installment_row(**{"Numero de credito": credit.credit_number})]
+        )
 
         result = await service.upload(other_portfolio.id, csv_bytes, "cuotas.csv")
 
@@ -180,9 +215,15 @@ class TestUploadCharacterizationGolden:
         db_session.add(debtor)
         await db_session.flush()
 
-        credit_update = build_credit(portfolio.id, debtor.id, credit_number="CR-GOLDEN-UPDATE")
-        credit_insert = build_credit(portfolio.id, debtor.id, credit_number="CR-GOLDEN-INSERT")
-        credit_settle = build_credit(portfolio.id, debtor.id, credit_number="CR-GOLDEN-SETTLE")
+        credit_update = build_credit(
+            portfolio.id, debtor.id, credit_number="CR-GOLDEN-UPDATE"
+        )
+        credit_insert = build_credit(
+            portfolio.id, debtor.id, credit_number="CR-GOLDEN-INSERT"
+        )
+        credit_settle = build_credit(
+            portfolio.id, debtor.id, credit_number="CR-GOLDEN-SETTLE"
+        )
         db_session.add_all([credit_update, credit_insert, credit_settle])
         await db_session.flush()
 
@@ -207,26 +248,34 @@ class TestUploadCharacterizationGolden:
         )
 
         rows = [
-            installment_row(**{
-                "Numero de credito": "CR-GOLDEN-UPDATE",
-                "Numero de la cuota que se cancela": "2",
-                "total": "999999",
-                "Fecha del pago": "05/01/2026",
-            }),
-            installment_row(**{
-                "Numero de credito": "CR-GOLDEN-INSERT",
-                "Numero de la cuota que se cancela": "1",
-            }),
+            installment_row(
+                **{
+                    "Numero de credito": "CR-GOLDEN-UPDATE",
+                    "Numero de la cuota que se cancela": "2",
+                    "total": "999999",
+                    "Fecha del pago": "05/01/2026",
+                }
+            ),
+            installment_row(
+                **{
+                    "Numero de credito": "CR-GOLDEN-INSERT",
+                    "Numero de la cuota que se cancela": "1",
+                }
+            ),
             installment_row(**{"Numero de credito": "NO-EXISTE-GOLDEN"}),
-            installment_row(**{
-                "Numero de credito": "CR-GOLDEN-SETTLE",
-                "Pago total del credito": "si",
-                "Numero de la cuota que se cancela": "",
-            }),
+            installment_row(
+                **{
+                    "Numero de credito": "CR-GOLDEN-SETTLE",
+                    "Pago total del credito": "si",
+                    "Numero de la cuota que se cancela": "",
+                }
+            ),
         ]
 
         service = InstallmentCsvService(db_session)
-        result = await service.upload(portfolio.id, build_installments_csv(rows), "cuotas-golden.csv")
+        result = await service.upload(
+            portfolio.id, build_installments_csv(rows), "cuotas-golden.csv"
+        )
 
         # --- Golden congelado: comparar campo a campo tras el refactor de la Fase 4. ---
         assert result.total_rows == 4
@@ -244,7 +293,9 @@ class TestUploadCharacterizationGolden:
         assert pending_to_update.status == PaymentStatus.PAID
 
         # Insert: cuota nueva para el crédito que no tenía ninguna.
-        insert_payment = await payment_repo.get_by_credit_and_installment(credit_insert.id, 1)
+        insert_payment = await payment_repo.get_by_credit_and_installment(
+            credit_insert.id, 1
+        )
         assert insert_payment is not None
 
         # Settle: crédito desactivado y su cuota pendiente distinta a la liquidada
@@ -257,10 +308,14 @@ class TestUploadCharacterizationGolden:
         # La fila inválida no debe haber tocado nada del crédito CR-GOLDEN-UPDATE
         # procesado justo antes de ella (aislamiento por SAVEPOINT).
         credit_repo = CreditRepository(db_session)
-        untouched = await credit_repo.get_by_credit_number("CR-GOLDEN-UPDATE", portfolio.id)
+        untouched = await credit_repo.get_by_credit_number(
+            "CR-GOLDEN-UPDATE", portfolio.id
+        )
         assert untouched.is_active is True
 
-    async def test_mixed_batch_matches_with_bulk_credit_preload(self, db_session, monkeypatch):
+    async def test_mixed_batch_matches_with_bulk_credit_preload(
+        self, db_session, monkeypatch
+    ):
         """Mismo escenario que arriba, con `PORTFOLIO_CSV_BULK_UPSERT=true` (Fase 4):
         la precarga de créditos en 1 query no debe cambiar ningún resultado."""
         monkeypatch.setenv("PORTFOLIO_CSV_BULK_UPSERT", "true")
@@ -275,9 +330,15 @@ class TestUploadCharacterizationGolden:
         db_session.add(debtor)
         await db_session.flush()
 
-        credit_update = build_credit(portfolio.id, debtor.id, credit_number="CR-BULKGOLDEN-UPDATE")
-        credit_insert = build_credit(portfolio.id, debtor.id, credit_number="CR-BULKGOLDEN-INSERT")
-        credit_settle = build_credit(portfolio.id, debtor.id, credit_number="CR-BULKGOLDEN-SETTLE")
+        credit_update = build_credit(
+            portfolio.id, debtor.id, credit_number="CR-BULKGOLDEN-UPDATE"
+        )
+        credit_insert = build_credit(
+            portfolio.id, debtor.id, credit_number="CR-BULKGOLDEN-INSERT"
+        )
+        credit_settle = build_credit(
+            portfolio.id, debtor.id, credit_number="CR-BULKGOLDEN-SETTLE"
+        )
         db_session.add_all([credit_update, credit_insert, credit_settle])
         await db_session.flush()
 
@@ -302,26 +363,34 @@ class TestUploadCharacterizationGolden:
         )
 
         rows = [
-            installment_row(**{
-                "Numero de credito": "CR-BULKGOLDEN-UPDATE",
-                "Numero de la cuota que se cancela": "2",
-                "total": "999999",
-                "Fecha del pago": "05/01/2026",
-            }),
-            installment_row(**{
-                "Numero de credito": "CR-BULKGOLDEN-INSERT",
-                "Numero de la cuota que se cancela": "1",
-            }),
+            installment_row(
+                **{
+                    "Numero de credito": "CR-BULKGOLDEN-UPDATE",
+                    "Numero de la cuota que se cancela": "2",
+                    "total": "999999",
+                    "Fecha del pago": "05/01/2026",
+                }
+            ),
+            installment_row(
+                **{
+                    "Numero de credito": "CR-BULKGOLDEN-INSERT",
+                    "Numero de la cuota que se cancela": "1",
+                }
+            ),
             installment_row(**{"Numero de credito": "NO-EXISTE-BULKGOLDEN"}),
-            installment_row(**{
-                "Numero de credito": "CR-BULKGOLDEN-SETTLE",
-                "Pago total del credito": "si",
-                "Numero de la cuota que se cancela": "",
-            }),
+            installment_row(
+                **{
+                    "Numero de credito": "CR-BULKGOLDEN-SETTLE",
+                    "Pago total del credito": "si",
+                    "Numero de la cuota que se cancela": "",
+                }
+            ),
         ]
 
         service = InstallmentCsvService(db_session)
-        result = await service.upload(portfolio.id, build_installments_csv(rows), "cuotas-bulk-golden.csv")
+        result = await service.upload(
+            portfolio.id, build_installments_csv(rows), "cuotas-bulk-golden.csv"
+        )
 
         assert result.total_rows == 4
         assert result.processed_rows == 3
@@ -336,7 +405,9 @@ class TestUploadCharacterizationGolden:
         assert pending_to_update.payment_amount == 999999
         assert pending_to_update.status == PaymentStatus.PAID
 
-        insert_payment = await payment_repo.get_by_credit_and_installment(credit_insert.id, 1)
+        insert_payment = await payment_repo.get_by_credit_and_installment(
+            credit_insert.id, 1
+        )
         assert insert_payment is not None
 
         await db_session.refresh(credit_settle)
@@ -345,5 +416,7 @@ class TestUploadCharacterizationGolden:
         assert pending_to_close_on_settle.deleted_at is not None
 
         credit_repo = CreditRepository(db_session)
-        untouched = await credit_repo.get_by_credit_number("CR-BULKGOLDEN-UPDATE", portfolio.id)
+        untouched = await credit_repo.get_by_credit_number(
+            "CR-BULKGOLDEN-UPDATE", portfolio.id
+        )
         assert untouched.is_active is True

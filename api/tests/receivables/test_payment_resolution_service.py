@@ -11,13 +11,24 @@ from receivables.payments.enums.payment_enums import PaymentStatus
 from receivables.payments.models.payment_model import PaymentModel
 from receivables.payments.models.payment_ticket_model import PaymentTicketModel
 from receivables.payments.repository.payment_repository import PaymentRepository
-from receivables.payments.repository.payment_ticket_repository import PaymentTicketRepository
-from receivables.payments.services.payment_resolution_service import PaymentResolutionService
-from tests.receivables.conftest import build_credit, build_debtor, build_organization, build_portfolio
+from receivables.payments.repository.payment_ticket_repository import (
+    PaymentTicketRepository,
+)
+from receivables.payments.services.payment_resolution_service import (
+    PaymentResolutionService,
+)
+from tests.receivables.conftest import (
+    build_credit,
+    build_debtor,
+    build_organization,
+    build_portfolio,
+)
 
 
 async def _support_ticket(db_session, created_by):
-    ticket = SupportTicketModel(case_type=SupportCaseType.REQUIREMENT, created_by=created_by)
+    ticket = SupportTicketModel(
+        case_type=SupportCaseType.REQUIREMENT, created_by=created_by
+    )
     db_session.add(ticket)
     await db_session.flush()
     return ticket
@@ -74,7 +85,9 @@ async def _ticket_link(db_session, payment_id, credit_id, created_by, **override
 class TestApplyRescheduleResolution:
     async def test_unknown_ticket_is_a_no_op(self, db_session):
         service = PaymentResolutionService(db_session)
-        await service.apply_reschedule_resolution(uuid.uuid4(), approved=True)  # no debe lanzar
+        await service.apply_reschedule_resolution(
+            uuid.uuid4(), approved=True
+        )  # no debe lanzar
 
     async def test_payment_missing_is_a_no_op(self, db_session, real_admin_user_id):
         credit = await _credit(db_session)
@@ -86,9 +99,13 @@ class TestApplyRescheduleResolution:
         await PaymentRepository(db_session).delete(payment)
 
         service = PaymentResolutionService(db_session)
-        await service.apply_reschedule_resolution(link.ticket_id, approved=True)  # no debe lanzar
+        await service.apply_reschedule_resolution(
+            link.ticket_id, approved=True
+        )  # no debe lanzar
 
-    async def test_rejected_reverts_payment_to_pending(self, db_session, real_admin_user_id):
+    async def test_rejected_reverts_payment_to_pending(
+        self, db_session, real_admin_user_id
+    ):
         credit = await _credit(db_session)
         payment = await _payment(db_session, credit.id)
         link = await _ticket_link(db_session, payment.id, credit.id, real_admin_user_id)
@@ -99,13 +116,25 @@ class TestApplyRescheduleResolution:
         await db_session.refresh(payment)
         assert payment.status == PaymentStatus.PENDING
 
-    async def test_approved_marks_rescheduled_and_creates_new_pending_payment(self, db_session, real_admin_user_id):
+    async def test_approved_marks_rescheduled_and_creates_new_pending_payment(
+        self, db_session, real_admin_user_id
+    ):
         credit = await _credit(db_session)
         new_date = datetime(2027, 1, 15, tzinfo=timezone.utc)
         payment = await _payment(
-            db_session, credit.id, payment_amount=500, principal_payment=400, total_interest_amount=100
+            db_session,
+            credit.id,
+            payment_amount=500,
+            principal_payment=400,
+            total_interest_amount=100,
         )
-        link = await _ticket_link(db_session, payment.id, credit.id, real_admin_user_id, requested_date=new_date)
+        link = await _ticket_link(
+            db_session,
+            payment.id,
+            credit.id,
+            real_admin_user_id,
+            requested_date=new_date,
+        )
 
         service = PaymentResolutionService(db_session)
         await service.apply_reschedule_resolution(link.ticket_id, approved=True)
@@ -132,11 +161,17 @@ class TestApplyRescheduleResolution:
 class TestApplyValidationResolution:
     async def test_unknown_ticket_is_a_no_op(self, db_session):
         service = PaymentResolutionService(db_session)
-        await service.apply_validation_resolution(uuid.uuid4(), approved=True)  # no debe lanzar
+        await service.apply_validation_resolution(
+            uuid.uuid4(), approved=True
+        )  # no debe lanzar
 
-    async def test_rejected_reverts_payment_to_pending(self, db_session, real_admin_user_id):
+    async def test_rejected_reverts_payment_to_pending(
+        self, db_session, real_admin_user_id
+    ):
         credit = await _credit(db_session)
-        payment = await _payment(db_session, credit.id, status=PaymentStatus.VALIDATION_REQUESTED)
+        payment = await _payment(
+            db_session, credit.id, status=PaymentStatus.VALIDATION_REQUESTED
+        )
         link = await _ticket_link(db_session, payment.id, credit.id, real_admin_user_id)
 
         service = PaymentResolutionService(db_session)
@@ -145,9 +180,16 @@ class TestApplyValidationResolution:
         await db_session.refresh(payment)
         assert payment.status == PaymentStatus.PENDING
 
-    async def test_approved_marks_paid_with_ticket_creation_date(self, db_session, real_admin_user_id):
+    async def test_approved_marks_paid_with_ticket_creation_date(
+        self, db_session, real_admin_user_id
+    ):
         credit = await _credit(db_session)
-        payment = await _payment(db_session, credit.id, status=PaymentStatus.VALIDATION_REQUESTED, payment_date=None)
+        payment = await _payment(
+            db_session,
+            credit.id,
+            status=PaymentStatus.VALIDATION_REQUESTED,
+            payment_date=None,
+        )
         link = await _ticket_link(db_session, payment.id, credit.id, real_admin_user_id)
 
         service = PaymentResolutionService(db_session)

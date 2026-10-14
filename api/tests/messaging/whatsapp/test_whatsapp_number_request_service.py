@@ -8,14 +8,22 @@ soporte cuando la organización no tiene número activo, sin lanzar excepción.
 import uuid
 from unittest.mock import AsyncMock, MagicMock
 
-from messaging.whatsapp.models.whatsapp_org_credentials_model import WhatsAppOrgCredentialsModel
-from messaging.whatsapp.services.whatsapp_number_request_service import WhatsAppNumberRequestService
+from messaging.whatsapp.models.whatsapp_org_credentials_model import (
+    WhatsAppOrgCredentialsModel,
+)
+from messaging.whatsapp.services.whatsapp_number_request_service import (
+    WhatsAppNumberRequestService,
+)
 
 
 def build_service() -> tuple[WhatsAppNumberRequestService, MagicMock, MagicMock]:
     credentials_repo = MagicMock()
     support_service = MagicMock()
-    return WhatsAppNumberRequestService(credentials_repo, support_service), credentials_repo, support_service
+    return (
+        WhatsAppNumberRequestService(credentials_repo, support_service),
+        credentials_repo,
+        support_service,
+    )
 
 
 class TestHasActiveNumber:
@@ -28,7 +36,9 @@ class TestHasActiveNumber:
     async def test_inactive_credentials_returns_false(self):
         service, credentials_repo, _support = build_service()
         credentials_repo.get_by_organization = AsyncMock(
-            return_value=WhatsAppOrgCredentialsModel(organization_id=uuid.uuid4(), phone_number_id="1", active=False)
+            return_value=WhatsAppOrgCredentialsModel(
+                organization_id=uuid.uuid4(), phone_number_id="1", active=False
+            )
         )
 
         assert await service.has_active_number(uuid.uuid4()) is False
@@ -36,7 +46,9 @@ class TestHasActiveNumber:
     async def test_active_credentials_returns_true(self):
         service, credentials_repo, _support = build_service()
         credentials_repo.get_by_organization = AsyncMock(
-            return_value=WhatsAppOrgCredentialsModel(organization_id=uuid.uuid4(), phone_number_id="1", active=True)
+            return_value=WhatsAppOrgCredentialsModel(
+                organization_id=uuid.uuid4(), phone_number_id="1", active=True
+            )
         )
 
         assert await service.has_active_number(uuid.uuid4()) is True
@@ -47,7 +59,9 @@ class TestEnsureNumberAvailable:
         organization_id = uuid.uuid4()
         service, credentials_repo, support_service = build_service()
         credentials_repo.get_by_organization = AsyncMock(
-            return_value=WhatsAppOrgCredentialsModel(organization_id=organization_id, phone_number_id="1", active=True)
+            return_value=WhatsAppOrgCredentialsModel(
+                organization_id=organization_id, phone_number_id="1", active=True
+            )
         )
 
         result = await service.ensure_number_available(organization_id, uuid.uuid4())
@@ -65,4 +79,6 @@ class TestEnsureNumberAvailable:
         result = await service.ensure_number_available(organization_id, requested_by)
 
         assert result is False
-        support_service.ensure_whatsapp_number_ticket.assert_awaited_once_with(organization_id, requested_by)
+        support_service.ensure_whatsapp_number_ticket.assert_awaited_once_with(
+            organization_id, requested_by
+        )

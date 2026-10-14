@@ -4,7 +4,10 @@ facturacion -- un error de indice de mes/anio aqui rompe todos los reportes."""
 
 from datetime import datetime, timezone
 
-from billing.billing_dashboard.utils.billing_dashboard_utils import current_period, last_n_months
+from billing.billing_dashboard.utils.billing_dashboard_utils import (
+    current_period,
+    last_n_months,
+)
 
 
 class TestCurrentPeriod:
@@ -19,7 +22,9 @@ class TestCurrentPeriod:
 
 class TestLastNMonths:
     def test_single_month_returns_just_current_period(self):
-        assert last_n_months(1, datetime(2026, 8, 15, tzinfo=timezone.utc)) == [(2026, 8)]
+        assert last_n_months(1, datetime(2026, 8, 15, tzinfo=timezone.utc)) == [
+            (2026, 8)
+        ]
 
     def test_three_months_within_same_year(self):
         result = last_n_months(3, datetime(2026, 8, 15, tzinfo=timezone.utc))

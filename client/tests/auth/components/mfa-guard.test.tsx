@@ -87,7 +87,9 @@ describe("MfaGuard", () => {
     // Cubre el fix: el flag de sesión del servidor pudo expirar aunque
     // sessionStorage.mfaVerified siguiera en "true" -- use-api-client dispara este
     // evento ante un 403 con el mensaje exacto de MFA pendiente, y el guard debe
-    // volver a pedir el OTP en vez de dejar pasar al usuario.
+    // volver a pedir el OTP en vez de dejar pasar al usuario. `children` sigue
+    // montado (ver mfa-guard.tsx: layoutUnlockedOnce) para no perder el estado de
+    // navbar/sidebar/chat -- el modal de OTP solo se superpone encima.
     sessionStorage.setItem("mfaVerified", "true");
     renderGuard();
     expect(screen.getByText("Contenido protegido")).toBeInTheDocument();
@@ -96,7 +98,7 @@ describe("MfaGuard", () => {
       window.dispatchEvent(new Event("mfa-pending"));
     });
 
-    expect(screen.queryByText("Contenido protegido")).not.toBeInTheDocument();
+    expect(screen.getByText("Contenido protegido")).toBeInTheDocument();
     expect(screen.getByText("Enviar código por correo")).toBeInTheDocument();
   });
 });

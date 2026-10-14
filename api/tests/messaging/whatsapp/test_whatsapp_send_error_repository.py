@@ -6,12 +6,16 @@ aparece en el listado por organización, aunque exista en la tabla.
 """
 
 from messaging.contacts.models.contact_model import ContactModel
-from messaging.whatsapp.repository.whatsapp_send_error_repository import WhatsAppSendErrorRepository
+from messaging.whatsapp.repository.whatsapp_send_error_repository import (
+    WhatsAppSendErrorRepository,
+)
 from tests.messaging.whatsapp.conftest import build_send_error
 
 
 def build_contact(organization_id, **overrides) -> ContactModel:
-    defaults = dict(content="mensaje", recipient="573000000000", organization_id=organization_id)
+    defaults = dict(
+        content="mensaje", recipient="573000000000", organization_id=organization_id
+    )
     defaults.update(overrides)
     return ContactModel(**defaults)
 
@@ -44,7 +48,9 @@ class TestGetByWamidAndCode:
 
 
 class TestListByOrganization:
-    async def test_lists_only_errors_whose_contact_belongs_to_the_organization(self, db_session, real_org):
+    async def test_lists_only_errors_whose_contact_belongs_to_the_organization(
+        self, db_session, real_org
+    ):
         from tests.messaging.whatsapp.conftest import build_organization
 
         other_org = build_organization()
@@ -89,7 +95,9 @@ class TestListByOrganization:
         db_session.add(contact)
         await db_session.flush()
         now = datetime.now(timezone.utc)
-        older = build_send_error(contact_id=contact.id, occurred_at=now - timedelta(days=1))
+        older = build_send_error(
+            contact_id=contact.id, occurred_at=now - timedelta(days=1)
+        )
         newer = build_send_error(contact_id=contact.id, occurred_at=now)
         db_session.add_all([older, newer])
         await db_session.flush()

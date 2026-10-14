@@ -7,7 +7,9 @@ from datetime import datetime, timedelta, timezone
 
 from receivables.reports.models.report_execution_model import ReportExecutionModel
 from receivables.reports.models.report_model import ReportModel
-from receivables.reports.repository.report_execution_repository import ReportExecutionRepository
+from receivables.reports.repository.report_execution_repository import (
+    ReportExecutionRepository,
+)
 from receivables.reports.repository.report_repository import ReportRepository
 from tests.receivables.conftest import build_organization
 
@@ -19,15 +21,27 @@ class TestGetByOrganizationId:
         db_session.add_all([org, other_org])
         await db_session.flush()
 
-        db_session.add_all([
-            ReportModel(name="A", report_config={"tables": []}, organization_id=org.id),
-            ReportModel(name="B", report_config={"tables": []}, organization_id=org.id),
-            ReportModel(
-                name="Borrado", report_config={"tables": []}, organization_id=org.id,
-                deleted_at=datetime.now(timezone.utc),
-            ),
-            ReportModel(name="Otra org", report_config={"tables": []}, organization_id=other_org.id),
-        ])
+        db_session.add_all(
+            [
+                ReportModel(
+                    name="A", report_config={"tables": []}, organization_id=org.id
+                ),
+                ReportModel(
+                    name="B", report_config={"tables": []}, organization_id=org.id
+                ),
+                ReportModel(
+                    name="Borrado",
+                    report_config={"tables": []},
+                    organization_id=org.id,
+                    deleted_at=datetime.now(timezone.utc),
+                ),
+                ReportModel(
+                    name="Otra org",
+                    report_config={"tables": []},
+                    organization_id=other_org.id,
+                ),
+            ]
+        )
         await db_session.flush()
 
         repo = ReportRepository(db_session)
@@ -41,7 +55,11 @@ class TestGetByOrganizationId:
         db_session.add(org)
         await db_session.flush()
         for i in range(3):
-            db_session.add(ReportModel(name=f"R{i}", report_config={"tables": []}, organization_id=org.id))
+            db_session.add(
+                ReportModel(
+                    name=f"R{i}", report_config={"tables": []}, organization_id=org.id
+                )
+            )
         await db_session.flush()
 
         repo = ReportRepository(db_session)
@@ -58,21 +76,41 @@ class TestGetGlobalAndByOrganization:
         db_session.add_all([org, other_org])
         await db_session.flush()
 
-        own_active = ReportModel(name="Propio", report_config={"tables": []}, organization_id=org.id, is_active=True)
+        own_active = ReportModel(
+            name="Propio",
+            report_config={"tables": []},
+            organization_id=org.id,
+            is_active=True,
+        )
         own_inactive = ReportModel(
-            name="Propio inactivo", report_config={"tables": []}, organization_id=org.id, is_active=False
+            name="Propio inactivo",
+            report_config={"tables": []},
+            organization_id=org.id,
+            is_active=False,
         )
         global_active = ReportModel(
-            name="Global", report_config={"tables": []}, organization_id=other_org.id, is_active=True, is_global=True
+            name="Global",
+            report_config={"tables": []},
+            organization_id=other_org.id,
+            is_active=True,
+            is_global=True,
         )
         global_inactive = ReportModel(
-            name="Global inactivo", report_config={"tables": []}, organization_id=other_org.id,
-            is_active=False, is_global=True,
+            name="Global inactivo",
+            report_config={"tables": []},
+            organization_id=other_org.id,
+            is_active=False,
+            is_global=True,
         )
         other_org_report = ReportModel(
-            name="Otra org, no global", report_config={"tables": []}, organization_id=other_org.id, is_active=True
+            name="Otra org, no global",
+            report_config={"tables": []},
+            organization_id=other_org.id,
+            is_active=True,
         )
-        db_session.add_all([own_active, own_inactive, global_active, global_inactive, other_org_report])
+        db_session.add_all(
+            [own_active, own_inactive, global_active, global_inactive, other_org_report]
+        )
         await db_session.flush()
 
         repo = ReportRepository(db_session)
@@ -82,23 +120,35 @@ class TestGetGlobalAndByOrganization:
 
 
 class TestReportExecutionRepository:
-    async def test_get_by_report_orders_most_recent_first(self, db_session, real_admin_user_id):
+    async def test_get_by_report_orders_most_recent_first(
+        self, db_session, real_admin_user_id
+    ):
         org = build_organization()
         db_session.add(org)
         await db_session.flush()
-        report = ReportModel(name="R", report_config={"tables": []}, organization_id=org.id)
+        report = ReportModel(
+            name="R", report_config={"tables": []}, organization_id=org.id
+        )
         db_session.add(report)
         await db_session.flush()
 
         now = datetime.now(timezone.utc)
         older = ReportExecutionModel(
-            report_id=report.id, mode="preview", rows=1, columns=["a"], executed_by=real_admin_user_id,
+            report_id=report.id,
+            mode="preview",
+            rows=1,
+            columns=["a"],
+            executed_by=real_admin_user_id,
             created_at=now - timedelta(days=1),
         )
         db_session.add(older)
         await db_session.flush()
         newer = ReportExecutionModel(
-            report_id=report.id, mode="audit", rows=2, columns=["a"], executed_by=real_admin_user_id,
+            report_id=report.id,
+            mode="audit",
+            rows=2,
+            columns=["a"],
+            executed_by=real_admin_user_id,
             created_at=now,
         )
         db_session.add(newer)

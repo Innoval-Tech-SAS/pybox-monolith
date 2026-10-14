@@ -11,9 +11,15 @@ import io
 from app_platform.countries.enums.country_enums import UserDocumentType
 from receivables.credits.enums.credit_enums import CreditTypes
 from receivables.debtors.enums.debtor_enums import DebtorType
-from receivables.portfolios.constants.portfolio_csv_constants import PORTFOLIO_TEMPLATE_COLUMNS
+from receivables.portfolios.constants.portfolio_csv_constants import (
+    PORTFOLIO_TEMPLATE_COLUMNS,
+)
 from receivables.portfolios.utils.portfolio_file_parser import PortfolioFileParser
-from tests.receivables.conftest import build_minimal_xlsx, build_portfolio_csv, portfolio_csv_row
+from tests.receivables.conftest import (
+    build_minimal_xlsx,
+    build_portfolio_csv,
+    portfolio_csv_row,
+)
 
 
 def build_portfolio_csv_cp1252(rows: list[dict[str, str]]) -> bytes:
@@ -28,7 +34,9 @@ def build_portfolio_csv_cp1252(rows: list[dict[str, str]]) -> bytes:
 class TestEncodingFallback:
     def test_cp1252_bytes_fall_back_and_decode_accents(self):
         parser = PortfolioFileParser()
-        csv_bytes = build_portfolio_csv_cp1252([portfolio_csv_row(**{"Nombre del titular": "Muñoz Peña"})])
+        csv_bytes = build_portfolio_csv_cp1252(
+            [portfolio_csv_row(**{"Nombre del titular": "Muñoz Peña"})]
+        )
 
         data = parser.parse(csv_bytes)
 
@@ -67,7 +75,9 @@ class TestXlsxBranch:
         )
 
         parser = PortfolioFileParser()
-        data = parser.parse(xlsx_bytes, filename="")  # sin .xlsx: se detecta por PK\x03\x04
+        data = parser.parse(
+            xlsx_bytes, filename=""
+        )  # sin .xlsx: se detecta por PK\x03\x04
 
         assert len(data.rows) == 1
 
@@ -75,13 +85,17 @@ class TestXlsxBranch:
 class TestSkipsIncompleteRows:
     def test_row_without_document_number_is_skipped(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([portfolio_csv_row(**{"Numero de documento": ""})]))
+        data = parser.parse(
+            build_portfolio_csv([portfolio_csv_row(**{"Numero de documento": ""})])
+        )
         assert data.rows == []
         assert data.total_skipped == 1
 
     def test_row_without_credit_number_is_skipped(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([portfolio_csv_row(**{"Numero de credito": ""})]))
+        data = parser.parse(
+            build_portfolio_csv([portfolio_csv_row(**{"Numero de credito": ""})])
+        )
         assert data.rows == []
         assert data.total_skipped == 1
 
@@ -89,19 +103,34 @@ class TestSkipsIncompleteRows:
 class TestCodebtor:
     def test_codebtor_name_without_document_is_ignored(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([
-            portfolio_csv_row(**{"Nombre del Codeudor": "Codeudor sin doc", "Numero de documento codeudor": ""})
-        ]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{
+                            "Nombre del Codeudor": "Codeudor sin doc",
+                            "Numero de documento codeudor": "",
+                        }
+                    )
+                ]
+            )
+        )
         assert data.rows[0].codebtor is None
 
     def test_codebtor_with_name_and_document_is_built(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([
-            portfolio_csv_row(**{
-                "Nombre del Codeudor": "Codeudor Completo",
-                "Numero de documento codeudor": "900123456",
-            })
-        ]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{
+                            "Nombre del Codeudor": "Codeudor Completo",
+                            "Numero de documento codeudor": "900123456",
+                        }
+                    )
+                ]
+            )
+        )
         codebtor = data.rows[0].codebtor
         assert codebtor is not None
         assert codebtor.full_name == "Codeudor Completo"
@@ -122,9 +151,19 @@ class TestSecondaryAddress:
 
     def test_second_city_present_builds_secondary_address(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([
-            portfolio_csv_row(**{"Ciudad 2": "Medellin", "Direccion 2": "Calle 2", "Departamento 2": "Antioquia"})
-        ]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{
+                            "Ciudad 2": "Medellin",
+                            "Direccion 2": "Calle 2",
+                            "Departamento 2": "Antioquia",
+                        }
+                    )
+                ]
+            )
+        )
         secondary = data.rows[0].secondary_address
         assert secondary is not None
         assert secondary.city == "Medellin"
@@ -134,24 +173,36 @@ class TestSecondaryAddress:
 class TestDocumentTypeMapping:
     def test_unknown_document_type_code_defaults_to_cc(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([portfolio_csv_row(**{"Tipo documento": "CODIGO-INVENTADO"})]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [portfolio_csv_row(**{"Tipo documento": "CODIGO-INVENTADO"})]
+            )
+        )
         assert data.rows[0].debtor.document_type == UserDocumentType.CC
 
     def test_known_document_type_code_is_mapped(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([portfolio_csv_row(**{"Tipo documento": "CE"})]))
+        data = parser.parse(
+            build_portfolio_csv([portfolio_csv_row(**{"Tipo documento": "CE"})])
+        )
         assert data.rows[0].debtor.document_type == UserDocumentType.CE
 
 
 class TestCreditTypeMapping:
     def test_unknown_credit_type_alias_defaults_to_other_service(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([portfolio_csv_row(**{"Tipo de producto": "PRODUCTO-RARO"})]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [portfolio_csv_row(**{"Tipo de producto": "PRODUCTO-RARO"})]
+            )
+        )
         assert data.rows[0].credit.credit_type == CreditTypes.OTHER_SERVICE
 
     def test_known_alias_is_mapped(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([portfolio_csv_row(**{"Tipo de producto": "TC"})]))
+        data = parser.parse(
+            build_portfolio_csv([portfolio_csv_row(**{"Tipo de producto": "TC"})])
+        )
         assert data.rows[0].credit.credit_type == CreditTypes.CREDIT_CARD
 
 
@@ -163,9 +214,19 @@ class TestOptionalPayment:
 
     def test_payment_date_without_limit_date_falls_back_to_payment_date(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([
-            portfolio_csv_row(**{"Fecha del pago": "10/01/2026", "Fecha limite de pago": "", "total": "50000"})
-        ]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{
+                            "Fecha del pago": "10/01/2026",
+                            "Fecha limite de pago": "",
+                            "total": "50000",
+                        }
+                    )
+                ]
+            )
+        )
         payment = data.rows[0].payment
         assert payment is not None
         assert payment.limit_pay_date == payment.payment_date
@@ -179,16 +240,31 @@ class TestOptionalUVRQuote:
 
     def test_quote_value_without_court_date_means_no_uvr_quote(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([
-            portfolio_csv_row(**{"Cotizacion de UVR": "350.55", "Fecha de corte": ""})
-        ]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{"Cotizacion de UVR": "350.55", "Fecha de corte": ""}
+                    )
+                ]
+            )
+        )
         assert data.rows[0].uvr_quote is None
 
     def test_quote_value_and_court_date_build_uvr_quote(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([
-            portfolio_csv_row(**{"Cotizacion de UVR": "350.55", "Fecha de corte": "01/02/2026"})
-        ]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{
+                            "Cotizacion de UVR": "350.55",
+                            "Fecha de corte": "01/02/2026",
+                        }
+                    )
+                ]
+            )
+        )
         quote = data.rows[0].uvr_quote
         assert quote is not None
         assert str(quote.quote_value) == "350.55"
@@ -202,18 +278,33 @@ class TestOptionalCreditAdjustment:
 
     def test_amount_without_cutoff_date_falls_back_to_now(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([
-            portfolio_csv_row(**{"Condonaciones y/o descuentos": "1000", "Fecha de corte": ""})
-        ]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{"Condonaciones y/o descuentos": "1000", "Fecha de corte": ""}
+                    )
+                ]
+            )
+        )
         adjustment = data.rows[0].credit_adjustment
         assert adjustment is not None
         assert adjustment.applied_date is not None
 
     def test_amount_with_cutoff_date_uses_it(self):
         parser = PortfolioFileParser()
-        data = parser.parse(build_portfolio_csv([
-            portfolio_csv_row(**{"Condonaciones y/o descuentos": "1000", "Fecha de corte": "01/02/2026"})
-        ]))
+        data = parser.parse(
+            build_portfolio_csv(
+                [
+                    portfolio_csv_row(
+                        **{
+                            "Condonaciones y/o descuentos": "1000",
+                            "Fecha de corte": "01/02/2026",
+                        }
+                    )
+                ]
+            )
+        )
         adjustment = data.rows[0].credit_adjustment
         assert adjustment.applied_date.day == 1
         assert adjustment.applied_date.month == 2

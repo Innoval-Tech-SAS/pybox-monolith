@@ -6,7 +6,9 @@ persiste los conteos exactos y que `campaign_time_id` -- opcional, puede venir
 """
 
 from messaging.campaigns.models.campaign_time_model import CampaignTimeModel
-from messaging.campaigns.repository.campaign_result_repository import CampaignResultRepository
+from messaging.campaigns.repository.campaign_result_repository import (
+    CampaignResultRepository,
+)
 from tests.messaging.campaigns.conftest import build_campaign, get_channel_id
 from tests.receivables.conftest import build_organization, build_portfolio
 
@@ -49,9 +51,13 @@ class TestCreate:
         assert result.campaign_time_id is None
         assert result.sending_id is None
 
-    async def test_persists_with_optional_campaign_time_id_and_sending_id(self, db_session):
+    async def test_persists_with_optional_campaign_time_id_and_sending_id(
+        self, db_session
+    ):
         org, campaign = await _setup_campaign(db_session)
-        ct = CampaignTimeModel(campaign_id=campaign.id, organization_id=org.id, is_active=True)
+        ct = CampaignTimeModel(
+            campaign_id=campaign.id, organization_id=org.id, is_active=True
+        )
         db_session.add(ct)
         await db_session.flush()
 
@@ -70,19 +76,31 @@ class TestCreate:
         assert result.campaign_time_id == ct.id
         assert result.sending_id == "sending-abc"
 
-    async def test_multiple_results_for_same_campaign_are_independent_rows(self, db_session):
+    async def test_multiple_results_for_same_campaign_are_independent_rows(
+        self, db_session
+    ):
         """Cada tick recurrente crea un nuevo resultado -- no debe pisar el anterior
         (no hay upsert por campaña, es historial)."""
         org, campaign = await _setup_campaign(db_session)
         repo = CampaignResultRepository(db_session)
 
         first = await repo.create(
-            campaign_id=campaign.id, organization_id=org.id, campaign_time_id=None,
-            total_sent=5, success_count=5, failure_count=0, unique_customers=5,
+            campaign_id=campaign.id,
+            organization_id=org.id,
+            campaign_time_id=None,
+            total_sent=5,
+            success_count=5,
+            failure_count=0,
+            unique_customers=5,
         )
         second = await repo.create(
-            campaign_id=campaign.id, organization_id=org.id, campaign_time_id=None,
-            total_sent=8, success_count=6, failure_count=2, unique_customers=8,
+            campaign_id=campaign.id,
+            organization_id=org.id,
+            campaign_time_id=None,
+            total_sent=8,
+            success_count=6,
+            failure_count=2,
+            unique_customers=8,
         )
 
         assert first.id != second.id

@@ -16,7 +16,10 @@ import pytest
 import pytest_asyncio
 
 from core.security.services.encrypt_service import encrypt_service
-from identity.organizations.enums.organization_enums import EntitySectors, VerificationStatus
+from identity.organizations.enums.organization_enums import (
+    EntitySectors,
+    VerificationStatus,
+)
 from identity.organizations.models.organization_model import OrganizationModel
 from identity.users.enums.user_enums import UserRole, UserScope
 from receivables.credits.models.credit_model import CreditModel
@@ -141,16 +144,23 @@ ORG_BASE = "/api/v1/organizations"
 
 
 @pytest_asyncio.fixture
-async def verified_org_id(client, db_session, auth_as, make_user_session_factory) -> str:
+async def verified_org_id(
+    client, db_session, auth_as, make_user_session_factory
+) -> str:
     """Org real, con `verification_status=APPROVED` -- requisito de
     `require_verified_org` para casi todo lo que toca portafolios."""
     payload = register_payload()
     resp = await client.post(f"{AUTH_BASE}/register/user", json=payload)
     assert resp.status_code == 201
     user = await get_user_by_email(db_session, payload["email"])
-    global_admin = make_user_session_factory(user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL)
+    global_admin = make_user_session_factory(
+        user_id=user.id, role=UserRole.ADMIN, scope=UserScope.GLOBAL
+    )
     authed = auth_as(global_admin)
-    create = await authed.post(f"{ORG_BASE}/", json={"name": f"Org {uuid.uuid4().hex[:8]}", "sector": "FINTECH"})
+    create = await authed.post(
+        f"{ORG_BASE}/",
+        json={"name": f"Org {uuid.uuid4().hex[:8]}", "sector": "FINTECH"},
+    )
     assert create.status_code == 201
     org_id = create.json()["id"]
 
@@ -248,7 +258,9 @@ async def real_debtor(db_session, real_portfolio) -> DebtorModel:
     return debtor
 
 
-def build_credit(portfolio_id: uuid.UUID, debtor_id: uuid.UUID, **overrides) -> CreditModel:
+def build_credit(
+    portfolio_id: uuid.UUID, debtor_id: uuid.UUID, **overrides
+) -> CreditModel:
     defaults = dict(
         credit_number=f"CR-{uuid.uuid4().hex[:10]}",
         disbursed_date=datetime.now(timezone.utc),

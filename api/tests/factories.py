@@ -42,7 +42,9 @@ def register_payload(**overrides) -> dict:
 
 
 async def get_user_by_email(db_session: AsyncSession, email: str) -> UserModel:
-    result = await db_session.execute(select(UserModel).where(UserModel.email == email.lower()))
+    result = await db_session.execute(
+        select(UserModel).where(UserModel.email == email.lower())
+    )
     return result.scalar_one()
 
 

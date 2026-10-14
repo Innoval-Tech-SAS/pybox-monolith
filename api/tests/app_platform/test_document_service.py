@@ -19,7 +19,11 @@ from fastapi import HTTPException, UploadFile
 from app_platform.documents.enums.document_enums import MAX_DOCUMENT_SIZE_BYTES
 from app_platform.documents.models.document_model import DocumentModel
 from app_platform.documents.services.document_service import DocumentService
-from core.storage.object_storage import ObjectMetadata, ObjectStorage, ObjectStorageError
+from core.storage.object_storage import (
+    ObjectMetadata,
+    ObjectStorage,
+    ObjectStorageError,
+)
 
 
 class FakeObjectStorage(ObjectStorage):
@@ -54,14 +58,18 @@ class FakeObjectStorage(ObjectStorage):
         if entry is None:
             return None
         data, content_type = entry
-        return ObjectMetadata(size_bytes=len(data), content_type=content_type, etag=f"etag-{len(data)}")
+        return ObjectMetadata(
+            size_bytes=len(data), content_type=content_type, etag=f"etag-{len(data)}"
+        )
 
     async def delete(self, key: str) -> None:
         self._objects.pop(key, None)
         self.deleted_keys.append(key)
 
 
-def upload_file(filename: str, content: bytes, content_type: str | None = None) -> UploadFile:
+def upload_file(
+    filename: str, content: bytes, content_type: str | None = None
+) -> UploadFile:
     import io
 
     headers = {"content-type": content_type} if content_type else {}
@@ -79,9 +87,13 @@ def service(db_session, fake_storage) -> DocumentService:
 
 
 class TestStore:
-    async def test_valid_upload_persists_document_and_object(self, service: DocumentService, fake_storage: FakeObjectStorage):
+    async def test_valid_upload_persists_document_and_object(
+        self, service: DocumentService, fake_storage: FakeObjectStorage
+    ):
         document = await service.store(
-            upload_file("cedula.pdf", b"contenido real"), domain="deudor", owner_id=str(uuid.uuid4())
+            upload_file("cedula.pdf", b"contenido real"),
+            domain="deudor",
+            owner_id=str(uuid.uuid4()),
         )
 
         assert document.content_type == "application/pdf"
@@ -92,18 +104,30 @@ class TestStore:
 
     async def test_empty_file_raises_422(self, service: DocumentService):
         with pytest.raises(HTTPException) as exc_info:
-            await service.store(upload_file("vacio.pdf", b""), domain="deudor", owner_id=str(uuid.uuid4()))
+            await service.store(
+                upload_file("vacio.pdf", b""),
+                domain="deudor",
+                owner_id=str(uuid.uuid4()),
+            )
         assert exc_info.value.status_code == 422
 
     async def test_oversized_file_raises_413(self, service: DocumentService):
         content = b"x" * (MAX_DOCUMENT_SIZE_BYTES + 1)
         with pytest.raises(HTTPException) as exc_info:
-            await service.store(upload_file("grande.pdf", content), domain="deudor", owner_id=str(uuid.uuid4()))
+            await service.store(
+                upload_file("grande.pdf", content),
+                domain="deudor",
+                owner_id=str(uuid.uuid4()),
+            )
         assert exc_info.value.status_code == 413
 
     async def test_unsupported_extension_raises_415(self, service: DocumentService):
         with pytest.raises(HTTPException) as exc_info:
-            await service.store(upload_file("script.exe", b"contenido"), domain="deudor", owner_id=str(uuid.uuid4()))
+            await service.store(
+                upload_file("script.exe", b"contenido"),
+                domain="deudor",
+                owner_id=str(uuid.uuid4()),
+            )
         assert exc_info.value.status_code == 415
 
     async def test_storage_failure_raises_503_and_no_row_persisted(
@@ -111,7 +135,11 @@ class TestStore:
     ):
         fake_storage.put_should_fail = True
         with pytest.raises(HTTPException) as exc_info:
-            await service.store(upload_file("cedula.pdf", b"contenido"), domain="deudor", owner_id=str(uuid.uuid4()))
+            await service.store(
+                upload_file("cedula.pdf", b"contenido"),
+                domain="deudor",
+                owner_id=str(uuid.uuid4()),
+            )
         assert exc_info.value.status_code == 503
 
     async def test_rollback_deletes_object_when_row_insert_fails(
@@ -123,7 +151,11 @@ class TestStore:
         monkeypatch.setattr(service._repo, "add", _boom)
 
         with pytest.raises(RuntimeError):
-            await service.store(upload_file("cedula.pdf", b"contenido"), domain="deudor", owner_id=str(uuid.uuid4()))
+            await service.store(
+                upload_file("cedula.pdf", b"contenido"),
+                domain="deudor",
+                owner_id=str(uuid.uuid4()),
+            )
 
         # El objeto no debe quedar huérfano en el almacén si la fila nunca se creó.
         assert len(fake_storage._objects) == 0
@@ -131,7 +163,9 @@ class TestStore:
 
 
 class TestStoreGenerated:
-    async def test_creates_document_with_correct_size(self, service: DocumentService, fake_storage: FakeObjectStorage):
+    async def test_creates_document_with_correct_size(
+        self, service: DocumentService, fake_storage: FakeObjectStorage
+    ):
         content = b"col1,col2\nval1,val2\n"
         document = await service.store_generated(
             content=content,
@@ -144,12 +178,17 @@ class TestStoreGenerated:
         assert document.etag
         assert document.object_key in fake_storage._objects
 
-    async def test_storage_failure_raises_503(self, service: DocumentService, fake_storage: FakeObjectStorage):
+    async def test_storage_failure_raises_503(
+        self, service: DocumentService, fake_storage: FakeObjectStorage
+    ):
         fake_storage.put_should_fail = True
         with pytest.raises(HTTPException) as exc_info:
             await service.store_generated(
-                content=b"data", filename="reporte.csv", content_type="text/csv",
-                domain="reporte", owner_id=str(uuid.uuid4()),
+                content=b"data",
+                filename="reporte.csv",
+                content_type="text/csv",
+                domain="reporte",
+                owner_id=str(uuid.uuid4()),
             )
         assert exc_info.value.status_code == 503
 
@@ -157,7 +196,11 @@ class TestStoreGenerated:
 class TestGetById:
     async def test_returns_document_when_it_exists(self, service: DocumentService):
         document = await service.store_generated(
-            content=b"data", filename="a.csv", content_type="text/csv", domain="reporte", owner_id=str(uuid.uuid4())
+            content=b"data",
+            filename="a.csv",
+            content_type="text/csv",
+            domain="reporte",
+            owner_id=str(uuid.uuid4()),
         )
         found = await service.get_by_id(document.id)
         assert found is not None
@@ -168,18 +211,26 @@ class TestGetById:
 
 
 class TestToContentResponse:
-    async def test_returns_response_with_content_and_headers(self, service: DocumentService):
+    async def test_returns_response_with_content_and_headers(
+        self, service: DocumentService
+    ):
         document = await service.store(
-            upload_file("cédula depósito.pdf", b"contenido real"), domain="deudor", owner_id=str(uuid.uuid4())
+            upload_file("cédula depósito.pdf", b"contenido real"),
+            domain="deudor",
+            owner_id=str(uuid.uuid4()),
         )
         response = await service.to_content_response(document)
         assert response.body == b"contenido real"
         assert response.media_type == "application/pdf"
         assert "inline" in response.headers["Content-Disposition"]
 
-    async def test_storage_failure_raises_503(self, service: DocumentService, fake_storage: FakeObjectStorage):
+    async def test_storage_failure_raises_503(
+        self, service: DocumentService, fake_storage: FakeObjectStorage
+    ):
         document = await service.store(
-            upload_file("cedula.pdf", b"contenido"), domain="deudor", owner_id=str(uuid.uuid4())
+            upload_file("cedula.pdf", b"contenido"),
+            domain="deudor",
+            owner_id=str(uuid.uuid4()),
         )
         fake_storage.get_should_fail = True
         with pytest.raises(HTTPException) as exc_info:
@@ -192,7 +243,9 @@ class TestDeleteAndRestore:
         self, service: DocumentService, fake_storage: FakeObjectStorage, db_session
     ):
         document = await service.store(
-            upload_file("cedula.pdf", b"contenido"), domain="deudor", owner_id=str(uuid.uuid4())
+            upload_file("cedula.pdf", b"contenido"),
+            domain="deudor",
+            owner_id=str(uuid.uuid4()),
         )
 
         await service.delete(document)
@@ -204,12 +257,18 @@ class TestDeleteAndRestore:
         assert document.object_key in fake_storage._objects
         assert fake_storage.deleted_keys == []
 
-    async def test_delete_by_id_on_nonexistent_id_is_a_noop(self, service: DocumentService):
+    async def test_delete_by_id_on_nonexistent_id_is_a_noop(
+        self, service: DocumentService
+    ):
         await service.delete_by_id(uuid.uuid4())
 
-    async def test_restore_clears_deleted_at(self, service: DocumentService, db_session):
+    async def test_restore_clears_deleted_at(
+        self, service: DocumentService, db_session
+    ):
         document = await service.store(
-            upload_file("cedula.pdf", b"contenido"), domain="deudor", owner_id=str(uuid.uuid4())
+            upload_file("cedula.pdf", b"contenido"),
+            domain="deudor",
+            owner_id=str(uuid.uuid4()),
         )
         await service.delete(document)
 
@@ -218,14 +277,18 @@ class TestDeleteAndRestore:
         row = await db_session.get(DocumentModel, document.id)
         assert row is not None and row.deleted_at is None
 
-    async def test_restore_by_id_on_nonexistent_id_is_a_noop(self, service: DocumentService):
+    async def test_restore_by_id_on_nonexistent_id_is_a_noop(
+        self, service: DocumentService
+    ):
         await service.restore_by_id(uuid.uuid4())
 
 
 class TestToResponse:
     async def test_maps_model_fields_to_schema(self, service: DocumentService):
         document = await service.store(
-            upload_file("cedula.pdf", b"contenido"), domain="deudor", owner_id=str(uuid.uuid4())
+            upload_file("cedula.pdf", b"contenido"),
+            domain="deudor",
+            owner_id=str(uuid.uuid4()),
         )
         response = DocumentService.to_response(document)
         assert response.id == document.id
