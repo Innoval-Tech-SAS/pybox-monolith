@@ -1,14 +1,33 @@
+import json
 import uuid
+from unittest.mock import AsyncMock, patch
 
+import httpx
 import pytest
 from sqlalchemy import select
 
 from identity.auth.models.verification_code_model import VerificationCodeModel
 from identity.users.enums.user_enums import UserRole, UserScope
+from messaging.providers.email_provider import NRS360EmailProvider
 from tests.factories import get_user_by_email, register_payload
 
 AUTH_BASE = "/api/v1/auth"
 BASE = "/api/v1/onboarding"
+
+
+def _mock_nrs360_email_success():
+    """`NRS360EmailProvider` es un singleton que hace un POST real a 360nrs.com
+    (ver email_provider.py); en CI las credenciales son dummies no-secretas, así
+    que sin este mock el envío falla con 401 real del proveedor. Mismo patrón que
+    tests/messaging/providers/test_sms_provider.py: se reemplaza `_http`."""
+    response = httpx.Response(
+        status_code=200,
+        content=json.dumps({"result": [], "sendingId": 1}).encode(),
+        request=httpx.Request("POST", "https://dashboard.360nrs.com/api/rest/mailing"),
+    )
+    mock_http = AsyncMock()
+    mock_http.request = AsyncMock(return_value=response)
+    return patch.object(NRS360EmailProvider(), "_http", mock_http)
 
 
 @pytest.fixture
@@ -43,7 +62,8 @@ class TestOnboardingStatus:
 class TestRequestOtp:
     async def test_request_otp_valid(self, onboarding_user):
         authed, _user, _payload = onboarding_user
-        resp = await authed.post(f"{BASE}/request-otp", json={"channel": "EMAIL"})
+        with _mock_nrs360_email_success():
+            resp = await authed.post(f"{BASE}/request-otp", json={"channel": "EMAIL"})
         assert resp.status_code == 204
 
     async def test_request_otp_invalid_channel_returns_422(self, onboarding_user):

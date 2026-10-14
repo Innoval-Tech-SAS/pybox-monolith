@@ -1,5 +1,8 @@
+import json
 import uuid
+from unittest.mock import AsyncMock, patch
 
+import httpx
 import pytest
 from sqlalchemy import select
 
@@ -11,6 +14,7 @@ from identity.auth.services.oauth_provider_service import (
     ProviderProfile,
 )
 from identity.users.enums.user_enums import UserRole, UserScope
+from messaging.providers.email_provider import NRS360EmailProvider
 from tests.factories import (
     STRONG_PASSWORD,
     get_user_by_email,
@@ -20,6 +24,21 @@ from tests.factories import (
 )
 
 BASE = "/api/v1/auth"
+
+
+def _mock_nrs360_email_success():
+    """`NRS360EmailProvider` es un singleton que hace un POST real a 360nrs.com
+    (ver email_provider.py); en CI las credenciales son dummies no-secretas, así
+    que sin este mock el envío falla con 401 real del proveedor. Mismo patrón que
+    tests/messaging/providers/test_sms_provider.py: se reemplaza `_http`."""
+    response = httpx.Response(
+        status_code=200,
+        content=json.dumps({"result": [], "sendingId": 1}).encode(),
+        request=httpx.Request("POST", "https://dashboard.360nrs.com/api/rest/mailing"),
+    )
+    mock_http = AsyncMock()
+    mock_http.request = AsyncMock(return_value=response)
+    return patch.object(NRS360EmailProvider(), "_http", mock_http)
 
 
 # ---------------------------------------------------------------------------
@@ -377,14 +396,15 @@ class TestForgotPassword:
     async def test_send_code_valid(self, client):
         payload = register_payload()
         await client.post(f"{BASE}/register/user", json=payload)
-        resp = await client.post(
-            f"{BASE}/forgot-password/send-code",
-            json={
-                "document_type": payload["document_type"],
-                "document_number": payload["document_number"],
-                "channel": "EMAIL",
-            },
-        )
+        with _mock_nrs360_email_success():
+            resp = await client.post(
+                f"{BASE}/forgot-password/send-code",
+                json={
+                    "document_type": payload["document_type"],
+                    "document_number": payload["document_number"],
+                    "channel": "EMAIL",
+                },
+            )
         assert resp.status_code == 204
 
     async def test_send_code_unknown_document_returns_404(self, client):
