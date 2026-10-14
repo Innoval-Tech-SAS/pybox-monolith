@@ -53,7 +53,16 @@ const createCardTokenMock = vi.fn();
 const getPaymentMethodsMock = vi.fn();
 const getIdentificationTypesMock = vi.fn();
 
-function MockMercadoPago(this: any) {
+interface MockMercadoPagoInstance {
+  fields: {
+    create: (field: string) => { mount: () => FakeSecureField };
+    createCardToken: typeof createCardTokenMock;
+  };
+  getIdentificationTypes: typeof getIdentificationTypesMock;
+  getPaymentMethods: typeof getPaymentMethodsMock;
+}
+
+function MockMercadoPago(this: MockMercadoPagoInstance) {
   this.fields = {
     create: (field: string) => ({
       mount: () => {

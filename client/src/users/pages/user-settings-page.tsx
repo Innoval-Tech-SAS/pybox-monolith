@@ -31,7 +31,11 @@ const PermissionsList: React.FC<{
     setBusy(name);
     const base = localOverride ?? serverGranted;
     const next = new Set(base);
-    checked ? next.add(name) : next.delete(name);
+    if (checked) {
+      next.add(name);
+    } else {
+      next.delete(name);
+    }
     setLocalOverride(next);
     const ok = checked ? await assignPermission(name, "OTORGAR") : await removePermission(name);
     if (!ok) setLocalOverride(base);
@@ -88,7 +92,11 @@ const PortfoliosList: React.FC<{
     setBusyPerm(name);
     const base = localOverride ?? serverGranted;
     const next = new Set(base);
-    checked ? next.add(name) : next.delete(name);
+    if (checked) {
+      next.add(name);
+    } else {
+      next.delete(name);
+    }
     setLocalOverride(next);
     const ok = checked ? await assignPermission(name, "OTORGAR") : await removePermission(name);
     if (!ok) setLocalOverride(base);
