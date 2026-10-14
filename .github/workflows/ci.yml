@@ -113,7 +113,9 @@ jobs:
             -e STORAGE_ACCESS_KEY="$STORAGE_ACCESS_KEY" \
             -e STORAGE_SECRET_KEY="$STORAGE_SECRET_KEY" \
             pybox-storage-ci
-          timeout 30 bash -c 'until curl -fs http://127.0.0.1:3004/ -o /dev/null; do sleep 1; done'
+          # Sin -f: una petición sin firmar al API S3 devuelve 403 aun con el
+          # servidor arriba, y -f trata cualquier 4xx como fallo del curl.
+          timeout 30 bash -c 'until curl -s http://127.0.0.1:3004/ -o /dev/null; do sleep 1; done'
 
       - name: Estilo (black)
         run: uv run black --check .
@@ -192,8 +194,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: client/pnpm-lock.yaml
+
+      # El `cache: pnpm` nativo de setup-node@v4 falla duro en un runner limpio
+      # (el store de pnpm todavía no existe la primera vez) en vez de solo
+      # saltarse la restauración -- se arma el cache a mano para evitarlo.
+      - name: Resolver store de pnpm
+        id: pnpm-cache
+        run: echo "store_path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store_path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('client/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
