@@ -29,10 +29,15 @@ env:
   REDIS_HOST: "127.0.0.1"
   REDIS_PORT: "6379"
   REDIS_PASSWORD: "ci-password"
-  AUTH_TOKEN_SECRET: "ci-auth-token-secret-0123456789abcdef"
-  ENCRYPT_KEY: "ci-encrypt-key-0123456789abcdef"
-  DOCUMENT_HASH_KEY: "ci-document-hash-key-0123456789"
-  PASSWORD_PEPPER: "ci-password-pepper-0123456789"
+  # ENCRYPT_KEY/DOCUMENT_HASH_KEY se decodifican como base64 de 32 bytes (ver
+  # EncryptService) -- un string plano de 32 caracteres no decodifica a 32
+  # bytes y tumba el import con ValueError. Generados con
+  # `python -c "import secrets; print(secrets.token_urlsafe(32))"`, igual que
+  # documenta .env.example.
+  AUTH_TOKEN_SECRET: "6zhmVFiocUbFdghsIpt2Ca25WUgFgh5t2pi2Z5jX_iE"
+  ENCRYPT_KEY: "ZdEJ-XrQoHXIleF-aZbcGHUyTyEovroac637mALOVds"
+  DOCUMENT_HASH_KEY: "MRLF04g9Fq5LpnZ8OeK0yfkZ7NpVN5rigUABaMzN4S0"
+  PASSWORD_PEPPER: "fIR90hGmZgn0fJVoB7T0d3XIzhAMsIaUknRisZ89Qh8"
   GOOGLE_CLIENT_ID: "ci-google-client-id"
   CORS_ORIGINS: "http://localhost:4200,http://127.0.0.1:4200"
   COOKIE_DOMAIN: ""
