@@ -12,10 +12,12 @@
 # la migración de su propia versión no pasó primero.
 set -euo pipefail
 
-REPO_DIR="/root/repositories/pybox-monolith"
+REPO_DIR="/root/my-repositories/pybox-monolith"
 BACKUP_DIR="/var/backups/pybox"
 STATE_FILE="/var/lib/pybox/desplegado"
 KEEP_IMAGES=5
+# Dominio provisional del cliente mientras app.pybox.co no tenga DNS.
+CLIENT_URL="https://dev.pybox.co/"
 
 SHA="${1:-}"
 if ! [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
@@ -77,7 +79,7 @@ if ! curl -fsS "https://api.pybox.co/" -o /dev/null; then
   echo "La API no respondió 200 en /. Revisar logs: podman compose -p pybox logs api" >&2
   exit 1
 fi
-if ! curl -fsS "https://app.pybox.co/" -o /dev/null; then
+if ! curl -fsS "$CLIENT_URL" -o /dev/null; then
   echo "El cliente no respondió 200. Revisar logs: podman compose -p pybox logs client nginx" >&2
   exit 1
 fi
