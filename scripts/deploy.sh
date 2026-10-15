@@ -16,6 +16,9 @@ REPO_DIR="/root/my-repositories/pybox-monolith"
 BACKUP_DIR="/var/backups/pybox"
 STATE_FILE="/var/lib/pybox/desplegado"
 KEEP_IMAGES=5
+# Nombre del proyecto compose con el que corre el stack en vivo (el de la carpeta del
+# checkout). Si no coincide, compose crea un stack paralelo en otra red, sin acceso a la base.
+PROJECT="pybox-monolith"
 # Dominio provisional del cliente mientras app.pybox.co no tenga DNS.
 CLIENT_URL="https://dev.pybox.co/"
 
@@ -39,16 +42,13 @@ fi
 echo "==> git merge --ff-only"
 git merge --ff-only origin/main
 
-# Carga DB_USERNAME/DB_NAME del .env de producción para el respaldo.
-set -a
-source "$REPO_DIR/.env"
-set +a
-
+# El .env no se hace `source`: es formato dotenv, no bash (valores con espacios sin comillas
+# se ejecutarían como comandos). Usuario y base se toman del entorno del propio contenedor.
 echo "==> Respaldo previo (pg_dump)"
 mkdir -p "$BACKUP_DIR"
 BACKUP_FILE="$BACKUP_DIR/pre-deploy-${SHA}.sql.gz"
-if ! podman compose -p pybox exec -T database \
-    pg_dump -U "$DB_USERNAME" "$DB_NAME" | gzip > "$BACKUP_FILE"; then
+if ! podman compose -p "$PROJECT" exec -T database \
+    sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' | gzip > "$BACKUP_FILE"; then
   echo "El respaldo falló -- abortando sin tocar contenedores." >&2
   rm -f "$BACKUP_FILE"
   exit 1
@@ -56,31 +56,31 @@ fi
 echo "Respaldo en $BACKUP_FILE"
 
 echo "==> podman compose build"
-podman compose -p pybox build api client landing nginx
+podman compose -p "$PROJECT" build api client landing nginx
 
+# podman-compose nombra las imágenes construidas localhost/<proyecto>_<servicio>:latest.
 echo "==> Etiquetar imágenes con el SHA (para poder revertir)"
 for servicio in api client landing nginx; do
-  imagen="$(podman compose -p pybox images -q "$servicio")"
-  [ -n "$imagen" ] && podman tag "$imagen" "pybox-${servicio}:${SHA}"
+  podman tag "localhost/${PROJECT}_${servicio}:latest" "pybox-${servicio}:${SHA}"
 done
 
 echo "==> Migrar (alembic upgrade head, con la imagen nueva de api, sin tocar el contenedor en vivo)"
-if ! podman compose -p pybox run --rm api alembic upgrade head; then
+if ! podman compose -p "$PROJECT" run -T --rm api alembic upgrade head; then
   echo "La migración falló -- los contenedores en producción NO se recrean (siguen corriendo la versión anterior)." >&2
-  echo "Restaura con: gunzip -c $BACKUP_FILE | podman compose -p pybox exec -T database psql -U $DB_USERNAME $DB_NAME" >&2
+  echo "Restaura con: gunzip -c $BACKUP_FILE | podman compose -p $PROJECT exec -T database sh -c 'PGPASSWORD=\"\$POSTGRES_PASSWORD\" psql -U \"\$POSTGRES_USER\" \"\$POSTGRES_DB\"'" >&2
   exit 1
 fi
 
 echo "==> Recrear solo los servicios de la aplicación (database/redis/storage no se tocan)"
-podman compose -p pybox up -d --force-recreate --no-deps api client landing nginx
+podman compose -p "$PROJECT" up -d --force-recreate --no-deps api client landing nginx
 
 echo "==> Verificación de salud"
 if ! curl -fsS "https://api.pybox.co/" -o /dev/null; then
-  echo "La API no respondió 200 en /. Revisar logs: podman compose -p pybox logs api" >&2
+  echo "La API no respondió 200 en /. Revisar logs: podman compose -p $PROJECT logs api" >&2
   exit 1
 fi
 if ! curl -fsS "$CLIENT_URL" -o /dev/null; then
-  echo "El cliente no respondió 200. Revisar logs: podman compose -p pybox logs client nginx" >&2
+  echo "El cliente no respondió 200. Revisar logs: podman compose -p $PROJECT logs client nginx" >&2
   exit 1
 fi
 
@@ -88,13 +88,14 @@ mkdir -p "$(dirname "$STATE_FILE")"
 echo "$SHA" > "$STATE_FILE"
 
 echo "==> Conservando solo las últimas $KEEP_IMAGES imágenes por servicio"
+# Se borra por etiqueta y sin -f: si la imagen sigue en uso o tiene otra etiqueta (un servicio
+# sin cambios entre despliegues comparte ID), rmi solo quita la etiqueta o falla sin tocar
+# el contenedor en ejecución. `podman images` ya lista de la más nueva a la más vieja.
 for servicio in api client landing nginx; do
-  podman images "pybox-${servicio}" --format "{{.Tag}} {{.ID}}" \
-    | grep -v '^latest ' \
-    | sort -r \
+  podman images "pybox-${servicio}" --format "{{.Repository}}:{{.Tag}}" \
+    | grep -v ':latest$' \
     | tail -n "+$((KEEP_IMAGES + 1))" \
-    | awk '{print $2}' \
-    | xargs -r podman rmi -f
+    | xargs -r podman rmi || true
 done
 
 echo "Despliegue de $SHA completo."
