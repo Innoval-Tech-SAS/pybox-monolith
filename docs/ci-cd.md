@@ -26,7 +26,7 @@ de producción:
 5. Corre `alembic upgrade head` con la imagen nueva de `api` (`podman compose run --rm api ...`), **sin** recrear el contenedor en vivo todavía.
 6. Si la migración falla, el script se detiene ahí: los contenedores en producción siguen corriendo la versión anterior (no hay modo mantenimiento tipo `artisan down`; en su lugar, simplemente nunca se llega a recrear nada con código que no migró bien).
 7. Si la migración pasa, recrea solo los servicios de la aplicación (`--force-recreate --no-deps api client landing nginx`). La base, Redis y el storage no se reinician.
-8. Comprueba que `https://api.pybox.co/` y `https://app.pybox.co/` respondan 200.
+8. Comprueba que `https://api.pybox.co/` y `https://dev.pybox.co/` (cliente; pasará a `app.pybox.co` cuando tenga DNS, ver `CLIENT_URL`) respondan 200.
 9. Guarda el SHA desplegado en `/var/lib/pybox/desplegado` y conserva las imágenes de los últimos 5 despliegues por servicio.
 
 **Autorización de migraciones:** el despliegue es totalmente automático. **El merge a `main` es la autorización**: quien aprueba el PR debe revisar si trae migraciones (`api/alembic/versions/`) y si son compatibles hacia atrás.
@@ -42,9 +42,11 @@ de producción:
 Como root en el servidor:
 
 ```bash
+# Sin contraseña (useradd la deja bloqueada): solo entra con la llave del paso 2.2.
+# El shell debe ser real: sshd ejecuta el command= forzado a través de él.
 useradd --create-home --shell /bin/bash deploy
 
-install -o root -g root -m 0755 /root/repositories/pybox-monolith/scripts/deploy.sh \
+install -o root -g root -m 0755 /root/my-repositories/pybox-monolith/scripts/deploy.sh \
   /usr/local/sbin/pybox-deploy
 
 echo 'deploy ALL=(root) NOPASSWD: /usr/local/sbin/pybox-deploy' > /etc/sudoers.d/pybox-deploy
@@ -91,6 +93,33 @@ directamente si `deploy.yml` falla con "Secretos vacíos" aunque estén configur
 El script hace `git fetch` como root, así que necesita su propia deploy key de solo lectura
 hacia el repositorio (`ssh-keygen` + entrada en `~/.ssh/config` + deploy key agregada en
 GitHub → repo → Settings → Deploy keys, solo lectura).
+
+### 2.5. Servidor: endurecimiento de sshd
+
+**Antes** de este paso, el acceso de administración debe funcionar con llave (`ssh-copy-id root@<IP>`
+desde la máquina del administrador y probar en otra terminal), o el cambio deja fuera al administrador.
+
+`/etc/ssh/sshd_config.d/10-pybox-hardening.conf` (el prefijo `10-` gana sobre `50-cloud-init.conf`,
+que activa `PasswordAuthentication yes`: en sshd se queda el primer valor leído):
+
+```
+PermitRootLogin prohibit-password
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+AuthenticationMethods publickey
+MaxAuthTries 3
+LoginGraceTime 30
+X11Forwarding no
+AllowUsers root deploy
+
+Match User deploy
+    AllowTcpForwarding no
+    AllowAgentForwarding no
+    PermitTTY no
+```
+
+Validar y aplicar sin cerrar la sesión abierta: `sshd -t && systemctl reload sshd`, y probar en
+una terminal nueva antes de salir.
 
 ---
 

@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 45
     environment:
       name: PROD
-      url: https://app.pybox.co
+      url: https://dev.pybox.co
     steps:
       # En organizaciones Free los secretos de environment no llegan a repos privados (docs/ci-cd.md §2.3).
       - name: Verificar secretos
