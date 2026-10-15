@@ -75,11 +75,12 @@ echo "==> Recrear solo los servicios de la aplicación (database/redis/storage n
 podman compose -p "$PROJECT" up -d --force-recreate --no-deps api client landing nginx
 
 echo "==> Verificación de salud"
-if ! curl -fsS "https://api.pybox.co/" -o /dev/null; then
+# nginx tarda unos segundos en escuchar tras --force-recreate: se reintenta hasta 60 s.
+if ! curl -fsS --retry 20 --retry-delay 3 --retry-max-time 60 --retry-all-errors "https://api.pybox.co/" -o /dev/null; then
   echo "La API no respondió 200 en /. Revisar logs: podman compose -p $PROJECT logs api" >&2
   exit 1
 fi
-if ! curl -fsS "$CLIENT_URL" -o /dev/null; then
+if ! curl -fsS --retry 20 --retry-delay 3 --retry-max-time 60 --retry-all-errors "$CLIENT_URL" -o /dev/null; then
   echo "El cliente no respondió 200. Revisar logs: podman compose -p $PROJECT logs client nginx" >&2
   exit 1
 fi
