@@ -6,6 +6,7 @@ resources/
 server/
 .vscode/
 public/
+graphify-out/
 
 # Python-generated files
 __pycache__/
