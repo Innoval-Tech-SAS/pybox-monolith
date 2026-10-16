@@ -16,7 +16,7 @@ export const useJudicialPriorities = () => {
       .then((data) => setPriorities(data ?? []))
       .catch(() => setPriorities([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiClient]);
 
   const labels = useMemo(
     () => Object.fromEntries(priorities.map((p) => [p.value, p.label])) as Record<string, string>,

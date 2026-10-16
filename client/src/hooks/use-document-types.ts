@@ -29,7 +29,7 @@ export const useDocumentTypes = () => {
         setGroups([]);
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiClient]);
 
   return { labels, groups, loading };
 };

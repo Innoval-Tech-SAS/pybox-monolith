@@ -13,11 +13,11 @@ export const useDebtorRelatedContacts = (debtorId: string | null, portfolioId: s
       return;
     }
     setLoading(true);
-    apiClient(`/debtors/${debtorId}/related-contacts?portfolioId=${portfolioId}`)
-      .then((d: RelatedContactsResponse) => setData(d))
+    apiClient<RelatedContactsResponse>(`/debtors/${debtorId}/related-contacts?portfolioId=${portfolioId}`)
+      .then((d) => setData(d))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, [debtorId, portfolioId]);
+  }, [debtorId, portfolioId, apiClient]);
 
   return { data, loading };
 };
@@ -33,11 +33,11 @@ export const useDebtorCredits = (debtorId: string | null, portfolioId: string) =
       return;
     }
     setLoading(true);
-    apiClient(`/debtors/${debtorId}/credits?portfolioId=${portfolioId}`)
-      .then((d: DebtorCredit[]) => setCredits(d ?? []))
+    apiClient<DebtorCredit[]>(`/debtors/${debtorId}/credits?portfolioId=${portfolioId}`)
+      .then((d) => setCredits(d ?? []))
       .catch(() => setCredits([]))
       .finally(() => setLoading(false));
-  }, [debtorId, portfolioId]);
+  }, [debtorId, portfolioId, apiClient]);
 
   return { credits, loading };
 };

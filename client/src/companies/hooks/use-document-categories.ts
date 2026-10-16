@@ -17,7 +17,7 @@ export const useDocumentCategories = () => {
       .then((data) => setCategories(data ?? []))
       .catch(() => setCategories([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiClient]);
 
   const labels = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.value, c.label])) as Record<string, string>,

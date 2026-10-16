@@ -19,13 +19,13 @@ export const useUserPortfolioAccess = (orgId: string, userId: string) => {
     } finally {
       setLoading(false);
     }
-  }, [orgId, userId]);
+  }, [orgId, userId, apiClient]);
 
   useEffect(() => { fetchPortfolios(); }, [fetchPortfolios]);
 
   const grantAccess = async (portfolioId: string): Promise<boolean> => {
     try {
-      await apiClient(`/organizations/${orgId}/members/${userId}/portfolios/${portfolioId}`, {
+      await apiClient<unknown>(`/organizations/${orgId}/members/${userId}/portfolios/${portfolioId}`, {
         method: "PUT",
       });
       await fetchPortfolios();
@@ -37,7 +37,7 @@ export const useUserPortfolioAccess = (orgId: string, userId: string) => {
 
   const revokeAccess = async (portfolioId: string): Promise<boolean> => {
     try {
-      await apiClient(`/organizations/${orgId}/members/${userId}/portfolios/${portfolioId}`, {
+      await apiClient<unknown>(`/organizations/${orgId}/members/${userId}/portfolios/${portfolioId}`, {
         method: "DELETE",
       });
       await fetchPortfolios();

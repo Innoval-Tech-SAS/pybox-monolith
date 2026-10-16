@@ -12,11 +12,11 @@ export const useEntitySectors = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiClient("/organizations/sectors", { method: "GET" })
-      .then((data: EntitySectorOption[]) => setSectors(data))
+    apiClient<EntitySectorOption[]>("/organizations/sectors", { method: "GET" })
+      .then((data) => setSectors(data))
       .catch(() => setSectors([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiClient]);
 
   return { sectors, loading };
 };

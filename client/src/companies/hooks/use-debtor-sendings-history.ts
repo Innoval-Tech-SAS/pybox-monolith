@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import type { DebtorSendingChannelGroup } from "@/types/companies/portfolio-debtor-types";
 
@@ -13,22 +13,22 @@ export const useDebtorSendingsHistory = (
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchHistory = () => {
+  const fetchHistory = useCallback(() => {
     if (!debtorId || !portfolioId) {
       setGroups([]);
       return;
     }
     setLoading(true);
     setError(null);
-    apiClient(`/contacts/debtor/${debtorId}?portfolioId=${portfolioId}&page=${page}&pageSize=${pageSize}`)
-      .then((d: DebtorSendingChannelGroup[]) => setGroups(d ?? []))
+    apiClient<DebtorSendingChannelGroup[]>(`/contacts/debtor/${debtorId}?portfolioId=${portfolioId}&page=${page}&pageSize=${pageSize}`)
+      .then((d) => setGroups(d ?? []))
       .catch((err) => setError(err instanceof Error ? err.message : "Error al cargar el historial de envíos"))
       .finally(() => setLoading(false));
-  };
+  }, [debtorId, portfolioId, page, pageSize, apiClient]);
 
   useEffect(() => {
     fetchHistory();
-  }, [debtorId, portfolioId, page, pageSize]);
+  }, [fetchHistory]);
 
   return { groups, loading, error, refetch: fetchHistory };
 };

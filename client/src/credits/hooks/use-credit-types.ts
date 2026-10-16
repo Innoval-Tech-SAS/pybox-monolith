@@ -17,7 +17,7 @@ export const useCreditTypes = () => {
       .then((data) => setTypes(data ?? []))
       .catch(() => setTypes([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiClient]);
 
   const labels = useMemo(
     () => Object.fromEntries(types.map((t) => [t.value, t.label])) as Record<string, string>,

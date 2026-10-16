@@ -19,13 +19,13 @@ export const useUserPermissions = (orgId: string, userId: string) => {
     } finally {
       setLoading(false);
     }
-  }, [orgId, userId]);
+  }, [orgId, userId, apiClient]);
 
   useEffect(() => { fetchPermissions(); }, [fetchPermissions]);
 
   const assignPermission = async (name: string, effect: "OTORGAR" | "REVOCAR"): Promise<boolean> => {
     try {
-      await apiClient(`/organizations/${orgId}/members/${userId}/permissions`, {
+      await apiClient<unknown>(`/organizations/${orgId}/members/${userId}/permissions`, {
         method: "PUT",
         body: JSON.stringify({ name, effect }),
       });
@@ -38,7 +38,7 @@ export const useUserPermissions = (orgId: string, userId: string) => {
 
   const removePermission = async (name: string): Promise<boolean> => {
     try {
-      await apiClient(`/organizations/${orgId}/members/${userId}/permissions/${name}`, {
+      await apiClient<unknown>(`/organizations/${orgId}/members/${userId}/permissions/${name}`, {
         method: "DELETE",
       });
       await fetchPermissions();

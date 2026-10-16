@@ -44,7 +44,7 @@ export const useJudicialInbox = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [apiClient]);
 
   useEffect(() => {
     fetchInbox();
@@ -58,12 +58,12 @@ export const useJudicialInbox = () => {
         unreadCount: Math.max(0, prev.unreadCount - 1),
       }));
       try {
-        await apiClient(`/judicial-notifications/${notificationId}/read`, { method: "POST" });
+        await apiClient<unknown>(`/judicial-notifications/${notificationId}/read`, { method: "POST" });
       } finally {
         await fetchInbox();
       }
     },
-    [fetchInbox],
+    [fetchInbox, apiClient],
   );
 
   const markAllRead = useCallback(async () => {
@@ -72,11 +72,11 @@ export const useJudicialInbox = () => {
       unreadCount: 0,
     }));
     try {
-      await apiClient("/judicial-notifications/read-all", { method: "POST" });
+      await apiClient<unknown>("/judicial-notifications/read-all", { method: "POST" });
     } finally {
       await fetchInbox();
     }
-  }, [fetchInbox]);
+  }, [fetchInbox, apiClient]);
 
   return { inbox, loading, error, refetch: fetchInbox, markRead, markAllRead };
 };
