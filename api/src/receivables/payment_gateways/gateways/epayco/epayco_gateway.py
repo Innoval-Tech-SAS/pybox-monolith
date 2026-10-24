@@ -95,8 +95,13 @@ class EpaycoGateway:
         return (self._credentials.get("environment") or "sandbox") != "production"
 
     async def _login(self) -> str:
+        """`bearer_token` es el campo primario de la respuesta de `/login` (confirmado
+        contra los SDKs oficiales de Go y Ruby de ePayco); `token` es el fallback que
+        usan ambos SDKs cuando el primero viene vacío. Antes solo se leia `token` --
+        si la API real nombra el campo `bearer_token`, cada llamada quedaba
+        autenticando con un token vacio (401 persistente sin error en el origen)."""
         response = await self._client.login(self._public_key, self._private_key)
-        return str(response.get("token", ""))
+        return str(response.get("bearer_token") or response.get("token", ""))
 
     async def get_acceptance_tokens(self) -> AcceptanceTokens:
         """ePayco no tiene el concepto de tokens de aceptación de Wompi -- mismo
