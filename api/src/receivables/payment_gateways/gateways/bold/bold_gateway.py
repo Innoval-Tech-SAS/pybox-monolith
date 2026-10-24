@@ -242,8 +242,13 @@ class BoldGateway:
         `BoldWebhookService` NO usa este método: verifica directamente con
         `verify_bold_webhook_signature` (ver `gateways/bold/bold_signature.py`) sobre
         el body crudo y el header, antes de parsear el JSON. Este método existe solo
-        para cumplir el Protocol; siempre devuelve `False`."""
-        return False
+        para cumplir el Protocol -- levanta en vez de devolver `False`, para que un
+        llamador que lo invoque por error no reciba un "firma inválida" silenciosamente
+        incorrecto."""
+        raise NotImplementedError(
+            "BoldGateway no verifica la firma del webhook por este método -- "
+            "usar verify_bold_webhook_signature sobre el body crudo."
+        )
 
     def supports_automatic_charge(self) -> bool:
         return False
