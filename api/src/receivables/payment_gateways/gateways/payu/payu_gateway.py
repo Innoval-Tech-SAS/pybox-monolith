@@ -203,6 +203,13 @@ class PayUGateway:
             ),
             "extraParameters": {
                 "RESPONSE_URL": self._build_response_url(reference),
+                # shortcut: la doc de PayU no define PSE_REFERENCE1 en la seccion de
+                # PSE (solo PSE_REFERENCE2/3, documento del pagador); el UNICO ejemplo
+                # de request que lo muestra manda una IP, no una referencia de
+                # negocio. "Confirmation URL" lo describe aparte como "custom
+                # reference field 1", sin forzar un formato -- se asume de negocio
+                # (nuestra referencia) hasta confirmar contra sandbox real cual de
+                # las dos lecturas es la correcta.
                 "PSE_REFERENCE1": reference,
                 "FINANCIAL_INSTITUTION_CODE": (
                     payment_method.financial_institution_code

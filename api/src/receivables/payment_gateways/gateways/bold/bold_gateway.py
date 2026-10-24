@@ -133,6 +133,12 @@ class BoldGateway:
         self, payment_method: PaymentMethodInput
     ) -> dict[str, Any]:
         if isinstance(payment_method, CardPaymentMethod):
+            # shortcut: la doc de Bold documenta un "Billing Address Object"
+            # (city/country_code/street/zip_code/state) pero no aclara si va anidado
+            # en CREDIT_CARD ni bajo que llave -- la tabla propia de CREDIT_CARD no lo
+            # lista como campo. Se omite hasta confirmar contra sandbox real; si Bold
+            # lo exige, el pago con tarjeta fallara con un error explicito de Bold, no
+            # en silencio.
             return {
                 "name": "CREDIT_CARD",
                 "card_number": payment_method.number,
@@ -143,9 +149,13 @@ class BoldGateway:
                 "installments": payment_method.installments,
             }
         if isinstance(payment_method, PsePaymentMethod):
+            # El esquema `PSE` de creacion de pago documenta `bank_code` como
+            # integer (distinto del esquema `BankItem` de
+            # `list_pse_financial_institutions`, que lo documenta como string -- la
+            # propia doc de Bold es inconsistente entre esos dos esquemas).
             return {
                 "name": "PSE",
-                "bank_code": payment_method.financial_institution_code,
+                "bank_code": int(payment_method.financial_institution_code),
                 "bank_name": await self._resolve_bank_name(
                     payment_method.financial_institution_code
                 ),
