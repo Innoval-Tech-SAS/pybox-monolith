@@ -64,6 +64,12 @@ class OrganizationGatewayCredentialManagementService:
                 f"Ya existe una credencial de {data.provider.value} para esta "
                 "organización — edítala en vez de crear otra.",
             )
+        if data.is_active:
+            # El checkout de autoservicio resuelve "la" pasarela activa de la
+            # organización sin que el deudor elija (ver
+            # `ReceivablesGatewayResolver.get_active_for_organization`) -- a lo sumo
+            # una puede estarlo a la vez.
+            await self._repo.deactivate_all(organization_id)
         row = OrganizationGatewayCredentialModel(
             organization_id=organization_id,
             provider=data.provider,
@@ -86,6 +92,8 @@ class OrganizationGatewayCredentialManagementService:
         data: OrganizationGatewayCredentialUpdateRequest,
     ) -> OrganizationGatewayCredentialResponse:
         row = await self._get_owned(credential_id, organization_id)
+        if data.is_active:
+            await self._repo.deactivate_all(organization_id, exclude_id=row.id)
         if data.secrets:
             # Merge de secretos: los enviados rotan; los omitidos se conservan (igual
             # contrato que las otras dos tablas de credenciales del proyecto).

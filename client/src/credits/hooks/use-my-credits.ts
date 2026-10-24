@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import { ApiError } from "@/types/api-error";
 import { getSession } from "@/auth/utils/auth-session-utils";
@@ -14,7 +14,7 @@ export const useMyCredits = () => {
   // en la sesión primero para no pedir el endpoint cuando ya se sabe que va a rechazar.
   const [identityPending, setIdentityPending] = useState(false);
 
-  const fetch = async () => {
+  const loadCredits = useCallback(async () => {
     setLoading(true);
     setError(null);
     setIdentityPending(false);
@@ -26,11 +26,11 @@ export const useMyCredits = () => {
     }
 
     try {
-      const data = (await apiClient(
+      const data = await apiClient<CreditWithPayments[]>(
         "/credits/my-credits",
         {},
         { silentStatuses: [403, 404] },
-      )) as CreditWithPayments[];
+      );
       setCredits(data);
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
@@ -45,9 +45,9 @@ export const useMyCredits = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiClient]);
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { loadCredits(); }, [loadCredits]);
 
-  return { credits, loading, error, identityPending, refetch: fetch };
+  return { credits, loading, error, identityPending, refetch: loadCredits };
 };

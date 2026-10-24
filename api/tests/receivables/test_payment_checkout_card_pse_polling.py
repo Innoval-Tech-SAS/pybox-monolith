@@ -22,8 +22,8 @@ from receivables.payment_gateways.gateways.base import (
     BrowserInfo,
     CardPaymentMethod,
     ThreeDsChallenge,
-    WompiFinancialInstitution,
-    WompiTransaction,
+    GatewayFinancialInstitution,
+    GatewayTransaction,
 )
 from receivables.payment_gateways.models.payment_attempt_model import (
     CreditPaymentAttemptModel,
@@ -100,13 +100,14 @@ class TestCardThreeDsChallenge:
     ):
         org, debtor, payment = await _setup_payment(db_session)
         gateway = AsyncMock()
+        gateway.name = "WOMPI"
         gateway.get_acceptance_tokens.return_value = AcceptanceTokens(
             acceptance_token="acc_tok",
             acceptance_permalink="https://x/acc",
             personal_data_token="pd_tok",
             personal_data_permalink="https://x/pd",
         )
-        gateway.create_transaction.return_value = WompiTransaction(
+        gateway.create_transaction.return_value = GatewayTransaction(
             id="txn-card-1",
             status="PENDING",
             amount_in_cents=1_500_000,
@@ -121,7 +122,7 @@ class TestCardThreeDsChallenge:
             ),
         )
         gateway_resolver = AsyncMock()
-        gateway_resolver.get_for_organization.return_value = gateway
+        gateway_resolver.get_active_for_organization.return_value = gateway
 
         service = PaymentCheckoutService(
             _ownership_resolver(db_session),
@@ -146,9 +147,14 @@ class TestCardThreeDsChallenge:
             browser_user_agent="pytest",
             browser_tz="300",
         )
-        attempt, challenge = await service.create_transaction(
+        (
+            attempt,
+            challenge,
+            redirect_action,
+        ) = await service.create_transaction(
             session, payment.id, card, "debtor@example.com", browser_info=browser_info
         )
+        assert redirect_action is None
 
         assert attempt.status == ReceivablesPaymentAttemptStatus.PENDING
         assert attempt.charge_mode == ChargeMode.CHECKOUT
@@ -168,12 +174,12 @@ class TestListPseInstitutions:
         org, debtor, payment = await _setup_payment(db_session)
         gateway = AsyncMock()
         gateway.list_pse_financial_institutions.return_value = [
-            WompiFinancialInstitution(
+            GatewayFinancialInstitution(
                 financial_institution_code="1", financial_institution_name="Banco Uno"
             ),
         ]
         gateway_resolver = AsyncMock()
-        gateway_resolver.get_for_organization.return_value = gateway
+        gateway_resolver.get_active_for_organization.return_value = gateway
 
         service = PaymentCheckoutService(
             _ownership_resolver(db_session),
@@ -241,7 +247,7 @@ class TestRefreshAttemptStatus:
         attempt = await self._add_attempt(db_session, payment)
 
         gateway = AsyncMock()
-        gateway.get_transaction.return_value = WompiTransaction(
+        gateway.get_transaction.return_value = GatewayTransaction(
             id="txn-1",
             status="APPROVED",
             amount_in_cents=1_500_000,
@@ -251,7 +257,7 @@ class TestRefreshAttemptStatus:
             raw={"id": "txn-1", "status": "APPROVED"},
         )
         gateway_resolver = AsyncMock()
-        gateway_resolver.get_for_organization.return_value = gateway
+        gateway_resolver.get_active_for_organization.return_value = gateway
 
         service = PaymentCheckoutService(
             _ownership_resolver(db_session),
@@ -285,7 +291,7 @@ class TestRefreshAttemptStatus:
 
         result = await service.refresh_attempt_status(session, payment.id, attempt.id)
         assert result.status == ReceivablesPaymentAttemptStatus.APPROVED
-        gateway_resolver.get_for_organization.assert_not_awaited()
+        gateway_resolver.get_active_for_organization.assert_not_awaited()
 
     async def test_attempt_of_another_payment_raises_404(
         self, db_session, make_user_session_factory

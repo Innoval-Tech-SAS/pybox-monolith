@@ -26,11 +26,11 @@ export const useGlobalBillingDashboard = () => {
       setLoading(true);
       try {
         const [summaryResult, statusResult, channelResult, providerResult, monthlyResult] = await Promise.all([
-          apiClient("/billing/admin/dashboard/summary", { method: "GET" }),
-          apiClient("/billing/admin/dashboard/invoices-by-status", { method: "GET" }),
-          apiClient("/billing/admin/dashboard/revenue-by-channel", { method: "GET" }),
-          apiClient("/billing/admin/dashboard/revenue-by-provider", { method: "GET" }),
-          apiClient("/billing/admin/dashboard/monthly-revenue", { method: "GET" }),
+          apiClient<BillingSummary>("/billing/admin/dashboard/summary", { method: "GET" }),
+          apiClient<InvoiceStatusBreakdown>("/billing/admin/dashboard/invoices-by-status", { method: "GET" }),
+          apiClient<RevenueByChannel>("/billing/admin/dashboard/revenue-by-channel", { method: "GET" }),
+          apiClient<RevenueByProvider>("/billing/admin/dashboard/revenue-by-provider", { method: "GET" }),
+          apiClient<MonthlyRevenue>("/billing/admin/dashboard/monthly-revenue", { method: "GET" }),
         ]);
         if (cancelled) return;
         setSummary(summaryResult);
@@ -55,7 +55,7 @@ export const useGlobalBillingDashboard = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [apiClient]);
 
   return { summary, statusBreakdown, revenueByChannel, revenueByProvider, monthlyRevenue, loading };
 };

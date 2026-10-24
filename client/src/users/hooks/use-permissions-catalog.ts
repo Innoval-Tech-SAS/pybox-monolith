@@ -13,7 +13,7 @@ export const usePermissionsCatalog = () => {
       .then(setCatalog)
       .catch(() => setCatalog([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiClient]);
 
   return { catalog, loading };
 };

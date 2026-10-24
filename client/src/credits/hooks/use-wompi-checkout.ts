@@ -22,7 +22,7 @@ export const useWompiCheckout = (paymentId: string) => {
     setSubmitting(true);
     try {
       return await apiClient<TransactionCreationResult>(
-        `/credits/payments/${paymentId}/wompi/transaction`,
+        `/credits/payments/${paymentId}/transaction`,
         { method: "POST", body: JSON.stringify(body) },
       );
     } catch {
@@ -35,7 +35,7 @@ export const useWompiCheckout = (paymentId: string) => {
   const listPseInstitutions = async (): Promise<FinancialInstitution[]> => {
     try {
       return await apiClient<FinancialInstitution[]>(
-        `/credits/payments/${paymentId}/wompi/pse/financial-institutions`,
+        `/credits/payments/${paymentId}/pse/financial-institutions`,
         { method: "GET" },
       );
     } catch {
@@ -46,7 +46,7 @@ export const useWompiCheckout = (paymentId: string) => {
   const fetchAttemptStatus = async (attemptId: string): Promise<PaymentAttemptResult | null> => {
     try {
       return await apiClient<PaymentAttemptResult>(
-        `/credits/payments/${paymentId}/wompi/transactions/${attemptId}`,
+        `/credits/payments/${paymentId}/transactions/${attemptId}`,
         { method: "GET" },
       );
     } catch {

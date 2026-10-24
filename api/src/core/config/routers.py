@@ -29,7 +29,7 @@ from billing.billing_status.controllers.billing_status_controller import (
     router as billing_status_router,
 )
 from billing.bold.controllers.bold_webhook_controller import (
-    router as bold_webhook_router,
+    router as billing_bold_webhook_router,
 )
 from billing.invoices.controllers.invoice_controller import router as invoices_router
 from billing.mercadopago.controllers.mercadopago_webhook_controller import (
@@ -127,8 +127,17 @@ from receivables.debtors.controllers.my_documents_controller import (
 from receivables.judicial_notifications.controllers.judicial_notification_controller import (
     router as judicial_notifications_router,
 )
+from receivables.payment_gateways.controllers.bold_webhook_controller import (
+    router as receivables_bold_webhook_router,
+)
+from receivables.payment_gateways.controllers.epayco_webhook_controller import (
+    router as epayco_webhook_router,
+)
 from receivables.payment_gateways.controllers.payment_checkout_controller import (
     router as payment_checkout_router,
+)
+from receivables.payment_gateways.controllers.payu_webhook_controller import (
+    router as payu_webhook_router,
 )
 
 # pylint: disable-next=line-too-long
@@ -176,7 +185,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(invoices_router, prefix=API_PREFIX)
     app.include_router(dashboard_router, prefix=API_PREFIX)
     app.include_router(billing_dashboard_router, prefix=API_PREFIX)
-    app.include_router(bold_webhook_router, prefix=API_PREFIX)
+    app.include_router(billing_bold_webhook_router, prefix=API_PREFIX)
     app.include_router(mercadopago_webhook_router, prefix=API_PREFIX)
     app.include_router(billing_status_router, prefix=API_PREFIX)
     app.include_router(contacts_router, prefix=API_PREFIX)
@@ -190,6 +199,9 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(payment_gateway_credentials_router, prefix=API_PREFIX)
     app.include_router(payment_checkout_router, prefix=API_PREFIX)
     app.include_router(wompi_webhook_router, prefix=API_PREFIX)
+    app.include_router(receivables_bold_webhook_router, prefix=API_PREFIX)
+    app.include_router(epayco_webhook_router, prefix=API_PREFIX)
+    app.include_router(payu_webhook_router, prefix=API_PREFIX)
     app.include_router(credit_catalog_router, prefix=API_PREFIX)
     app.include_router(judicial_notifications_router, prefix=API_PREFIX)
     app.include_router(my_credits_router, prefix=API_PREFIX)

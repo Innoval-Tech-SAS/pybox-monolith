@@ -6,8 +6,12 @@ from receivables.payment_gateways.enums.payment_gateway_enums import (
     ReceivablesGatewayProvider,
 )
 from receivables.payment_gateways.gateways.base import ReceivablesPaymentGateway
+from receivables.payment_gateways.gateways.bold.bold_gateway import BoldGateway
+from receivables.payment_gateways.gateways.epayco.epayco_gateway import EpaycoGateway
+from receivables.payment_gateways.gateways.payu.payu_gateway import PayUGateway
 from receivables.payment_gateways.gateways.wompi.wompi_gateway import WompiGateway
 from receivables.payment_gateways.services.payment_gateway_credential_service import (
+    DecryptedGatewayCredential,
     OrganizationGatewayCredentialService,
 )
 
@@ -26,12 +30,40 @@ class ReceivablesGatewayResolver:
     async def get_for_organization(
         self, organization_id: uuid.UUID, provider: ReceivablesGatewayProvider
     ) -> ReceivablesPaymentGateway | None:
+        """Resuelve una pasarela EXPLÍCITA, conocida de antemano por el llamador (ej.
+        el webhook de Wompi, cuya URL ya fija el proveedor). El checkout de
+        autoservicio no debe usar este método: ver `get_active_for_organization`."""
         credentials = await self._credential_service.get_decrypted(
             organization_id, provider
         )
         if credentials is None:
             return None
-        if provider == ReceivablesGatewayProvider.WOMPI:
+        return self._build(credentials)
+
+    async def get_active_for_organization(
+        self, organization_id: uuid.UUID
+    ) -> ReceivablesPaymentGateway | None:
+        """Resuelve la pasarela activa de la organización sin que el llamador sepa de
+        antemano cuál es (checkout/fuentes de pago del autoservicio -- la organización
+        pudo haber elegido Wompi o Bold, nunca las dos a la vez, ver
+        `OrganizationGatewayCredentialManagementService`)."""
+        credentials = await self._credential_service.get_active_decrypted(
+            organization_id
+        )
+        if credentials is None:
+            return None
+        return self._build(credentials)
+
+    @staticmethod
+    def _build(
+        credentials: DecryptedGatewayCredential,
+    ) -> ReceivablesPaymentGateway | None:
+        if credentials.provider == ReceivablesGatewayProvider.WOMPI:
             return WompiGateway(credentials)
-        # BOLD/PAYU/EPAYCO: listados en el enum, todavia sin adaptador implementado.
+        if credentials.provider == ReceivablesGatewayProvider.BOLD:
+            return BoldGateway(credentials)
+        if credentials.provider == ReceivablesGatewayProvider.EPAYCO:
+            return EpaycoGateway(credentials)
+        if credentials.provider == ReceivablesGatewayProvider.PAYU:
+            return PayUGateway(credentials)
         return None

@@ -18,7 +18,7 @@ from receivables.payment_gateways.enums.payment_gateway_enums import (
     ReceivablesGatewayProvider,
     ReceivablesPaymentAttemptStatus,
 )
-from receivables.payment_gateways.gateways.base import WompiTransaction
+from receivables.payment_gateways.gateways.base import GatewayTransaction
 from receivables.payment_gateways.models.payment_attempt_model import (
     CreditPaymentAttemptModel,
 )
@@ -82,7 +82,9 @@ async def _setup_payment_and_attempt(
     return org, payment, attempt
 
 
-def make_gateway(*, signature_valid: bool, transaction: WompiTransaction) -> MagicMock:
+def make_gateway(
+    *, signature_valid: bool, transaction: GatewayTransaction
+) -> MagicMock:
     gateway = MagicMock()
     gateway.verify_webhook_signature = MagicMock(return_value=signature_valid)
     gateway.get_transaction = AsyncMock(return_value=transaction)
@@ -109,7 +111,7 @@ class TestWompiWebhookService:
 
     async def test_invalid_signature_raises_401(self, db_session):
         org = await add_organization(db_session)
-        transaction = WompiTransaction(
+        transaction = GatewayTransaction(
             id="txn-1",
             status="APPROVED",
             amount_in_cents=1_500_000,
@@ -133,7 +135,7 @@ class TestWompiWebhookService:
         org, payment, attempt = await _setup_payment_and_attempt(
             db_session, expected_amount_cents=1_500_000
         )
-        transaction = WompiTransaction(
+        transaction = GatewayTransaction(
             id="txn-1",
             status="APPROVED",
             amount_in_cents=999_000,
@@ -158,7 +160,7 @@ class TestWompiWebhookService:
         org, payment, attempt = await _setup_payment_and_attempt(
             db_session, expected_amount_cents=1_500_000
         )
-        transaction = WompiTransaction(
+        transaction = GatewayTransaction(
             id="txn-1",
             status="APPROVED",
             amount_in_cents=1_500_000,
@@ -188,7 +190,7 @@ class TestWompiWebhookService:
         payment.status = PaymentStatus.PAID
         await db_session.flush()
 
-        transaction = WompiTransaction(
+        transaction = GatewayTransaction(
             id="txn-1",
             status="APPROVED",
             amount_in_cents=1_500_000,

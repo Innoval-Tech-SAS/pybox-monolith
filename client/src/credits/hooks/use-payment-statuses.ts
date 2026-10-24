@@ -20,7 +20,7 @@ export const usePaymentStatuses = () => {
       .then((data) => setStatuses(data ?? []))
       .catch(() => setStatuses([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiClient]);
 
   const labels = useMemo(
     () => Object.fromEntries(statuses.map((s) => [s.value, s.label])) as Record<string, string>,

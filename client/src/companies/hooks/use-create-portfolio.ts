@@ -49,7 +49,7 @@ export const useCreatePortfolio = () => {
     if (selectedCountry) params.set("countryId", selectedCountry);
 
     // El backend acepta y procesa en background, notifica por SSE al terminar
-    apiClient(`/portfolios/upload-csv?${params}`, { method: "POST", body: data })
+    apiClient<unknown>(`/portfolios/upload-csv?${params}`, { method: "POST", body: data })
       .then(() => {
         sessionStorage.setItem(processingKey, "true");
         setShowSuccessModal(true);
@@ -84,7 +84,7 @@ export const useCreatePortfolio = () => {
     sessionStorage.removeItem(processingKey);
     setShowSuccessModal(false);
     navigate(buildOrgPath("/my-companies/portfolios"));
-  }, [navigate, orgId, buildOrgPath, processingKey]);
+  }, [navigate, buildOrgPath, processingKey]);
 
   return {
     showSuccessModal,

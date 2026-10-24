@@ -43,9 +43,18 @@ class PseTransactionRequest(BaseSchema):
 
 
 class NequiTransactionRequest(BaseSchema):
+    """`full_name`/`user_legal_id_type`/`user_legal_id`/`address`/`city` son
+    ignorados por Wompi (solo pide `phone_number`) pero obligatorios para PayU, que
+    exige `buyer`/`payer` completos -- ver `PayUGateway`."""
+
     payment_method_type: Literal["NEQUI"] = "NEQUI"
     phone_number: str
     customer_email: EmailStr
+    full_name: str | None = None
+    user_legal_id_type: str | None = None
+    user_legal_id: str | None = None
+    address: str | None = None
+    city: str | None = None
 
 
 class BancolombiaTransferTransactionRequest(BaseSchema):
@@ -79,9 +88,20 @@ class ThreeDsChallengeResponse(BaseSchema):
     challenge_html: str
 
 
+class RedirectActionResponse(BaseSchema):
+    """El deudor debe navegar a `redirect_url` para confirmar el cobro (PSE, Botón
+    Bancolombia o 3DS vía Bold) y vuelve a la app por el `callback_url` configurado --
+    a diferencia del reto 3DS de Wompi (`ThreeDsChallengeResponse`), que no sale de la
+    pantalla actual."""
+
+    redirect_url: str
+    redirect_method: str
+
+
 class TransactionCreationResponse(BaseSchema):
     attempt: PaymentAttemptResponse
     three_ds_challenge: ThreeDsChallengeResponse | None = None
+    redirect_action: RedirectActionResponse | None = None
 
 
 class TokenizeCardSourceRequest(BaseSchema):
@@ -110,3 +130,13 @@ class PaymentSourceResponse(BaseSchema):
 class FinancialInstitutionResponse(BaseSchema):
     financial_institution_code: str
     financial_institution_name: str
+
+
+class PaymentAttemptLookupResponse(BaseSchema):
+    """Para la página de retorno de una redirección (Bold) -- el frontend solo
+    conoce `reference` y necesita `payment_id`/`attempt_id` para retomar el polling
+    habitual de `PaymentAttemptResponse`."""
+
+    payment_id: uuid.UUID
+    attempt_id: uuid.UUID
+    status: str

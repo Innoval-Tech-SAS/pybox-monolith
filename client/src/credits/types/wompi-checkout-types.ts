@@ -21,7 +21,13 @@ export interface PaymentAttemptResult {
   chargeMode: string;
 }
 
+export interface RedirectAction {
+  redirectUrl: string;
+  redirectMethod: string;
+}
+
 export interface TransactionCreationResult {
   attempt: PaymentAttemptResult;
   threeDsChallenge: ThreeDsChallenge | null;
+  redirectAction: RedirectAction | null;
 }

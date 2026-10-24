@@ -8,11 +8,11 @@ export const useAccessibleUsers = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiClient("/users", { method: "GET" })
-      .then((data: UserSummary[]) => { if (data) setUsers(data); })
+    apiClient<UserSummary[]>("/users", { method: "GET" })
+      .then((data) => { if (data) setUsers(data); })
       .catch(() => setUsers([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiClient]);
 
   return { users, loading };
 };

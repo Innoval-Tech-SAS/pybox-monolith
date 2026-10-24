@@ -13,11 +13,11 @@ export const useUsers = (orgId?: string, includeDeleted = false) => {
     if (orgId) params.set("org_id", orgId);
     if (includeDeleted) params.set("includeDeleted", "true");
     const query = params.toString();
-    apiClient(`/users${query ? `?${query}` : ""}`, { method: "GET" })
-      .then((data: UserSummary[]) => setUsers(data ?? []))
+    apiClient<UserSummary[]>(`/users${query ? `?${query}` : ""}`, { method: "GET" })
+      .then((data) => setUsers(data ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [orgId, includeDeleted]);
+  }, [orgId, includeDeleted, apiClient]);
 
   useEffect(() => {
     fetchUsers();

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useApiClient } from "@/hooks/use-api-client";
 import { ApiError } from "@/types/api-error";
 import { getSession } from "@/auth/utils/auth-session-utils";
@@ -11,7 +11,7 @@ export const useMyStatements = () => {
   const [error, setError] = useState<string | null>(null);
   const [identityPending, setIdentityPending] = useState(false);
 
-  const fetch = async () => {
+  const loadStatements = useCallback(async () => {
     setLoading(true);
     setError(null);
     setIdentityPending(false);
@@ -42,9 +42,9 @@ export const useMyStatements = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiClient]);
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { loadStatements(); }, [loadStatements]);
 
-  return { statements, loading, error, identityPending, refetch: fetch };
+  return { statements, loading, error, identityPending, refetch: loadStatements };
 };

@@ -48,6 +48,16 @@ class OrganizationGatewayCredentialService:
         )
         return self._to_decrypted(row)
 
+    async def get_active_decrypted(
+        self, organization_id: uuid.UUID
+    ) -> DecryptedGatewayCredential | None:
+        """La credencial activa de la organización, sin importar cuál pasarela sea —
+        para el checkout de autoservicio, que debe funcionar igual sin saber de
+        antemano si la organización eligió Wompi o Bold (ver
+        `ReceivablesGatewayResolver.get_active_for_organization`)."""
+        row = await self._repo.get_active_by_organization(organization_id)
+        return self._to_decrypted(row)
+
     async def resolve_by_lookup_key(
         self, provider: ReceivablesGatewayProvider, lookup_key: str
     ) -> DecryptedGatewayCredential | None:

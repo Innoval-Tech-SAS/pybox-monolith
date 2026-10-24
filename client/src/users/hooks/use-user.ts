@@ -12,11 +12,11 @@ export const useUser = (userId: string | undefined) => {
     if (!userId) return;
     setLoading(true);
     setNotFound(false);
-    apiClient(`/users/${userId}`, { method: "GET" })
-      .then((data: UserDetail) => setUser(data))
+    apiClient<UserDetail>(`/users/${userId}`, { method: "GET" })
+      .then((data) => setUser(data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
-  }, [userId]);
+  }, [userId, apiClient]);
 
   return { user, loading, notFound };
 };

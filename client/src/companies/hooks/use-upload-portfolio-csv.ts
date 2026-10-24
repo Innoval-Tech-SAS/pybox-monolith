@@ -53,7 +53,7 @@ export const useUploadPortfolioCsv = (mode: CsvUploadMode) => {
     data.set("file", selectedFile);
 
     setSubmitting(true);
-    apiClient(endpoint, { method: "POST", body: data })
+    apiClient<unknown>(endpoint, { method: "POST", body: data })
       .then(() => {
         sessionStorage.setItem(processingKey, "true");
         setProcessing(true);
@@ -89,7 +89,7 @@ export const useUploadPortfolioCsv = (mode: CsvUploadMode) => {
     sessionStorage.removeItem(processingKey);
     setProcessing(false);
     navigate(buildOrgPath("/my-companies/portfolios", { portfolio: portfolioId }));
-  }, [navigate, orgId, portfolioId, buildOrgPath, processingKey]);
+  }, [navigate, portfolioId, buildOrgPath, processingKey]);
 
   return {
     orgId,

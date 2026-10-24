@@ -8,11 +8,11 @@ export const useCountries = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiClient("/countries", { method: "GET" })
-      .then((data: NationalityOption[]) => setCountries(data))
+    apiClient<NationalityOption[]>("/countries", { method: "GET" })
+      .then((data) => setCountries(data))
       .catch(() => setCountries([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [apiClient]);
 
   return { countries, loading };
 };

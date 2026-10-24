@@ -16,9 +16,11 @@ import type {
 } from "@/credits/types/wompi-checkout-types";
 import type { CardFieldsValue } from "@/credits/types/wompi-card-fields-props";
 import type { PseFieldsValue } from "@/credits/types/wompi-pse-fields-props";
+import type { PayuPayerFieldsValue } from "@/credits/types/payu-payer-fields-props";
 import { WompiCardFields } from "./wompi-card-fields";
 import { WompiPseFields } from "./wompi-pse-fields";
 import { WompiChallengePanel } from "./wompi-challenge-panel";
+import { PayuPayerFields } from "./payu-payer-fields";
 
 const METHOD_OPTIONS: { value: WompiMethod; label: string }[] = [
   { value: "NEQUI", label: "Nequi" },
@@ -62,6 +64,9 @@ export const WompiCheckoutForm: React.FC<WompiCheckoutFormProps> = ({
     userType: "0", userLegalIdType: "CC", userLegalId: "", financialInstitutionCode: "", paymentDescription: "",
   });
   const [nequiPhone, setNequiPhone] = useState("");
+  const [nequiPayerFields, setNequiPayerFields] = useState<PayuPayerFieldsValue>({
+    fullName: "", userLegalIdType: "CC", userLegalId: "", address: "", city: "",
+  });
   const [institutions, setInstitutions] = useState<FinancialInstitution[]>([]);
   const [loadingInstitutions, setLoadingInstitutions] = useState(false);
   const [attempt, setAttempt] = useState<PaymentAttemptResult | null>(null);
@@ -103,7 +108,19 @@ export const WompiCheckoutForm: React.FC<WompiCheckoutFormProps> = ({
   const buildBody = (): Record<string, unknown> | null => {
     if (method === "NEQUI") {
       if (!nequiPhone || !customerEmail) return null;
-      return { paymentMethodType: "NEQUI", phoneNumber: nequiPhone, customerEmail };
+      return {
+        paymentMethodType: "NEQUI",
+        phoneNumber: nequiPhone,
+        customerEmail,
+        // PayU exige estos datos del pagador para NEQUI (Wompi los ignora, ver
+        // `NequiTransactionRequest`) -- se mandan si se llenaron, sin bloquear el
+        // envío cuando la organización usa Wompi.
+        fullName: nequiPayerFields.fullName || undefined,
+        userLegalIdType: nequiPayerFields.userLegalIdType || undefined,
+        userLegalId: nequiPayerFields.userLegalId || undefined,
+        address: nequiPayerFields.address || undefined,
+        city: nequiPayerFields.city || undefined,
+      };
     }
     if (method === "PSE") {
       if (!pseFields.userLegalId || !pseFields.financialInstitutionCode || !customerEmail) return null;
@@ -148,6 +165,13 @@ export const WompiCheckoutForm: React.FC<WompiCheckoutFormProps> = ({
     if (!body) return;
     const result = await createTransaction(body);
     if (!result) return;
+    if (result.redirectAction) {
+      // Bold (PSE, Botón Bancolombia, 3DS): el deudor sale de la app y vuelve por
+      // `RECEIVABLES_PAYMENT_REDIRECT_RETURN_URL` -- a diferencia del reto embebido de
+      // Wompi, no hay nada más que mostrar aquí.
+      window.location.href = result.redirectAction.redirectUrl;
+      return;
+    }
     setAttempt(result.attempt);
     setChallengeHtml(result.threeDsChallenge?.challengeHtml ?? null);
   };
@@ -216,14 +240,21 @@ export const WompiCheckoutForm: React.FC<WompiCheckoutFormProps> = ({
           />
 
           {method === "NEQUI" && (
-            <Input
-              label="Número de celular Nequi"
-              id="wompi-nequi-phone"
-              maxLength={10}
-              value={nequiPhone}
-              onChange={(e) => setNequiPhone(e.target.value.replace(/\D/g, ""))}
-              placeholder="3001234567"
-            />
+            <>
+              <Input
+                label="Número de celular Nequi"
+                id="wompi-nequi-phone"
+                maxLength={10}
+                value={nequiPhone}
+                onChange={(e) => setNequiPhone(e.target.value.replace(/\D/g, ""))}
+                placeholder="3001234567"
+              />
+              <PayuPayerFields
+                value={nequiPayerFields}
+                onChange={setNequiPayerFields}
+                idPrefix="wompi-nequi-payer"
+              />
+            </>
           )}
 
           {method === "PSE" && (

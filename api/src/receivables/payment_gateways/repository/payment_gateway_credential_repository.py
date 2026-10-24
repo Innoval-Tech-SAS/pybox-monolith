@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from core.base.soft_delete_repository_base import SoftDeleteRepositoryBase
 from receivables.payment_gateways.enums.payment_gateway_enums import (
@@ -40,6 +40,41 @@ class OrganizationGatewayCredentialRepository(
             )
         )
         return list(result.scalars().all())
+
+    async def get_active_by_organization(
+        self, organization_id: uuid.UUID
+    ) -> OrganizationGatewayCredentialModel | None:
+        """La pasarela activa de la organización para el checkout de autoservicio (ver
+        `ReceivablesGatewayResolver.get_active_for_organization`). El invariante "a lo
+        sumo una activa por organización" lo impone
+        `OrganizationGatewayCredentialManagementService` al activar una credencial
+        (desactiva las demás) — `order_by` + `limit(1)` es solo defensivo por si ese
+        invariante no se cumplió todavía sobre datos existentes."""
+        result = await self.session.execute(
+            select(OrganizationGatewayCredentialModel)
+            .where(
+                OrganizationGatewayCredentialModel.organization_id == organization_id,
+                OrganizationGatewayCredentialModel.is_active.is_(True),
+                OrganizationGatewayCredentialModel.deleted_at.is_(None),
+            )
+            .order_by(OrganizationGatewayCredentialModel.updated_at.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def deactivate_all(
+        self, organization_id: uuid.UUID, exclude_id: uuid.UUID | None = None
+    ) -> None:
+        """Mantiene el invariante "a lo sumo una credencial activa por organización"
+        (ver `get_active_by_organization`) — se llama ANTES de activar una credencial
+        nueva o existente."""
+        stmt = update(OrganizationGatewayCredentialModel).where(
+            OrganizationGatewayCredentialModel.organization_id == organization_id,
+            OrganizationGatewayCredentialModel.deleted_at.is_(None),
+        )
+        if exclude_id is not None:
+            stmt = stmt.where(OrganizationGatewayCredentialModel.id != exclude_id)
+        await self.session.execute(stmt.values(is_active=False))
 
     async def get_by_lookup_key(
         self, provider: ReceivablesGatewayProvider, lookup_key: str

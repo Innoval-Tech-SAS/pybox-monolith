@@ -31,6 +31,7 @@ const HomePage = lazy(() => import("./home/pages/home-page").then((m) => ({ defa
 const MyCreditsPage = lazy(() => import("./credits/pages/my-credits-page").then((m) => ({ default: m.MyCreditsPage })));
 const MyStatementsPage = lazy(() => import("./credits/pages/my-statements-page").then((m) => ({ default: m.MyStatementsPage })));
 const CreditDetailPage = lazy(() => import("./credits/pages/credit-detail-page").then((m) => ({ default: m.CreditDetailPage })));
+const PaymentRedirectReturnPage = lazy(() => import("./credits/pages/payment-redirect-return-page").then((m) => ({ default: m.PaymentRedirectReturnPage })));
 const NotificationDetailPage = lazy(() => import("./notifications/pages/notification-detail-page").then((m) => ({ default: m.NotificationDetailPage })));
 const NotificationsPage = lazy(() => import("./notifications/pages/notifications-page").then((m) => ({ default: m.NotificationsPage })));
 const ProfilePhotoPage = lazy(() => import("./profile/pages/profile-photo-page").then((m) => ({ default: m.ProfilePhotoPage })));
@@ -122,6 +123,10 @@ export const authRouter = [
   {
     path: "/my-credits/:creditId",
     element: <CreditDetailPage />,
+  },
+  {
+    path: "/credits/payments/payment-return",
+    element: <PaymentRedirectReturnPage />,
   },
   {
     path: "/my-statements",
