@@ -1,0 +1,272 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useApiClient } from "../../hooks/use-api-client";
+import { getSession } from "@/auth/utils/auth-session-utils";
+import { playMessageSound } from "../utils/chat-sound";
+import type {
+  ChatAvailableUser,
+  ChatMember,
+  ChatMessage,
+  ChatSummary,
+  MessagesPage,
+  WsChatEvent,
+} from "../../types/chat/chat-types";
+import { useChatWebSocket } from "./use-chat-websocket";
+
+interface ConversationState {
+  chatId: string;
+  messages: ChatMessage[];
+  loading: boolean;
+  nextCursor: string | null;
+}
+
+export const useChatPage = () => {
+  const { apiClient } = useApiClient();
+  const [chats, setChats] = useState<ChatSummary[]>([]);
+  const [chatsLoading, setChatsLoading] = useState(true);
+  const [selected, setSelected] = useState<ConversationState | null>(null);
+  const [availableUsers, setAvailableUsers] = useState<ChatAvailableUser[]>([]);
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [showNewGroup, setShowNewGroup] = useState(false);
+  const [groupMembers, setGroupMembers] = useState<ChatMember[]>([]);
+  const loadedRef = useRef(false);
+  const currentUserId = getSession()?.userId ?? "";
+
+  const loadAvailableUsers = useCallback(async () => {
+    try {
+      const data = await apiClient("/users/available-for-chat");
+      setAvailableUsers(data ?? []);
+    } catch {
+      // silent
+    }
+  }, [apiClient]);
+
+  const handleWsEvent = useCallback(
+    (event: WsChatEvent) => {
+      if (event.event === "message") {
+        const msg = event.data;
+        playMessageSound();
+        const isSelected = selected?.chatId === msg.chatId;
+        setSelected((prev) =>
+          prev?.chatId === msg.chatId && !prev.messages.some((m) => m.id === msg.id)
+            ? { ...prev, messages: [...prev.messages, msg] }
+            : prev,
+        );
+        setChats((prev) =>
+          prev.map((c) =>
+            c.id === msg.chatId
+              ? {
+                  ...c,
+                  lastMessage: msg.body,
+                  lastMessageAt: msg.createdAt,
+                  unreadCount: isSelected ? 0 : c.unreadCount + 1,
+                }
+              : c,
+          ),
+        );
+        if (isSelected) {
+          send("read", { chatId: msg.chatId, messageIds: [msg.id] });
+        }
+      } else if (event.event === "read") {
+        const { chatId, messageIds } = event.data;
+        setSelected((prev) =>
+          prev?.chatId === chatId
+            ? {
+                ...prev,
+                messages: prev.messages.map((m) =>
+                  messageIds.includes(m.id) ? { ...m, status: "read" as const } : m,
+                ),
+              }
+            : prev,
+        );
+      } else if (event.event === "chat") {
+        const summary = event.data;
+        setChats((prev) => {
+          const exists = prev.find((c) => c.id === summary.id);
+          return exists ? prev.map((c) => (c.id === summary.id ? summary : c)) : [summary, ...prev];
+        });
+      } else if (event.event === "group_updated") {
+        const { chatId, memberCount } = event.data;
+        setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, memberCount } : c)));
+      } else if (event.event === "member_removed") {
+        const { chatId, userId } = event.data;
+        if (userId === currentUserId) {
+          setChats((prev) => prev.filter((c) => c.id !== chatId));
+          setSelected((prev) => (prev?.chatId === chatId ? null : prev));
+        } else {
+          setGroupMembers((prev) => prev.filter((m) => m.userId !== userId));
+        }
+      }
+    },
+    [selected?.chatId, currentUserId],
+  );
+
+  const { send, request } = useChatWebSocket(handleWsEvent);
+
+  const loadChats = useCallback(async () => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+    setChatsLoading(true);
+    try {
+      const data = await request<ChatSummary[]>("list_chats", {});
+      setChats(data ?? []);
+    } catch {
+      // Sin el reset, un fallo dejaría el ref marcado y la lista vacía para siempre.
+      loadedRef.current = false;
+    } finally {
+      setChatsLoading(false);
+    }
+  }, [request]);
+
+  useEffect(() => {
+    loadChats();
+  }, [loadChats]);
+
+  const selectChat = useCallback(
+    async (chatId: string) => {
+      setSelected({ chatId, messages: [], loading: true, nextCursor: null });
+      setChats((prev) =>
+        prev.map((c) => (c.id === chatId ? { ...c, unreadCount: 0 } : c)),
+      );
+      try {
+        const page = await request<MessagesPage>("list_messages", { chatId, limit: 50 });
+        const items = page.items ?? [];
+        setSelected({ chatId, messages: items, loading: false, nextCursor: page.nextCursor });
+        const allIds = items.map((m) => m.id);
+        if (allIds.length) {
+          send("read", { chatId, messageIds: allIds });
+        }
+      } catch {
+        setSelected((prev) => (prev ? { ...prev, loading: false } : null));
+      }
+    },
+    [request, send],
+  );
+
+  const loadMore = useCallback(async () => {
+    if (!selected?.nextCursor || selected.loading) return;
+    const { chatId, nextCursor } = selected;
+    setSelected((prev) => (prev ? { ...prev, loading: true } : null));
+    try {
+      const page = await request<MessagesPage>("list_messages", {
+        chatId,
+        before: nextCursor,
+        limit: 50,
+      });
+      setSelected((prev) =>
+        prev
+          ? {
+              ...prev,
+              messages: [...(page.items ?? []), ...prev.messages],
+              nextCursor: page.nextCursor,
+              loading: false,
+            }
+          : null,
+      );
+    } catch {
+      setSelected((prev) => (prev ? { ...prev, loading: false } : null));
+    }
+  }, [request, selected]);
+
+  const sendMessage = useCallback(
+    async (body: string) => {
+      if (!selected) return;
+      const msg = await request<ChatMessage>("send_message", { chatId: selected.chatId, body });
+      setSelected((prev) =>
+        prev && !prev.messages.some((m) => m.id === msg.id)
+          ? { ...prev, messages: [...prev.messages, msg] }
+          : prev,
+      );
+      setChats((prev) =>
+        prev.map((c) =>
+          c.id === selected.chatId
+            ? { ...c, lastMessage: msg.body, lastMessageAt: msg.createdAt }
+            : c,
+        ),
+      );
+    },
+    [request, selected],
+  );
+
+  const openNewChat = useCallback(
+    async (peerId: string) => {
+      setShowNewChat(false);
+      const summary = await request<ChatSummary>("create_direct_chat", { peerId });
+      setChats((prev) => {
+        const exists = prev.find((c) => c.id === summary.id);
+        return exists ? prev : [summary, ...prev];
+      });
+      await selectChat(summary.id);
+    },
+    [request, selectChat],
+  );
+
+  const createGroupChat = useCallback(
+    async (title: string, memberIds: string[]) => {
+      setShowNewGroup(false);
+      const summary = await request<ChatSummary>("create_group_chat", { title, memberIds });
+      setChats((prev) => [summary, ...prev]);
+      await selectChat(summary.id);
+    },
+    [request, selectChat],
+  );
+
+  const loadGroupMembers = useCallback(
+    async (chatId: string) => {
+      const page = await request<{ chatId: string; members: ChatMember[] }>("list_group_members", {
+        chatId,
+      });
+      setGroupMembers(page.members ?? []);
+    },
+    [request],
+  );
+
+  const addGroupMember = useCallback(
+    async (chatId: string, userId: string) => {
+      const summary = await request<ChatSummary>("add_group_member", { chatId, userId });
+      setChats((prev) => prev.map((c) => (c.id === chatId ? summary : c)));
+      await loadGroupMembers(chatId);
+    },
+    [request, loadGroupMembers],
+  );
+
+  const removeGroupMember = useCallback(
+    async (chatId: string, userId: string) => {
+      await request("remove_group_member", { chatId, userId });
+      setGroupMembers((prev) => prev.filter((m) => m.userId !== userId));
+      if (userId === currentUserId) {
+        setChats((prev) => prev.filter((c) => c.id !== chatId));
+        setSelected((prev) => (prev?.chatId === chatId ? null : prev));
+      }
+    },
+    [request, currentUserId],
+  );
+
+  /** Limpia la conversación seleccionada — usado por el botón "Volver" del layout mobile. */
+  const closeConversation = useCallback(() => setSelected(null), []);
+
+  const totalUnread = chats.reduce((acc, c) => acc + c.unreadCount, 0);
+
+  return {
+    chats,
+    chatsLoading,
+    selected,
+    availableUsers,
+    showNewChat,
+    showNewGroup,
+    groupMembers,
+    currentUserId,
+    totalUnread,
+    setShowNewChat,
+    setShowNewGroup,
+    selectChat,
+    loadMore,
+    sendMessage,
+    openNewChat,
+    createGroupChat,
+    loadGroupMembers,
+    addGroupMember,
+    removeGroupMember,
+    loadAvailableUsers,
+    closeConversation,
+  };
+};

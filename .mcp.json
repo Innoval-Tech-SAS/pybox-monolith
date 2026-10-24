@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "mercadopago": {
+      "type": "http",
+      "url": "https://mcp.mercadopago.com/mcp"
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "chrome-devtools-mcp@latest"]
+    },
+    "Meta Social Technologies": {
+      "url": "https://mcp.facebook.com/devtools",
+      "type": "http"
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "postman": {
+      "command": "npx",
+      "args": ["@postman/postman-mcp-server@latest"],
+      "env": {
+        "POSTMAN_API_KEY": "${POSTMAN_API_KEY}"
+      }
+    }
+  }
+}

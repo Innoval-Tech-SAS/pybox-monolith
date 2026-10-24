@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pybox para Empresas — Centraliza cartera, obligaciones y comunicaciones certificadas</title>
+  <meta name="description"
+    content="Pybox conecta a la empresa que necesita cobrar y notificar con el usuario que necesita organizar sus deudas. Centraliza cartera, recordatorios y evidencias." />
+  <link rel="canonical" href="https://pybox.app/" />
+  <meta property="og:title" content="Pybox para Empresas — Cartera y comunicaciones certificadas" />
+  <meta property="og:description"
+    content="Centraliza obligaciones, programa recordatorios, notifica con evidencia y mejora la recuperación de cartera." />
+  <meta property="og:url" content="https://pybox.app/" />
+  <meta property="og:image" content="https://pybox.app/assets/images/og-empresas.webp" />
+  <meta property="og:type" content="website" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #fff;
+      -webkit-font-smoothing: antialiased
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(18, 16, 48, .82);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(99, 102, 241, .15)
+    }
+
+    .nav__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 3.75rem;
+      max-width: 1200px;
+      margin-inline: auto;
+      padding-inline: 1.25rem;
+      gap: 1rem
+    }
+
+    .nav__logo {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      flex-shrink: 0
+    }
+
+    .nav__logo-icon {
+      width: 2rem;
+      height: 2rem;
+      border-radius: .75rem;
+      background: #6366f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .nav__logo-name {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      color: #fff
+    }
+  </style>
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+
+<body data-page="empresas">
+
+  <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h8" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+      <path d="m16 19 2 2 4-4" />
+    </symbol>
+    <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+      <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+      <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+      <path d="M10 6h4M10 10h4M10 14h4M10 18h4" />
+    </symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <rect width="22" height="14" x="1" y="5" rx="2" />
+      <path d="M1 9h22" />
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M20 6 9 17l-5-5" />
+    </symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <path d="m9 11 3 3L22 4" />
+    </symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+    </symbol>
+    <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="m22 2-7 20-4-9-9-4Z" />
+      <path d="M22 2 11 13" />
+    </symbol>
+    <symbol id="i-coins" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <circle cx="8" cy="8" r="6" />
+      <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
+      <path d="M7 6h1v4" />
+    </symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M3 3v18h18" />
+      <path d="M18 17V9M13 17V5M8 17v-3" />
+    </symbol>
+    <symbol id="i-files" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M20 7h-3a2 2 0 0 1-2-2V2" />
+      <path d="M9 18a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7l4 4v10a2 2 0 0 1-2 2Z" />
+      <path d="M3 7.6v12.8A1.6 1.6 0 0 0 4.6 22h9.8" />
+    </symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <rect width="18" height="18" x="3" y="4" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2z" />
+      <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+    </symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <rect width="20" height="14" x="2" y="3" rx="2" />
+      <path d="M8 21h8M12 17v4" />
+    </symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7" />
+    </symbol>
+  </svg>
+
+  <div id="nav-placeholder"></div>
+
+  <main class="main" id="main-content">
+
+    <section class="hero">
+      <div class="container">
+        <div class="hero__inner">
+          <span class="hero__label">
+            <span class="hero__label-dot" aria-hidden="true"></span>
+            Plataforma para empresas con cartera por cobrar
+          </span>
+          <h1 class="hero__h1">Centraliza cartera,<br>obligaciones y<br><em>comunicaciones</em><br><em>certificadas</em>
+          </h1>
+          <p class="hero__sub">Pybox conecta a la empresa que necesita cobrar, notificar y evidenciar con el usuario que
+            necesita consultar, organizar y atender sus deudas desde un mismo entorno.</p>
+          <div class="hero__actions">
+            <a href="https://dev.pybox.co/admin/sign-up" data-env-link="sign-up" class="btn btn--white btn--lg">Solicitar demo</a>
+            <a href="#audiencias" class="btn btn--ghost btn--lg">Ver cómo funciona</a>
+          </div>
+          <div class="hero__stats">
+            <div>
+              <div class="hero__stat-value">3 <span class="hero__stat-accent">servicios</span></div>
+              <div class="hero__stat-label">de comunicación certificada</div>
+            </div>
+            <div style="width:1px;height:2rem;background:rgba(255,255,255,.1)"></div>
+            <div>
+              <div class="hero__stat-value"><span class="hero__stat-accent">100%</span> trazabilidad</div>
+              <div class="hero__stat-label">en cada notificación</div>
+            </div>
+            <div style="width:1px;height:2rem;background:rgba(255,255,255,.1)"></div>
+            <div>
+              <div class="hero__stat-value">2 <span class="hero__stat-accent">audiencias</span></div>
+              <div class="hero__stat-label">un mismo flujo de información</div>
+            </div>
+          </div>
+          <div class="hero__cards">
+            <div class="hero__card">
+              <div class="hero__card-icon" aria-hidden="true"><svg width="18" height="18">
+                  <use href="#i-wallet" />
+                </svg></div>
+              <div class="hero__card-title">Deudas centralizadas</div>
+              <div class="hero__card-text">Consolida obligaciones y pagos en un solo calendario para empresa y usuario
+                final.</div>
+            </div>
+            <div class="hero__card">
+              <div class="hero__card-icon" aria-hidden="true"><svg width="18" height="18">
+                  <use href="#i-mail" />
+                </svg></div>
+              <div class="hero__card-title">Notificación con evidencia</div>
+              <div class="hero__card-text">Respalda cada entrega con confirmación, trazabilidad y custodia de
+                evidencias.</div>
+            </div>
+            <div class="hero__card">
+              <div class="hero__card-icon" aria-hidden="true"><svg width="18" height="18">
+                  <use href="#i-chart" />
+                </svg></div>
+              <div class="hero__card-title">Cobranza más ordenada</div>
+              <div class="hero__card-text">Mejora el seguimiento de cartera sin perder servicio, cumplimiento ni
+                claridad.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="audiencias">
+      <div class="container">
+        <div class="section-header section-header--center">
+          <span class="kicker">Para quién es</span>
+          <h2 class="section-title" style="margin-inline:auto">Dos audiencias, un mismo flujo</h2>
+          <p class="section-body" style="margin-inline:auto">Pybox está diseñado para empresas que necesitan recuperar
+            cartera y para usuarios que requieren ordenar sus obligaciones financieras.</p>
+        </div>
+        <div class="audience-grid">
+          <div class="audience-card">
+            <div class="audience-card__icon" aria-hidden="true"><svg width="24" height="24">
+                <use href="#i-building" />
+              </svg></div>
+            <h3 class="audience-card__title">Empresas con cartera por cobrar</h3>
+            <p class="audience-card__text">Organiza obligaciones, envía notificaciones, genera recordatorios y respalda
+              cada gestión con trazabilidad y evidencia.</p>
+            <ul class="audience-card__list">
+              <li class="audience-card__item"><svg width="16" height="16" class="audience-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check-circle" />
+                </svg>Centralización de cartera y comunicaciones</li>
+              <li class="audience-card__item"><svg width="16" height="16" class="audience-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check-circle" />
+                </svg>Menor costo operativo y logístico</li>
+              <li class="audience-card__item"><svg width="16" height="16" class="audience-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check-circle" />
+                </svg>Mayor control sobre estados y entregas</li>
+            </ul>
+          </div>
+          <div class="audience-card">
+            <div class="audience-card__icon" aria-hidden="true"><svg width="24" height="24">
+                <use href="#i-wallet" />
+              </svg></div>
+            <h3 class="audience-card__title">Usuarios con obligaciones financieras</h3>
+            <p class="audience-card__text">Consulta tus deudas en un solo entorno, recibe recordatorios oportunos y
+              mantén claridad sobre pagos y vencimientos.</p>
+            <ul class="audience-card__list">
+              <li class="audience-card__item"><svg width="16" height="16" class="audience-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check-circle" />
+                </svg>Histórico consolidado de obligaciones</li>
+              <li class="audience-card__item"><svg width="16" height="16" class="audience-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check-circle" />
+                </svg>Calendario único para seguimiento</li>
+              <li class="audience-card__item"><svg width="16" height="16" class="audience-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check-circle" />
+                </svg>Más orden y menos incertidumbre</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--gray" id="beneficios">
+      <div class="container">
+        <div class="section-header">
+          <span class="kicker">Beneficios para tu empresa</span>
+          <h2 class="section-title">Más control. Menos fricción.</h2>
+          <p class="section-body">La plataforma integra sostenibilidad, cumplimiento, trazabilidad, servicio y
+            visibilidad en un flujo de cobranza más consistente.</p>
+        </div>
+        <div class="benefits-grid">
+          <div class="benefit-item">
+            <div class="benefit-item__icon" aria-hidden="true"><svg width="18" height="18">
+                <use href="#i-leaf" />
+              </svg></div>
+            <div>
+              <div class="benefit-item__title">Sostenibilidad con impacto real</div>
+              <div class="benefit-item__text">Desmaterializa procesos y fortalece tu posicionamiento como empresa
+                socialmente responsable.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-item__icon" aria-hidden="true"><svg width="18" height="18">
+                <use href="#i-send" />
+              </svg></div>
+            <div>
+              <div class="benefit-item__title">Canal único para información prioritaria</div>
+              <div class="benefit-item__text">Centraliza la comunicación importante con tus clientes para aumentar la
+                certeza en la entrega.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-item__icon" aria-hidden="true"><svg width="18" height="18">
+                <use href="#i-coins" />
+              </svg></div>
+            <div>
+              <div class="benefit-item__title">Reducción de costos</div>
+              <div class="benefit-item__text">Disminuye costos de preparación, logística y distribución frente a
+                procesos físicos o dispersos.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-item__icon" aria-hidden="true"><svg width="18" height="18">
+                <use href="#i-shield" />
+              </svg></div>
+            <div>
+              <div class="benefit-item__title">Confidencialidad y cumplimiento</div>
+              <div class="benefit-item__text">Protege la información y respalda el envío bajo marcos de cumplimiento.
+              </div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-item__icon" aria-hidden="true"><svg width="18" height="18">
+                <use href="#i-bell" />
+              </svg></div>
+            <div>
+              <div class="benefit-item__title">Recordación de pago preventiva</div>
+              <div class="benefit-item__text">Genera recordatorios automáticos para anticiparte al vencimiento y mejorar
+                el seguimiento.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-item__icon" aria-hidden="true"><svg width="18" height="18">
+                <use href="#i-chart" />
+              </svg></div>
+            <div>
+              <div class="benefit-item__title">Visibilidad operativa</div>
+              <div class="benefit-item__text">Conoce el tráfico de la información y estandariza tus procesos de
+                comunicación.</div>
+            </div>
+          </div>
+        </div>
+        <div class="user-panel">
+          <div class="section-header">
+            <span class="kicker">Beneficios para el usuario final</span>
+            <h3 class="section-title">Claridad para quien debe pagar</h3>
+            <p class="section-body">El usuario final gana contexto, orden y recordación para actuar a tiempo sobre sus
+              obligaciones financieras.</p>
+          </div>
+          <div class="user-benefits-grid">
+            <div class="user-benefit">
+              <div class="user-benefit__icon" aria-hidden="true"><svg width="18" height="18">
+                  <use href="#i-files" />
+                </svg></div>
+              <div class="user-benefit__title">Histórico consolidado</div>
+              <div class="user-benefit__text">Consulta todas las obligaciones desde un mismo entorno, con mayor orden y
+                contexto.</div>
+            </div>
+            <div class="user-benefit">
+              <div class="user-benefit__icon" aria-hidden="true"><svg width="18" height="18">
+                  <use href="#i-cal" />
+                </svg></div>
+              <div class="user-benefit__title">Pagos en un calendario</div>
+              <div class="user-benefit__text">Visualiza fechas clave y planifica pagos con más claridad.</div>
+            </div>
+            <div class="user-benefit">
+              <div class="user-benefit__icon" aria-hidden="true"><svg width="18" height="18">
+                  <use href="#i-bell" />
+                </svg></div>
+              <div class="user-benefit__title">Recordatorios preventivos</div>
+              <div class="user-benefit__text">Avisos antes del vencimiento para atender compromisos a tiempo.</div>
+            </div>
+            <div class="user-benefit">
+              <div class="user-benefit__icon" aria-hidden="true"><svg width="18" height="18">
+                  <use href="#i-msg" />
+                </svg></div>
+              <div class="user-benefit__title">Atención más clara</div>
+              <div class="user-benefit__text">Recibe soporte por un canal ordenado, con menos fricción.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="como-funciona">
+      <div class="container">
+        <div class="section-header section-header--center">
+          <span class="kicker">Cómo funciona</span>
+          <h2 class="section-title" style="margin-inline:auto">Del histórico a la evidencia</h2>
+          <p class="section-body" style="margin-inline:auto">Centralización, programación, notificación, monitoreo y
+            atención en un solo flujo.</p>
+        </div>
+        <div class="workflow-grid">
+          <div class="step">
+            <div class="step__num"></div>
+            <div class="step__title">Consolidación de obligaciones</div>
+            <div class="step__text">Agrupa cartera, histórico e información relevante para que empresa y usuario
+              trabajen sobre una sola base.</div>
+          </div>
+          <div class="step">
+            <div class="step__num"></div>
+            <div class="step__title">Programación y recordatorios</div>
+            <div class="step__text">Define calendarios y activa recordatorios preventivos para reducir vencimientos.
+            </div>
+          </div>
+          <div class="step">
+            <div class="step__num"></div>
+            <div class="step__title">Notificación certificada</div>
+            <div class="step__text">Envía información prioritaria por canales con trazabilidad, acuse y evidencia
+              verificable.</div>
+          </div>
+          <div class="step">
+            <div class="step__num"></div>
+            <div class="step__title">Monitoreo y custodia</div>
+            <div class="step__text">Consulta estados, administra acuses y conserva evidencias para auditoría y
+              operación.</div>
+          </div>
+          <div class="step">
+            <div class="step__num"></div>
+            <div class="step__title">Atención y gestión</div>
+            <div class="step__text">Conecta comunicación, seguimiento y servicio para una cobranza más ordenada.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--gray" id="servicios">
+      <div class="container">
+        <div class="section-header">
+          <span class="kicker">Servicios</span>
+          <h2 class="section-title">Un portafolio completo</h2>
+          <p class="section-body">Cada servicio resuelve una parte crítica del proceso: organización, notificación
+            certificada, monitoreo y operación masiva.</p>
+        </div>
+        <div class="services-grid">
+          <div class="service-card">
+            <div class="service-card__icon" aria-hidden="true"><svg width="22" height="22">
+                <use href="#i-wallet" />
+              </svg></div>
+            <h3 class="service-card__title">Centralización de obligaciones y pagos</h3>
+            <p class="service-card__text">Servicio principal para empresas con cartera por cobrar y usuarios con deudas
+              por organizar en un mismo entorno.</p>
+            <ul class="service-card__list">
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Consolidación del histórico de obligaciones</li>
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Programación de pagos en un solo calendario</li>
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Mejor experiencia para seguimiento y cobranza</li>
+            </ul>
+          </div>
+          <div class="service-card">
+            <div class="service-card__icon" aria-hidden="true"><svg width="22" height="22">
+                <use href="#i-mail" />
+              </svg></div>
+            <h3 class="service-card__title">Correo Certificado</h3>
+            <p class="service-card__text">Confirmación de envío, acuse certificado, cadena de custodia SMTP y estampado
+              cronológico con hora legal colombiana.</p>
+            <ul class="service-card__list">
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Evidencia probatoria y trazabilidad</li>
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Reducción en tiempos de notificación</li>
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Ahorro frente a documentos físicos</li>
+            </ul>
+          </div>
+          <div class="service-card">
+            <div class="service-card__icon" aria-hidden="true"><svg width="22" height="22">
+                <use href="#i-monitor" />
+              </svg></div>
+            <h3 class="service-card__title">Certimail Admin</h3>
+            <p class="service-card__text">Aplicativo web para monitorear buzones, consultar estados y administrar
+              evidencias en infraestructura del cliente.</p>
+            <ul class="service-card__list">
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Acuses en PDF y custodia de evidencias</li>
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Consulta detallada vía servicio web</li>
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Clasificación por códigos de referencia</li>
+            </ul>
+          </div>
+          <div class="service-card">
+            <div class="service-card__icon" aria-hidden="true"><svg width="22" height="22">
+                <use href="#i-send" />
+              </svg></div>
+            <h3 class="service-card__title">Certimail Massive</h3>
+            <p class="service-card__text">Aplicativo de escritorio para envíos masivos de correos certificados mediante
+              archivos Excel y adjuntos.</p>
+            <ul class="service-card__list">
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Envíos masivos certificados</li>
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Validez probatoria en notificaciones</li>
+              <li class="service-card__point"><svg width="14" height="14" class="service-card__check"
+                  aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Menor tiempo en campañas operativas</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="impact-wrap">
+          <div class="impact-grid">
+            <div>
+              <span
+                style="display:inline-block;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#a78bfa;background:rgba(124,58,237,.15);border:1px solid rgba(139,92,246,.2);padding:.25rem .75rem;border-radius:9999px;margin-bottom:1.25rem">Impacto
+                operativo</span>
+              <h2 class="section-title" style="color:#fff">Más orden en la recuperación, mejor experiencia para quien
+                debe pagar</h2>
+              <p class="section-body" style="color:rgba(255,255,255,.45)">Pybox articula cartera, notificación,
+                seguimiento y servicio para que la empresa gane control y el usuario tenga más claridad.</p>
+            </div>
+            <ul class="impact-list">
+              <li class="impact-item"><svg width="16" height="16" class="impact-item__icon" aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Recuperación de cartera con más orden y menor fricción operativa</li>
+              <li class="impact-item"><svg width="16" height="16" class="impact-item__icon" aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Usuarios con más claridad sobre deudas, fechas y recordatorios</li>
+              <li class="impact-item"><svg width="16" height="16" class="impact-item__icon" aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Evidencias centralizadas para servicio, auditoría y cumplimiento</li>
+              <li class="impact-item"><svg width="16" height="16" class="impact-item__icon" aria-hidden="true">
+                  <use href="#i-check" />
+                </svg>Procesos de notificación más rápidos y consistentes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="container" style="max-width:960px">
+        <div class="cta-wrap">
+          <h2 class="cta-title">Ordena la cobranza sin perder trazabilidad ni claridad para el usuario</h2>
+          <p class="cta-body">Centraliza obligaciones, programa recordatorios, notifica con evidencia y mejora la
+            relación entre empresa acreedora y usuario final.</p>
+          <div class="cta-actions">
+            <a href="https://dev.pybox.co/admin/sign-up" data-env-link="sign-up" class="btn btn--white btn--lg"><svg width="16" height="16"
+                aria-hidden="true">
+                <use href="#i-arrow" />
+              </svg>Solicitar demo</a>
+            <a href="#servicios" class="btn btn--ghost btn--lg">Ver servicios</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script defer src="js/env.js"></script>
+  <script defer src="js/partials.js"></script>
+  <script defer src="js/nav.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,266 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+# Valores no-secretos de .env.example, fijos para que la API importe sin fallar
+# (varios módulos los exigen a nivel de import, ver comentarios en .env.example).
+# Ninguno de estos es una credencial real ni se usa fuera de este workflow.
+env:
+  ENV: "ci"
+  STORAGE_ACCESS_KEY: "ci-access-key"
+  STORAGE_SECRET_KEY: "ci-secret-key"
+  STORAGE_BUCKET: "documentos"
+  DB_ENGINE: "postgresql"
+  DB_DRIVER: "asyncpg"
+  DB_PORT: "5432"
+  DB_USERNAME: "postgres"
+  DB_PASSWORD: "ci-password"
+  REDIS_HOST: "127.0.0.1"
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: "ci-password"
+  # ENCRYPT_KEY/DOCUMENT_HASH_KEY se decodifican como base64 de 32 bytes (ver
+  # EncryptService) -- un string plano de 32 caracteres no decodifica a 32
+  # bytes y tumba el import con ValueError. Generados con
+  # `python -c "import secrets; print(secrets.token_urlsafe(32))"`, igual que
+  # documenta .env.example.
+  AUTH_TOKEN_SECRET: "6zhmVFiocUbFdghsIpt2Ca25WUgFgh5t2pi2Z5jX_iE"
+  ENCRYPT_KEY: "ZdEJ-XrQoHXIleF-aZbcGHUyTyEovroac637mALOVds"
+  DOCUMENT_HASH_KEY: "MRLF04g9Fq5LpnZ8OeK0yfkZ7NpVN5rigUABaMzN4S0"
+  PASSWORD_PEPPER: "fIR90hGmZgn0fJVoB7T0d3XIzhAMsIaUknRisZ89Qh8"
+  GOOGLE_CLIENT_ID: "ci-google-client-id"
+  CORS_ORIGINS: "http://localhost:4200,http://127.0.0.1:4200"
+  COOKIE_DOMAIN: ""
+  SEED_ADMIN_FIRSTNAME: "Admin"
+  SEED_ADMIN_LASTNAME: "CI"
+  SEED_ADMIN_EMAIL: "admin@example.com"
+  SEED_ADMIN_PASSWORD: "ci-password"
+  SEED_ADMIN_PHONE: ""
+  SEED_ADMIN_NATIONALITY: "CO"
+  SEED_ADMIN_DOC_TYPE: "CC"
+  SEED_ADMIN_DOC_NUMBER: "0000000000"
+  NRS360_SMS_TOKEN: "ci-token"
+  NRS360_SMS_SENDER: "ci-sender"
+  NRS360_EMAIL_TOKEN: "ci-token"
+  NRS360_EMAIL_SENDER: "ci@example.com"
+  NRS360_EMAIL_SENDER_NAME: "CI"
+  HELENA_BASE_URL: "https://helena.example.com"
+  HELENA_API_TOKEN: "ci-token"
+  HELENA_WEBHOOK_SECRET: "ci-webhook-secret"
+  NRS360_WEBHOOK_TOKEN: "ci-webhook-token"
+  N8N_SERVICE_KEY: "ci-service-key"
+  HELENA_PUBLIC_WEBHOOK_URL: ""
+  WHATSAPP_CLOUD_ACCESS_TOKEN: "ci-token"
+  WHATSAPP_CLOUD_WABA_ID: "ci-waba-id"
+  WHATSAPP_CLOUD_APP_SECRET: "ci-app-secret"
+  WHATSAPP_CLOUD_VERIFY_TOKEN: "ci-verify-token"
+  MP_PUBLIC_KEY_MX: "ci-public-key"
+  MP_ACCESS_TOKEN_MX: "ci-access-token"
+  MP_WEBHOOK_SECRET_MX: "ci-webhook-secret"
+  MP_APPLICATION_ID_MX: "ci-application-id"
+  BOLD_API_KEY: "ci-api-key"
+  BOLD_SECRET_KEY: "ci-secret-key"
+  BOLD_REDIRECTION_URL: "https://example.com/bold/redirect"
+  LANDING_SIGN_IN_URL: "https://example.com/admin/sign-in"
+  LANDING_SIGN_UP_URL: "https://example.com/admin/sign-up"
+  PGADMIN_EMAIL: "admin@example.com"
+  PGADMIN_PASSWORD: "ci-password"
+
+jobs:
+  api:
+    name: API (black + pylint + pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: api
+    services:
+      # Misma imagen que database/Dockerfile (postgres:17-alpine), sin el build
+      # custom: solo fija TZ/auth, no afecta a las pruebas.
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: template_db_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d template_db_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar uv (gestiona su propio Python 3.14)
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
+
+      - run: uv sync --locked
+
+      - name: Levantar storage (misma imagen que object-storage/Dockerfile)
+        working-directory: .
+        run: |
+          docker build -t pybox-storage-ci ./object-storage
+          docker run -d --name pybox-storage-ci \
+            -p 3004:8333 \
+            -e STORAGE_ACCESS_KEY="$STORAGE_ACCESS_KEY" \
+            -e STORAGE_SECRET_KEY="$STORAGE_SECRET_KEY" \
+            pybox-storage-ci
+          # Sin -f: una petición sin firmar al API S3 devuelve 403 aun con el
+          # servidor arriba, y -f trata cualquier 4xx como fallo del curl.
+          timeout 30 bash -c 'until curl -s http://127.0.0.1:3004/ -o /dev/null; do sleep 1; done'
+
+      - name: Estilo (black)
+        run: uv run black --check .
+
+      - name: Lint (pylint)
+        env:
+          PYTHONPATH: src
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: uv run pylint src --rcfile=.pylintrc
+
+      - name: Pruebas (pytest)
+        env:
+          DB_HOST: "127.0.0.1"
+          DB_NAME: "template_db_test"
+          STORAGE_ENDPOINT: "http://127.0.0.1:3004"
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: uv run pytest
+
+      - name: Apagar storage
+        if: always()
+        run: docker rm -f pybox-storage-ci || true
+
+  migraciones:
+    # Las pruebas crean el esquema con Base.metadata.create_all (ver tests/conftest.py);
+    # este job valida que las migraciones de Alembic sí corren limpias desde cero,
+    # igual que en un despliegue real.
+    name: Migraciones Alembic en Postgres 17
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: api
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: pybox_migraciones_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-password
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d pybox_migraciones_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DB_HOST: "127.0.0.1"
+      DB_NAME: "pybox_migraciones_ci"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.14"
+          enable-cache: true
+          cache-dependency-glob: api/uv.lock
+
+      - run: uv sync --locked
+
+      - name: Migrar desde cero
+        run: uv run alembic upgrade head
+
+  client:
+    name: Cliente (lint + pruebas + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      # Misma versión que client/Dockerfile.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # El `cache: pnpm` nativo de setup-node@v4 falla duro en un runner limpio
+      # (el store de pnpm todavía no existe la primera vez) en vez de solo
+      # saltarse la restauración -- se arma el cache a mano para evitarlo.
+      - name: Resolver store de pnpm
+        id: pnpm-cache
+        run: echo "store_path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.store_path }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('client/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
+  imagenes:
+    # Confirma que las imágenes de producción construyen; no publica nada.
+    name: Imágenes de producción
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Imagen api
+        uses: docker/build-push-action@v6
+        with:
+          context: api
+          file: api/Dockerfile
+          push: false
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      - name: Imagen client
+        uses: docker/build-push-action@v6
+        with:
+          context: client
+          file: client/Dockerfile
+          push: false
+          cache-from: type=gha,scope=client
+          cache-to: type=gha,mode=max,scope=client
+
+      - name: Imagen landing
+        uses: docker/build-push-action@v6
+        with:
+          context: landing
+          file: landing/Dockerfile
+          push: false
+          cache-from: type=gha,scope=landing
+          cache-to: type=gha,mode=max,scope=landing
+
+      - name: Imagen nginx (reverse proxy)
+        uses: docker/build-push-action@v6
+        with:
+          context: nginx
+          file: nginx/Dockerfile
+          push: false
+          cache-from: type=gha,scope=nginx
+          cache-to: type=gha,mode=max,scope=nginx
