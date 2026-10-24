@@ -33,6 +33,12 @@ from receivables.payment_gateways.services.payment_gateway_credential_service im
 from receivables.payment_gateways.services.bold_webhook_service import (
     BoldWebhookService,
 )
+from receivables.payment_gateways.services.epayco_webhook_service import (
+    EpaycoWebhookService,
+)
+from receivables.payment_gateways.services.payu_webhook_service import (
+    PayUWebhookService,
+)
 from receivables.payment_gateways.services.payment_source_service import (
     PaymentSourceService,
 )
@@ -127,6 +133,32 @@ def get_bold_webhook_service(
     )
 
 
+def get_epayco_webhook_service(
+    session: Annotated[AsyncSession, Depends(get_main_session)],
+    gateway_resolver: Annotated[
+        ReceivablesGatewayResolver, Depends(get_receivables_gateway_resolver)
+    ],
+) -> EpaycoWebhookService:
+    return EpaycoWebhookService(
+        gateway_resolver,
+        CreditPaymentAttemptRepository(session),
+        PaymentRepository(session),
+    )
+
+
+def get_payu_webhook_service(
+    session: Annotated[AsyncSession, Depends(get_main_session)],
+    gateway_resolver: Annotated[
+        ReceivablesGatewayResolver, Depends(get_receivables_gateway_resolver)
+    ],
+) -> PayUWebhookService:
+    return PayUWebhookService(
+        gateway_resolver,
+        CreditPaymentAttemptRepository(session),
+        PaymentRepository(session),
+    )
+
+
 def get_automatic_charge_service(
     session: Annotated[AsyncSession, Depends(get_main_session)],
     gateway_resolver: Annotated[
@@ -168,6 +200,10 @@ WompiWebhookServiceDep = Annotated[
     WompiWebhookService, Depends(get_wompi_webhook_service)
 ]
 BoldWebhookServiceDep = Annotated[BoldWebhookService, Depends(get_bold_webhook_service)]
+EpaycoWebhookServiceDep = Annotated[
+    EpaycoWebhookService, Depends(get_epayco_webhook_service)
+]
+PayUWebhookServiceDep = Annotated[PayUWebhookService, Depends(get_payu_webhook_service)]
 AutomaticChargeServiceDep = Annotated[
     AutomaticChargeService, Depends(get_automatic_charge_service)
 ]

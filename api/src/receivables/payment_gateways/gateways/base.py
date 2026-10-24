@@ -35,26 +35,62 @@ class CardPaymentMethod:
 @dataclass(frozen=True)
 class PsePaymentMethod:
     """PSE no tiene fuente de pago reutilizable en Wompi — solo aplica a un cobro
-    `CHECKOUT` puntual, nunca a `AUTOMATIC_3RI`."""
+    `CHECKOUT` puntual, nunca a `AUTOMATIC_3RI`. Los 4 campos finales son ignorados por
+    Wompi (ya pide documento/identidad dentro del propio método) pero obligatorios
+    para PayU/ePayco, que exigen `buyer`/`payer` completos -- ver `PayUGateway`/
+    `EpaycoGateway`."""
 
     user_type: int  # 0 = persona natural, 1 = persona juridica
     user_legal_id_type: str
     user_legal_id: str
     financial_institution_code: str
     payment_description: str
+    full_name: str | None = None
+    phone: str | None = None
+    address: str | None = None
+    city: str | None = None
 
 
 @dataclass(frozen=True)
 class NequiPaymentMethod:
+    """Los campos opcionales son ignorados por Wompi (solo pide `phone_number`) pero
+    obligatorios para PayU, que exige `buyer`/`payer` completos -- ver `PayUGateway`."""
+
     phone_number: str
+    full_name: str | None = None
+    user_legal_id: str | None = None
+    user_legal_id_type: str | None = None
+    address: str | None = None
+    city: str | None = None
+    payment_description: str | None = None
 
 
 @dataclass(frozen=True)
 class BancolombiaTransferPaymentMethod:
     """Tampoco tiene fuente de pago reutilizable en Wompi — mismo alcance que PSE, solo
-    `CHECKOUT`."""
+    `CHECKOUT`. Los campos opcionales son ignorados por Wompi/Bold pero obligatorios
+    para PayU -- ver `PayUGateway`."""
 
     payment_description: str
+    full_name: str | None = None
+    phone: str | None = None
+    user_legal_id: str | None = None
+    user_legal_id_type: str | None = None
+    address: str | None = None
+    city: str | None = None
+
+
+@dataclass(frozen=True)
+class DaviplataPaymentMethod:
+    """Único método de ePayco en este Protocol (Wompi/Bold/PayU no tienen Daviplata) --
+    ver `EpaycoGateway.confirm_daviplata_otp`."""
+
+    user_legal_id_type: str
+    user_legal_id: str
+    full_name: str
+    address: str
+    city: str
+    phone: str | None = None
 
 
 PaymentMethodInput = Union[
@@ -62,7 +98,20 @@ PaymentMethodInput = Union[
     PsePaymentMethod,
     NequiPaymentMethod,
     BancolombiaTransferPaymentMethod,
+    DaviplataPaymentMethod,
 ]
+
+
+@dataclass(frozen=True)
+class DeviceInfo:
+    """Antifraude exigido por PayU (`deviceSessionId`/`ipAddress`/`cookie`/
+    `userAgent`, ver `PayUGateway._submit_transaction`) -- ePayco solo usa
+    `ip_address` (ver `EpaycoGateway.create_transaction`). Wompi/Bold no lo piden."""
+
+    device_session_id: str
+    cookie: str
+    user_agent: str
+    ip_address: str
 
 
 @dataclass(frozen=True)
@@ -102,6 +151,16 @@ class RedirectAction:
 
 
 @dataclass(frozen=True)
+class OtpChallenge:
+    """Daviplata (ePayco) no se resuelve por redirección ni por notificación push
+    esperada en silencio -- el deudor recibe un OTP en su app y hay que volver a
+    pedírselo y confirmarlo con `EpaycoGateway.confirm_daviplata_otp`."""
+
+    transaction_id: str
+    id_session_token: str
+
+
+@dataclass(frozen=True)
 class GatewayTransaction:
     """Transacción ya normalizada al vocabulario propio (`raw` conserva la respuesta
     completa del proveedor para auditoría/debug). Antes `WompiTransaction` -- se
@@ -116,6 +175,7 @@ class GatewayTransaction:
     raw: dict[str, Any]
     three_ds_challenge: ThreeDsChallenge | None = None
     redirect_action: RedirectAction | None = None
+    otp_challenge: OtpChallenge | None = None
 
 
 @dataclass(frozen=True)
