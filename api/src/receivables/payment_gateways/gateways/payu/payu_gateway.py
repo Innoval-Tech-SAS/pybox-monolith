@@ -1,6 +1,7 @@
 """Adaptador de PayU Latam: implementa el Protocol de pasarela de cobro de
 receivables."""
 
+from decimal import Decimal
 from typing import Any
 
 from core.tools.config_tools import get_or_throw
@@ -495,7 +496,7 @@ class PayUGateway:
         tx_value = (last_transaction.get("additionalValues") or {}).get(
             "TX_VALUE"
         ) or {}
-        amount_in_cents = int(float(tx_value.get("value", 0)) * 100)
+        amount_in_cents = int(Decimal(str(tx_value.get("value", 0))) * 100)
         return GatewayTransaction(
             id=transaction_id,
             status=payu_transaction_state_to_attempt_status(

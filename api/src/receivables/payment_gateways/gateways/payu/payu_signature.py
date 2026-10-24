@@ -4,6 +4,7 @@ sección "Authentication Signature" de developers.payulatam.com, no contra terce
 
 import hashlib
 import hmac
+from decimal import Decimal, InvalidOperation
 
 
 def build_payu_request_signature(
@@ -35,8 +36,8 @@ def verify_payu_confirmation_signature(fields: dict[str, str], api_key: str) -> 
     state_pol = fields.get("state_pol", "")
     received_signature = fields.get("sign", "")
     try:
-        raw_value = float(fields.get("value", "0"))
-    except ValueError:
+        raw_value = Decimal(fields.get("value", "0"))
+    except InvalidOperation:
         return False
     value = _format_confirmation_value(raw_value)
     message = f"{api_key}~{merchant_id}~{reference_sale}~{value}~{currency}~{state_pol}"
@@ -44,6 +45,6 @@ def verify_payu_confirmation_signature(fields: dict[str, str], api_key: str) -> 
     return hmac.compare_digest(expected_signature.lower(), received_signature.lower())
 
 
-def _format_confirmation_value(value: float) -> str:
+def _format_confirmation_value(value: Decimal) -> str:
     formatted = f"{value:.2f}"
     return formatted[:-1] if formatted.endswith("0") else formatted

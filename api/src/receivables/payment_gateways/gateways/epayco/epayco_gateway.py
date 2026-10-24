@@ -1,6 +1,7 @@
 """Adaptador de ePayco Latam: implementa el Protocol de pasarela de cobro de
 receivables."""
 
+from decimal import Decimal
 from typing import Any
 
 from core.tools.config_tools import get_or_throw
@@ -272,7 +273,7 @@ class EpaycoGateway:
         }
         response = await self._client.confirm_daviplata_transaction(token, payload)
         data = response.get("data") or {}
-        amount_in_cents = int(float(data.get("value", 0)) * 100)
+        amount_in_cents = int(Decimal(str(data.get("value", 0))) * 100)
         return GatewayTransaction(
             id=transaction_id,
             status=epayco_status_to_attempt_status(data.get("status", "")).value,
@@ -355,7 +356,7 @@ class EpaycoGateway:
                 raw=response,
             )
         data = response.get("data") or {}
-        amount_in_cents = int(float(data.get("amount", 0)) * 100)
+        amount_in_cents = int(Decimal(str(data.get("amount", 0))) * 100)
         return GatewayTransaction(
             id=transaction_id,
             status=epayco_status_to_attempt_status(data.get("status", "")).value,

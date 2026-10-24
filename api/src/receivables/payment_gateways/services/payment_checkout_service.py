@@ -128,8 +128,13 @@ class PaymentCheckoutService:
         """Para el retorno de una redirección (Bold: PSE, Botón Bancolombia, 3DS) -- el
         deudor vuelve a `RECEIVABLES_PAYMENT_REDIRECT_RETURN_URL?reference=...` sin
         conocer de antemano el `payment_id`/`attempt_id` que el frontend necesita para
-        seguir el polling habitual."""
-        attempt = await self._attempt_repo.get_by_provider_reference(reference)
+        seguir el polling habitual. ePayco nunca acepta nuestra propia referencia (ver
+        `EpaycoGateway._build_response_url`): su URL de retorno solo trae `ref_payco`,
+        guardado como `provider_transaction_id`, no como `provider_reference` -- de ahí
+        el fallback."""
+        attempt = await self._attempt_repo.get_by_provider_reference(
+            reference
+        ) or await self._attempt_repo.get_by_provider_transaction_id(reference)
         if attempt is None:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND, "Intento de pago no encontrado."
