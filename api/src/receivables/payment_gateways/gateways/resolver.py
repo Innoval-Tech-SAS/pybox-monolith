@@ -7,6 +7,8 @@ from receivables.payment_gateways.enums.payment_gateway_enums import (
 )
 from receivables.payment_gateways.gateways.base import ReceivablesPaymentGateway
 from receivables.payment_gateways.gateways.bold.bold_gateway import BoldGateway
+from receivables.payment_gateways.gateways.epayco.epayco_gateway import EpaycoGateway
+from receivables.payment_gateways.gateways.payu.payu_gateway import PayUGateway
 from receivables.payment_gateways.gateways.wompi.wompi_gateway import WompiGateway
 from receivables.payment_gateways.services.payment_gateway_credential_service import (
     DecryptedGatewayCredential,
@@ -60,4 +62,8 @@ class ReceivablesGatewayResolver:
             return WompiGateway(credentials)
         if credentials.provider == ReceivablesGatewayProvider.BOLD:
             return BoldGateway(credentials)
+        if credentials.provider == ReceivablesGatewayProvider.EPAYCO:
+            return EpaycoGateway(credentials)
+        if credentials.provider == ReceivablesGatewayProvider.PAYU:
+            return PayUGateway(credentials)
         return None

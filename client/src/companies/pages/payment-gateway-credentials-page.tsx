@@ -17,12 +17,14 @@ import { PaymentGatewayCredentialsTable } from "../components/payment-gateway-cr
 import { InfoRow } from "../components/info-row";
 
 /** Pasarelas con webhook propio ya implementado -- Wompi
- * (`/webhooks/wompi/{organizationId}`, ver skill `wompi-gateway`) y Bold
- * (`/webhooks/bold/{organizationId}`). PayU/ePayco todavía no tienen adaptador ni
- * controller de webhook: no mostrar una URL que no recibiría nada. */
+ * (`/webhooks/wompi/{organizationId}`, ver skill `wompi-gateway`), Bold
+ * (`/webhooks/bold/{organizationId}`), ePayco (`/webhooks/epayco/{organizationId}`)
+ * y PayU (`/webhooks/payu/{organizationId}`). */
 const WEBHOOK_PATH_BY_PROVIDER: Partial<Record<PaymentGatewayProvider, string>> = {
   WOMPI: "webhooks/wompi",
   BOLD: "webhooks/bold",
+  EPAYCO: "webhooks/epayco",
+  PAYU: "webhooks/payu",
 };
 
 const emptyRecord = (keys: string[]): Record<string, string> =>
