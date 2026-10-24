@@ -21,7 +21,7 @@ export const usePaymentRedirectReturn = () => {
   ): Promise<PaymentAttemptLookup | null> => {
     try {
       return await apiClient<PaymentAttemptLookup>(
-        `/credits/payments/by-reference/${reference}`,
+        `/credits/payments/by-reference/${encodeURIComponent(reference)}`,
         { method: "GET" },
       );
     } catch {
