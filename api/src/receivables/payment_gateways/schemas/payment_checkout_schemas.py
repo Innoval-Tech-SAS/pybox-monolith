@@ -43,9 +43,18 @@ class PseTransactionRequest(BaseSchema):
 
 
 class NequiTransactionRequest(BaseSchema):
+    """`full_name`/`user_legal_id_type`/`user_legal_id`/`address`/`city` son
+    ignorados por Wompi (solo pide `phone_number`) pero obligatorios para PayU, que
+    exige `buyer`/`payer` completos -- ver `PayUGateway`."""
+
     payment_method_type: Literal["NEQUI"] = "NEQUI"
     phone_number: str
     customer_email: EmailStr
+    full_name: str | None = None
+    user_legal_id_type: str | None = None
+    user_legal_id: str | None = None
+    address: str | None = None
+    city: str | None = None
 
 
 class BancolombiaTransferTransactionRequest(BaseSchema):
