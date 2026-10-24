@@ -13,9 +13,10 @@ from receivables.payment_gateways.enums.payment_gateway_enums import (
 )
 from receivables.payment_gateways.gateways.base import (
     BrowserInfo,
+    GatewayFinancialInstitution,
     PaymentMethodInput,
+    RedirectAction,
     ThreeDsChallenge,
-    WompiFinancialInstitution,
 )
 from receivables.payment_gateways.gateways.resolver import ReceivablesGatewayResolver
 from receivables.payment_gateways.models.payment_attempt_model import (
@@ -65,15 +66,19 @@ class PaymentCheckoutService:
         payment_method: PaymentMethodInput,
         customer_email: str,
         browser_info: BrowserInfo | None = None,
-    ) -> tuple[CreditPaymentAttemptModel, ThreeDsChallenge | None]:
+    ) -> tuple[
+        CreditPaymentAttemptModel,
+        ThreeDsChallenge | None,
+        RedirectAction | None,
+    ]:
         (
             payment,
             _credit,
             portfolio,
         ) = await self._ownership_resolver.resolve_owned_payment(session, payment_id)
 
-        gateway = await self._gateway_resolver.get_for_organization(
-            portfolio.organization_id, ReceivablesGatewayProvider.WOMPI
+        gateway = await self._gateway_resolver.get_active_for_organization(
+            portfolio.organization_id
         )
         if gateway is None:
             raise HTTPException(
@@ -103,7 +108,7 @@ class PaymentCheckoutService:
             CreditPaymentAttemptModel(
                 payment_id=payment.id,
                 attempt_number=attempt_number,
-                provider=ReceivablesGatewayProvider.WOMPI,
+                provider=ReceivablesGatewayProvider(gateway.name),
                 charge_mode=ChargeMode.CHECKOUT,
                 provider_reference=reference,
                 provider_transaction_id=transaction.id,
@@ -115,11 +120,31 @@ class PaymentCheckoutService:
                 accepted_at=datetime.now(timezone.utc),
             )
         )
-        return attempt, transaction.three_ds_challenge
+        return attempt, transaction.three_ds_challenge, transaction.redirect_action
+
+    async def resolve_by_reference(
+        self, session: UserSession, reference: str
+    ) -> CreditPaymentAttemptModel:
+        """Para el retorno de una redirección (Bold: PSE, Botón Bancolombia, 3DS) -- el
+        deudor vuelve a `RECEIVABLES_PAYMENT_REDIRECT_RETURN_URL?reference=...` sin
+        conocer de antemano el `payment_id`/`attempt_id` que el frontend necesita para
+        seguir el polling habitual."""
+        attempt = await self._attempt_repo.get_by_provider_reference(reference)
+        if attempt is None:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, "Intento de pago no encontrado."
+            )
+        # Misma cadena de pertenencia que el resto del modulo (ver skill
+        # tenant-isolation): 404 generico si la referencia no corresponde a un intento
+        # del propio deudor autenticado.
+        await self._ownership_resolver.resolve_owned_payment(
+            session, attempt.payment_id, require_pending=False
+        )
+        return attempt
 
     async def list_pse_institutions(
         self, session: UserSession, payment_id: uuid.UUID
-    ) -> list[WompiFinancialInstitution]:
+    ) -> list[GatewayFinancialInstitution]:
         (
             _payment,
             _credit,
@@ -127,8 +152,8 @@ class PaymentCheckoutService:
         ) = await self._ownership_resolver.resolve_owned_payment(
             session, payment_id, require_pending=False
         )
-        gateway = await self._gateway_resolver.get_for_organization(
-            portfolio.organization_id, ReceivablesGatewayProvider.WOMPI
+        gateway = await self._gateway_resolver.get_active_for_organization(
+            portfolio.organization_id
         )
         if gateway is None:
             raise HTTPException(
@@ -157,8 +182,8 @@ class PaymentCheckoutService:
         if attempt.status != ReceivablesPaymentAttemptStatus.PENDING:
             return attempt
 
-        gateway = await self._gateway_resolver.get_for_organization(
-            portfolio.organization_id, ReceivablesGatewayProvider.WOMPI
+        gateway = await self._gateway_resolver.get_active_for_organization(
+            portfolio.organization_id
         )
         if gateway is None or not attempt.provider_transaction_id:
             return attempt

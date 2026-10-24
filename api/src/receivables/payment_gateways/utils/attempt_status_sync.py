@@ -1,10 +1,10 @@
-"""Sincroniza un intento de pago con el estado real de la transacción en Wompi.
+"""Sincroniza un intento de pago con el estado real de la transacción en la pasarela.
 
-Compartido por `WompiWebhookService` (entrega del webhook) y
-`PaymentCheckoutService.refresh_attempt_status` (polling del self-service, usado por el
-reto 3DS) -- ambos necesitan la misma regla: nunca confiar en un estado ya visto,
-congelar el monto esperado al crear el intento y nunca marcarlo `APPROVED` si el monto
-reportado no coincide (skill `wompi-gateway`, Paso 7)."""
+Compartido por `WompiWebhookService`/`BoldWebhookService` (entrega del webhook) y
+`PaymentCheckoutService.refresh_attempt_status` (polling del self-service) -- todos
+necesitan la misma regla, sin importar la pasarela: nunca confiar en un estado ya
+visto, congelar el monto esperado al crear el intento y nunca marcarlo `APPROVED` si el
+monto reportado no coincide (skill `wompi-gateway`, Paso 7, para el caso de Wompi)."""
 
 from datetime import datetime, timezone
 
@@ -12,7 +12,7 @@ from core.config.logger import logger
 from receivables.payment_gateways.enums.payment_gateway_enums import (
     ReceivablesPaymentAttemptStatus,
 )
-from receivables.payment_gateways.gateways.base import WompiTransaction
+from receivables.payment_gateways.gateways.base import GatewayTransaction
 from receivables.payment_gateways.models.payment_attempt_model import (
     CreditPaymentAttemptModel,
 )
@@ -26,7 +26,7 @@ from receivables.payments.repository.payment_repository import PaymentRepository
 
 async def sync_attempt_with_transaction(
     attempt: CreditPaymentAttemptModel,
-    transaction: WompiTransaction,
+    transaction: GatewayTransaction,
     attempt_repo: CreditPaymentAttemptRepository,
     payment_repo: PaymentRepository,
 ) -> None:
@@ -40,7 +40,7 @@ async def sync_attempt_with_transaction(
             and transaction.amount_in_cents != attempt.expected_amount_cents
         ):
             logger.warning(
-                "[receivables][wompi] monto no coincide | intento=%s esperado=%s "
+                "[receivables] monto no coincide | intento=%s esperado=%s "
                 "reportado=%s",
                 attempt.id,
                 attempt.expected_amount_cents,

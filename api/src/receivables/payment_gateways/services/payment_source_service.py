@@ -10,7 +10,7 @@ from receivables.payment_gateways.enums.payment_gateway_enums import (
     PaymentSourceType,
     ReceivablesGatewayProvider,
 )
-from receivables.payment_gateways.gateways.base import WompiPaymentSource
+from receivables.payment_gateways.gateways.base import GatewayPaymentSource
 from receivables.payment_gateways.gateways.resolver import ReceivablesGatewayResolver
 from receivables.payment_gateways.models.payment_source_model import (
     DebtorPaymentSourceModel,
@@ -85,7 +85,9 @@ class PaymentSourceService:
             acceptance_token=tokens.acceptance_token,
             accept_personal_auth=tokens.personal_data_token,
         )
-        return await self._persist_source(debtor_id, PaymentSourceType.CARD, source)
+        return await self._persist_source(
+            debtor_id, gateway.name, PaymentSourceType.CARD, source
+        )
 
     async def create_nequi_source(
         self,
@@ -107,7 +109,9 @@ class PaymentSourceService:
             acceptance_token=tokens.acceptance_token,
             accept_personal_auth=tokens.personal_data_token,
         )
-        return await self._persist_source(debtor_id, PaymentSourceType.NEQUI, source)
+        return await self._persist_source(
+            debtor_id, gateway.name, PaymentSourceType.NEQUI, source
+        )
 
     async def list_active(
         self, session: UserSession, payment_id: uuid.UUID
@@ -134,25 +138,32 @@ class PaymentSourceService:
         await self._source_repo.update(source)
 
     async def _require_gateway(self, organization_id: uuid.UUID):
-        gateway = await self._gateway_resolver.get_for_organization(
-            organization_id, ReceivablesGatewayProvider.WOMPI
+        gateway = await self._gateway_resolver.get_active_for_organization(
+            organization_id
         )
         if gateway is None:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 "Esta organización no tiene una pasarela de pago configurada.",
             )
+        if not gateway.supports_saved_payment_sources():
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "Esta pasarela no soporta guardar métodos de pago para cobro "
+                "automático.",
+            )
         return gateway
 
     async def _persist_source(
         self,
         debtor_id: uuid.UUID,
+        provider: str,
         source_type: PaymentSourceType,
-        source: WompiPaymentSource,
+        source: GatewayPaymentSource,
     ) -> DebtorPaymentSourceModel:
         model = DebtorPaymentSourceModel(
             debtor_id=debtor_id,
-            provider=ReceivablesGatewayProvider.WOMPI,
+            provider=ReceivablesGatewayProvider(provider),
             type=source_type,
             provider_source_id=source.id,
             status=to_source_status(source.status),

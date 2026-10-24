@@ -23,9 +23,11 @@ from receivables.payment_gateways.schemas.payment_checkout_schemas import (
     CardTransactionRequest,
     FinancialInstitutionResponse,
     NequiTransactionRequest,
+    PaymentAttemptLookupResponse,
     PaymentAttemptResponse,
     PaymentSourceResponse,
     PseTransactionRequest,
+    RedirectActionResponse,
     ThreeDsChallengeResponse,
     TokenizeCardSourceRequest,
     TokenizeNequiSourceRequest,
@@ -33,7 +35,7 @@ from receivables.payment_gateways.schemas.payment_checkout_schemas import (
     TransactionRequest,
 )
 
-router = APIRouter(prefix="/credits/payments", tags=["Cobro de cuotas (Wompi)"])
+router = APIRouter(prefix="/credits/payments", tags=["Cobro de cuotas"])
 
 
 def _to_gateway_payment_method(body: TransactionRequest) -> PaymentMethodInput:
@@ -64,10 +66,10 @@ def _to_gateway_payment_method(body: TransactionRequest) -> PaymentMethodInput:
 
 
 @router.post(
-    "/{payment_id}/wompi/transaction",
+    "/{payment_id}/transaction",
     response_model=TransactionCreationResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Iniciar el cobro de una cuota vía Wompi",
+    summary="Iniciar el cobro de una cuota",
 )
 async def create_transaction(
     payment_id: uuid.UUID,
@@ -87,7 +89,7 @@ async def create_transaction(
         if isinstance(body, CardTransactionRequest)
         else None
     )
-    attempt, three_ds_challenge = await service.create_transaction(
+    attempt, three_ds_challenge, redirect_action = await service.create_transaction(
         session,
         payment_id,
         _to_gateway_payment_method(body),
@@ -111,11 +113,37 @@ async def create_transaction(
             if three_ds_challenge is not None
             else None
         ),
+        redirect_action=(
+            RedirectActionResponse(
+                redirect_url=redirect_action.redirect_url,
+                redirect_method=redirect_action.redirect_method,
+            )
+            if redirect_action is not None
+            else None
+        ),
     )
 
 
 @router.get(
-    "/{payment_id}/wompi/pse/financial-institutions",
+    "/by-reference/{reference}",
+    response_model=PaymentAttemptLookupResponse,
+    summary="Resolver un intento de cobro por su referencia (retorno de redirección)",
+)
+async def get_transaction_by_reference(
+    reference: str,
+    session: RequireSelfForPaymentGateways,
+    service: PaymentCheckoutServiceDep,
+) -> PaymentAttemptLookupResponse:
+    attempt = await service.resolve_by_reference(session, reference)
+    return PaymentAttemptLookupResponse(
+        payment_id=attempt.payment_id,
+        attempt_id=attempt.id,
+        status=attempt.status.value,
+    )
+
+
+@router.get(
+    "/{payment_id}/pse/financial-institutions",
     response_model=list[FinancialInstitutionResponse],
     summary="Listar bancos disponibles para pagar por PSE",
 )
@@ -135,9 +163,9 @@ async def list_pse_financial_institutions(
 
 
 @router.get(
-    "/{payment_id}/wompi/transactions/{attempt_id}",
+    "/{payment_id}/transactions/{attempt_id}",
     response_model=PaymentAttemptResponse,
-    summary="Consultar el estado de un intento de cobro (polling del reto 3DS)",
+    summary="Consultar el estado de un intento de cobro (polling)",
 )
 async def get_transaction_status(
     payment_id: uuid.UUID,
@@ -156,7 +184,7 @@ async def get_transaction_status(
 
 
 @router.post(
-    "/{payment_id}/wompi/payment-sources/card",
+    "/{payment_id}/payment-sources/card",
     response_model=PaymentSourceResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Guardar una tarjeta como fuente de pago reutilizable (cobro automático)",
@@ -181,7 +209,7 @@ async def create_card_source(
 
 
 @router.post(
-    "/{payment_id}/wompi/payment-sources/nequi",
+    "/{payment_id}/payment-sources/nequi",
     response_model=PaymentSourceResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Guardar Nequi como fuente de pago reutilizable (cobro automático)",
@@ -199,7 +227,7 @@ async def create_nequi_source(
 
 
 @router.get(
-    "/{payment_id}/wompi/payment-sources",
+    "/{payment_id}/payment-sources",
     response_model=list[PaymentSourceResponse],
     summary="Listar mis fuentes de pago guardadas",
 )
@@ -213,7 +241,7 @@ async def list_payment_sources(
 
 
 @router.delete(
-    "/{payment_id}/wompi/payment-sources/{source_id}",
+    "/{payment_id}/payment-sources/{source_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Revocar una fuente de pago guardada",
 )

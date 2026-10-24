@@ -53,13 +53,15 @@ describe("WompiCheckoutForm", () => {
   it("pays with Nequi, polls while PENDING, and calls onDone once APPROVED", { timeout: 10000 }, async () => {
     const attempt = { id: "att-1", status: "PENDING", providerReference: "ref", providerTransactionId: "txn-1", chargeMode: "CHECKOUT" };
     const fetchMock = vi.fn((url: string) => {
-      // Ojo: "/wompi/transactions/" (polling) contiene "/wompi/transaction" (creación)
-      // como substring -- hay que chequear el patrón más específico primero.
-      if (String(url).includes("/wompi/transactions/")) {
+      // Ojo: "/transactions/" (polling) contiene "/transaction" (creación) como
+      // substring -- hay que chequear el patrón más específico primero.
+      if (String(url).includes("/transactions/")) {
         return Promise.resolve(makeResponse(200, { ...attempt, status: "APPROVED" }));
       }
-      if (String(url).includes("/wompi/transaction")) {
-        return Promise.resolve(makeResponse(201, { attempt, threeDsChallenge: null }));
+      if (String(url).includes("/transaction")) {
+        return Promise.resolve(
+          makeResponse(201, { attempt, threeDsChallenge: null, redirectAction: null }),
+        );
       }
       throw new Error(`unexpected fetch: ${url}`);
     });
@@ -72,12 +74,16 @@ describe("WompiCheckoutForm", () => {
     fireEvent.change(screen.getByLabelText("Método de pago"), { target: { value: "NEQUI" } });
     fireEvent.change(await screen.findByLabelText("Correo electrónico"), { target: { value: "deudor@example.com" } });
     fireEvent.change(screen.getByLabelText("Número de celular Nequi"), { target: { value: "3001234567" } });
+    fireEvent.change(screen.getByLabelText("Nombre completo"), { target: { value: "Juan Perez" } });
+    fireEvent.change(screen.getByLabelText("Número de documento"), { target: { value: "123456789" } });
+    fireEvent.change(screen.getByLabelText("Dirección"), { target: { value: "Calle 1 # 2-3" } });
+    fireEvent.change(screen.getByLabelText("Ciudad"), { target: { value: "Bogota" } });
 
     fireEvent.click(screen.getByRole("button", { name: "Pagar" }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        expect.stringContaining("/credits/payments/pay-1/wompi/transaction"),
+        expect.stringContaining("/credits/payments/pay-1/transaction"),
         expect.objectContaining({ method: "POST" }),
       );
     });

@@ -91,7 +91,22 @@ class ThreeDsChallenge:
 
 
 @dataclass(frozen=True)
-class WompiTransaction:
+class RedirectAction:
+    """Algunas pasarelas (Bold: PSE, Botón Bancolombia, 3DS de tarjeta) no resuelven el
+    cobro en la misma llamada -- el deudor debe salir de la app, confirmar en el banco o
+    en el challenge 3DS, y volver por `callback_url`. Wompi nunca llena este campo
+    (su reto 3DS se resuelve con `ThreeDsChallenge`, embebido, sin salir de la app)."""
+
+    redirect_url: str
+    redirect_method: str
+
+
+@dataclass(frozen=True)
+class GatewayTransaction:
+    """Transacción ya normalizada al vocabulario propio (`raw` conserva la respuesta
+    completa del proveedor para auditoría/debug). Antes `WompiTransaction` -- se
+    generalizó al agregar Bold como segundo adaptador real."""
+
     id: str
     status: str
     amount_in_cents: int
@@ -100,10 +115,14 @@ class WompiTransaction:
     payment_method_type: str
     raw: dict[str, Any]
     three_ds_challenge: ThreeDsChallenge | None = None
+    redirect_action: RedirectAction | None = None
 
 
 @dataclass(frozen=True)
-class WompiPaymentSource:
+class GatewayPaymentSource:
+    """Antes `WompiPaymentSource` -- generalizado al agregar Bold (que nunca la
+    produce, ver `ReceivablesPaymentGateway.supports_saved_payment_sources`)."""
+
     id: str
     status: str
     type: str
@@ -111,7 +130,11 @@ class WompiPaymentSource:
 
 
 @dataclass(frozen=True)
-class WompiFinancialInstitution:
+class GatewayFinancialInstitution:
+    """Banco disponible para pagar por PSE. Antes `WompiFinancialInstitution` --
+    generalizado porque Bold también expone un listado de bancos PSE propio
+    (`GET /v1/payment/pse/banks`)."""
+
     financial_institution_code: str
     financial_institution_name: str
 
@@ -121,11 +144,25 @@ class ReceivablesPaymentGateway(Protocol):
     — ver discusión de arquitectura: mismo patrón, interfaces deliberadamente separadas
     porque resuelven credenciales por clave distinta y tienen obligaciones de
     cumplimiento distintas). Una instancia ya trae las credenciales de UNA organización
-    resueltas (ver `resolver.py`)."""
+    resueltas (ver `resolver.py`).
+
+    No todas las pasarelas ofrecen las mismas capacidades (Bold no tiene fuente de
+    pago reutilizable ni cobro automático 3RI, a diferencia de Wompi) -- los métodos
+    `supports_*` son la forma explícita de declarar esa diferencia. Un adaptador sin
+    una capacidad igual debe implementar los métodos que dependen de ella (no puede
+    omitirlos, el Protocol los exige), pero levanta `NotImplementedError` ahí: el
+    llamador SIEMPRE debe chequear el `supports_*` correspondiente antes de
+    invocarlos."""
 
     name: str
 
-    async def get_acceptance_tokens(self) -> AcceptanceTokens: ...
+    async def get_acceptance_tokens(self) -> AcceptanceTokens:
+        """Tokens de aceptación de términos/habeas data (ver `AcceptanceTokens`). Una
+        pasarela sin este concepto (Bold: la aceptación queda dentro de su propia
+        página de cobro alojada) devuelve tokens vacíos en vez de levantar -- se piden
+        siempre, para cualquier pasarela, antes de cada cobro (ver
+        `PaymentCheckoutService.create_transaction`)."""
+        ...
 
     async def create_transaction(
         self,
@@ -138,18 +175,28 @@ class ReceivablesPaymentGateway(Protocol):
         customer_email: str,
         payment_source_id: str | None = None,
         browser_info: BrowserInfo | None = None,
-    ) -> WompiTransaction:
+    ) -> GatewayTransaction:
         """`payment_method` es obligatorio salvo cuando se cobra contra una fuente de
-        pago guardada (`payment_source_id` presente, ver Paso 5.3 de la skill) — en ese
-        caso Wompi ignora `payment_method` y este se pasa en `None`. `browser_info` se
-        exige para CARD (3DS v2, Paso 6) y no aplica a los demás métodos."""
+        pago guardada (`payment_source_id` presente, ver Paso 5.3 de la skill de
+        Wompi) — en ese caso Wompi ignora `payment_method` y este se pasa en `None`.
+        `payment_source_id` no aplica a pasarelas sin `supports_saved_payment_sources`.
+        `browser_info` se exige para CARD (3DS) y no aplica a los demás métodos."""
         ...
 
     async def tokenize_card(
         self, number: str, cvc: str, exp_month: str, exp_year: str, card_holder: str
-    ) -> str: ...
+    ) -> str:
+        """Solo tiene sentido cuando `supports_saved_payment_sources()` es `True` (el
+        dato tokenizado se usa para `create_payment_source`, no para
+        `create_transaction` -- Wompi tokeniza la tarjeta igual en un cobro puntual,
+        pero eso lo hace el propio adaptador internamente, no pasa por este
+        método)."""
+        ...
 
-    async def tokenize_nequi(self, phone_number: str) -> str: ...
+    async def tokenize_nequi(self, phone_number: str) -> str:
+        """Mismo alcance que `tokenize_card`: solo para guardar una fuente
+        reutilizable."""
+        ...
 
     async def create_payment_source(
         self,
@@ -158,18 +205,30 @@ class ReceivablesPaymentGateway(Protocol):
         customer_email: str,
         acceptance_token: str,
         accept_personal_auth: str,
-    ) -> WompiPaymentSource: ...
+    ) -> GatewayPaymentSource:
+        """Solo disponible cuando `supports_saved_payment_sources()` es `True`."""
+        ...
 
     async def list_pse_financial_institutions(
         self,
-    ) -> list[WompiFinancialInstitution]: ...
+    ) -> list[GatewayFinancialInstitution]: ...
 
-    async def get_transaction(self, transaction_id: str) -> WompiTransaction: ...
+    async def get_transaction(self, transaction_id: str) -> GatewayTransaction: ...
 
     def verify_webhook_signature(self, event_body: dict[str, Any]) -> bool: ...
 
     def supports_automatic_charge(self) -> bool:
         """Si esta organización tiene la activación de fraude de Wompi para cobro 3RI
         (skill `wompi-gateway`, Paso 6) — condición necesaria pero no suficiente: la
-        fuente de pago también debe cumplir `three_ds_enrolled` y ser Mastercard."""
+        fuente de pago también debe cumplir `three_ds_enrolled` y ser Mastercard. Bold
+        no tiene este concepto en su API: siempre `False`."""
+        ...
+
+    def supports_saved_payment_sources(self) -> bool:
+        """Si esta pasarela puede guardar un medio de pago reutilizable
+        (`tokenize_card`/`tokenize_nequi`/`create_payment_source`). Es condición
+        necesaria -- no suficiente -- para `supports_automatic_charge`: toda pasarela
+        con cobro automático necesariamente soporta fuentes guardadas, pero no al
+        revés (Wompi soporta fuentes guardadas incluso para organizaciones sin la
+        activación de fraude de 3RI)."""
         ...

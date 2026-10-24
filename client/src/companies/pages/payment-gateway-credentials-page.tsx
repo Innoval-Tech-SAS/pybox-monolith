@@ -16,12 +16,13 @@ import { PaymentGatewayCredentialForm } from "../components/payment-gateway-cred
 import { PaymentGatewayCredentialsTable } from "../components/payment-gateway-credentials-table";
 import { InfoRow } from "../components/info-row";
 
-/** Pasarelas con webhook propio ya implementado -- hoy solo Wompi
- * (`/webhooks/wompi/{organizationId}`, ver skill `wompi-gateway`). Bold/PayU/ePayco
- * todavía no tienen adaptador ni controller de webhook: no mostrar una URL que no
- * recibiría nada. */
+/** Pasarelas con webhook propio ya implementado -- Wompi
+ * (`/webhooks/wompi/{organizationId}`, ver skill `wompi-gateway`) y Bold
+ * (`/webhooks/bold/{organizationId}`). PayU/ePayco todavía no tienen adaptador ni
+ * controller de webhook: no mostrar una URL que no recibiría nada. */
 const WEBHOOK_PATH_BY_PROVIDER: Partial<Record<PaymentGatewayProvider, string>> = {
   WOMPI: "webhooks/wompi",
+  BOLD: "webhooks/bold",
 };
 
 const emptyRecord = (keys: string[]): Record<string, string> =>

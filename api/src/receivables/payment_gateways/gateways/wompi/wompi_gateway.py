@@ -12,9 +12,9 @@ from receivables.payment_gateways.gateways.base import (
     PaymentMethodInput,
     PsePaymentMethod,
     ThreeDsChallenge,
-    WompiFinancialInstitution,
-    WompiPaymentSource,
-    WompiTransaction,
+    GatewayFinancialInstitution,
+    GatewayPaymentSource,
+    GatewayTransaction,
 )
 from receivables.payment_gateways.gateways.wompi.wompi_client import WompiClient
 from receivables.payment_gateways.gateways.wompi.wompi_signature import (
@@ -85,7 +85,7 @@ class WompiGateway:
         customer_email: str,
         payment_source_id: str | None = None,
         browser_info: BrowserInfo | None = None,
-    ) -> WompiTransaction:
+    ) -> GatewayTransaction:
         signature = build_integrity_signature(
             reference, amount_in_cents, currency, self._integrity_secret
         )
@@ -203,7 +203,7 @@ class WompiGateway:
         customer_email: str,
         acceptance_token: str,
         accept_personal_auth: str,
-    ) -> WompiPaymentSource:
+    ) -> GatewayPaymentSource:
         payload = {
             "type": type,
             "token": token,
@@ -215,19 +215,21 @@ class WompiGateway:
             self._private_key, self._environment, payload
         )
         data = response.get("data") or {}
-        return WompiPaymentSource(
+        return GatewayPaymentSource(
             id=str(data.get("id", "")),
             status=data.get("status", ""),
             type=data.get("type", type),
             raw=data,
         )
 
-    async def list_pse_financial_institutions(self) -> list[WompiFinancialInstitution]:
+    async def list_pse_financial_institutions(
+        self,
+    ) -> list[GatewayFinancialInstitution]:
         response = await self._client.list_pse_financial_institutions(
             self._private_key, self._environment
         )
         return [
-            WompiFinancialInstitution(
+            GatewayFinancialInstitution(
                 financial_institution_code=str(
                     row.get("financial_institution_code", "")
                 ),
@@ -236,17 +238,17 @@ class WompiGateway:
             for row in (response.get("data") or [])
         ]
 
-    async def get_transaction(self, transaction_id: str) -> WompiTransaction:
+    async def get_transaction(self, transaction_id: str) -> GatewayTransaction:
         response = await self._client.get_transaction(
             self._private_key, self._environment, transaction_id
         )
         return self._to_transaction(response)
 
     @staticmethod
-    def _to_transaction(response: dict[str, Any]) -> WompiTransaction:
+    def _to_transaction(response: dict[str, Any]) -> GatewayTransaction:
         data = response.get("data") or {}
         payment_method_data = data.get("payment_method") or {}
-        return WompiTransaction(
+        return GatewayTransaction(
             id=str(data.get("id", "")),
             status=data.get("status", ""),
             amount_in_cents=int(data.get("amount_in_cents") or 0),
@@ -291,3 +293,6 @@ class WompiGateway:
             str(self._credentials.get("wompi_3ri_enabled", "")).strip().lower()
             == "true"
         )
+
+    def supports_saved_payment_sources(self) -> bool:
+        return True

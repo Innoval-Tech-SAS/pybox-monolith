@@ -121,6 +121,73 @@ class TestGlobalAdminBypass:
         assert resp.status_code == 200
 
 
+class TestSingleActiveCredentialInvariant:
+    """El checkout de autoservicio resuelve "la" pasarela activa de la organización sin
+    que el deudor elija (ver `ReceivablesGatewayResolver.get_active_for_organization`)
+    -- a lo sumo una credencial puede estar activa a la vez, sin importar la pasarela.
+    """
+
+    async def test_activating_a_second_provider_deactivates_the_first(
+        self, db_session, auth_as, make_user_session_factory
+    ):
+        org = await add_organization(db_session)
+        authed = auth_as(
+            _org_session(make_user_session_factory, org.id, UserRole.ADMIN)
+        )
+        wompi_resp = await authed.post(
+            f"{BASE}/?organizationId={org.id}",
+            json=credential_payload(is_active=True),
+        )
+        assert wompi_resp.json()["isActive"] is True
+
+        bold_resp = await authed.post(
+            f"{BASE}/?organizationId={org.id}",
+            json=credential_payload(
+                provider="BOLD",
+                secrets={"identity_key": "id_x", "secret_key": "sec_x"},
+                public_config={},
+                is_active=True,
+            ),
+        )
+        assert bold_resp.status_code == 201
+        assert bold_resp.json()["isActive"] is True
+
+        list_resp = await authed.get(f"{BASE}/?organizationId={org.id}")
+        by_provider = {row["provider"]: row["isActive"] for row in list_resp.json()}
+        assert by_provider == {"WOMPI": False, "BOLD": True}
+
+    async def test_activating_via_update_deactivates_the_others(
+        self, db_session, auth_as, make_user_session_factory
+    ):
+        org = await add_organization(db_session)
+        authed = auth_as(
+            _org_session(make_user_session_factory, org.id, UserRole.ADMIN)
+        )
+        await authed.post(
+            f"{BASE}/?organizationId={org.id}",
+            json=credential_payload(is_active=True),
+        )
+        bold_resp = await authed.post(
+            f"{BASE}/?organizationId={org.id}",
+            json=credential_payload(
+                provider="BOLD",
+                secrets={"identity_key": "id_x", "secret_key": "sec_x"},
+                public_config={},
+                is_active=False,
+            ),
+        )
+        bold_id = bold_resp.json()["id"]
+
+        update_resp = await authed.patch(
+            f"{BASE}/{bold_id}?organizationId={org.id}", json={"isActive": True}
+        )
+        assert update_resp.json()["isActive"] is True
+
+        list_resp = await authed.get(f"{BASE}/?organizationId={org.id}")
+        by_provider = {row["provider"]: row["isActive"] for row in list_resp.json()}
+        assert by_provider == {"WOMPI": False, "BOLD": True}
+
+
 class TestDuplicateProviderRejected:
     async def test_second_credential_for_same_provider_returns_409(
         self, db_session, auth_as, make_user_session_factory

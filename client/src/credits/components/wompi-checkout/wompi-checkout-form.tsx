@@ -148,6 +148,13 @@ export const WompiCheckoutForm: React.FC<WompiCheckoutFormProps> = ({
     if (!body) return;
     const result = await createTransaction(body);
     if (!result) return;
+    if (result.redirectAction) {
+      // Bold (PSE, Botón Bancolombia, 3DS): el deudor sale de la app y vuelve por
+      // `RECEIVABLES_PAYMENT_REDIRECT_RETURN_URL` -- a diferencia del reto embebido de
+      // Wompi, no hay nada más que mostrar aquí.
+      window.location.href = result.redirectAction.redirectUrl;
+      return;
+    }
     setAttempt(result.attempt);
     setChallengeHtml(result.threeDsChallenge?.challengeHtml ?? null);
   };

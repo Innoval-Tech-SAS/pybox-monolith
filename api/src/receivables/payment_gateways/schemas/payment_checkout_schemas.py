@@ -79,9 +79,20 @@ class ThreeDsChallengeResponse(BaseSchema):
     challenge_html: str
 
 
+class RedirectActionResponse(BaseSchema):
+    """El deudor debe navegar a `redirect_url` para confirmar el cobro (PSE, Botón
+    Bancolombia o 3DS vía Bold) y vuelve a la app por el `callback_url` configurado --
+    a diferencia del reto 3DS de Wompi (`ThreeDsChallengeResponse`), que no sale de la
+    pantalla actual."""
+
+    redirect_url: str
+    redirect_method: str
+
+
 class TransactionCreationResponse(BaseSchema):
     attempt: PaymentAttemptResponse
     three_ds_challenge: ThreeDsChallengeResponse | None = None
+    redirect_action: RedirectActionResponse | None = None
 
 
 class TokenizeCardSourceRequest(BaseSchema):
@@ -110,3 +121,13 @@ class PaymentSourceResponse(BaseSchema):
 class FinancialInstitutionResponse(BaseSchema):
     financial_institution_code: str
     financial_institution_name: str
+
+
+class PaymentAttemptLookupResponse(BaseSchema):
+    """Para la página de retorno de una redirección (Bold) -- el frontend solo
+    conoce `reference` y necesita `payment_id`/`attempt_id` para retomar el polling
+    habitual de `PaymentAttemptResponse`."""
+
+    payment_id: uuid.UUID
+    attempt_id: uuid.UUID
+    status: str
